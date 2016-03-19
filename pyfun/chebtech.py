@@ -81,7 +81,7 @@ class ChebTech(object):
             }
         try:
             return method[how](x)
-        except:
+        except KeyError:
             raise ValueError("\'how' must be either \'clenshaw\' or \'bary\'")
 
     def __call__clenshaw(self, x):
@@ -258,7 +258,7 @@ def bary(x, fvals, xk=None, vk=None):
 
 
 def clenshaw(x, a):
-    """Clenshaw's Algorithm"""
+    """Clenshaw algorithm"""
     bk1 = 0*x 
     bk2 = 0*x
     x = 2*x
