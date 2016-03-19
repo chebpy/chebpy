@@ -100,10 +100,12 @@ class ChebTech(object):
         ax.plot(xx, yy, *args, **kwargs)
         return ax
 
-    def chebpolyplot(self, ax=None, *args, **kwargs):
+    def plotcoeffs(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
         logcoeffs = log10(abs(self._coeffs))
         ax.plot(logcoeffs, ".", *args, **kwargs)
+        ax.set_ylabel("coefficient magnitude")
+        ax.set_xlabel("wavenumber")
         return ax
 
     def __repr__(self):
@@ -305,5 +307,5 @@ if __name__ == "__main__":
     c2.plot()    
     
     fix, ax = plt.subplots()
-    c3 = ChebTech2.initfun(sin)
-    c3.chebpolyplot(ax=ax)
+    c3 = ChebTech2.initfun(exp)
+    c3.plotcoeffs(ax=ax)
