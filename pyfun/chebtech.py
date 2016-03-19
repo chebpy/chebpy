@@ -266,7 +266,7 @@ def clenshaw(x, a):
     for k in idx[a.size:1:-2]:
         bk2 = a[k] + x*bk1 - bk2
         bk1 = a[k-1] + x*bk2 - bk1
-    if mod(a.size-1, 2) != 0:
+    if mod(a.size-1, 2) == 1:
         bk1, bk2 = a[1] + x*bk1 - bk2, bk1
     out = a[0] + .5*x*bk1 - bk2
     return out
