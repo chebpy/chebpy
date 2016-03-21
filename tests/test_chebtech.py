@@ -12,7 +12,11 @@ from numpy import array
 from numpy import inf
 from numpy import sin
 from numpy import linspace
+from numpy import all as all_
+from numpy import diff
 from numpy.linalg import norm
+#from numpy.random import rand
+from numpy.random import seed
 
 from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import bary
@@ -20,7 +24,7 @@ from pyfun.chebtech import clenshaw
 from pyfun.chebtech import eps
 
 # staticmethod aliases
-chebpts     = ChebTech2.chebpts
+chebpts      = ChebTech2.chebpts
 _vals2coeffs = ChebTech2._vals2coeffs
 _coeffs2vals = ChebTech2._coeffs2vals
 
@@ -28,42 +32,28 @@ _coeffs2vals = ChebTech2._coeffs2vals
 #    """Return True if all elements are within eps"""
 #    return allclose(arr0, arr1, rtol=eps, atol=eps)
 
+seed(0)
+
 def infnorm(x):
     return norm(x, inf)
 
+# ------------------------
+# Dynamic Test Generators
+# ------------------------
+
+def infNormLessThanTol(a, b, tol):
+    def asserter(self):
+        msg = "Not all components were less than the required tolerance"
+        self.assertLessEqual(infnorm(a-b), tol, msg)
+    return asserter
+
+
+
 class TestChebTech2(TestCase):
-    """Unit-tests for Chebtech2"""
+    """Unit-tests for ChebTech2"""
 
-    def setUp(self):
-        self.pts0 = chebpts(0)
-        self.pts1 = chebpts(1)
-        self.pts2 = chebpts(2)
-        self.pts3 = chebpts(3)
-        self.pts4 = chebpts(4)
-        self.pts5 = chebpts(5)
-      
     def test_chebpts_0(self):
-        assert self.pts0.size == 0
-        
-    def test_chebpts_1(self):
-        assert infnorm( self.pts1 - array([0.]) ) < eps
-
-    def test_chebpts_2(self):
-        assert infnorm( self.pts2 -array([-1., 1.]) ) < eps
-
-    def test_chebpts_3(self):
-        assert infnorm( self.pts3 - array([-1., 0., 1.]) ) < eps
-
-    def test_chebpts_4(self):
-        assert infnorm( self.pts4 - array([-1., -.5, .5, 1.]) ) < 2*eps
-        
-    def test_chebpts_5(self):
-        r2 = 2.**(-.5)
-        assert infnorm( self.pts5 - array([-1., -r2, 0., r2, 1.]) ) < eps
-               
-    def test_chebpts_len(self):
-        for k in 100 * arange(10):
-            assert chebpts(k).size == k
+        self.assertEquals(chebpts(0).size, 0)
             
     def test_vals2coeffs_0(self):
         assert _vals2coeffs(array([])).size == 0
@@ -76,7 +66,41 @@ class TestChebTech2(TestCase):
         
     def test_coeffs2vals_0(self):
         assert _coeffs2vals(array([])).size == 0
+   
+# ------------------------------------------------------------------------
+# Add second-kind Chebyshev points test cases to TestChebTech2 
+# ------------------------------------------------------------------------
+chebpts2_testlist = (
+    (chebpts(1), array([0.]), eps),
+    (chebpts(2), array([-1., 1.]), eps),
+    (chebpts(3), array([-1., 0., 1.]), eps),   
+    (chebpts(4), array([-1., -.5, .5, 1.]), 2*eps),
+    (chebpts(5), array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
+)
+for k, (a,b,tol) in enumerate(chebpts2_testlist):
+    testfun = infNormLessThanTol(a,b,tol)
+    testfun.__name__ = "test_chebpts_{:02}".format(k+1)
+    setattr(TestChebTech2, testfun.__name__, testfun)
 
+# check the output is of the right length, that the endpoint values are -1 
+# and 1, respectively, and that the sequence is monotonically increasing
+def chebptsLenTester(k):
+    def asserter(self):
+        pts = chebpts(k)
+        self.assertEquals(pts.size, k)
+        self.assertEquals(pts[0], -1.)
+        self.assertEquals(pts[-1], 1.)
+        self.assertTrue( all_(diff(pts)) > 0 )
+    return asserter
+    
+for k, n in enumerate(2**arange(2,18,2)):
+    testfun = chebptsLenTester(n+3)
+    testfun.__name__ = "test_chebpts_len_{:02}".format(k)
+    setattr(TestChebTech2, testfun.__name__, testfun)    
+# ------------------------------------------------------------------------
+   
+# reset the testsfun variable so it doesn't get picked up by nose
+testfun = None
 
 class TestBary(TestCase):
     """Unit-tests for the barycentric formula"""
