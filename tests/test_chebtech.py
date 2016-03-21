@@ -11,11 +11,12 @@ from numpy import arange
 from numpy import array
 from numpy import inf
 from numpy import sin
+from numpy import log
 from numpy import linspace
 from numpy import all as all_
 from numpy import diff
 from numpy.linalg import norm
-#from numpy.random import rand
+from numpy.random import rand
 from numpy.random import seed
 
 from pyfun.chebtech import ChebTech2
@@ -66,6 +67,40 @@ class TestChebTech2(TestCase):
         
     def test_coeffs2vals_0(self):
         assert _coeffs2vals(array([])).size == 0
+
+
+# ------------------------------------------------------------------------
+# Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
+# ------------------------------------------------------------------------
+def vals2coeffs2valsTester(n, tol=eps):
+    def asserter(self):
+        values = rand(n)
+        coeffs = _vals2coeffs(values)
+        _values_ = _coeffs2vals(coeffs)
+        self.assertLessEqual( infnorm(values-_values_), log(n)**2.5*tol )
+    return asserter
+
+def coeffs2vals2coeffsTester(n, tol=eps):
+    def asserter(self):
+        coeffs = rand(n)
+        values = _coeffs2vals(coeffs)
+        _coeffs_ = _vals2coeffs(values)
+        self.assertLessEqual( infnorm(coeffs-_coeffs_), log(n)**2.5*tol )
+    return asserter
+
+for k, n in enumerate(2**arange(2,18,2)):
+
+    # vals2coeffs2vals
+    testfun = vals2coeffs2valsTester(n)
+    testfun.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
+    setattr(TestChebTech2, testfun.__name__, testfun)
+
+    # coeffs2vals2coeffs
+    testfun = coeffs2vals2coeffsTester(n)
+    testfun.__name__ = "test_coeffs2vals2coeffs_{:02}".format(k)
+    setattr(TestChebTech2, testfun.__name__, testfun)
+
+# ------------------------------------------------------------------------
    
 # ------------------------------------------------------------------------
 # Add second-kind Chebyshev points test cases to TestChebTech2 
