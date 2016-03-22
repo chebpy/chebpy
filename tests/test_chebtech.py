@@ -148,5 +148,38 @@ class Construction(TestCase):
         self.assertIsInstance(f, ChebTech2)
         self.assertTrue(infNormLessThanTol(f.coeffs(), coeffs, eps))
 
+# TODO: check these lengths against Chebfun
+# TODO: more examples
+fun_lens = {
+    "cos(20x)": 53,
+    "exp(x)": 18,
+    "poly3(x)": 4,
+    "sin(x)": 16,
+}
+
+def adaptiveTester(fun):
+    ff = ChebTech2.initfun_adaptive(fun)
+    def tester(self):
+        return self.assertEquals(ff.size(), fun_lens[fun.__name__])
+    return tester
+
+for fun in funs:
+    testfun = adaptiveTester(fun)
+    testfun.__name__ = "test_adaptive_{}".format(fun.__name__)
+    setattr(Construction, testfun.__name__, testfun)
+
+def fixedlenTester(fun, n):
+    ff = ChebTech2.initfun_fixedlen(fun, n)
+    def tester(self):
+        return self.assertEquals(ff.size(), n)
+    return tester
+
+for fun in funs:
+    for n in array([50, 100, 300, 500]):
+        testfun = fixedlenTester(fun, n)
+        testfun.__name__ = \
+            "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
+        setattr(Construction, testfun.__name__, testfun)
+
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

@@ -32,7 +32,6 @@ def infNormLessThanTol(a, b, tol):
     return asserter
 
 # ------------------------
-
 funs = []
 funs_and_names = [
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)"),
