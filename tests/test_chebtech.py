@@ -133,6 +133,12 @@ class ClassUsage(TestCase):
         self.assertFalse(f.isempty())
         self.assertTrue(not f.isempty())
 
+    def test_size(self):
+        cfs = rand(10)
+        self.assertEquals(ChebTech2(array([])).size(), 0)
+        self.assertEquals(ChebTech2(array([1.])).size(), 1)
+        self.assertEquals(ChebTech2(cfs).size(), cfs.size)
+
 class Construction(TestCase):
     """Unit-tests for construction of ChebTech2 objects"""
 

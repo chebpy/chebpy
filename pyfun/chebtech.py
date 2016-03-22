@@ -85,7 +85,7 @@ class ChebTech(object):
         return bary(x, fk, xk, vk)
 
     def __repr__(self):
-        out = "{} <{}>".format(self.__class__.__name__, self._coeffs.size)
+        out = "{} <{}>".format(self.__class__.__name__, self.size())
         return out
 
     def coeffs(self):
@@ -96,9 +96,13 @@ class ChebTech(object):
         """Function values at Chebyshev points"""
         return self._coeffs2vals(self._coeffs)
 
+    def size(self):
+        """Return the size of the object"""
+        return self.coeffs().size
+
     def isempty(self):
-        """Return True if the ChebTech2 is empty"""
-        return self.coeffs().size == 0
+        """Return the shape of the ChebTech2"""
+        return self.size() == 0
 
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
