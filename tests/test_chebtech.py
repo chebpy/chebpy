@@ -16,6 +16,7 @@ from numpy.random import seed
 from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import eps
 
+from utilities import funs
 from utilities import infnorm
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
@@ -53,17 +54,6 @@ class ChebyshevPoints(TestCase):
             self.assertLessEqual(infnorm(_coeffs2vals(ak)-ak), eps)
 
     # TODO: further checks for chepbts
-
-    # tests for emptiness of ChebTech2 objects
-    def test_isempty_True(self):
-        f = ChebTech2(array([]))
-        self.assertTrue(f.isempty())
-        self.assertFalse(not f.isempty())
-
-    def test_isempty_False(self):
-        f = ChebTech2(array([1.]))
-        self.assertFalse(f.isempty())
-        self.assertTrue(not f.isempty())
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
@@ -112,7 +102,7 @@ for k, (a,b,tol) in enumerate(chebpts2_testlist):
     testfun.__name__ = "test_chebpts_{:02}".format(k+1)
     setattr(ChebyshevPoints, testfun.__name__, testfun)
 
-# check the output is of the right length, that the endpoint values are -1 
+# check the output is of the correct length, the endpoint values are -1
 # and 1, respectively, and that the sequence is monotonically increasing
 def chebptsLenTester(k):
     def asserter(self):
@@ -128,6 +118,29 @@ for k, n in enumerate(2**arange(2,18,2)):
     testfun.__name__ = "test_chebpts_len_{:02}".format(k)
     setattr(ChebyshevPoints, testfun.__name__, testfun)
 # ------------------------------------------------------------------------
+
+class ClassUsage(TestCase):
+    """Unit-tests for miscelaneous ChebTech2 class usage"""
+
+    # tests for emptiness of ChebTech2 objects
+    def test_isempty_True(self):
+        f = ChebTech2(array([]))
+        self.assertTrue(f.isempty())
+        self.assertFalse(not f.isempty())
+
+    def test_isempty_False(self):
+        f = ChebTech2(array([1.]))
+        self.assertFalse(f.isempty())
+        self.assertTrue(not f.isempty())
+
+class Construction(TestCase):
+    """Unit-tests for construction of ChebTech2 objects"""
+
+    def test_coeff_construction(self):
+        coeffs = rand(10)
+        f = ChebTech2(coeffs)
+        self.assertIsInstance(f, ChebTech2)
+        self.assertTrue(infNormLessThanTol(f.coeffs(), coeffs, eps))
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

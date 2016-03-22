@@ -8,15 +8,13 @@ from __future__ import division
 from unittest import TestCase
 
 from numpy import array
-from numpy import sin
-from numpy import cos
-from numpy import exp
 from numpy import linspace
 
 from pyfun.chebtech import ChebTech2
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 
+from utilities import funs
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
 
@@ -30,18 +28,6 @@ class Evaluation(TestCase):
         
     def test_clenshaw_empty(self):
         self.assertEquals(clenshaw(array([]), array([1.])).size, 0)
-
-funs = []
-funs_and_names = [
-    (lambda x: x**3 + x**2 + x + 1, "poly3(x)"),
-    (lambda x: exp(x), "exp(x)"),
-    (lambda x: sin(x), "sin(x)"),
-    (lambda x: cos(20*x), "cos(20x)"),
-]
-for k, item in enumerate(funs_and_names):
-    fun = item[0]
-    fun.__name__ = item[1]
-    funs.append(fun)
 
 evalpts = [linspace(-1,1,n) for n in 10**array([2,3,4,5])]
 ptsarry = [ChebTech2.chebpts(n) for n in array([100, 200])]
