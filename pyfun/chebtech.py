@@ -65,14 +65,6 @@ class ChebTech(object):
         coeffs = ctor_adaptive(cls, fun)
         return cls(coeffs)
 
-    def coeffs(self):
-        """Chebyshev expansion coefficients in the T_k (first-kind) basis"""
-        return self._coeffs
-        
-    def values(self):
-        """Function values at Chebyshev points"""
-        return self._coeffs2vals(self._coeffs)
-        
     def __call__(self, x, how="clenshaw"):
         method = {
             "clenshaw": self.__call__clenshaw,
@@ -92,6 +84,22 @@ class ChebTech(object):
         vk = self.barywts(fk.size)
         return bary(x, fk, xk, vk)
 
+    def __repr__(self):
+        out = "{} <{}>".format(self.__class__.__name__, self._coeffs.size)
+        return out
+
+    def coeffs(self):
+        """Chebyshev expansion coefficients in the T_k (first-kind) basis"""
+        return self._coeffs
+
+    def values(self):
+        """Function values at Chebyshev points"""
+        return self._coeffs2vals(self._coeffs)
+
+    def isempty(self):
+        """Return True if the ChebTech2 is empty"""
+        return self.coeffs().size == 0
+
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
         xx = linspace(-1, 1, 2001)
@@ -107,9 +115,7 @@ class ChebTech(object):
         ax.set_xlabel("polynomial degree")
         return ax
 
-    def __repr__(self):
-        out = "{} <{}>".format(self.__class__.__name__, self._coeffs.size)
-        return out
+
     
 
     # --------------------------------------------------

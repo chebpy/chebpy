@@ -54,6 +54,17 @@ class ChebyshevPoints(TestCase):
 
     # TODO: further checks for chepbts
 
+    # tests for emptiness of ChebTech2 objects
+    def test_isempty_True(self):
+        f = ChebTech2(array([]))
+        self.assertTrue(f.isempty())
+        self.assertFalse(not f.isempty())
+
+    def test_isempty_False(self):
+        f = ChebTech2(array([1.]))
+        self.assertFalse(f.isempty())
+        self.assertTrue(not f.isempty())
+
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
 # ------------------------------------------------------------------------
