@@ -9,37 +9,17 @@ from unittest import TestCase
 
 from numpy import arange
 from numpy import array
-from numpy import inf
 from numpy import sin
 from numpy import cos
 from numpy import exp
-from numpy import log
-from numpy import finfo
 from numpy import linspace
-from numpy.linalg import norm
 
 from pyfun.chebtech import ChebTech2
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 
-eps = finfo(float).eps
-
-def infnorm(x):
-    return norm(x, inf)
-
-def scaled_tol(n):
-    tol = 5e1*eps if n < 20 else log(n)**2.5*eps
-    return tol
-
-# ------------------------
-# Dynamic Test Generators
-# ------------------------
-
-def infNormLessThanTol(a, b, tol):
-    def asserter(self):
-        self.assertLessEqual(infnorm(a-b), tol)
-    return asserter
-
+from utilities import scaled_tol
+from utilities import infNormLessThanTol
 
 class Evaluation(TestCase):
     """Tests for the Barycentric formula and Clenshaw algorithm"""

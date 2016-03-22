@@ -4,39 +4,23 @@ Unit-tests for pyfun/chebtech.py
 """
 from __future__ import division
 
-#from functools import wraps
 from unittest import TestCase
 
 from numpy import arange
 from numpy import array
-from numpy import inf
-from numpy import log
 from numpy import all as all_
 from numpy import diff
-from numpy.linalg import norm
 from numpy.random import rand
 from numpy.random import seed
 
 from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import eps
 
+from utilities import infnorm
+from utilities import scaled_tol
+from utilities import infNormLessThanTol
+
 seed(0)
-
-def infnorm(x):
-    return norm(x, inf)
-
-def scaled_tol(n):
-    tol = 5e1*eps if n < 20 else log(n)**2.5*eps
-    return tol
-
-# ------------------------
-# Dynamic Test Generators
-# ------------------------
-
-def infNormLessThanTol(a, b, tol):
-    def asserter(self):
-        self.assertLessEqual(infnorm(a-b), tol)
-    return asserter
 
 # staticmethod aliases
 chebpts      = ChebTech2.chebpts
