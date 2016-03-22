@@ -7,7 +7,6 @@ from __future__ import division
 #from functools import wraps
 from unittest import TestCase
 
-from numpy import arange
 from numpy import array
 from numpy import sin
 from numpy import cos
@@ -23,22 +22,6 @@ from utilities import infNormLessThanTol
 
 class Evaluation(TestCase):
     """Tests for the Barycentric formula and Clenshaw algorithm"""
-
-    def setUp(self):
-        funs_and_names = [
-            (lambda x: x**3 + x**2 + x + 1, "poly3(x)"),
-            (lambda x: exp(x), "exp(x)"),
-            (lambda x: sin(x), "sin(x)"),
-            (lambda x: cos(20*x), "cos(20x)"),
-        ]
-        funs = []
-        for k, item in enumerate(funs_and_names):
-            fun = item[0]
-            fun.__name__ = item[1]
-            funs.append(fun)
-
-        self.funs = funs
-        self.evalpts = [linspace(-1,1,10**n) for n in arange(6)]
 
     def test_barycentric_empty(self):
         self.assertEquals(
