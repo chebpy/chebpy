@@ -9,10 +9,13 @@ from unittest import TestCase
 from numpy import arange
 from numpy import array
 from numpy import sin
+from numpy import cos
 from numpy import all as all_
 from numpy import diff
 from numpy.random import rand
 from numpy.random import seed
+
+from matplotlib.pyplot import subplots
 
 from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import eps
@@ -152,7 +155,7 @@ class ClassUsage(TestCase):
     def test_call_bary(self):
         self.ff(self.xx, "bary")
         self.ff(self.xx, how="bary")
-        
+
     def test_call_clenshaw(self):
         self.ff(self.xx, "clenshaw")
         self.ff(self.xx, how="clenshaw")
@@ -161,10 +164,27 @@ class ClassUsage(TestCase):
         b = self.ff(self.xx, "clenshaw")
         c = self.ff(self.xx, "bary")
         self.assertLessEqual(infnorm(b-c), 5e1*eps)
-        
+
     def test_call_raises(self):
         self.assertRaises(ValueError, self.ff, self.xx, "notamethod")
         self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
+
+
+class Plotting(TestCase):
+    """Unit-tests for ChebTech2 plotting methods"""
+
+    def setUp(self):
+        f = lambda x: sin(3*x) + 5e-1*cos(30*x)
+        self.f0 = ChebTech2.initfun_fixedlen(f, 100)
+        self.f1 = ChebTech2.initfun_adaptive(f)
+
+    def test_plot(self):
+        self.f0.plot()
+
+    def test_plotcoeffs(self):
+        fig, ax = subplots()
+        self.f0.plotcoeffs(ax=ax)
+        self.f1.plotcoeffs(ax=ax, color="r")
 
 
 class Construction(TestCase):

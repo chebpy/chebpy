@@ -17,7 +17,6 @@ from numpy import real
 from numpy import imag
 from numpy import isreal
 from numpy import linspace
-from numpy import log10
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -73,7 +72,7 @@ class ChebTech(object):
         try:
             return method[how](x)
         except KeyError:
-            raise ValueError("\'how' must be either \'clenshaw\' or \'bary\'")
+            raise ValueError(how, "\Expected \'clenshaw\' or \'bary\'")
 
     def __call__clenshaw(self, x):
         return clenshaw(x, self._coeffs)
@@ -113,8 +112,8 @@ class ChebTech(object):
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
-        logcoeffs = log10(abs(self._coeffs))
-        ax.plot(logcoeffs, ".", *args, **kwargs)
+        abscoeffs = abs(self._coeffs)
+        ax.semilogy(abscoeffs, ".", *args, **kwargs)
         ax.set_ylabel("coefficient magnitude")
         ax.set_xlabel("polynomial degree")
         return ax
