@@ -8,6 +8,7 @@ from unittest import TestCase
 
 from numpy import arange
 from numpy import array
+from numpy import sin
 from numpy import all as all_
 from numpy import diff
 from numpy.random import rand
@@ -122,6 +123,10 @@ for k, n in enumerate(2**arange(2,18,2)):
 class ClassUsage(TestCase):
     """Unit-tests for miscelaneous ChebTech2 class usage"""
 
+    def setUp(self):
+        self.ff = ChebTech2.initfun_fixedlen(lambda x: sin(30*x), 100)
+        self.xx = -1 + 2*rand(100)
+
     # tests for emptiness of ChebTech2 objects
     def test_isempty_True(self):
         f = ChebTech2(array([]))
@@ -133,11 +138,34 @@ class ClassUsage(TestCase):
         self.assertFalse(f.isempty())
         self.assertTrue(not f.isempty())
 
+    # check the size() method is working properly
     def test_size(self):
         cfs = rand(10)
         self.assertEquals(ChebTech2(array([])).size(), 0)
         self.assertEquals(ChebTech2(array([1.])).size(), 1)
         self.assertEquals(ChebTech2(cfs).size(), cfs.size)
+
+    # test the different permutations of self(xx, ..)
+    def test_call(self):
+        self.ff(self.xx)
+
+    def test_call_bary(self):
+        self.ff(self.xx, "bary")
+        self.ff(self.xx, how="bary")
+        
+    def test_call_clenshaw(self):
+        self.ff(self.xx, "clenshaw")
+        self.ff(self.xx, how="clenshaw")
+
+    def test_call_bary_vs_clenshaw(self):
+        b = self.ff(self.xx, "clenshaw")
+        c = self.ff(self.xx, "bary")
+        self.assertLessEqual(infnorm(b-c), 5e1*eps)
+        
+    def test_call_raises(self):
+        self.assertRaises(ValueError, self.ff, self.xx, "notamethod")
+        self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
+
 
 class Construction(TestCase):
     """Unit-tests for construction of ChebTech2 objects"""
