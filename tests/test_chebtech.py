@@ -10,6 +10,8 @@ from numpy import arange
 from numpy import array
 from numpy import sin
 from numpy import cos
+from numpy import exp
+from numpy import pi
 from numpy import all as all_
 from numpy import diff
 from numpy.random import rand
@@ -186,6 +188,32 @@ class Plotting(TestCase):
         self.f0.plotcoeffs(ax=ax)
         self.f1.plotcoeffs(ax=ax, color="r")
 
+
+class Calculus(TestCase):
+    """Unit-tests for ChebTech2 calculus operations"""
+
+def_integrals = [
+    (lambda x: sin(x), 0, eps),
+    (lambda x: sin(4*pi*x), 0, eps),
+    (lambda x: cos(x), 1.682941969615793, eps),
+    (lambda x: cos(4*pi*x), 0, 2*eps),
+    (lambda x: exp(cos(4*pi*x)), 2.532131755504016, 2*eps),
+    (lambda x: cos(3244*x), 5.879599674161602e-04, 5e2*eps),
+    (lambda x: exp(x), exp(1)-exp(-1), eps),
+    (lambda x: 1e10*exp(x), 1e10*(exp(1)-exp(-1)), 1e10*(2*eps)),
+]
+
+def definiteIntegralTester(fun, integral, tol):
+    ff = ChebTech2.initfun_adaptive(fun)
+    def tester(self):
+        absdiff = abs(ff.sum()-integral)
+        return self.assertLessEqual(absdiff, tol)
+    return tester
+
+for k, (fun, integral, tol) in enumerate(def_integrals):
+    testfun = definiteIntegralTester(fun, integral, tol)
+    testfun.__name__ = "test_sum_{:02}".format(k)
+    setattr(Calculus, testfun.__name__, testfun)
 
 class Construction(TestCase):
     """Unit-tests for construction of ChebTech2 objects"""

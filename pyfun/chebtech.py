@@ -103,6 +103,20 @@ class ChebTech(object):
         """Return the shape of the ChebTech2"""
         return self.size() == 0
 
+    def sum(self):
+        """Definite integral of a ChebTech on the interval [-1,1]"""
+        ak = self.coeffs().copy()
+        if ak.size == 0:        # empty
+            out = ak
+        elif ak.size == 1:      # constant
+            out = 2*ak
+        else:
+            ak[1::2] = 0
+            kk = arange(2, ak.size)
+            ii = append([2,0], 2/(1-kk**2))
+            out = (ak*ii).sum()
+        return out
+
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
         xx = linspace(-1, 1, 2001)
@@ -117,9 +131,6 @@ class ChebTech(object):
         ax.set_ylabel("coefficient magnitude")
         ax.set_xlabel("polynomial degree")
         return ax
-
-
-    
 
     # --------------------------------------------------
     #          abstract method declarations
