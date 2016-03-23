@@ -17,6 +17,7 @@ from numpy import real
 from numpy import imag
 from numpy import isreal
 from numpy import linspace
+from numpy import zeros
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -72,7 +73,7 @@ class ChebTech(object):
         try:
             return method[how](x)
         except KeyError:
-            raise ValueError(how, "\Expected \'clenshaw\' or \'bary\'")
+            raise ValueError(how)
 
     def __call__clenshaw(self, x):
         return clenshaw(x, self._coeffs)
@@ -88,7 +89,7 @@ class ChebTech(object):
         return out
 
     def coeffs(self):
-        """Chebyshev expansion coefficients in the T_k (first-kind) basis"""
+        """Chebyshev expansion coefficients in the T_k basis"""
         return self._coeffs
 
     def values(self):
@@ -107,7 +108,7 @@ class ChebTech(object):
         """Definite integral of a ChebTech on the interval [-1,1]"""
         ak = self.coeffs().copy()
         if ak.size == 0:        # empty
-            out = ak
+            out = None
         elif ak.size == 1:      # constant
             out = 2*ak
         else:
@@ -115,6 +116,25 @@ class ChebTech(object):
             kk = arange(2, ak.size)
             ii = append([2,0], 2/(1-kk**2))
             out = (ak*ii).sum()
+        return out
+
+    def cumsum(self):
+        """Return a ChebTech object representing the indefinite integral
+        of a ChebTech on the interval [-1,1]. The constant term is chosen
+        such that F(-1) = 0."""
+        if self.size() == 0:
+            out = self
+        else:
+            n = self.size()
+            ak = append(self.coeffs(), [0, 0])
+            bk = zeros(n+1)
+            rk = arange(2,n+1)
+            bk[2:] = (ak[1:n] - ak[3:n+2]) / (2*rk)
+            bk[1] = ak[0] - .5*ak[2]
+            vk = ones(n)
+            vk[1::2] = -1
+            bk[0] = (vk*bk[1:]).sum()
+            out = self.__class__(bk)
         return out
 
     def plot(self, ax=None, *args, **kwargs):

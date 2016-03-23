@@ -189,9 +189,21 @@ class Plotting(TestCase):
         self.f1.plotcoeffs(ax=ax, color="r")
 
 
+
 class Calculus(TestCase):
     """Unit-tests for ChebTech2 calculus operations"""
 
+    def test_sum_empty(self):
+        ff = ChebTech2(array([]))
+        self.assertEquals(ff.sum(), None)
+
+    def test_cumsum_empty(self):
+        ff = ChebTech2(array([]))
+        self.assertTrue(ff.cumsum().isempty())
+
+# --------------------------------------
+#           definite integrals
+# --------------------------------------
 def_integrals = [
     (lambda x: sin(x), 0, eps),
     (lambda x: sin(4*pi*x), 0, eps),
@@ -201,6 +213,7 @@ def_integrals = [
     (lambda x: cos(3244*x), 5.879599674161602e-04, 5e2*eps),
     (lambda x: exp(x), exp(1)-exp(-1), eps),
     (lambda x: 1e10*exp(x), 1e10*(exp(1)-exp(-1)), 1e10*(2*eps)),
+    (lambda x: 0*x+1., 2, eps)
 ]
 
 def definiteIntegralTester(fun, integral, tol):
@@ -214,6 +227,35 @@ for k, (fun, integral, tol) in enumerate(def_integrals):
     testfun = definiteIntegralTester(fun, integral, tol)
     testfun.__name__ = "test_sum_{:02}".format(k)
     setattr(Calculus, testfun.__name__, testfun)
+
+# --------------------------------------
+#          indefinite integrals
+# --------------------------------------
+indef_integrals = [
+    (lambda x: sin(x), lambda x: -cos(x), 2*eps),
+    (lambda x: cos(3*x), lambda x: 1./3*sin(3*x), eps),
+    (lambda x: exp(x), lambda x: exp(x), 3*eps),
+    (lambda x: x**2, lambda x: 1./3*x**3, eps),
+    (lambda x: 0*x+1., lambda x: x, eps),
+    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x), 1e10*(2*eps)),
+]
+
+def indefiniteIntegralTester(fun, antideriv, tol):
+    ff = ChebTech2.initfun_adaptive(fun)
+    gg = ChebTech2.initfun_fixedlen(antideriv, ff.size()+1)
+    coeffs = gg.coeffs()
+    coeffs[0] = coeffs[0] - antideriv(array([-1]))
+    def tester(self):
+        absdiff = infnorm(ff.cumsum().coeffs() - coeffs)
+        return self.assertLessEqual(absdiff, tol)
+    return tester
+
+for k, (fun, antideriv, tol) in enumerate(indef_integrals):
+    testfun = indefiniteIntegralTester(fun, antideriv, tol)
+    testfun.__name__ = "test_cumsum_{:02}".format(k)
+    setattr(Calculus, testfun.__name__, testfun)
+
+
 
 class Construction(TestCase):
     """Unit-tests for construction of ChebTech2 objects"""
