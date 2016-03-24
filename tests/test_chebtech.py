@@ -143,6 +143,17 @@ class ClassUsage(TestCase):
         self.assertFalse(f.isempty())
         self.assertTrue(not f.isempty())
 
+    # tests for constantness of ChebTech2 objects
+    def test_isconstant_True(self):
+        f = ChebTech2(array([1.]))
+        self.assertTrue(f.isconstant())
+        self.assertFalse(not f.isconstant())
+
+    def test_isconstant_False(self):
+        f = ChebTech2(array([]))
+        self.assertFalse(f.isconstant())
+        self.assertTrue(not f.isconstant())
+
     # check the size() method is working properly
     def test_size(self):
         cfs = rand(10)

@@ -31,9 +31,6 @@ from utilities import clenshaw
 # machine epsilon
 eps = finfo(float).eps
 
-
-
-
 class ChebTech(object):
     """Abstract base class serving as the template for ChebTech1 and 
     ChebTech2 subclasses. 
@@ -104,15 +101,19 @@ class ChebTech(object):
         return self.coeffs().size
 
     def isempty(self):
-        """Return the shape of the ChebTech2"""
+        """Return True if the ChebTech is empty."""
         return self.size() == 0
+
+    def isconstant(self):
+        """Return True if the ChebTech represents a constant."""
+        return self.size() == 1
 
     def sum(self):
         """Definite integral of a ChebTech on the interval [-1,1]"""
         ak = self.coeffs().copy()
-        if self.isempty():      # empty
+        if self.isempty():
             out = None
-        elif ak.size == 1:      # constant
+        elif self.isconstant():
             out = 2*ak
         else:
             ak[1::2] = 0
@@ -145,7 +146,7 @@ class ChebTech(object):
         ChebTech on the interval [-1,1]."""
         if self.isempty():
             out = self
-        elif self.size() == 1:
+        elif self.isconstant():
             out = self.__class__([0])
         else:
             n = self.size()
