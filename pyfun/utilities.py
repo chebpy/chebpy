@@ -52,22 +52,22 @@ def checkempty(resultif=None):
 
 def bary(x, fvals, xk, vk):
     """Barycentric interpolation formula. See:
-    
+
     J.P. Berrut, L.N. Trefethen, Barycentric Lagrange Interpolation, SIAM
         Review (2004)
-    
+
     Inputs
     ------
-    x : numpy ndarray  
+    x : numpy ndarray
         array of evaluation points
-    fvals : numpy ndarray  
+    fvals : numpy ndarray
         array of function values at the interpolation nodes xk
-    xk: numpy ndarray  
+    xk: numpy ndarray
         array of interpolation nodes
-    vk: numpy ndarray  
+    vk: numpy ndarray
         barycentric weights corresponding to the interpolation nodes xk
     """
-    
+
     # function is constant
     if fvals.size == 1:
         fx = fvals * ones_like(x)
@@ -77,14 +77,14 @@ def bary(x, fvals, xk, vk):
     if any_(isnan(fvals)):
         fx = NaN * ones_like(x)
         return fx
-    
-    # ether iterate over evaluation points, or ... 
+
+    # ether iterate over evaluation points, or ...
     if x.size < 4*xk.size:
         fx = zeros(x.size)
         for i in xrange(x.size):
             xx = vk / (x[i] - xk)
             fx[i] = dot(xx, fvals) / xx.sum()
-            
+
     # ... iterate over barycenters
     else:
         numer = zeros(x.size)
@@ -94,20 +94,20 @@ def bary(x, fvals, xk, vk):
             numer = numer + temp * fvals[j]
             denom = denom + temp
         fx = numer / denom
-    
+
     # replace NaNs
     for k in find( isnan(fx) ):
         idx = find( x[k] == xk )
         if idx.size > 0:
-            fx[k] = fvals[idx[0]] 
-            
+            fx[k] = fvals[idx[0]]
+
     return fx
 
 
 def clenshaw(x, ak):
     """Clenshaw's algorithm for the evaluation of a first-kind Chebyshev 
     series expansion at some array of points x"""
-    bk1 = 0*x 
+    bk1 = 0*x
     bk2 = 0*x
     x = 2*x
     idx = range(ak.size)
@@ -121,29 +121,29 @@ def clenshaw(x, ak):
 
 
 def standard_chop(coeffs, tol=eps):
-    """Chop a Chebyshev series to a given tolerance. This is a Python 
+    """Chop a Chebyshev series to a given tolerance. This is a Python
     transcription of the algorithm described in:
-    
+
     J. Aurentz and L.N. Trefethen, Chopping a Chebyshev series (2015)
     (http://arxiv.org/pdf/1512.01803v1.pdf)
     """
-    
+
     # ensure length at least 17:
     n = coeffs.size
     cutoff = n
     if n < 17:
         return cutoff
-  
+
     # Step 1
     b = abs(coeffs)
     m = b[-1] * ones(n)
     for j in arange(n-2, -1, -1):   # n-2, ... , 2, 1, 0
-        m[j] = max( (b[j], m[j+1]) )        
+        m[j] = max( (b[j], m[j+1]) )
     if m[0] == 0.:
         cutoff = 0
         return cutoff
     envelope = m / m[0]
-    
+
     # Step 2
     for j in arange(1, n):
         j2 = round(1.25*j+5)
@@ -158,7 +158,7 @@ def standard_chop(coeffs, tol=eps):
             # a plateau has been found: go to Step 3
             plateauPoint = j
             break
-       
+
     # Step 3
     if envelope[int(plateauPoint)] == 0.:
         cutoff = plateauPoint
@@ -175,12 +175,12 @@ def standard_chop(coeffs, tol=eps):
 
 
 def ctor_adaptive(cls, fun, maxpow2=16):
-    """Adaptive constructor: cycle over powers of two, calling 
-    standard_chop each time, the output of which determines whether or not 
+    """Adaptive constructor: cycle over powers of two, calling
+    standard_chop each time, the output of which determines whether or not
     we are happy."""
     for k in xrange(4, maxpow2+1):
         n = 2**k + 1
-        points = cls.chebpts(n)            
+        points = cls.chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
         chplen = standard_chop(coeffs)

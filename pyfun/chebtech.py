@@ -18,6 +18,7 @@ from numpy import imag
 from numpy import isreal
 from numpy import linspace
 from numpy import zeros
+from numpy import isscalar
 
 from numpy.fft import fft
 from numpy.fft import ifft

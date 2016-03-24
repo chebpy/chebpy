@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Unit-tests for pyfun/chebtech.py 
+Unit-tests for pyfun/utilities.py
 """
 from __future__ import division
 
@@ -23,9 +23,9 @@ class Evaluation(TestCase):
 
     def test_barycentric_empty(self):
         self.assertEquals(
-            bary(array([]), array([]), 
+            bary(array([]), array([]),
                  array([]), array([])).size, 0)
-        
+
     def test_clenshaw_empty(self):
         self.assertEquals(clenshaw(array([]), array([1.])).size, 0)
 
@@ -34,11 +34,11 @@ ptsarry = [ChebTech2.chebpts(n) for n in array([100, 200])]
 methods = [bary, clenshaw]
 
 def evalTester(method, fun, evalpts, chebpts):
-    
+
     x = evalpts
     xk = chebpts
     fvals = fun(xk)
-    
+
     if method is bary:
         vk = ChebTech2.barywts(fvals.size)
         a = bary(x, fvals, xk, vk)
@@ -48,7 +48,7 @@ def evalTester(method, fun, evalpts, chebpts):
         ak = ChebTech2._vals2coeffs(fvals)
         a = clenshaw(x, ak)
         tol_multiplier = 2e1
-        
+
     b = fun(evalpts)
     n = evalpts.size
     tol = tol_multiplier * scaled_tol(n)
