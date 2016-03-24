@@ -186,8 +186,6 @@ class ClassUsage(TestCase):
     def test_prolong(self):
         for k in [0, 1, 20, self.ff.size(), 200]:
             self.assertEquals(self.ff.prolong(k).size(), k)
-            self.assertEquals(self.ff.prolong(k).size(), k)
-            self.assertEquals(self.ff.prolong(k).size(), k)
 
 
 class Plotting(TestCase):

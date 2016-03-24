@@ -18,8 +18,6 @@ from numpy import imag
 from numpy import isreal
 from numpy import linspace
 from numpy import zeros
-from numpy import NaN
-from numpy import isscalar
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -129,7 +127,7 @@ class ChebTech(object):
         """Return True if the ChebTech represents a constant."""
         return self.size() == 1
 
-    @checkempty(resultIfEmpty=0.)
+    @checkempty(resultif=0.)
     def sum(self):
         """Definite integral of a ChebTech on the interval [-1,1]"""
         if self.isconstant():

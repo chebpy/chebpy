@@ -2,7 +2,6 @@
 from __future__ import division
 
 from functools import wraps
-from functools import partial
 from warnings import warn
 
 from numpy import finfo
@@ -35,13 +34,13 @@ def find(x):
 # whose classmethod is being wrapepd is empty, returning the object if
 # so, but returning the supplied outputval if not. (Used in chebtech.py)
 # TODO: add unit test for this
-def checkempty(resultIfEmpty=None):
+def checkempty(resultif=None):
     def decorator(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             if self.isempty():
-                    if resultIfEmpty is not None:
-                        return resultIfEmpty
+                    if resultif is not None:
+                        return resultif
                     else:
                         return self
             else:
