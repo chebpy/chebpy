@@ -18,6 +18,7 @@ from numpy import imag
 from numpy import isreal
 from numpy import linspace
 from numpy import zeros
+from numpy import NaN
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -27,9 +28,11 @@ from matplotlib.pyplot import gca
 from utilities import ctor_adaptive
 from utilities import bary
 from utilities import clenshaw
+from utilities import checkempty
 
 # machine epsilon
 eps = finfo(float).eps
+
 
 class ChebTech(object):
     """Abstract base class serving as the template for ChebTech1 and 
@@ -108,45 +111,41 @@ class ChebTech(object):
         """Return True if the ChebTech represents a constant."""
         return self.size() == 1
 
+    @checkempty(resultIfEmpty=0.)
     def sum(self):
         """Definite integral of a ChebTech on the interval [-1,1]"""
-        ak = self.coeffs().copy()
-        if self.isempty():
-            out = None
-        elif self.isconstant():
-            out = 2*ak
+        if self.isconstant():
+            out = 2.*self(0.)
         else:
+            ak = self.coeffs().copy()
             ak[1::2] = 0
             kk = arange(2, ak.size)
             ii = append([2,0], 2/(1-kk**2))
             out = (ak*ii).sum()
         return out
 
+    @checkempty()
     def cumsum(self):
         """Return a ChebTech object representing the indefinite integral
         of a ChebTech on the interval [-1,1]. The constant term is chosen
         such that F(-1) = 0."""
-        if self.isempty():
-            out = self
-        else:
-            n = self.size()
-            ak = append(self.coeffs(), [0, 0])
-            bk = zeros(n+1)
-            rk = arange(2,n+1)
-            bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
-            bk[1] = ak[0] - .5*ak[2]
-            vk = ones(n)
-            vk[1::2] = -1
-            bk[0] = (vk*bk[1:]).sum()
-            out = self.__class__(bk)
+        n = self.size()
+        ak = append(self.coeffs(), [0, 0])
+        bk = zeros(n+1)
+        rk = arange(2,n+1)
+        bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
+        bk[1] = ak[0] - .5*ak[2]
+        vk = ones(n)
+        vk[1::2] = -1
+        bk[0] = (vk*bk[1:]).sum()
+        out = self.__class__(bk)
         return out
 
+    @checkempty()
     def diff(self):
         """Return a ChebTech object representing the derivative of a
         ChebTech on the interval [-1,1]."""
-        if self.isempty():
-            out = self
-        elif self.isconstant():
+        if self.isconstant():
             out = self.__class__([0])
         else:
             n = self.size()

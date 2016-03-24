@@ -1,6 +1,8 @@
 
 from __future__ import division
 
+from functools import wraps
+from functools import partial
 from warnings import warn
 
 from numpy import finfo
@@ -24,6 +26,30 @@ eps = finfo(float).eps
 # local helpers
 def find(x):
     return where(x)[0]
+
+# -------------------------------------
+#              decorators
+# -------------------------------------
+
+# Factory method to produce a decorator that checks whether the object
+# whose classmethod is being wrapepd is empty, returning the object if
+# so, but returning the supplied outputval if not. (Used in chebtech.py)
+# TODO: add unit test for this
+def checkempty(resultIfEmpty=None):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(self, *args, **kwargs):
+            if self.isempty():
+                    if resultIfEmpty is not None:
+                        return resultIfEmpty
+                    else:
+                        return self
+            else:
+                return f(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+# -------------------------------------
 
 def bary(x, fvals, xk, vk):
     """Barycentric interpolation formula. See:

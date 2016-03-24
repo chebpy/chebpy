@@ -12,6 +12,7 @@ from numpy import sin
 from numpy import cos
 from numpy import exp
 from numpy import pi
+from numpy import NaN
 from numpy import all as all_
 from numpy import diff
 from numpy.random import rand
@@ -204,17 +205,18 @@ class Plotting(TestCase):
 class Calculus(TestCase):
     """Unit-tests for ChebTech2 calculus operations"""
 
+    def setUp(self):
+        self.emptyfun = ChebTech2(array([]))
+
+    # tests for the correct results in the empty cases
     def test_sum_empty(self):
-        ff = ChebTech2(array([]))
-        self.assertEquals(ff.sum(), None)
+        self.assertEqual(self.emptyfun.sum(), 0)
 
     def test_cumsum_empty(self):
-        ff = ChebTech2(array([]))
-        self.assertTrue(ff.cumsum().isempty())
+        self.assertTrue(self.emptyfun.cumsum().isempty())
 
     def test_diff_empty(self):
-        ff = ChebTech2(array([]))
-        self.assertTrue(ff.diff().isempty())
+        self.assertTrue(self.emptyfun.diff().isempty())
 
 # --------------------------------------
 #           definite integrals
