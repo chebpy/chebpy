@@ -186,7 +186,10 @@ class ClassUsage(TestCase):
     def test_prolong(self):
         for k in [0, 1, 20, self.ff.size(), 200]:
             self.assertEquals(self.ff.prolong(k).size(), k)
-
+            
+    def test_vscale_empty(self):
+        gg = ChebTech2(array([]))
+        self.assertEquals(gg.vscale(), 0.)
 # --------------------------------------
 #          vscale estimates
 # --------------------------------------
