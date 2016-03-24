@@ -87,9 +87,12 @@ class ChebTech(object):
         vk = self.barywts(fk.size)
         return bary(x, fk, xk, vk)
 
-    def __repr__(self):
-        out = "{} <{}>".format(self.__class__.__name__, self.size())
+    def __str__(self):
+        out = "<{0}{{{1}}}>".format(self.__class__.__name__, self.size())
         return out
+
+    def __repr__(self):
+        return self.__str__()
 
     def coeffs(self):
         """Chebyshev expansion coefficients in the T_k basis"""
