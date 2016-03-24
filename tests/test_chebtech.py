@@ -205,26 +205,27 @@ class Calculus(TestCase):
 #           definite integrals
 # --------------------------------------
 def_integrals = [
-    (lambda x: sin(x), 0, eps),
-    (lambda x: sin(4*pi*x), 0, eps),
-    (lambda x: cos(x), 1.682941969615793, eps),
-    (lambda x: cos(4*pi*x), 0, 2*eps),
-    (lambda x: exp(cos(4*pi*x)), 2.532131755504016, 2*eps),
-    (lambda x: cos(3244*x), 5.879599674161602e-04, 5e2*eps),
-    (lambda x: exp(x), exp(1)-exp(-1), eps),
-    (lambda x: 1e10*exp(x), 1e10*(exp(1)-exp(-1)), 1e10*(2*eps)),
-    (lambda x: 0*x+1., 2, eps)
+    # (function, number of points, integral, tolerance)
+    (lambda x: sin(x),             14,                    .0,      eps),
+    (lambda x: sin(4*pi*x),        40,                    .0,  1e1*eps),
+    (lambda x: cos(x),             15,     1.682941969615793,    2*eps),
+    (lambda x: cos(4*pi*x),        39,                    .0,    2*eps),
+    (lambda x: exp(cos(4*pi*x)),  181,     2.532131755504016,    2*eps),
+    (lambda x: cos(3244*x),      3389, 5.879599674161602e-04,  5e2*eps),
+    (lambda x: exp(x),             15,        exp(1)-exp(-1),    2*eps),
+    (lambda x: 1e10*exp(x),        15, 1e10*(exp(1)-exp(-1)), 2e10*eps),
+    (lambda x: 0*x+1.,              1,                     2,      eps),
 ]
 
-def definiteIntegralTester(fun, integral, tol):
-    ff = ChebTech2.initfun_adaptive(fun)
+def definiteIntegralTester(fun, n, integral, tol):
+    ff = ChebTech2.initfun_fixedlen(fun, n)
     def tester(self):
         absdiff = abs(ff.sum()-integral)
         return self.assertLessEqual(absdiff, tol)
     return tester
 
-for k, (fun, integral, tol) in enumerate(def_integrals):
-    testfun = definiteIntegralTester(fun, integral, tol)
+for k, (fun, n, integral, tol) in enumerate(def_integrals):
+    testfun = definiteIntegralTester(fun, n, integral, tol)
     testfun.__name__ = "test_sum_{:02}".format(k)
     setattr(Calculus, testfun.__name__, testfun)
 
@@ -232,26 +233,31 @@ for k, (fun, integral, tol) in enumerate(def_integrals):
 #          indefinite integrals
 # --------------------------------------
 indef_integrals = [
-    (lambda x: sin(x), lambda x: -cos(x), 2*eps),
-    (lambda x: cos(3*x), lambda x: 1./3*sin(3*x), eps),
-    (lambda x: exp(x), lambda x: exp(x), 3*eps),
-    (lambda x: x**2, lambda x: 1./3*x**3, eps),
-    (lambda x: 0*x+1., lambda x: x, eps),
-    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x), 1e10*(2*eps)),
+    # (function, indefinite integral, number of points, tolerance)
+    (lambda x: 0*x+1.,      lambda x: x,              1,         eps),
+    (lambda x: x,           lambda x: 1/2*x**2,       2,       2*eps),
+    (lambda x: x**2,        lambda x: 1/3*x**3,       3,       2*eps),
+    (lambda x: x**3,        lambda x: 1/4*x**4,       4,       2*eps),
+    (lambda x: x**4,        lambda x: 1/5*x**5,       5,       2*eps),
+    (lambda x: x**5,        lambda x: 1/6*x**6,       6,       4*eps),
+    (lambda x: sin(x),      lambda x: -cos(x),       16,       2*eps),
+    (lambda x: cos(3*x),    lambda x: 1./3*sin(3*x), 23,       2*eps),
+    (lambda x: exp(x),      lambda x: exp(x),        16,       3*eps),
+    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x),   16, 1e10*(3*eps)),
 ]
 
-def indefiniteIntegralTester(fun, antideriv, tol):
-    ff = ChebTech2.initfun_adaptive(fun)
-    gg = ChebTech2.initfun_fixedlen(antideriv, ff.size()+1)
+def indefiniteIntegralTester(fun, dfn, n, tol):
+    ff = ChebTech2.initfun_fixedlen(fun, n)
+    gg = ChebTech2.initfun_fixedlen(dfn, n+1)
     coeffs = gg.coeffs()
-    coeffs[0] = coeffs[0] - antideriv(array([-1]))
+    coeffs[0] = coeffs[0] - dfn(array([-1]))
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs() - coeffs)
         return self.assertLessEqual(absdiff, tol)
     return tester
 
-for k, (fun, antideriv, tol) in enumerate(indef_integrals):
-    testfun = indefiniteIntegralTester(fun, antideriv, tol)
+for k, (fun, dfn, n, tol) in enumerate(indef_integrals):
+    testfun = indefiniteIntegralTester(fun, dfn, n, tol)
     testfun.__name__ = "test_cumsum_{:02}".format(k)
     setattr(Calculus, testfun.__name__, testfun)
 
