@@ -187,6 +187,33 @@ class ClassUsage(TestCase):
         for k in [0, 1, 20, self.ff.size(), 200]:
             self.assertEquals(self.ff.prolong(k).size(), k)
 
+# --------------------------------------
+#          vscale estimates
+# --------------------------------------
+vscales = [
+    # (function, number of points, vscale)
+    (lambda x: sin(4*pi*x),        40, 1),
+    (lambda x: cos(x),             15, 1),
+    (lambda x: cos(4*pi*x),        39, 1),
+    (lambda x: exp(cos(4*pi*x)),  181, exp(1)),
+    (lambda x: cos(3244*x),      3389, 1),
+    (lambda x: exp(x),             15, exp(1)),
+    (lambda x: 1e10*exp(x),        15, 1e10*exp(1)),
+    (lambda x: 0*x+1.,              1, 1),
+]
+
+def definiteIntegralTester(fun, n, vscale):
+    ff = ChebTech2.initfun_fixedlen(fun, n)
+    def tester(self):
+        absdiff = abs(ff.vscale()-vscale)
+        self.assertLessEqual(absdiff, .1*vscale)
+    return tester
+
+for k, args in enumerate(vscales):
+    testfun = definiteIntegralTester(*args)
+    testfun.__name__ = "test_vscale_{:02}".format(k)
+    setattr(ClassUsage, testfun.__name__, testfun)
+
 
 class Plotting(TestCase):
     """Unit-tests for ChebTech2 plotting methods"""
@@ -242,7 +269,7 @@ def definiteIntegralTester(fun, n, integral, tol):
     ff = ChebTech2.initfun_fixedlen(fun, n)
     def tester(self):
         absdiff = abs(ff.sum()-integral)
-        return self.assertLessEqual(absdiff, tol)
+        self.assertLessEqual(absdiff, tol)
     return tester
 
 for k, (fun, n, integral, tol) in enumerate(def_integrals):
@@ -274,7 +301,7 @@ def indefiniteIntegralTester(fun, dfn, n, tol):
     coeffs[0] = coeffs[0] - dfn(array([-1]))
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs() - coeffs)
-        return self.assertLessEqual(absdiff, tol)
+        self.assertLessEqual(absdiff, tol)
     return tester
 
 for k, (fun, dfn, n, tol) in enumerate(indef_integrals):
@@ -304,7 +331,7 @@ def derivativeTester(fun, der, n, tol):
     gg = ChebTech2.initfun_fixedlen(der, max(n-1,1))
     def tester(self):
         absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
-        return self.assertLessEqual(absdiff, tol)
+        self.assertLessEqual(absdiff, tol)
     return tester
 
 for k, (fun, der, n, tol) in enumerate(derivatives):

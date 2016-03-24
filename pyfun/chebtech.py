@@ -94,6 +94,9 @@ class ChebTech(object):
     def __repr__(self):
         return self.__str__()
 
+    # ---------------------------------
+    #         utility methods
+    # ---------------------------------
     def prolong(self, n):
         """Return a ChebTech of length n, obtained either by truncating
         if n < self.size or zero-padding if n > self.size.
@@ -128,6 +131,19 @@ class ChebTech(object):
         """Return True if the ChebTech represents a constant."""
         return self.size() == 1
 
+    @checkempty(resultif=0.)
+    def vscale(self):
+        """Estimate the vertical scale of a ChebTech"""
+        if self.isconstant():
+            values = self.coeffs()
+        else:
+            values = self.values()
+        vscale = abs(values).max()
+        return vscale
+
+    # ---------------------------------
+    #       calculus operations
+    # ---------------------------------
     @checkempty(resultif=0.)
     def sum(self):
         """Definite integral of a ChebTech on the interval [-1,1]"""
