@@ -255,6 +255,35 @@ for k, (fun, antideriv, tol) in enumerate(indef_integrals):
     testfun.__name__ = "test_cumsum_{:02}".format(k)
     setattr(Calculus, testfun.__name__, testfun)
 
+# --------------------------------------
+#            derivatives
+# --------------------------------------
+derivatives = [
+    # (function, derivative, number of points, tolerance)
+    (lambda x: 0*x+1.,      lambda x: 0*x+0,        1,         eps),
+    (lambda x: x,           lambda x: 0*x+1,        2,       2*eps),
+    (lambda x: x**2,        lambda x: 2*x,          3,       2*eps),
+    (lambda x: x**3,        lambda x: 3*x**2,       4,       2*eps),
+    (lambda x: x**4,        lambda x: 4*x**3,       5,       2*eps),
+    (lambda x: x**5,        lambda x: 5*x**4,       6,       4*eps),
+    (lambda x: sin(x),      lambda x: cos(x),      16,     5e1*eps),
+    (lambda x: cos(3*x),    lambda x: -3*sin(3*x), 23,     5e2*eps),
+    (lambda x: exp(x),      lambda x: exp(x),      16,     2e2*eps),
+    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x), 16, 1e12*(2*eps)),
+]
+
+def derivativeTester(fun, der, n, tol):
+    ff = ChebTech2.initfun_fixedlen(fun, n)
+    gg = ChebTech2.initfun_fixedlen(der, max(n-1,1))
+    def tester(self):
+        absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
+        return self.assertLessEqual(absdiff, tol)
+    return tester
+
+for k, (fun, der, n, tol) in enumerate(derivatives):
+    testfun = derivativeTester(fun, der, n, tol)
+    testfun.__name__ = "test_diff_{:02}".format(k)
+    setattr(Calculus, testfun.__name__, testfun)
 
 
 class Construction(TestCase):

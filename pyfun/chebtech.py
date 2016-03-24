@@ -129,12 +129,31 @@ class ChebTech(object):
             ak = append(self.coeffs(), [0, 0])
             bk = zeros(n+1)
             rk = arange(2,n+1)
-            bk[2:] = (ak[1:n] - ak[3:n+2]) / (2*rk)
+            bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
             bk[1] = ak[0] - .5*ak[2]
             vk = ones(n)
             vk[1::2] = -1
             bk[0] = (vk*bk[1:]).sum()
             out = self.__class__(bk)
+        return out
+
+    def diff(self):
+        """Return a ChebTech object representing the derivative of a
+        ChebTech on the interval [-1,1]."""
+        if self.size() == 0:
+            out = self
+        elif self.size() == 1:
+            out = self.__class__([0])
+        else:
+            n = self.size()
+            ak = self.coeffs()
+            zk = zeros(n-1)
+            wk = 2 * arange(1, n)
+            vk = wk * ak[1:]
+            zk[-1::-2] = vk[-1::-2].cumsum()
+            zk[-2::-2] = vk[-2::-2].cumsum()
+            zk[0] = .5 * zk[0]
+            out = self.__class__(zk)
         return out
 
     def plot(self, ax=None, *args, **kwargs):
