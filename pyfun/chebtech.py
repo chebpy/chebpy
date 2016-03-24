@@ -19,6 +19,7 @@ from numpy import isreal
 from numpy import linspace
 from numpy import zeros
 from numpy import NaN
+from numpy import isscalar
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -93,6 +94,20 @@ class ChebTech(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def prolong(self, n):
+        """Return a ChebTech of length n, obtained either by truncating
+        if n < self.size or zero-padding if n > self.size.
+        """
+        m = self.size()
+        c = self.coeffs().copy()
+        if n - m < 0:
+            out = self.__class__( c[:n] )
+        elif n - m > 0:
+            out = self.__class__( append(c, zeros(n-m)) )
+        else:
+            out = self
+        return out
 
     def coeffs(self):
         """Chebyshev expansion coefficients in the T_k basis"""
