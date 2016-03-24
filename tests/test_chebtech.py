@@ -201,6 +201,10 @@ class Calculus(TestCase):
         ff = ChebTech2(array([]))
         self.assertTrue(ff.cumsum().isempty())
 
+    def test_diff_empty(self):
+        ff = ChebTech2(array([]))
+        self.assertTrue(ff.diff().isempty())
+
 # --------------------------------------
 #           definite integrals
 # --------------------------------------
