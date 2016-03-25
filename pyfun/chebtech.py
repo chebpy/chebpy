@@ -54,7 +54,7 @@ class ChebTech(object):
         """Initialise a ChebTech from a constant c"""
         if not isscalar(c):
             raise ValueError(c)
-        return cls(array([c]))
+        return cls(array([float(c)]))
 
     @classmethod
     def initempty(cls):

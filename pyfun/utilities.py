@@ -6,13 +6,15 @@ from warnings import warn
 
 from numpy import finfo
 from numpy import ones
+from numpy import array
+from numpy import asarray
+from numpy import isscalar
 from numpy import arange
 from numpy import log
 from numpy import log10
 from numpy import linspace
 from numpy import argmin
-from numpy import ones_like
-from numpy import any as any_
+from numpy import any
 from numpy import isnan
 from numpy import NaN
 from numpy import zeros
@@ -48,19 +50,34 @@ def checkempty(resultif=None):
         return wrapper
     return decorator
 
+
+# check first if either of the first two arguments of the wrapped function
+# are empty arrays, and if so then return an empty array. Although we use
+# numpy.asarray to check the length of the obeject, we pass the input as is
+# to the subsequent evaluation routines. (Wraps bary and clenshaw.)
+def returnemptyarray(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if ( asarray(args[0]).size==0) | (asarray(args[1]).size==0 ):
+            return array([])
+        else:
+            return f(*args, **kwargs)
+    return wrapper
+
 # -------------------------------------
 
-def bary(x, fvals, xk, vk):
+@returnemptyarray
+def bary(xx, fk, xk, vk):
     """Barycentric interpolation formula. See:
 
     J.P. Berrut, L.N. Trefethen, Barycentric Lagrange Interpolation, SIAM
-        Review (2004)
+    Review (2004)
 
     Inputs
     ------
-    x : numpy ndarray
+    xx : numpy ndarray
         array of evaluation points
-    fvals : numpy ndarray
+    fk : numpy ndarray
         array of function values at the interpolation nodes xk
     xk: numpy ndarray
         array of interpolation nodes
@@ -68,55 +85,59 @@ def bary(x, fvals, xk, vk):
         barycentric weights corresponding to the interpolation nodes xk
     """
 
-    # function is constant
-    if fvals.size == 1:
-        fx = fvals * ones_like(x)
-        return fx
+    # bookkeeping for non-array inputs
+    xx_is_scalar = isscalar(xx)
+    if xx_is_scalar:
+        xx = array([xx])
 
-    # function contains NaN
-    if any_(isnan(fvals)):
-        fx = NaN * ones_like(x)
-        return fx
+    # deal with a constant function
+    if fk.size == 1:
+        return fk[0] if xx_is_scalar else fk * ones(xx.size)
 
-    # ether iterate over evaluation points, or ...
-    if x.size < 4*xk.size:
-        fx = zeros(x.size)
-        for i in xrange(x.size):
-            xx = vk / (x[i] - xk)
-            fx[i] = dot(xx, fvals) / xx.sum()
+    # NaNs in function values
+    if any(isnan(fk)):
+        return NaN * ones(xx.size)
+
+    # either iterate over evaluation points, or ...
+    if xx.size < 4*xk.size:
+        out = zeros(xx.size)
+        for i in xrange(xx.size):
+            tt = vk / (xx[i] - xk)
+            out[i] = dot(tt, fk) / tt.sum()
 
     # ... iterate over barycenters
     else:
-        numer = zeros(x.size)
-        denom = zeros(x.size)
+        numer = zeros(xx.size)
+        denom = zeros(xx.size)
         for j in xrange(xk.size):
-            temp = vk[j] / (x - xk[j])
-            numer = numer + temp * fvals[j]
+            temp = vk[j] / (xx - xk[j])
+            numer = numer + temp * fk[j]
             denom = denom + temp
-        fx = numer / denom
+        out = numer / denom
 
     # replace NaNs
-    for k in find( isnan(fx) ):
-        idx = find( x[k] == xk )
+    for k in find( isnan(out) ):
+        idx = find( xx[k] == xk )
         if idx.size > 0:
-            fx[k] = fvals[idx[0]]
+            out[k] = fk[idx[0]]
 
-    return fx
+    return out[0] if xx_is_scalar else out
 
 
-def clenshaw(x, ak):
+@returnemptyarray
+def clenshaw(xx, ak):
     """Clenshaw's algorithm for the evaluation of a first-kind Chebyshev 
     series expansion at some array of points x"""
-    bk1 = 0*x
-    bk2 = 0*x
-    x = 2*x
+    bk1 = 0*xx
+    bk2 = 0*xx
+    xx = 2*xx
     idx = range(ak.size)
     for k in idx[ak.size:1:-2]:
-        bk2 = ak[k] + x*bk1 - bk2
-        bk1 = ak[k-1] + x*bk2 - bk1
+        bk2 = ak[k] + xx*bk1 - bk2
+        bk1 = ak[k-1] + xx*bk2 - bk1
     if mod(ak.size-1, 2) == 1:
-        bk1, bk2 = ak[1] + x*bk1 - bk2, bk1
-    out = ak[0] + .5*x*bk1 - bk2
+        bk1, bk2 = ak[1] + xx*bk1 - bk2, bk1
+    out = ak[0] + .5*xx*bk1 - bk2
     return out
 
 
