@@ -111,7 +111,8 @@ class ChebTech(object):
     # ---------------------------------
     def prolong(self, n):
         """Return a ChebTech of length n, obtained either by truncating
-        if n < self.size or zero-padding if n > self.size.
+        if n < self.size or zero-padding if n > self.size. In all cases a
+        deep copy is returned.
         """
         m = self.size()
         ak = self.coeffs()
@@ -121,8 +122,12 @@ class ChebTech(object):
         elif n - m > 0:
             out = cls(append(ak, zeros(n-m)))
         else:
-            out = self
+            out = self.copy()
         return out
+
+    def copy(self):
+        """Return a deep copy of the ChebTech"""
+        return self.__class__(self.coeffs().copy())
 
     def coeffs(self):
         """Chebyshev expansion coefficients in the T_k basis"""

@@ -190,6 +190,14 @@ class ClassUsage(TestCase):
         gg = ChebTech2(array([]))
         self.assertEquals(gg.vscale(), 0.)
 
+    def test_copy(self):
+        ff = self.ff
+        gg = self.ff.copy()
+        self.assertEquals(ff, ff)
+        self.assertEquals(gg, gg)
+        self.assertNotEquals(ff, gg)
+        self.assertEquals( infnorm(ff.coeffs() - gg.coeffs()), 0)
+
 # --------------------------------------
 #          vscale estimates
 # --------------------------------------
