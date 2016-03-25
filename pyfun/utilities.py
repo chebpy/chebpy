@@ -51,22 +51,41 @@ def checkempty(resultif=None):
     return decorator
 
 
-# check first if either of the first two arguments of the wrapped function
-# are empty arrays, and if so then return an empty array. Although we use
-# numpy.asarray to check the length of the obeject, we pass the input as is
-# to the subsequent evaluation routines. (Wraps bary and clenshaw.)
-def returnemptyarray(f):
+# pre- and post-processing tasks common to bary and clenshaw
+def preandpostprocess(f):
+
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        if ( asarray(args[0]).size==0) | (asarray(args[1]).size==0 ):
+    def thewrapper(*args, **kwargs):
+        xx, akfk = args[:2]
+
+        # are any of the first two arguments empty arrays?
+        if ( asarray(xx).size==0) | (asarray(akfk).size==0 ):
             return array([])
+
+        # is the function constant?
+        elif akfk.size == 1:
+            if isscalar(xx):
+                return akfk[0]
+            else:
+                return akfk * ones(xx.size)
+
+        # are there any NaNs in the second argument?
+        elif any(isnan(akfk)):
+            return NaN * ones(xx.size)
+
+        # convert first argument to an array if it is a scalar and then
+        # return the first (and only) element of the result if so
         else:
-            return f(*args, **kwargs)
-    return wrapper
+            args = list(args)
+            args[0] = array([xx]) if isscalar(xx) else args[0]
+            out = f(*args, **kwargs)
+            return out[0] if isscalar(xx) else out
+
+    return thewrapper
 
 # -------------------------------------
 
-@returnemptyarray
+@preandpostprocess
 def bary(xx, fk, xk, vk):
     """Barycentric interpolation formula. See:
 
@@ -85,27 +104,14 @@ def bary(xx, fk, xk, vk):
         barycentric weights corresponding to the interpolation nodes xk
     """
 
-    # bookkeeping for non-array inputs
-    xx_is_scalar = isscalar(xx)
-    if xx_is_scalar:
-        xx = array([xx])
-
-    # deal with a constant function
-    if fk.size == 1:
-        return fk[0] if xx_is_scalar else fk * ones(xx.size)
-
-    # NaNs in function values
-    if any(isnan(fk)):
-        return NaN * ones(xx.size)
-
-    # either iterate over evaluation points, or ...
+    # either iterate over the evaluation points, or ...
     if xx.size < 4*xk.size:
         out = zeros(xx.size)
         for i in xrange(xx.size):
             tt = vk / (xx[i] - xk)
             out[i] = dot(tt, fk) / tt.sum()
 
-    # ... iterate over barycenters
+    # ... iterate over the barycenters
     else:
         numer = zeros(xx.size)
         denom = zeros(xx.size)
@@ -121,10 +127,10 @@ def bary(xx, fk, xk, vk):
         if idx.size > 0:
             out[k] = fk[idx[0]]
 
-    return out[0] if xx_is_scalar else out
+    return out
 
 
-@returnemptyarray
+@preandpostprocess
 def clenshaw(xx, ak):
     """Clenshaw's algorithm for the evaluation of a first-kind Chebyshev 
     series expansion at some array of points x"""

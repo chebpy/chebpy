@@ -37,10 +37,10 @@ eps = finfo(float).eps
 class ChebTech(object):
     """Abstract base class serving as the template for ChebTech1 and 
     ChebTech2 subclasses. 
-    
+
     ChebTech objects always work with first-kind coefficients, so much 
     of the core operational functionality is defined this level.
-    
+
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
     """
