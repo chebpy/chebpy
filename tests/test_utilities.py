@@ -65,12 +65,20 @@ class Evaluation(TestCase):
             self.assertTrue( isscalar(bary(x, self.fk, self.xk, self.vk)) )
         self.assertFalse( isscalar(bary(xx, self.fk, self.xk, self.vk)) )
 
-    # TODO: check that we always get out a float even if we pass in an int
-#    def test_bary_float_output(self):
-#        pass
-#
-#    def test_clenshaw_float_output(self):
-#        pass
+    # Check that we always get float output for constant ChebTechs, even 
+    # when passing in an integer input
+    def test_bary__float_output(self):
+        ff = ChebTech2.initconst(1)
+        gg = ChebTech2.initconst(1.)
+        self.assertTrue(isinstance(ff(0, "bary"), float))
+        self.assertTrue(isinstance(gg(0, "bary"), float))
+
+    def test_clenshaw__float_output(self):
+        ff = ChebTech2.initconst(1)
+        gg = ChebTech2.initconst(1.)
+        self.assertTrue(isinstance(ff(0, "clenshaw"), float))
+        self.assertTrue(isinstance(gg(0, "clenshaw"), float))
+
 
 evalpts = [linspace(-1,1,n) for n in array([1e2, 1e3, 1e4, 1e5])]
 ptsarry = [ChebTech2.chebpts(n) for n in array([100, 200])]
