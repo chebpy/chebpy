@@ -25,7 +25,7 @@ from numpy.fft import ifft
 
 from matplotlib.pyplot import gca
 
-from utilities import ctor_adaptive
+from pyfun.utilities import ctor_adaptive
 from utilities import bary
 from utilities import clenshaw
 from utilities import checkempty
@@ -55,6 +55,11 @@ class ChebTech(object):
         if not isscalar(c):
             raise ValueError(c)
         return cls(array([c]))
+
+    @classmethod
+    def initempty(cls):
+        """Initialise an empty ChebTech"""
+        return cls(array([]))
 
     @classmethod
     def initfun(cls, fun, n=None):

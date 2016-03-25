@@ -360,6 +360,13 @@ class Construction(TestCase):
         self.assertFalse(ff.isempty())
         self.assertRaises(ValueError, ChebTech2.initconst, [1.])
 
+    def test_empty_construction(self):
+        ff = ChebTech2.initempty()
+        self.assertEquals(ff.size(), 0)
+        self.assertFalse(ff.isconst())
+        self.assertTrue(ff.isempty())
+        self.assertRaises(TypeError, ChebTech2.initempty, [1.])
+
 # TODO: check these lengths against Chebfun
 # TODO: more examples
 fun_lens = {
