@@ -12,7 +12,6 @@ from numpy import sin
 from numpy import cos
 from numpy import exp
 from numpy import pi
-from numpy import NaN
 from numpy import all as all_
 from numpy import diff
 from numpy.random import rand

@@ -25,10 +25,10 @@ from numpy.fft import ifft
 
 from matplotlib.pyplot import gca
 
+from pyfun.utilities import bary
+from pyfun.utilities import clenshaw
+from pyfun.utilities import checkempty
 from pyfun.utilities import ctor_adaptive
-from utilities import bary
-from utilities import clenshaw
-from utilities import checkempty
 
 # machine epsilon
 eps = finfo(float).eps
