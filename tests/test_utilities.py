@@ -66,7 +66,8 @@ class Evaluation(TestCase):
         self.assertFalse( isscalar(bary(xx, self.fk, self.xk, self.vk)) )
 
     # Check that we always get float output for constant ChebTechs, even 
-    # when passing in an integer input
+    # when passing in an integer input.
+    # TODO: Move these tests elsewhere?
     def test_bary__float_output(self):
         ff = ChebTech2.initconst(1)
         gg = ChebTech2.initconst(1.)
@@ -79,6 +80,17 @@ class Evaluation(TestCase):
         self.assertTrue(isinstance(ff(0, "clenshaw"), float))
         self.assertTrue(isinstance(gg(0, "clenshaw"), float))
 
+    # Check that we get consistent output from bary and clenshaw
+    # TODO: Move these tests elsewhere?
+    def test_bary_clenshaw_consistency(self):
+        coeffs = rand(3)
+        evalpts = (0.5, array([]), array([.5]), array([.5, .6]))
+        for n in range(len(coeffs)):
+            ff = ChebTech2(coeffs[:n])
+            for xx in evalpts:
+                fb = ff(xx, "bary")
+                fc = ff(xx, "clenshaw")
+                self.assertEquals(type(fb), type(fc))
 
 evalpts = [linspace(-1,1,n) for n in array([1e2, 1e3, 1e4, 1e5])]
 ptsarry = [ChebTech2.chebpts(n) for n in array([100, 200])]
