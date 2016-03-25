@@ -145,15 +145,15 @@ class ClassUsage(TestCase):
         self.assertTrue(not f.isempty())
 
     # tests for constantness of ChebTech2 objects
-    def test_isconstant_True(self):
+    def test_isconst_True(self):
         f = ChebTech2(array([1.]))
-        self.assertTrue(f.isconstant())
-        self.assertFalse(not f.isconstant())
+        self.assertTrue(f.isconst())
+        self.assertFalse(not f.isconst())
 
-    def test_isconstant_False(self):
+    def test_isconst_False(self):
         f = ChebTech2(array([]))
-        self.assertFalse(f.isconstant())
-        self.assertTrue(not f.isconstant())
+        self.assertFalse(f.isconst())
+        self.assertTrue(not f.isconst())
 
     # check the size() method is working properly
     def test_size(self):
@@ -190,6 +190,7 @@ class ClassUsage(TestCase):
     def test_vscale_empty(self):
         gg = ChebTech2(array([]))
         self.assertEquals(gg.vscale(), 0.)
+
 # --------------------------------------
 #          vscale estimates
 # --------------------------------------
@@ -351,6 +352,13 @@ class Construction(TestCase):
         f = ChebTech2(coeffs)
         self.assertIsInstance(f, ChebTech2)
         self.assertTrue(infNormLessThanTol(f.coeffs(), coeffs, eps))
+
+    def test_const_construction(self):
+        ff = ChebTech2.initconst(1.)
+        self.assertEquals(ff.size(), 1)
+        self.assertTrue(ff.isconst())
+        self.assertFalse(ff.isempty())
+        self.assertRaises(ValueError, ChebTech2.initconst, [1.])
 
 # TODO: check these lengths against Chebfun
 # TODO: more examples

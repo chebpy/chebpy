@@ -31,8 +31,8 @@ def find(x):
 # -------------------------------------
 
 # Factory method to produce a decorator that checks whether the object
-# whose classmethod is being wrapepd is empty, returning the object if
-# so, but returning the supplied outputval if not. (Used in chebtech.py)
+# whose classmethod is being wrapped is empty, returning the object if
+# so, but returning the supplied resultif if not. (Used in chebtech.py)
 # TODO: add unit test for this
 def checkempty(resultif=None):
     def decorator(f):

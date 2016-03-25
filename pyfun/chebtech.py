@@ -50,6 +50,13 @@ class ChebTech(object):
         self._coeffs = coeffs
 
     @classmethod
+    def initconst(cls, c):
+        """Initialise a ChebTech from a constant c"""
+        if not isscalar(c):
+            raise ValueError(c)
+        return cls(array([c]))
+
+    @classmethod
     def initfun(cls, fun, n=None):
         if n is None:
             return cls.initfun_adaptive(fun)
@@ -102,11 +109,12 @@ class ChebTech(object):
         if n < self.size or zero-padding if n > self.size.
         """
         m = self.size()
-        c = self.coeffs().copy()
+        ak = self.coeffs()
+        cls = self.__class__
         if n - m < 0:
-            out = self.__class__( c[:n] )
+            out = cls(ak[:n].copy())
         elif n - m > 0:
-            out = self.__class__( append(c, zeros(n-m)) )
+            out = cls(append(ak, zeros(n-m)))
         else:
             out = self
         return out
@@ -127,14 +135,14 @@ class ChebTech(object):
         """Return True if the ChebTech is empty."""
         return self.size() == 0
 
-    def isconstant(self):
+    def isconst(self):
         """Return True if the ChebTech represents a constant."""
         return self.size() == 1
 
     @checkempty(resultif=0.)
     def vscale(self):
         """Estimate the vertical scale of a ChebTech"""
-        if self.isconstant():
+        if self.isconst():
             values = self.coeffs()
         else:
             values = self.values()
@@ -147,7 +155,7 @@ class ChebTech(object):
     @checkempty(resultif=0.)
     def sum(self):
         """Definite integral of a ChebTech on the interval [-1,1]"""
-        if self.isconstant():
+        if self.isconst():
             out = 2.*self(0.)
         else:
             ak = self.coeffs().copy()
@@ -178,7 +186,7 @@ class ChebTech(object):
     def diff(self):
         """Return a ChebTech object representing the derivative of a
         ChebTech on the interval [-1,1]."""
-        if self.isconstant():
+        if self.isconst():
             out = self.__class__([0])
         else:
             n = self.size()
