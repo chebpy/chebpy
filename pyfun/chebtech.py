@@ -169,8 +169,11 @@ class ChebTech(object):
         if isscalar(f):
             cfs = self.coeffs().copy()
             cfs[0] += f
-            out = cls(cfs)
+            return cls(cfs)
         else:
+            # TODO: is a more general decorator approach better here?
+            if f.isempty():
+                return f.copy()
             g = self
             n, m = g.size(), f.size()
             if n < m:
@@ -180,8 +183,10 @@ class ChebTech(object):
             cfs = f.coeffs() + g.coeffs()
             # check for zero output
             tol = .2 * eps * max([f.vscale(), g.vscale()])
-            out = cls.initconst(0.) if all( abs(cfs)<tol ) else cls(cfs)
-        return out
+            if all( abs(cfs)<tol ):
+                return cls.initconst(0.)
+            else:
+                return cls(cfs)
 
     # ---------------------------------
     #            calculus

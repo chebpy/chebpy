@@ -41,10 +41,10 @@ def checkempty(resultif=None):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             if self.isempty():
-                    if resultif is not None:
-                        return resultif
-                    else:
-                        return self
+                if resultif is not None:
+                    return resultif
+                else:
+                    return self.copy()
             else:
                 return f(self, *args, **kwargs)
         return wrapper

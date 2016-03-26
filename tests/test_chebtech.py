@@ -7,6 +7,7 @@ from __future__ import division
 from itertools import combinations
 from operator import __add__
 from unittest import TestCase
+from unittest import skip
 
 from numpy import arange
 from numpy import array
@@ -376,7 +377,6 @@ class Construction(TestCase):
         self.assertTrue(ff.isempty())
         self.assertRaises(TypeError, ChebTech2.initempty, [1.])
 
-
 def adaptiveTester(fun, funlen):
     ff = ChebTech2.initfun_adaptive(fun)
     def tester(self):
@@ -408,6 +408,30 @@ class Algebra(TestCase):
     """Unit-tests for ChebTech2 algebraic operations"""
     def setUp(self):
         self.xx = -1 + 2 * rand(1000)
+
+    # check that (empty ChebTech) + (ChebTech) = (empty Chebtech)
+    def test__add__empty_a(self):
+        emptychebtech = ChebTech2.initempty()
+        for (fun, funlen) in testfunctions:
+            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue((emptychebtech+chebtech).isempty())
+
+    # check that (ChebTech) + (empty ChebTech) = (empty Chebtech)
+    def test__add__empty_b(self):
+        emptychebtech = ChebTech2.initempty()
+        for (fun, funlen) in testfunctions:
+            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue((chebtech+emptychebtech).isempty())
+
+    def test__add__constant(self):
+        xx = self.xx
+        for (fun, funlen) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                f = lambda x: fun(x) + const
+                ff = ChebTech2.initfun_fixedlen(fun, funlen) + const
+                tol = 5e1 * eps * abs(const)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+
 
 def binopTester(f, g, binop, nf, ng):
     nbinop = binop(nf, ng)
