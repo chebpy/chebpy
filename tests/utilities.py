@@ -33,9 +33,9 @@ testfunctions = []
 fun_details = [
     # (function, name for the test printouts, Matlab chebfun adaptive degree)
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)",  4),
-    (lambda x: exp(x),              "exp(x)",   18),
-    (lambda x: sin(x),              "sin(x)",   16),
-    (lambda x: cos(20*x),           "cos(20x)", 53),
+    (lambda x: exp(x),              "exp(x)",   15),
+    (lambda x: sin(x),              "sin(x)",   14),
+    (lambda x: cos(20*x),           "cos(20x)", 51),
     (lambda x: 0.*x+1.,             "constfun",  1),
     (lambda x: 0.*x,                "zerofun",   1),
 ]

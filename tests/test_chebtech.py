@@ -397,7 +397,7 @@ for (fun, funlen) in testfunctions:
     setattr(Construction, _testfun_.__name__, _testfun_)
 
     # add the fixedlen tests
-    for n in array([50, 100, 300, 500]):
+    for n in array([50, 500]):
         _testfun_ = fixedlenTester(fun, n)
         _testfun_.__name__ = \
             "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
