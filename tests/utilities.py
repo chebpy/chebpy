@@ -22,38 +22,28 @@ def scaled_tol(n):
     tol = 5e1*eps if n < 20 else log(n)**2.5*eps
     return tol
 
-# ------------------------
-# Dynamic Test Generators
-# ------------------------
-
+# bespoke test generators
 def infNormLessThanTol(a, b, tol):
     def asserter(self):
         self.assertLessEqual(infnorm(a-b), tol)
     return asserter
 
-# ------------------------
-
-funs = []
-funs_and_names = [
-    (lambda x: x**3 + x**2 + x + 1, "poly3(x)"),
-    (lambda x: exp(x), "exp(x)"),
-    (lambda x: sin(x), "sin(x)"),
-    (lambda x: cos(20*x), "cos(20x)"),
-    (lambda x: 0.*x+1., "constfun"),
-    (lambda x: 0.*x, "zerofun"),
+# test functions
+testfunctions = []
+fun_details = [
+    # (function, name for the test printouts, Matlab chebfun adaptive degree)
+    (lambda x: x**3 + x**2 + x + 1, "poly3(x)",  4),
+    (lambda x: exp(x),              "exp(x)",   18),
+    (lambda x: sin(x),              "sin(x)",   16),
+    (lambda x: cos(20*x),           "cos(20x)", 53),
+    (lambda x: 0.*x+1.,             "constfun",  1),
+    (lambda x: 0.*x,                "zerofun",   1),
 ]
-for k, item in enumerate(funs_and_names):
+for k, item in enumerate(fun_details):
     fun = item[0]
     fun.__name__ = item[1]
-    funs.append(fun)
+    testfunctions.append((fun, item[2]))
 
 # TODO: check these lengths against Chebfun
 # TODO: more examples
-fun_lens = {
-    "cos(20x)": 53,
-    "exp(x)": 18,
-    "poly3(x)": 4,
-    "sin(x)": 16,
-    "constfun": 1,
-    "zerofun": 1,
-}
+

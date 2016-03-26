@@ -17,7 +17,7 @@ from pyfun.chebtech import ChebTech2
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 
-from utilities import funs
+from utilities import testfunctions
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
 
@@ -119,7 +119,7 @@ def evalTester(method, fun, evalpts, chebpts):
     return infNormLessThanTol(a, b, tol)
 
 for method in methods:
-    for fun in funs:
+    for (fun, _) in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 testfun = evalTester(method, fun, xx, chebpts)

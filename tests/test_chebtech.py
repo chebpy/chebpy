@@ -24,8 +24,7 @@ from matplotlib.pyplot import subplots
 from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import eps
 
-from utilities import funs
-from utilities import fun_lens
+from utilities import testfunctions
 from utilities import infnorm
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
@@ -86,14 +85,14 @@ def coeffs2vals2coeffsTester(n):
 for k, n in enumerate(2**arange(2,18,2)):
 
     # vals2coeffs2vals
-    testfun = vals2coeffs2valsTester(n)
-    testfun.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
-    setattr(ChebyshevPoints, testfun.__name__, testfun)
+    _testfun_ = vals2coeffs2valsTester(n)
+    _testfun_.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
+    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 
     # coeffs2vals2coeffs
-    testfun = coeffs2vals2coeffsTester(n)
-    testfun.__name__ = "test_coeffs2vals2coeffs_{:02}".format(k)
-    setattr(ChebyshevPoints, testfun.__name__, testfun)
+    _testfun_ = coeffs2vals2coeffsTester(n)
+    _testfun_.__name__ = "test_coeffs2vals2coeffs_{:02}".format(k)
+    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 # ------------------------------------------------------------------------
    
 # ------------------------------------------------------------------------
@@ -107,9 +106,9 @@ chebpts2_testlist = (
     (ChebTech2.chebpts(5), array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
 )
 for k, (a,b,tol) in enumerate(chebpts2_testlist):
-    testfun = infNormLessThanTol(a,b,tol)
-    testfun.__name__ = "test_chebpts_{:02}".format(k+1)
-    setattr(ChebyshevPoints, testfun.__name__, testfun)
+    _testfun_ = infNormLessThanTol(a,b,tol)
+    _testfun_.__name__ = "test_chebpts_{:02}".format(k+1)
+    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 
 # check the output is of the correct length, the endpoint values are -1
 # and 1, respectively, and that the sequence is monotonically increasing
@@ -123,9 +122,9 @@ def chebptsLenTester(k):
     return asserter
     
 for k, n in enumerate(2**arange(2,18,2)):
-    testfun = chebptsLenTester(n+3)
-    testfun.__name__ = "test_chebpts_len_{:02}".format(k)
-    setattr(ChebyshevPoints, testfun.__name__, testfun)
+    _testfun_ = chebptsLenTester(n+3)
+    _testfun_.__name__ = "test_chebpts_len_{:02}".format(k)
+    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 # ------------------------------------------------------------------------
 
 class ClassUsage(TestCase):
@@ -224,9 +223,9 @@ def definiteIntegralTester(fun, n, vscale):
     return tester
 
 for k, args in enumerate(vscales):
-    testfun = definiteIntegralTester(*args)
-    testfun.__name__ = "test_vscale_{:02}".format(k)
-    setattr(ClassUsage, testfun.__name__, testfun)
+    _testfun_ = definiteIntegralTester(*args)
+    _testfun_.__name__ = "test_vscale_{:02}".format(k)
+    setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
 
 class Plotting(TestCase):
@@ -287,9 +286,9 @@ def definiteIntegralTester(fun, n, integral, tol):
     return tester
 
 for k, (fun, n, integral, tol) in enumerate(def_integrals):
-    testfun = definiteIntegralTester(fun, n, integral, tol)
-    testfun.__name__ = "test_sum_{:02}".format(k)
-    setattr(Calculus, testfun.__name__, testfun)
+    _testfun_ = definiteIntegralTester(fun, n, integral, tol)
+    _testfun_.__name__ = "test_sum_{:02}".format(k)
+    setattr(Calculus, _testfun_.__name__, _testfun_)
 
 # --------------------------------------
 #          indefinite integrals
@@ -319,9 +318,9 @@ def indefiniteIntegralTester(fun, dfn, n, tol):
     return tester
 
 for k, (fun, dfn, n, tol) in enumerate(indef_integrals):
-    testfun = indefiniteIntegralTester(fun, dfn, n, tol)
-    testfun.__name__ = "test_cumsum_{:02}".format(k)
-    setattr(Calculus, testfun.__name__, testfun)
+    _testfun_ = indefiniteIntegralTester(fun, dfn, n, tol)
+    _testfun_.__name__ = "test_cumsum_{:02}".format(k)
+    setattr(Calculus, _testfun_.__name__, _testfun_)
 
 # --------------------------------------
 #            derivatives
@@ -349,9 +348,9 @@ def derivativeTester(fun, der, n, tol):
     return tester
 
 for k, (fun, der, n, tol) in enumerate(derivatives):
-    testfun = derivativeTester(fun, der, n, tol)
-    testfun.__name__ = "test_diff_{:02}".format(k)
-    setattr(Calculus, testfun.__name__, testfun)
+    _testfun_ = derivativeTester(fun, der, n, tol)
+    _testfun_.__name__ = "test_diff_{:02}".format(k)
+    setattr(Calculus, _testfun_.__name__, _testfun_)
 
 
 class Construction(TestCase):
@@ -378,10 +377,10 @@ class Construction(TestCase):
         self.assertRaises(TypeError, ChebTech2.initempty, [1.])
 
 
-def adaptiveTester(fun):
+def adaptiveTester(fun, funlen):
     ff = ChebTech2.initfun_adaptive(fun)
     def tester(self):
-        self.assertEquals(ff.size(), fun_lens[fun.__name__])
+        self.assertEquals(ff.size(), funlen)
     return tester
 
 def fixedlenTester(fun, n):
@@ -390,19 +389,19 @@ def fixedlenTester(fun, n):
         self.assertEquals(ff.size(), n)
     return tester
 
-for fun in funs:
+for (fun, funlen) in testfunctions:
 
     # add the adaptive tests
-    testfun = adaptiveTester(fun)
-    testfun.__name__ = "test_adaptive_{}".format(fun.__name__)
-    setattr(Construction, testfun.__name__, testfun)
+    _testfun_ = adaptiveTester(fun, funlen)
+    _testfun_.__name__ = "test_adaptive_{}".format(fun.__name__)
+    setattr(Construction, _testfun_.__name__, _testfun_)
 
     # add the fixedlen tests
     for n in array([50, 100, 300, 500]):
-        testfun = fixedlenTester(fun, n)
-        testfun.__name__ = \
+        _testfun_ = fixedlenTester(fun, n)
+        _testfun_.__name__ = \
             "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
-        setattr(Construction, testfun.__name__, testfun)
+        setattr(Construction, _testfun_.__name__, _testfun_)
 
 
 class Algebra(TestCase):
@@ -410,9 +409,7 @@ class Algebra(TestCase):
     def setUp(self):
         self.xx = -1 + 2 * rand(1000)
 
-def binopTester(f, g, binop):
-    nf = fun_lens[f.__name__]
-    ng = fun_lens[g.__name__]
+def binopTester(f, g, binop, nf, ng):
     nbinop = binop(nf, ng)
     ff = ChebTech2.initfun_fixedlen(f, nf)
     gg = ChebTech2.initfun_fixedlen(g, ng)
@@ -425,12 +422,12 @@ def binopTester(f, g, binop):
 binops = (__add__, )
 
 for binop in binops:
-    for f,g in combinations(funs, 2):
-        testfun = binopTester(f, g, binop)
-        testfun.__name__ = \
+    for (f, nf), (g, ng) in combinations(testfunctions, 2):
+        _testfun_ = binopTester(f, g, binop, nf, ng)
+        _testfun_.__name__ = \
             "test_{}_{}_{}".format(binop.__name__, f.__name__,  g.__name__)
-        setattr(Algebra, testfun.__name__, testfun)
+        setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
 # reset the testsfun variable so it doesn't get picked up by nose
-testfun = None
+_testfun_ = None

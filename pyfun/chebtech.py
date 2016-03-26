@@ -19,7 +19,6 @@ from numpy import isreal
 from numpy import linspace
 from numpy import zeros
 from numpy import isscalar
-from numpy import where
 from numpy import max
 
 from numpy.fft import fft
