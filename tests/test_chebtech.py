@@ -409,19 +409,19 @@ class Algebra(TestCase):
     def setUp(self):
         self.xx = -1 + 2 * rand(1000)
 
-    # check that (empty ChebTech) + (ChebTech) = (empty Chebtech)
-    def test__add__empty_a(self):
-        emptychebtech = ChebTech2.initempty()
-        for (fun, funlen) in testfunctions:
-            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((emptychebtech+chebtech).isempty())
-
-    # check that (ChebTech) + (empty ChebTech) = (empty Chebtech)
-    def test__add__empty_b(self):
+    # check (ChebTech) + (empty ChebTech) = (empty Chebtech)
+    def test__add__empty(self):
         emptychebtech = ChebTech2.initempty()
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((chebtech+emptychebtech).isempty())
+
+    # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
+    def test__radd__empty(self):
+        emptychebtech = ChebTech2.initempty()
+        for (fun, funlen) in testfunctions:
+            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue((emptychebtech+chebtech).isempty())
 
     def test__add__constant(self):
         xx = self.xx
@@ -432,6 +432,14 @@ class Algebra(TestCase):
                 tol = 5e1 * eps * abs(const)
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
 
+    def test__radd__constant(self):
+        xx = self.xx
+        for (fun, funlen) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                f = lambda x: fun(x) + const
+                ff = const + ChebTech2.initfun_fixedlen(fun, funlen)
+                tol = 5e1 * eps * abs(const)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
 
 def binopTester(f, g, binop, nf, ng):
     nbinop = binop(nf, ng)

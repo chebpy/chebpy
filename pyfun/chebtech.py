@@ -181,12 +181,17 @@ class ChebTech(object):
             elif m < n:
                 f = f.prolong(n)
             cfs = f.coeffs() + g.coeffs()
+
             # check for zero output
             tol = .2 * eps * max([f.vscale(), g.vscale()])
             if all( abs(cfs)<tol ):
                 return cls.initconst(0.)
             else:
                 return cls(cfs)
+
+    # ensure commuatativity of addition
+    def __radd__(self, f):
+        return self + f
 
     # ---------------------------------
     #            calculus
