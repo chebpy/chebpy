@@ -4,6 +4,8 @@ Unit-tests for pyfun/chebtech.py
 """
 from __future__ import division
 
+from itertools import combinations
+from operator import __add__
 from unittest import TestCase
 
 from numpy import arange
@@ -12,7 +14,7 @@ from numpy import sin
 from numpy import cos
 from numpy import exp
 from numpy import pi
-from numpy import all as all_
+from numpy import all
 from numpy import diff
 from numpy.random import rand
 from numpy.random import seed
@@ -23,6 +25,7 @@ from pyfun.chebtech import ChebTech2
 from pyfun.chebtech import eps
 
 from utilities import funs
+from utilities import fun_lens
 from utilities import infnorm
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
@@ -116,7 +119,7 @@ def chebptsLenTester(k):
         self.assertEquals(pts.size, k)
         self.assertEquals(pts[0], -1.)
         self.assertEquals(pts[-1], 1.)
-        self.assertTrue( all_(diff(pts)) > 0 )
+        self.assertTrue( all(diff(pts)) > 0 )
     return asserter
     
 for k, n in enumerate(2**arange(2,18,2)):
@@ -358,7 +361,7 @@ class Construction(TestCase):
         coeffs = rand(10)
         f = ChebTech2(coeffs)
         self.assertIsInstance(f, ChebTech2)
-        self.assertTrue(infNormLessThanTol(f.coeffs(), coeffs, eps))
+        self.assertLess(infnorm(f.coeffs()-coeffs), eps)
 
     def test_const_construction(self):
         ff = ChebTech2.initconst(1.)
@@ -374,38 +377,60 @@ class Construction(TestCase):
         self.assertTrue(ff.isempty())
         self.assertRaises(TypeError, ChebTech2.initempty, [1.])
 
-# TODO: check these lengths against Chebfun
-# TODO: more examples
-fun_lens = {
-    "cos(20x)": 53,
-    "exp(x)": 18,
-    "poly3(x)": 4,
-    "sin(x)": 16,
-}
 
 def adaptiveTester(fun):
     ff = ChebTech2.initfun_adaptive(fun)
     def tester(self):
-        return self.assertEquals(ff.size(), fun_lens[fun.__name__])
+        self.assertEquals(ff.size(), fun_lens[fun.__name__])
     return tester
-
-for fun in funs:
-    testfun = adaptiveTester(fun)
-    testfun.__name__ = "test_adaptive_{}".format(fun.__name__)
-    setattr(Construction, testfun.__name__, testfun)
 
 def fixedlenTester(fun, n):
     ff = ChebTech2.initfun_fixedlen(fun, n)
     def tester(self):
-        return self.assertEquals(ff.size(), n)
+        self.assertEquals(ff.size(), n)
     return tester
 
 for fun in funs:
+
+    # add the adaptive tests
+    testfun = adaptiveTester(fun)
+    testfun.__name__ = "test_adaptive_{}".format(fun.__name__)
+    setattr(Construction, testfun.__name__, testfun)
+
+    # add the fixedlen tests
     for n in array([50, 100, 300, 500]):
         testfun = fixedlenTester(fun, n)
         testfun.__name__ = \
             "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
         setattr(Construction, testfun.__name__, testfun)
+
+
+class Algebra(TestCase):
+    """Unit-tests for ChebTech2 algebraic operations"""
+    def setUp(self):
+        self.xx = -1 + 2 * rand(1000)
+
+def binopTester(f, g, binop):
+    nf = fun_lens[f.__name__]
+    ng = fun_lens[g.__name__]
+    nbinop = binop(nf, ng)
+    ff = ChebTech2.initfun_fixedlen(f, nf)
+    gg = ChebTech2.initfun_fixedlen(g, ng)
+    FG = ChebTech2.initfun_fixedlen(lambda x: binop(f(x),g(x)), nbinop)
+    fg = ff + gg
+    def tester(self):
+        self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 1e2*eps)
+    return tester
+
+binops = (__add__, )
+
+for binop in binops:
+    for f,g in combinations(funs, 2):
+        testfun = binopTester(f, g, binop)
+        testfun.__name__ = \
+            "test_{}_{}_{}".format(binop.__name__, f.__name__,  g.__name__)
+        setattr(Algebra, testfun.__name__, testfun)
+
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

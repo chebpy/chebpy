@@ -19,6 +19,8 @@ from numpy import isreal
 from numpy import linspace
 from numpy import zeros
 from numpy import isscalar
+from numpy import where
+from numpy import max
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -107,7 +109,7 @@ class ChebTech(object):
         return self.__str__()
 
     # ---------------------------------
-    #         utility methods
+    #     "public" utility methods
     # ---------------------------------
     def prolong(self, n):
         """Return a ChebTech of length n, obtained either by truncating
@@ -160,7 +162,30 @@ class ChebTech(object):
         return vscale
 
     # ---------------------------------
-    #       calculus operations
+    #        ChebTech algebra
+    # ---------------------------------
+    @checkempty()
+    def __add__(self, f):
+        cls = self.__class__
+        if isscalar(f):
+            cfs = self.coeffs().copy()
+            cfs[0] += f
+            out = cls(cfs)
+        else:
+            g = self
+            n, m = g.size(), f.size()
+            if n < m:
+                g = g.prolong(m)
+            elif m < n:
+                f = f.prolong(n)
+            cfs = f.coeffs() + g.coeffs()
+            # check for zero output
+            tol = .2 * eps * max([f.vscale(), g.vscale()])
+            out = cls.initconst(0.) if all( abs(cfs)<tol ) else cls(cfs)
+        return out
+
+    # ---------------------------------
+    #            calculus
     # ---------------------------------
     @checkempty(resultif=0.)
     def sum(self):
@@ -210,6 +235,9 @@ class ChebTech(object):
             out = self.__class__(zk)
         return out
 
+    # ---------------------------------
+    #            plotting
+    # ---------------------------------
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
         xx = linspace(-1, 1, 2001)
@@ -225,9 +253,9 @@ class ChebTech(object):
         ax.set_xlabel("polynomial degree")
         return ax
 
-    # --------------------------------------------------
-    #          abstract method declarations
-    # --------------------------------------------------
+    # ---------------------------------
+    #  subclasses must implement these
+    # ---------------------------------
     @abstractmethod
     def chebpts():
         pass
@@ -243,7 +271,6 @@ class ChebTech(object):
     @abstractmethod
     def _coeffs2vals():
         pass
-    # --------------------------------------------------
 
 
 class ChebTech2(ChebTech):

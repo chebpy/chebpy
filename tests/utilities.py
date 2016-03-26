@@ -39,8 +39,21 @@ funs_and_names = [
     (lambda x: exp(x), "exp(x)"),
     (lambda x: sin(x), "sin(x)"),
     (lambda x: cos(20*x), "cos(20x)"),
+    (lambda x: 0.*x+1., "constfun"),
+    (lambda x: 0.*x, "zerofun"),
 ]
 for k, item in enumerate(funs_and_names):
     fun = item[0]
     fun.__name__ = item[1]
     funs.append(fun)
+
+# TODO: check these lengths against Chebfun
+# TODO: more examples
+fun_lens = {
+    "cos(20x)": 53,
+    "exp(x)": 18,
+    "poly3(x)": 4,
+    "sin(x)": 16,
+    "constfun": 1,
+    "zerofun": 1,
+}
