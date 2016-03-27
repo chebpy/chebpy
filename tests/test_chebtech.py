@@ -5,9 +5,12 @@ Unit-tests for pyfun/chebtech.py
 from __future__ import division
 
 from itertools import combinations
-from operator import __add__
 from unittest import TestCase
 from unittest import skip
+
+from operator import __add__
+from operator import __pos__
+from operator import __neg__
 
 from numpy import arange
 from numpy import array
@@ -441,12 +444,13 @@ class Algebra(TestCase):
                 tol = 5e1 * eps * abs(const)
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
 
-def binopTester(f, g, binop, nf, ng):
+# add tests for the binary operators
+def binaryOpTester(f, g, binop, nf, ng):
     nbinop = binop(nf, ng)
     ff = ChebTech2.initfun_fixedlen(f, nf)
     gg = ChebTech2.initfun_fixedlen(g, ng)
     FG = ChebTech2.initfun_fixedlen(lambda x: binop(f(x),g(x)), nbinop)
-    fg = ff + gg
+    fg = binop(ff, gg)
     def tester(self):
         self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 1e2*eps)
     return tester
@@ -455,11 +459,28 @@ binops = (__add__, )
 
 for binop in binops:
     for (f, nf), (g, ng) in combinations(testfunctions, 2):
-        _testfun_ = binopTester(f, g, binop, nf, ng)
+        _testfun_ = binaryOpTester(f, g, binop, nf, ng)
         _testfun_.__name__ = \
             "test_{}_{}_{}".format(binop.__name__, f.__name__,  g.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
+# add tests for the unary operators
+def unaryOpTester(unaryop, f, nf):
+    ff = ChebTech2.initfun_fixedlen(f, nf)
+    gg = ChebTech2.initfun_fixedlen(lambda x: unaryop(f(x)), 20*nf)
+    GG = unaryop(ff)
+    def tester(self):
+        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 1e2*eps)
+    return tester
+
+unaryops = (__pos__, __neg__)
+
+for unaryop in unaryops:
+    for (f, nf) in testfunctions:
+        _testfun_ = unaryOpTester(unaryop, f, nf)
+        _testfun_.__name__ = \
+            "test_{}_{}".format(unaryop.__name__, f.__name__)
+        setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 _testfun_ = None
