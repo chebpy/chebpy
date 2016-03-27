@@ -189,14 +189,20 @@ class ChebTech(object):
             else:
                 return cls(cfs)
 
-    # ensure commuatativity of addition
-    __radd__ = __add__
+    def __sub__(self, f):
+        return self + (-f)
 
     def __pos__(self):
         return self.copy()
 
     def __neg__(self):
         return self.__class__(-self.coeffs())
+
+    __radd__ = __add__
+
+    def __rsub__(self, f):
+        return -(self - f)
+
 
     # ---------------------------------
     #            calculus
