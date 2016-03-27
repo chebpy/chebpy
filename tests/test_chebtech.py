@@ -411,20 +411,27 @@ class Algebra(TestCase):
     """Unit-tests for ChebTech2 algebraic operations"""
     def setUp(self):
         self.xx = -1 + 2 * rand(1000)
+        self.emptyfun = ChebTech2.initempty()
 
     # check (ChebTech) + (empty ChebTech) = (empty Chebtech)
     def test__add__empty(self):
-        emptychebtech = ChebTech2.initempty()
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((chebtech+emptychebtech).isempty())
+            self.assertTrue((chebtech+self.emptyfun).isempty())
 
     # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
     def test__radd__empty(self):
-        emptychebtech = ChebTech2.initempty()
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((emptychebtech+chebtech).isempty())
+            self.assertTrue((self.emptyfun+chebtech).isempty())
+
+    # check (ChebTech) + (empty ChebTech) = (empty Chebtech)
+    def test__pos__empty(self):
+        self.assertTrue(+self.emptyfun.isempty())
+
+    # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
+    def test__neg__empty(self):
+        self.assertTrue(-self.emptyfun.isempty())
 
     def test__add__constant(self):
         xx = self.xx
@@ -461,7 +468,7 @@ for binop in binops:
     for (f, nf), (g, ng) in combinations(testfunctions, 2):
         _testfun_ = binaryOpTester(f, g, binop, nf, ng)
         _testfun_.__name__ = \
-            "test_{}_{}_{}".format(binop.__name__, f.__name__,  g.__name__)
+            "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # add tests for the unary operators
@@ -470,7 +477,7 @@ def unaryOpTester(unaryop, f, nf):
     gg = ChebTech2.initfun_fixedlen(lambda x: unaryop(f(x)), 20*nf)
     GG = unaryop(ff)
     def tester(self):
-        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 1e2*eps)
+        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 2e2*eps)
     return tester
 
 unaryops = (__pos__, __neg__)
@@ -479,7 +486,7 @@ for unaryop in unaryops:
     for (f, nf) in testfunctions:
         _testfun_ = unaryOpTester(unaryop, f, nf)
         _testfun_.__name__ = \
-            "test_{}_{}".format(unaryop.__name__, f.__name__)
+            "test{}{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # reset the testsfun variable so it doesn't get picked up by nose
