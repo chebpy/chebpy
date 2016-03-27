@@ -10,16 +10,21 @@ from unittest import TestCase
 from numpy import array
 from numpy import linspace
 from numpy import isscalar
+from numpy import exp
+from numpy import cos
 from numpy.random import rand
 from numpy.random import seed
 
 from pyfun.chebtech import ChebTech2
+from pyfun.chebtech import eps
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
+from pyfun.utilities import coeffmult
 
 from utilities import testfunctions
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
+from utilities import infnorm
 
 seed(0)
 
@@ -127,6 +132,24 @@ for method in methods:
                     method.__name__, fun.__name__, j, k)
                 setattr(Evaluation, testfun.__name__, testfun)
 
+class Misc(TestCase):
+
+    def setUp(self):
+        self.f = lambda x: exp(x)
+        self.g = lambda x: cos(x)
+        self.fn = 15
+        self.gn = 15
+
+    def test_coeffmult(self):
+        f, g = self.f, self.g
+        fn, gn = self.fn, self.gn
+        hn = fn + gn - 1
+        h  = lambda x: self.f(x) * self.g(x)
+        fc = ChebTech2.initfun(f, fn).prolong(hn).coeffs()
+        gc = ChebTech2.initfun(g, gn).prolong(hn).coeffs()
+        hc = coeffmult(fc, gc)
+        HC = ChebTech2.initfun(h, hn).coeffs()
+        self.assertLessEqual( infnorm(hc-HC), 2e1*eps)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

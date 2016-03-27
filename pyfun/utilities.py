@@ -21,6 +21,12 @@ from numpy import zeros
 from numpy import dot
 from numpy import where
 from numpy import mod
+from numpy import append
+from numpy import real
+from numpy import isreal
+
+from numpy.fft import fft
+from numpy.fft import ifft
 
 eps = finfo(float).eps
 
@@ -84,6 +90,7 @@ def preandpostprocess(f):
     return thewrapper
 
 # -------------------------------------
+
 
 @preandpostprocess
 def bary(xx, fk, xk, vk):
@@ -219,3 +226,16 @@ def ctor_adaptive(cls, fun, maxpow2=16):
                  "using {} points".format(cls.__name__, n))
             break
     return coeffs
+
+
+def coeffmult(fc, gc):
+    """Coefficient-Space multiplication of equal-length first-kind Chebyshev
+    series."""
+    Fc = append( 2.*fc[:1], (fc[1:], fc[:0:-1]) )
+    Gc = append( 2.*gc[:1], (gc[1:], gc[:0:-1]) )
+    ak = ifft( fft(Fc) * fft(Gc) )
+    ak = append( ak[:1], ak[1:] + ak[:0:-1] ) * .25
+    ak = ak[:fc.size]
+    inputcfs = append(fc, gc)
+    out = real(ak) if isreal(inputcfs).all() else ak
+    return out

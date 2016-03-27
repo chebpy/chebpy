@@ -30,6 +30,8 @@ from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 from pyfun.utilities import checkempty
 from pyfun.utilities import ctor_adaptive
+from pyfun.utilities import coeffmult
+
 
 # machine epsilon
 eps = finfo(float).eps
@@ -143,12 +145,16 @@ class ChebTech(object):
         return self.coeffs().size
 
     def isempty(self):
-        """Return True if the ChebTech is empty."""
+        """Return True if the ChebTech is empty"""
         return self.size() == 0
 
     def isconst(self):
-        """Return True if the ChebTech represents a constant."""
+        """Return True if the ChebTech represents a constant"""
         return self.size() == 1
+
+    def simplify(self):
+        """Placeholder: Implement This"""
+        return self
 
     @checkempty(resultif=0.)
     def vscale(self):
@@ -172,6 +178,7 @@ class ChebTech(object):
             return cls(cfs)
         else:
             # TODO: is a more general decorator approach better here?
+            # TODO: for constant chebtech, convert to constant and call __add__ again 
             if f.isempty():
                 return f.copy()
             g = self
@@ -182,7 +189,7 @@ class ChebTech(object):
                 f = f.prolong(n)
             cfs = f.coeffs() + g.coeffs()
 
-            # check for zero output
+            # check for zero output (merge this into simplify?)
             tol = .2 * eps * max([f.vscale(), g.vscale()])
             if all( abs(cfs)<tol ):
                 return cls.initconst(0.)
@@ -196,12 +203,34 @@ class ChebTech(object):
         return self.copy()
 
     def __neg__(self):
-        return self.__class__(-self.coeffs())
+        coeffs = -self.coeffs()
+        return self.__class__(coeffs)
 
     __radd__ = __add__
 
     def __rsub__(self, f):
-        return -(self - f)
+        return -(self-f)
+
+    @checkempty()
+    def __mul__(self, g):
+        cls = self.__class__
+        if isscalar(g):
+            cfs = self.coeffs().copy()
+            cfs *= g
+            return cls(cfs)
+        else:
+            # TODO: review with reference to __add__
+            if g.isempty():
+                return g.copy()
+            f = self
+            n = f.size() + g.size() - 1
+            f = f.prolong(n)
+            g = g.prolong(n)
+            cfs = coeffmult(f.coeffs(), g.coeffs())
+            out = cls(cfs).simplify()
+            return out
+
+    __rmul__ = __mul__
 
 
     # ---------------------------------

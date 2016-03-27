@@ -12,6 +12,7 @@ from operator import __add__
 from operator import __sub__
 from operator import __pos__
 from operator import __neg__
+from operator import __mul__
 
 from numpy import arange
 from numpy import array
@@ -332,16 +333,16 @@ for k, (fun, dfn, n, tol) in enumerate(indef_integrals):
 # --------------------------------------
 derivatives = [
     # (function, derivative, number of points, tolerance)
-    (lambda x: 0*x+1.,      lambda x: 0*x+0,        1,         eps),
-    (lambda x: x,           lambda x: 0*x+1,        2,       2*eps),
-    (lambda x: x**2,        lambda x: 2*x,          3,       2*eps),
-    (lambda x: x**3,        lambda x: 3*x**2,       4,       2*eps),
-    (lambda x: x**4,        lambda x: 4*x**3,       5,       2*eps),
-    (lambda x: x**5,        lambda x: 5*x**4,       6,       4*eps),
-    (lambda x: sin(x),      lambda x: cos(x),      16,     5e1*eps),
-    (lambda x: cos(3*x),    lambda x: -3*sin(3*x), 23,     5e2*eps),
-    (lambda x: exp(x),      lambda x: exp(x),      16,     2e2*eps),
-    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x), 16, 1e12*(2*eps)),
+    (lambda x: 0*x+1.,      lambda x: 0*x+0,        1,          eps),
+    (lambda x: x,           lambda x: 0*x+1,        2,        2*eps),
+    (lambda x: x**2,        lambda x: 2*x,          3,        2*eps),
+    (lambda x: x**3,        lambda x: 3*x**2,       4,        2*eps),
+    (lambda x: x**4,        lambda x: 4*x**3,       5,        2*eps),
+    (lambda x: x**5,        lambda x: 5*x**4,       6,        4*eps),
+    (lambda x: sin(x),      lambda x: cos(x),      16,      5e1*eps),
+    (lambda x: cos(3*x),    lambda x: -3*sin(3*x), 23,      5e2*eps),
+    (lambda x: exp(x),      lambda x: exp(x),      16,      2e2*eps),
+    (lambda x: 1e10*exp(x), lambda x: 1e10*exp(x), 16, 1e10*2e2*eps),
 ]
 
 def derivativeTester(fun, der, n, tol):
@@ -414,22 +415,6 @@ class Algebra(TestCase):
         self.xx = -1 + 2 * rand(1000)
         self.emptyfun = ChebTech2.initempty()
 
-    # check (ChebTech) + (empty ChebTech) = (empty Chebtech)
-    def test__add__empty(self):
-        for (fun, funlen) in testfunctions:
-            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((chebtech+self.emptyfun).isempty())
-
-    # check the output of ChebTech + constant
-    def test__add__constant(self):
-        xx = self.xx
-        for (fun, funlen) in testfunctions:
-            for const in (-1, 1, 10, -1e5):
-                f = lambda x: fun(x) + const
-                ff = ChebTech2.initfun_fixedlen(fun, funlen) + const
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
-
     # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
     def test__radd__empty(self):
         for (fun, funlen) in testfunctions:
@@ -446,22 +431,6 @@ class Algebra(TestCase):
                 tol = 5e1 * eps * abs(const)
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
 
-    # check (ChebTech) - (empty ChebTech) = (empty Chebtech)
-    def test__sub__empty(self):
-        for (fun, funlen) in testfunctions:
-            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((chebtech-self.emptyfun).isempty())
-
-    # check the output of ChebTech - constant
-    def test__sub__constant(self):
-        xx = self.xx
-        for (fun, funlen) in testfunctions:
-            for const in (-1, 1, 10, -1e5):
-                f = lambda x: fun(x) - const
-                ff = ChebTech2.initfun_fixedlen(fun, funlen) - const
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
-
     # check (empty ChebTech) - (ChebTech) = (empty Chebtech)
     def test__rsub__empty(self):
         for (fun, funlen) in testfunctions:
@@ -475,6 +444,22 @@ class Algebra(TestCase):
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const - fun(x)
                 ff = const - ChebTech2.initfun_fixedlen(fun, funlen)
+                tol = 5e1 * eps * abs(const)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+
+    # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
+    def test__rmul__empty(self):
+        for (fun, funlen) in testfunctions:
+            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue((self.emptyfun*chebtech).isempty())
+
+    # check the output of constant + ChebTech
+    def test__rmul__constant(self):
+        xx = self.xx
+        for (fun, funlen) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                f = lambda x: const * fun(x)
+                ff = const * ChebTech2.initfun_fixedlen(fun, funlen)
                 tol = 5e1 * eps * abs(const)
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
 
@@ -495,19 +480,54 @@ def binaryOpTester(f, g, binop, nf, ng):
     FG = ChebTech2.initfun_fixedlen(lambda x: binop(f(x),g(x)), nbinop)
     fg = binop(ff, gg)
     def tester(self):
-        self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 1e2*eps)
+        self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 2e2*eps)
     return tester
 
+def binaryOpEmptyCaseTester(binop):
+    def tester(self):
+        for (fun, funlen) in testfunctions:
+            emptyfun = ChebTech2.initempty()
+            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue( binop(emptyfun, chebtech).isempty() )
+    return tester
+
+def binaryOpConstantScalarCaseTester(binop):
+    def tester(self):
+        xx = self.xx
+        for (fun, funlen) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                f = lambda x: binop(fun(x), const)
+                ff = binop(ChebTech2.initfun_fixedlen(fun, funlen), const)
+                tol = 5e1 * eps * abs(const)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+    return tester
+
+# note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
+# test will not in fact test the __radd__ functionality of the class. These
+# test need to be added manually to the class.
 binops = (
     __add__,
     __sub__,
+    __mul__,
     )
+
 for binop in binops:
+    # add the generic binary operator tests
     for (f, nf), (g, ng) in combinations(testfunctions, 2):
         _testfun_ = binaryOpTester(f, g, binop, nf, ng)
         _testfun_.__name__ = \
             "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
+
+    # add the special empty case tests
+    _testfun_ = binaryOpEmptyCaseTester(binop)
+    _testfun_.__name__ = "test{}empty".format(binop.__name__)
+    setattr(Algebra, _testfun_.__name__, _testfun_)
+
+    # add the scalar constant case tests
+    _testfun_ = binaryOpEmptyCaseTester(binop)
+    _testfun_.__name__ = "test{}constant".format(binop.__name__)
+    setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
