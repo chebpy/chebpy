@@ -27,13 +27,15 @@ from numpy.random import seed
 
 from matplotlib.pyplot import subplots
 
+from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import ChebTech2
-from pyfun.chebtech import eps
 
 from utilities import testfunctions
 from utilities import infnorm
 from utilities import scaled_tol
 from utilities import infNormLessThanTol
+
+eps = DefaultPrefs.eps
 
 seed(0)
 

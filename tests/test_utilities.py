@@ -15,8 +15,9 @@ from numpy import cos
 from numpy.random import rand
 from numpy.random import seed
 
+from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import ChebTech2
-from pyfun.chebtech import eps
+
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 from pyfun.utilities import coeffmult
@@ -27,6 +28,8 @@ from utilities import infNormLessThanTol
 from utilities import infnorm
 
 seed(0)
+
+eps = DefaultPrefs.eps
 
 class Evaluation(TestCase):
     """Tests for the Barycentric formula and Clenshaw algorithm"""

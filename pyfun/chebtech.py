@@ -6,7 +6,6 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
-from numpy import finfo
 from numpy import array
 from numpy import ones
 from numpy import arange
@@ -26,6 +25,7 @@ from numpy.fft import ifft
 
 from matplotlib.pyplot import gca
 
+from pyfun.settings import DefaultPrefs
 from pyfun.smoothfun import SmoothFun
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
@@ -35,7 +35,7 @@ from pyfun.utilities import coeffmult
 
 
 # machine epsilon
-eps = finfo(float).eps
+eps = DefaultPrefs.eps
 
 
 class ChebTech(SmoothFun):
