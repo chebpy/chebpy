@@ -26,6 +26,7 @@ from numpy.fft import ifft
 
 from matplotlib.pyplot import gca
 
+from pyfun.smoothfun import SmoothFun
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 from pyfun.utilities import checkempty
@@ -37,7 +38,7 @@ from pyfun.utilities import coeffmult
 eps = finfo(float).eps
 
 
-class ChebTech(object):
+class ChebTech(SmoothFun):
     """Abstract base class serving as the template for ChebTech1 and 
     ChebTech2 subclasses. 
 
