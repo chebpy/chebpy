@@ -9,31 +9,33 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
+from pyfun.utilities import abstractclassmethod
+
 class OneFun(object):
     __metaclass__ = ABCMeta
-    
-    @abstractmethod
-    def __init__(self):
-        pass
-    
-    @abstractmethod
+       
+    @abstractclassmethod
     def initconst(cls):
         pass
 
-    @abstractmethod
+    @abstractclassmethod
     def initempty(cls):
         pass
 
-    @abstractmethod
+    @abstractclassmethod
     def initfun(cls):
         pass
 
-    @abstractmethod
+    @abstractclassmethod
     def initfun_fixedlen(cls):
         pass
 
-    @abstractmethod    
+    @abstractclassmethod    
     def initfun_adaptive(cls):
+        pass
+
+    @abstractmethod
+    def __init__(self):
         pass
 
     @abstractmethod

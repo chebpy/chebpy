@@ -34,9 +34,68 @@ eps = finfo(float).eps
 def find(x):
     return where(x)[0]
 
+
+class Domain(object):
+    """Utility class to implement domain logic. The purpose of this class 
+    is to enforce certain properties of domain components such as having 
+    exactly two elements which are monotonically increasing. We also 
+    provide associated methods such as __eq__"""
+    def __init__(self, a, b):
+        if a > b:
+            raise ValueError("Domain values must be strictly increasing")
+        self.values = array([a, b])
+        
+    def __eq__(self, other):
+        return (self.values == other.values).all() 
+
+    def __str__(self):
+        cls = self.__class__
+        out = "{0}([{1}, {2}])".format(cls.__name__, *self.values)
+        return out
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class IntervalMapping(object):
+    """
+    formap: y in [-1,1] -> x in [a,b]
+    invmap: x in  [a,b] -> y in [-1,1]
+    drvmap: y in [-1,1] -> x in [a,b]
+    
+    Currently only implemented for finite a and b.
+    """
+    def __init__(self, domain):
+        a, b = domain.values
+        self.domain = domain
+        self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
+        self.invmap = lambda x: (2.*x-a-b) / (b-a)
+        self.dermap = lambda y: 0.*y + .5*(b-a)
+
+    @classmethod
+    def initendvals(cls, a, b):
+        domain = Domain(a, b)
+        return cls(domain)
+
+    def __str__(self):
+        cls = self.__class__
+        out = "{0}([{1}, {2}])".format(cls.__name__, *self.domain.values)
+        return out        
+
+    def __repr__(self):
+        return self.__str__()  
+
 # -------------------------------------
 #              decorators
 # -------------------------------------
+
+# define an abstract class method decorator:
+# http://stackoverflow.com/questions/11217878/python-2-7-combine-abc-abstractmethod-and-classmethod
+class abstractclassmethod(classmethod):
+    __isabstractmethod__ = True
+    def __init__(self, callable):
+        callable.__isabstractmethod__ = True
+        super(abstractclassmethod, self).__init__(callable)
 
 # Factory method to produce a decorator that checks whether the object
 # whose classmethod is being wrapped is empty, returning the object if
@@ -229,8 +288,8 @@ def ctor_adaptive(cls, fun, maxpow2=16):
 
 
 def coeffmult(fc, gc):
-    """Coefficient-Space multiplication of equal-length first-kind Chebyshev
-    series."""
+    """Coefficient-Space multiplication of equal-length first-kind 
+    Chebyshev series."""
     Fc = append( 2.*fc[:1], (fc[1:], fc[:0:-1]) )
     Gc = append( 2.*gc[:1], (gc[1:], gc[:0:-1]) )
     ak = ifft( fft(Fc) * fft(Gc) )

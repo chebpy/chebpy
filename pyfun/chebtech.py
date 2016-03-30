@@ -33,10 +33,8 @@ from pyfun.utilities import checkempty
 from pyfun.utilities import ctor_adaptive
 from pyfun.utilities import coeffmult
 
-
 # machine epsilon
 eps = DefaultPrefs.eps
-
 
 class ChebTech(SmoothFun):
     """Abstract base class serving as the template for ChebTech1 and 
@@ -50,9 +48,6 @@ class ChebTech(SmoothFun):
     """
     __metaclass__ = ABCMeta
     
-    def __init__(self, coeffs):
-        self._coeffs = coeffs
-
     @classmethod
     def initconst(cls, c):
         """Initialise a ChebTech from a constant c"""
@@ -83,6 +78,9 @@ class ChebTech(SmoothFun):
     def initfun_adaptive(cls, fun):
         coeffs = ctor_adaptive(cls, fun)
         return cls(coeffs)
+
+    def __init__(self, coeffs):
+        self._coeffs = coeffs
 
     def __call__(self, x, how="clenshaw"):
         method = {
