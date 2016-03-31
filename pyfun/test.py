@@ -26,12 +26,18 @@ def test_utilities():
     args = core_args[:] + [pyfunloc + u"/tests/test_utilities.py"]
     nose.run(argv=args)
 
+def test_bndfun():
+    """Unit-tests for pyfun/bndfun"""
+    args = core_args[:] + [pyfunloc + u"/tests/test_bndfun.py"]
+    nose.run(argv=args)
+
 def test_all():
     """Run all unit-tests"""
     args = core_args[:] + [pyfunloc + u"/tests"]
     nose.run(argv=args)
 
 if __name__ == "__main__":
-#    test_chebtech()
-#    test_utilities()
-    test_all()
+    test_chebtech()
+    test_utilities()
+    test_bndfun()
+#    test_all()

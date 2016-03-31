@@ -270,7 +270,7 @@ class ChebTech(SmoothFun):
         """Return a ChebTech object representing the derivative of a
         ChebTech on the interval [-1,1]."""
         if self.isconst():
-            out = self.__class__([0])
+            out = self.__class__(array([0.]))
         else:
             n = self.size()
             ak = self.coeffs()

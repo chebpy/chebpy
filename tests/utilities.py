@@ -31,7 +31,7 @@ def infNormLessThanTol(a, b, tol):
 # test functions
 testfunctions = []
 fun_details = [
-    # (function, name for the test printouts, Matlab chebfun adaptive degree)
+    # (function, name for the test printouts, Matlab chebfun adaptive degree on [-1,1])
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)",  4),
     (lambda x: exp(x),              "exp(x)",   15),
     (lambda x: sin(x),              "sin(x)",   14),

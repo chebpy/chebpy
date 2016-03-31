@@ -40,7 +40,7 @@ class Domain(object):
     is to enforce certain properties of domain components such as having 
     exactly two elements which are monotonically increasing. We also 
     provide associated methods such as __eq__"""
-    def __init__(self, a, b):
+    def __init__(self, a=-1, b=1):
         if a > b:
             raise ValueError("Domain values must be strictly increasing")
         self.values = array([a, b])
@@ -57,7 +57,7 @@ class Domain(object):
         return self.__str__()
 
 
-class IntervalMapping(object):
+class Mapper(object):
     """
     formap: y in [-1,1] -> x in [a,b]
     invmap: x in  [a,b] -> y in [-1,1]
@@ -71,11 +71,6 @@ class IntervalMapping(object):
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
         self.dermap = lambda y: 0.*y + .5*(b-a)
-
-    @classmethod
-    def initendvals(cls, a, b):
-        domain = Domain(a, b)
-        return cls(domain)
 
     def __str__(self):
         cls = self.__class__
@@ -233,7 +228,8 @@ def standard_chop(coeffs, tol=eps):
     for j in arange(n-2, -1, -1):   # n-2, ... , 2, 1, 0
         m[j] = max( (b[j], m[j+1]) )
     if m[0] == 0.:
-        cutoff = 0
+        # TODO: check this
+        cutoff = 1 # cutoff = 0
         return cutoff
     envelope = m / m[0]
 
@@ -263,7 +259,8 @@ def standard_chop(coeffs, tol=eps):
         cc = log10(envelope[:int(j2)])
         cc = cc + linspace(0, (-1./3.)*log10(tol), j2)
         d = argmin(cc)
-        cutoff = d + 2
+        # TODO: check this
+        cutoff = d # + 2
     return min( (cutoff, n-1) )
 
 
