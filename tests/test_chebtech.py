@@ -506,25 +506,6 @@ def binaryOpTester(f, g, binop, nf, ng):
         self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 2e2*eps)
     return tester
 
-def binaryOpEmptyCaseTester(binop):
-    def tester(self):
-        for (fun, funlen) in testfunctions:
-            emptyfun = ChebTech2.initempty()
-            chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue( binop(emptyfun, chebtech).isempty() )
-    return tester
-
-def binaryOpConstantScalarCaseTester(binop):
-    def tester(self):
-        xx = self.xx
-        for (fun, funlen) in testfunctions:
-            for const in (-1, 1, 10, -1e5):
-                f = lambda x: binop(fun(x), const)
-                ff = binop(ChebTech2.initfun_fixedlen(fun, funlen), const)
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
-    return tester
-
 # note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
 # test will not in fact test the __radd__ functionality of the class. These
 # test need to be added manually to the class.
@@ -541,16 +522,6 @@ for binop in binops:
         _testfun_.__name__ = \
             "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
-
-    # add the special empty case tests
-    _testfun_ = binaryOpEmptyCaseTester(binop)
-    _testfun_.__name__ = "test{}empty".format(binop.__name__)
-    setattr(Algebra, _testfun_.__name__, _testfun_)
-
-    # add the scalar constant case tests
-    _testfun_ = binaryOpEmptyCaseTester(binop)
-    _testfun_.__name__ = "test{}constant".format(binop.__name__)
-    setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
