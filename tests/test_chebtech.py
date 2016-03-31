@@ -245,7 +245,8 @@ class Plotting(TestCase):
         self.f1 = ChebTech2.initfun_adaptive(f)
 
     def test_plot(self):
-        self.f0.plot()
+        fig, ax = subplots()
+        self.f0.plot(ax=ax)
 
     def test_plotcoeffs(self):
         fig, ax = subplots()
@@ -418,54 +419,74 @@ class Algebra(TestCase):
         self.emptyfun = ChebTech2.initempty()
 
     # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
-    def test__radd__empty(self):
+    #   and (ChebTech) + (empty ChebTech) = (empty Chebtech)
+    def test__add__radd__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun+chebtech).isempty())
+            self.assertTrue((chebtech+self.emptyfun).isempty())
 
-    # check the output of constant + ChebTech
-    def test__radd__constant(self):
+    # check the output of (constant + ChebTech)
+    #                 and (ChebTech + constant)
+    def test__add__radd__constant(self):
         xx = self.xx
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
-                ff = const + ChebTech2.initfun_fixedlen(fun, funlen)
+                techfun = ChebTech2.initfun_fixedlen(fun, funlen)
+                f1 = const + techfun
+                f2 = techfun + const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual( infnorm(f(xx)-f1(xx)), tol )
+                self.assertLessEqual( infnorm(f(xx)-f2(xx)), tol )
 
     # check (empty ChebTech) - (ChebTech) = (empty Chebtech)
-    def test__rsub__empty(self):
+    #   and (ChebTech) - (empty ChebTech) = (empty Chebtech)
+    def test__sub__rsub__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun-chebtech).isempty())
+            self.assertTrue((chebtech-self.emptyfun).isempty())
 
     # check the output of constant - ChebTech
-    def test__rsub__constant(self):
+    #                 and ChebTech - constant
+    def test__sub__rsub__constant(self):
         xx = self.xx
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                techfun = ChebTech2.initfun_fixedlen(fun, funlen)
                 f = lambda x: const - fun(x)
-                ff = const - ChebTech2.initfun_fixedlen(fun, funlen)
+                g = lambda x: fun(x) - const
+                ff = const - techfun
+                gg = techfun - const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
+                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
 
-    # check (empty ChebTech) + (ChebTech) = (empty Chebtech)
-    def test__rmul__empty(self):
+    # check (empty ChebTech) * (ChebTech) = (empty Chebtech)
+    #   and (ChebTech) * (empty ChebTech) = (empty Chebtech)
+    def test__mul__rmul__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = ChebTech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun*chebtech).isempty())
+            self.assertTrue((chebtech*self.emptyfun).isempty())
 
-    # check the output of constant + ChebTech
+    # check the output of constant * ChebTech
+    #                 and ChebTech * constant
     def test__rmul__constant(self):
         xx = self.xx
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                techfun = ChebTech2.initfun_fixedlen(fun, funlen)
                 f = lambda x: const * fun(x)
-                ff = const * ChebTech2.initfun_fixedlen(fun, funlen)
+                g = lambda x: fun(x) * const
+                ff = const * techfun
+                gg = techfun * const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
+                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
 
-    # check +(empty ChebTech) = (empty Chebtech)
+    # check    +(empty ChebTech) = (empty Chebtech)
     def test__pos__empty(self):
         self.assertTrue(+self.emptyfun.isempty())
 
@@ -537,7 +558,7 @@ def unaryOpTester(unaryop, f, nf):
     gg = ChebTech2.initfun_fixedlen(lambda x: unaryop(f(x)), 20*nf)
     GG = unaryop(ff)
     def tester(self):
-        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 2e2*eps)
+        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 4e2*eps)
     return tester
 
 unaryops = (
