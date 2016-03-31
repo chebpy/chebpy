@@ -488,11 +488,11 @@ class Algebra(TestCase):
 
     # check    +(empty ChebTech) = (empty Chebtech)
     def test__pos__empty(self):
-        self.assertTrue(+self.emptyfun.isempty())
+        self.assertTrue( (+self.emptyfun).isempty() )
 
     # check -(empty ChebTech) = (empty Chebtech)
     def test__neg__empty(self):
-        self.assertTrue(-self.emptyfun.isempty())
+        self.assertTrue( (-self.emptyfun).isempty() )
 
 
 # add tests for the binary operators
