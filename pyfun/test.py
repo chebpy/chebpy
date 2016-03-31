@@ -37,7 +37,7 @@ def test_all():
     nose.run(argv=args)
 
 if __name__ == "__main__":
-    test_chebtech()
-    test_utilities()
-    test_bndfun()
-#    test_all()
+#    test_chebtech()
+#    test_utilities()
+#    test_bndfun()
+    test_all()

@@ -21,6 +21,7 @@ from pyfun.chebtech import ChebTech2
 from pyfun.utilities import bary
 from pyfun.utilities import clenshaw
 from pyfun.utilities import coeffmult
+from pyfun.utilities import Domain
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -135,6 +136,7 @@ for method in methods:
                     method.__name__, fun.__name__, j, k)
                 setattr(Evaluation, testfun.__name__, testfun)
 
+# tests for Miscelaneous functionality
 class Misc(TestCase):
 
     def setUp(self):
@@ -153,6 +155,34 @@ class Misc(TestCase):
         hc = coeffmult(fc, gc)
         HC = ChebTech2.initfun(h, hn).coeffs()
         self.assertLessEqual( infnorm(hc-HC), 2e1*eps)
+
+# tests for usage of the Domain class
+class TestDomain(TestCase):
+
+    def test_init(self):
+        Domain(-1,1)
+        self.assertTrue((Domain().values==array([-1,1])).all())
+
+    def test_init_disallow(self):
+        self.assertRaises(ValueError, Domain, 2, 0)
+        self.assertRaises(ValueError, Domain, 0, 0)
+
+    def test__eq__(self):
+        d1 = Domain(-2,3)
+        d2 = Domain(-2,3)
+        d3 = Domain(-1,1)
+        self.assertTrue(Domain()==Domain())
+        self.assertTrue(d1==d2)
+        self.assertTrue(d2==d1)
+        self.assertFalse(d3==d1)
+        self.assertFalse(d2==d3)
+
+    def test_maps(self):
+        yy = -1 + 2 * rand(1000)
+        domain = Domain(-2,3)
+        vals = domain.invmap( domain(yy) ) - yy
+        self.assertLessEqual( infnorm(vals), eps)
+
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

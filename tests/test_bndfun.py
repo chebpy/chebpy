@@ -27,7 +27,6 @@ from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import ChebTech2
 
 from pyfun.bndfun import BndFun
-from pyfun.utilities import Mapper
 from pyfun.utilities import Domain
 
 from utilities import testfunctions
@@ -41,7 +40,7 @@ seed(0)
 # NOTE: since (Fun/ClassicFun/)BndFun is not a user-facing class 
 # (although it is not abstract) we will test the interface in the way 
 # Chebfun will interact with it, which means working explcitly with  
-# Domain objects and Mapper objects.
+# Domain objects.
 
 # Furthermore, since we have already tested the adaptive constructor
 # in the ChebTech-level tests, we jsut use the adaptive constructor in
@@ -53,12 +52,11 @@ class ClassUsage(TestCase):
     def setUp(self):
         f = lambda x: sin(30*x)
         domain = Domain(-2,3)
-        mapper = Mapper(domain)
         self.ff = BndFun.initfun_adaptive(f, domain)
-        self.xx = mapper.formap(-1 + 2*rand(100))
+        self.xx = domain(-1 + 2*rand(100))
 
-        self.emptyfun = BndFun(ChebTech2.initempty(), mapper)
-        self.constfun = BndFun(ChebTech2.initconst(1.), mapper)
+        self.emptyfun = BndFun(ChebTech2.initempty(), domain)
+        self.constfun = BndFun(ChebTech2.initconst(1.), domain)
 
     # tests for emptiness of BndFun objects
     def test_isempty_True(self):
@@ -174,10 +172,9 @@ class Calculus(TestCase):
     """Unit-tests for BndFun calculus operations"""
 
     def setUp(self):
-        mapper = Mapper(Domain())
-        self.emptyfun = BndFun(ChebTech2.initempty(), mapper)
+        self.emptyfun = BndFun(ChebTech2.initempty(), Domain())
         self.yy = -1 + 2*rand(2000)
-#        self.constfun = BndFun(ChebTech2.initconst(1.), mapper)
+#        self.constfun = BndFun(ChebTech2.initconst(1.), domain)
 
     # tests for the correct results in the empty cases
     def test_sum_empty(self):
@@ -288,9 +285,9 @@ class Construction(TestCase):
 
     def test_onefun_construction(self):
         coeffs = rand(10)
-        mapper = Mapper(Domain())
+        domain = Domain()
         onefun = ChebTech2(coeffs)
-        f = BndFun(onefun, mapper)
+        f = BndFun(onefun, domain)
         self.assertIsInstance(f, BndFun)
         self.assertLess(infnorm(f.coeffs()-coeffs), eps)
 
@@ -371,8 +368,7 @@ class Algebra(TestCase):
     #                 and (BndFun + constant)
     def test__add__radd__constant(self):
         domain = Domain(-.5,.9)
-        mapper = Mapper(domain)
-        xx = mapper.formap(self.yy)
+        xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
@@ -396,8 +392,7 @@ class Algebra(TestCase):
     #                 and BndFun - constant
     def test__sub__rsub__constant(self):
         domain = Domain(-.5,.9)
-        mapper = Mapper(domain)
-        xx = mapper.formap(self.yy)
+        xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 boundedfun = BndFun.initfun_fixedlen(fun, domain, funlen)
@@ -422,8 +417,7 @@ class Algebra(TestCase):
     #                 and BndFun * constant
     def test__rmul__constant(self):
         domain = Domain(-.5,.9)
-        mapper = Mapper(domain)
-        xx = mapper.formap(self.yy)
+        xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 boundedfun = BndFun.initfun_fixedlen(fun, domain, funlen)
@@ -457,8 +451,7 @@ def binaryOpTester(f, g, domain, binop):
     FG = BndFun.initfun_adaptive(lambda x: binop(f(x),g(x)), domain)
     fg = binop(ff, gg)
     def tester(self):
-        mapper = Mapper(domain)
-        xx = mapper.formap(self.yy)
+        xx = domain(self.yy)
         self.assertLessEqual( infnorm(fg(xx)-FG(xx)), 2e2*eps)
     return tester
 
@@ -486,8 +479,7 @@ def unaryOpTester(unaryop, f, domain):
     gg = BndFun.initfun_adaptive(lambda x: unaryop(f(x)), domain)
     GG = unaryop(ff)
     def tester(self):
-        mapper = Mapper(domain)
-        xx = mapper.formap(self.yy)
+        xx = domain(self.yy)
         self.assertLessEqual( infnorm(gg(xx)-GG(xx)), 2e2*eps)
     return tester
     

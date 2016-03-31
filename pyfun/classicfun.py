@@ -17,7 +17,6 @@ from pyfun.chebtech import ChebTech2
 from pyfun.settings import DefaultPrefs
 
 from pyfun.utilities import checkempty
-from pyfun.utilities import Mapper
 from pyfun.utilities import Domain
 
 Techs = {
@@ -33,48 +32,46 @@ class ClassicFun(Fun):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, onefun, mapper):
-        """Initialise a ClassicFun from its two defining properties"""
-        self.mapper = mapper
+    def __init__(self, onefun, domain):
+        """Initialise a ClassicFun from its two defining properties: a
+        Domain object and a Onefun object"""
+        self.domain = domain
         self.onefun = onefun
 
     @classmethod
     def initempty(cls):
         """Adaptive initialisation of a ClassicFun from a callable
-        function f and a Domain object. The mapper's domain has no
+        function f and a Domain object. The domain's domain has no
         relevance to the emptiness status of a ClassicFun so we
         arbitrarily set this to be DefaultPrefs.domain"""
-        mapper = Mapper(Domain())
+        domain = Domain()
         onefun = Tech.initempty()
-        return cls(onefun, mapper)
+        return cls(onefun, domain)
 
     @classmethod
     def initconst(cls, c, domain):
         """ """
-        mapper = Mapper(domain)
         onefun = Tech.initconst(c)
-        return cls(onefun, mapper)
+        return cls(onefun, domain)
 
     @classmethod
     def initfun_adaptive(cls, f, domain):
         """Adaptive initialisation of a BndFun from a callable function f
         and a Domain object"""
-        mapper = Mapper(domain)
-        uifunc = lambda y: f(mapper.formap(y))
+        uifunc = lambda y: f(domain(y))
         onefun = Tech.initfun(uifunc)
-        return cls(onefun, mapper)
+        return cls(onefun, domain)
 
     @classmethod
     def initfun_fixedlen(cls, f, domain, n):
         """Fixed length initialisation of a BndFun from a callable
         function f and a Domain object"""
-        mapper = Mapper(domain)
-        uifunc = lambda y: f(mapper.formap(y))
+        uifunc = lambda y: f(domain(y))
         onefun = Tech.initfun(uifunc, n)
-        return cls(onefun, mapper)
+        return cls(onefun, domain)
 
     def __call__(self, x, how="clenshaw"):
-        y = self.mapper.invmap(x)
+        y = self.domain.invmap(x)
         return self.onefun(y, how)
 
     def plot(self, ax=None, *args, **kwargs):
@@ -95,11 +92,11 @@ class ClassicFun(Fun):
 
     def domain(self):
         """Return the Domain object associated with the Classicfun"""
-        return self.mapper.domain
+        return self.domain
 
     def endpoints(self):
         """Return a 2-array of endpointvalues taken from the domain"""
-        return self.domain().values
+        return self.domain.values
 
     def sum(self):
         a, b = self.endpoints()
@@ -108,12 +105,12 @@ class ClassicFun(Fun):
     def cumsum(self):
         a, b = self.endpoints()
         onefun = .5*(b-a) * self.onefun.cumsum()
-        return self.__class__(onefun, self.mapper)
+        return self.__class__(onefun, self.domain)
 
     def diff(self):
         a, b = self.endpoints()
         onefun = 2./(b-a) * self.onefun.diff()
-        return self.__class__(onefun, self.mapper)
+        return self.__class__(onefun, self.domain)
 
 
 
@@ -156,7 +153,7 @@ methods_onefun_zeroargs = (
 def addZeroArgOp(methodname):
     def method(self, *args, **kwargs):
         onefun = getattr(self.onefun, methodname)(*args, **kwargs)
-        return self.__class__(onefun, self.mapper)
+        return self.__class__(onefun, self.domain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
     setattr(ClassicFun, methodname, method)
@@ -188,13 +185,13 @@ def addBinaryOp(methodname):
                 return f.copy()
             g = f.onefun
             # raise Exception if domains are not consistent
-            if self.domain() != f.domain():
+            if self.domain != f.domain:
                 raise InconsistentDomains(self.domain(), f.domain())
         else:
             # let the lower level classes raise any other exceptions
             g = f
         onefun = getattr(self.onefun, methodname)(g, *args, **kwargs)
-        return cls(onefun, self.mapper)
+        return cls(onefun, self.domain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
     setattr(ClassicFun, methodname, method)
