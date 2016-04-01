@@ -564,13 +564,13 @@ def rootsTester(f, roots, tol):
     return tester
 
 rootstestfuns = (
-    (lambda x: 3*x+2., array([-2/3]), eps),
-    (lambda x: x**2, array([0.,0.]), eps),
-    (lambda x: x**2+.2*x-.08, array([-.4, .2]), eps),
-    (lambda x: sin(x), array([0]), 3*eps),
-    (lambda x: cos(2*pi*x), array([-0.75, -0.25,  0.25,  0.75]), 1e1*eps),
-    (lambda x: sin(100*pi*x), linspace(-1,1,201), 3*eps),
-    (lambda x: sin(5*pi/2*x), array([-.8, -.4, 0, .4, .8]), 3*eps)
+    (lambda x: 3*x+2.,        array([-2/3]),                         1*eps),
+    (lambda x: x**2,          array([0.,0.]),                        1*eps),
+    (lambda x: x**2+.2*x-.08, array([-.4, .2]),                      1*eps),
+    (lambda x: sin(x),        array([0]),                            1*eps),
+    (lambda x: cos(2*pi*x),   array([-0.75, -0.25,  0.25,  0.75]),   1*eps),
+    (lambda x: sin(100*pi*x), linspace(-1,1,201),                    1*eps),
+    (lambda x: sin(5*pi/2*x), array([-.8, -.4, 0, .4, .8]),          1*eps)
     )
 for k, args in enumerate(rootstestfuns):
     _testfun_ = rootsTester(*args)

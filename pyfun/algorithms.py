@@ -4,7 +4,6 @@ from __future__ import division
 
 from warnings import warn
 
-from numpy import finfo
 from numpy import ones
 from numpy import arange
 from numpy import log
@@ -22,18 +21,18 @@ from numpy import imag
 from numpy import isreal
 from numpy import array
 from numpy import cos
+from numpy import inf
 from numpy import pi
 from numpy import diag
 from numpy import sort
 from numpy.fft import fft
 from numpy.fft import ifft
+from numpy.linalg import norm
 from numpy.linalg import eigvals
 
 from pyfun.utilities import Domain
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import preandpostprocess
-
-eps = finfo(float).eps
 
 # local helpers
 def find(x):
@@ -321,3 +320,17 @@ def coeffs2vals2(coeffs):
         vals = fft(tmp)
     vals = vals[n-1::-1]
     return vals
+
+
+def newtonroots(fun, rts, tol=2*eps, maxiter=10):
+    """Rootfinding for a callable and differentiable fun, typically used to
+    polish already computed roots."""
+    if rts.size > 0:
+        dfun = fun.diff()
+        prv = inf * rts
+        count = 0
+        while ( norm(rts-prv, inf) > tol ) & ( count <= maxiter ):
+            count += 1
+            prv = rts
+            rts = rts - fun(rts) / dfun(rts)
+    return rts

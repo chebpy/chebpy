@@ -13,6 +13,7 @@ from operator import __pos__
 from operator import __neg__
 from operator import __mul__
 
+from numpy import linspace
 from numpy import array
 from numpy import sin
 from numpy import cos
@@ -490,6 +491,40 @@ for unaryop in unaryops:
         _testfun_.__name__ = \
             "test{}{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
+
+class Roots(TestCase):
+
+    def test_empty(self):
+        ff = BndFun.initempty()
+        self.assertEquals(ff.roots().size, 0)
+
+    def test_const(self):
+        ff = BndFun.initconst(0., Domain(-2,3))
+        gg = BndFun.initconst(2., Domain(-2,3))
+        self.assertEquals(ff.roots().size, 0)
+        self.assertEquals(gg.roots().size, 0)
+
+# add tests for roots
+def rootsTester(f, interval, roots, tol):
+    domain = Domain(*interval)
+    ff = BndFun.initfun_adaptive(f, domain)
+    rts = ff.roots()
+    def tester(self):
+        self.assertLessEqual( infnorm(rts-roots), tol)
+    return tester
+
+rootstestfuns = (
+    (lambda x: 3*x+2.,        [-2,3],     array([-2/3]),                  eps),
+    (lambda x: x**2+.2*x-.08, [-2,5],     array([-.4, .2]),           3e1*eps),
+    (lambda x: sin(x),        [-7,7],     pi*linspace(-2,2,5),        1e1*eps),
+    (lambda x: cos(2*pi*x),   [-20,10],   linspace(-19.75, 9.75, 60), 3e1*eps),
+    (lambda x: sin(100*pi*x), [-0.5,0.5], linspace(-.5,.5,101),           eps),
+    (lambda x: sin(5*pi/2*x), [-1,1],     array([-.8, -.4, 0, .4, .8]),   eps)
+    )
+for k, args in enumerate(rootstestfuns):
+    _testfun_ = rootsTester(*args)
+    _testfun_.__name__ = "test_roots_{}".format(k)
+    setattr(Roots, _testfun_.__name__, _testfun_)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 _testfun_ = None

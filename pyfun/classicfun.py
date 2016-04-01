@@ -111,7 +111,9 @@ class ClassicFun(Fun):
         onefun = 2./(b-a) * self.onefun.diff()
         return self.__class__(onefun, self.domain)
 
-
+    def roots(self):
+        uroots = self.onefun.roots()
+        return self.domain(uroots)
 
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is

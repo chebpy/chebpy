@@ -14,6 +14,9 @@ from numpy import zeros
 from numpy import isscalar
 from numpy import max
 
+from numpy.linalg import norm
+from numpy import inf
+
 from matplotlib.pyplot import gca
 
 from pyfun.smoothfun import SmoothFun
@@ -28,6 +31,7 @@ from pyfun.algorithms import coeffs2vals2
 from pyfun.algorithms import chebpts2
 from pyfun.algorithms import barywts2
 from pyfun.algorithms import rootsunit
+from pyfun.algorithms import newtonroots
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -233,7 +237,9 @@ class ChebTech(SmoothFun):
     def roots(self):
         """Compute the roots of the ChebTech on [-1,1] using the
         coefficients in the associated Chebyshev series approximation"""
-        return rootsunit(self.coeffs())
+        rts = rootsunit(self.coeffs())
+        rts = newtonroots(self, rts)
+        return rts
 
     # ---------------------------------
     #            calculus
