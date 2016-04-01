@@ -12,12 +12,11 @@ from numpy import linspace
 from matplotlib.pyplot import gca
 
 from pyfun.fun import Fun
-
 from pyfun.chebtech import ChebTech2
-from pyfun.settings import DefaultPrefs
-
-from pyfun.utilities import checkempty
 from pyfun.utilities import Domain
+
+from pyfun.settings import DefaultPrefs
+from pyfun.decorators import checkempty
 
 Techs = {
     "ChebTech2": ChebTech2,

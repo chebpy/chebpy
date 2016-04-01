@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-"""
+
 from __future__ import division
 
 from abc import ABCMeta
@@ -12,26 +11,22 @@ from numpy import arange
 from numpy import append
 from numpy import pi
 from numpy import cos
-from numpy import real
-from numpy import imag
-from numpy import isreal
 from numpy import linspace
 from numpy import zeros
 from numpy import isscalar
 from numpy import max
 
-from numpy.fft import fft
-from numpy.fft import ifft
-
 from matplotlib.pyplot import gca
 
-from pyfun.settings import DefaultPrefs
 from pyfun.smoothfun import SmoothFun
-from pyfun.utilities import bary
-from pyfun.utilities import clenshaw
-from pyfun.utilities import checkempty
-from pyfun.utilities import ctor_adaptive
-from pyfun.utilities import coeffmult
+from pyfun.settings import DefaultPrefs
+from pyfun.decorators import checkempty
+from pyfun.algorithms import bary
+from pyfun.algorithms import clenshaw
+from pyfun.algorithms import ctor_adaptive
+from pyfun.algorithms import coeffmult
+from pyfun.algorithms import vals2coeffs2
+from pyfun.algorithms import coeffs2vals2
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -71,7 +66,7 @@ class ChebTech(SmoothFun):
     def initfun_fixedlen(cls, fun, n):
         points = cls.chebpts(n)
         values = fun(points)
-        coeffs = cls._vals2coeffs(values)
+        coeffs = vals2coeffs2(values)
         return cls(coeffs)
 
     @classmethod
@@ -137,7 +132,7 @@ class ChebTech(SmoothFun):
 
     def values(self):
         """Function values at Chebyshev points"""
-        return self._coeffs2vals(self._coeffs)
+        return coeffs2vals2(self._coeffs)
 
     def size(self):
         """Return the size of the object"""
@@ -350,52 +345,11 @@ class ChebTech2(ChebTech):
     @staticmethod
     def _vals2coeffs(vals):
         """Map function values at Chebyshev points of 2nd kind to 
-        first-kind Chebyshev polynomial coefficients"""        
-        n = vals.size
-        if n <= 1:
-            coeffs = vals
-            return coeffs
-            
-        tmp = append( vals[::-1], vals[1:-1] )    
-        
-        if isreal(vals).all():
-            coeffs = ifft(tmp)
-            coeffs = real(coeffs)
-      
-        elif isreal( 1j*vals ).all():
-            coeffs = ifft( imag(tmp) )
-            coeffs = 1j * real(coeffs)
-            
-        else:
-            coeffs = ifft(tmp)            
-        
-        coeffs = coeffs[:n]        
-        coeffs[1:n-1] = 2*coeffs[1:n-1]
-        return coeffs
+        first-kind Chebyshev polynomial coefficients"""
+        return vals2coeffs2(vals)
 
     @staticmethod
     def _coeffs2vals(coeffs):
         """Map first-kind Chebyshev polynomial coefficients to 
         function values at Chebyshev points of 2nd kind"""
-        n = coeffs.size
-        if n <= 1:
-            vals = coeffs
-            return vals
-        
-        coeffs = coeffs.copy()
-        coeffs[1:n-1] = .5 * coeffs[1:n-1]
-        tmp = append( coeffs, coeffs[n-2:0:-1] )
-         
-        if isreal(coeffs).all():
-            vals = fft(tmp)
-            vals = real(vals)
-            
-        elif isreal( 1j*coeffs ).all():
-            vals = fft( imag(tmp) )
-            vals = 1j * real(vals)
-            
-        else:
-            vals = fft(tmp)    
-            
-        vals = vals[n-1::-1]
-        return vals
+        return coeffs2vals2(coeffs)

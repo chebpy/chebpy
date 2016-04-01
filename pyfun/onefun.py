@@ -9,7 +9,7 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
-from pyfun.utilities import abstractclassmethod
+from pyfun.decorators import abstractclassmethod
 
 class OneFun(object):
     __metaclass__ = ABCMeta

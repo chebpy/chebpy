@@ -8,7 +8,7 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
-from utilities import abstractclassmethod
+from pyfun.decorators import abstractclassmethod
 
 class Fun(object):
 

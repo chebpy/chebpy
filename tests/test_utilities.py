@@ -17,10 +17,9 @@ from numpy.random import seed
 
 from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import ChebTech2
-
-from pyfun.utilities import bary
-from pyfun.utilities import clenshaw
-from pyfun.utilities import coeffmult
+from pyfun.algorithms import bary
+from pyfun.algorithms import clenshaw
+from pyfun.algorithms import coeffmult
 from pyfun.utilities import Domain
 
 from utilities import testfunctions
