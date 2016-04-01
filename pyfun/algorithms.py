@@ -20,6 +20,9 @@ from numpy import append
 from numpy import real
 from numpy import imag
 from numpy import isreal
+from numpy import array
+from numpy import cos
+from numpy import pi
 
 from numpy.fft import fft
 from numpy.fft import ifft
@@ -150,13 +153,13 @@ def standard_chop(coeffs, tol=eps):
     return min( (cutoff, n-1) )
 
 
-def ctor_adaptive(cls, fun, maxpow2=16):
+def adaptive(cls, fun, maxpow2=16):
     """Adaptive constructor: cycle over powers of two, calling
     standard_chop each time, the output of which determines whether or not
     we are happy."""
     for k in xrange(4, maxpow2+1):
         n = 2**k + 1
-        points = cls.chebpts(n)
+        points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
         chplen = standard_chop(coeffs)
@@ -181,6 +184,29 @@ def coeffmult(fc, gc):
     inputcfs = append(fc, gc)
     out = real(ak) if isreal(inputcfs).all() else ak
     return out
+
+
+def barywts2(n):
+    """Barycentric weights for Chebyshev points of 2nd kind"""
+    if n == 0:
+        wts = array([])
+    elif n == 1:
+        wts = array([1])
+    else:
+        wts = append( ones(n-1), .5 )
+        wts[n-2::-2] = -1
+        wts[0] = .5 * wts[0]
+    return wts
+
+
+def chebpts2(n):
+    """Return n Chebyshev points of the second-kind"""
+    if n == 1:
+        pts = array([0.])
+    else:
+        nn = arange(n)
+        pts = cos( nn[::-1] * pi/(n-1) )
+    return pts
 
 
 def vals2coeffs2(vals):

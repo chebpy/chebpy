@@ -36,8 +36,8 @@ class Evaluation(TestCase):
 
     def setUp(self):
         npts = 15
-        self.xk = ChebTech2.chebpts(npts)
-        self.vk = ChebTech2.barywts(npts)
+        self.xk = ChebTech2._chebpts(npts)
+        self.vk = ChebTech2._barywts(npts)
         self.fk = rand(npts)
         self.ak = rand(11)
         self.xx = -1 + 2*rand(9)
@@ -101,7 +101,7 @@ class Evaluation(TestCase):
                 self.assertEquals(type(fb), type(fc))
 
 evalpts = [linspace(-1,1,n) for n in array([1e2, 1e3, 1e4, 1e5])]
-ptsarry = [ChebTech2.chebpts(n) for n in array([100, 200])]
+ptsarry = [ChebTech2._chebpts(n) for n in array([100, 200])]
 methods = [bary, clenshaw]
 
 def evalTester(method, fun, evalpts, chebpts):
@@ -111,7 +111,7 @@ def evalTester(method, fun, evalpts, chebpts):
     fvals = fun(xk)
 
     if method is bary:
-        vk = ChebTech2.barywts(fvals.size)
+        vk = ChebTech2._barywts(fvals.size)
         a = bary(x, fvals, xk, vk)
         tol_multiplier = 1e0
 

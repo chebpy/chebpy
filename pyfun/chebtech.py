@@ -9,8 +9,6 @@ from numpy import array
 from numpy import ones
 from numpy import arange
 from numpy import append
-from numpy import pi
-from numpy import cos
 from numpy import linspace
 from numpy import zeros
 from numpy import isscalar
@@ -23,10 +21,12 @@ from pyfun.settings import DefaultPrefs
 from pyfun.decorators import checkempty
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
-from pyfun.algorithms import ctor_adaptive
+from pyfun.algorithms import adaptive
 from pyfun.algorithms import coeffmult
 from pyfun.algorithms import vals2coeffs2
 from pyfun.algorithms import coeffs2vals2
+from pyfun.algorithms import chebpts2
+from pyfun.algorithms import barywts2
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -64,14 +64,14 @@ class ChebTech(SmoothFun):
 
     @classmethod
     def initfun_fixedlen(cls, fun, n):
-        points = cls.chebpts(n)
+        points = cls._chebpts(n)
         values = fun(points)
         coeffs = vals2coeffs2(values)
         return cls(coeffs)
 
     @classmethod
     def initfun_adaptive(cls, fun):
-        coeffs = ctor_adaptive(cls, fun)
+        coeffs = adaptive(cls, fun)
         return cls(coeffs)
 
     def __init__(self, coeffs):
@@ -92,8 +92,8 @@ class ChebTech(SmoothFun):
         
     def __call__bary(self, x):
         fk = self.values()
-        xk = self.chebpts(fk.size)
-        vk = self.barywts(fk.size)
+        xk = self._chebpts(fk.size)
+        vk = self._barywts(fk.size)
         return bary(x, fk, xk, vk)
 
     def __str__(self):
@@ -300,11 +300,11 @@ class ChebTech(SmoothFun):
     #  subclasses must implement these
     # ---------------------------------
     @abstractmethod
-    def chebpts():
+    def _chebpts():
         pass
 
     @abstractmethod
-    def barywts():
+    def _barywts():
         pass
     
     @abstractmethod
@@ -320,27 +320,14 @@ class ChebTech2(ChebTech):
     """Second-Kind Chebyshev technology"""
     
     @staticmethod
-    def chebpts(n):
+    def _chebpts(n):
         """Return n Chebyshev points of the second-kind"""
-        if n == 1:
-            pts = array([0.])
-        else:
-            nn = arange(n)
-            pts = cos( nn[::-1] * pi/(n-1) )
-        return pts
+        return chebpts2(n)
 
     @staticmethod
-    def barywts(n):
+    def _barywts(n):
         """Barycentric weights for Chebyshev points of 2nd kind"""
-        if n == 0:
-            wts = array([])
-        elif n == 1:
-            wts = array([1])
-        else:
-            wts = append( ones(n-1), .5 )
-            wts[n-2::-2] = -1
-            wts[0] = .5 * wts[0]
-        return wts
+        return barywts2(n)
     
     @staticmethod
     def _vals2coeffs(vals):

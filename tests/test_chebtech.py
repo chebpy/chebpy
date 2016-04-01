@@ -40,7 +40,6 @@ eps = DefaultPrefs.eps
 seed(0)
 
 # staticmethod aliases
-chebpts      = ChebTech2.chebpts
 _vals2coeffs = ChebTech2._vals2coeffs
 _coeffs2vals = ChebTech2._coeffs2vals
 
@@ -49,7 +48,7 @@ class ChebyshevPoints(TestCase):
     """Unit-tests for ChebTech2"""
 
     def test_chebpts_0(self):
-        self.assertEquals(ChebTech2.chebpts(0).size, 0)
+        self.assertEquals(ChebTech2._chebpts(0).size, 0)
             
     def test_vals2coeffs_empty(self):
         self.assertEquals(_vals2coeffs(array([])).size, 0)
@@ -107,11 +106,11 @@ for k, n in enumerate(2**arange(2,18,2)):
 # Add second-kind Chebyshev points test cases to ChebyshevPoints
 # ------------------------------------------------------------------------
 chebpts2_testlist = (
-    (ChebTech2.chebpts(1), array([0.]), eps),
-    (ChebTech2.chebpts(2), array([-1., 1.]), eps),
-    (ChebTech2.chebpts(3), array([-1., 0., 1.]), eps),
-    (ChebTech2.chebpts(4), array([-1., -.5, .5, 1.]), 2*eps),
-    (ChebTech2.chebpts(5), array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
+    (ChebTech2._chebpts(1), array([0.]), eps),
+    (ChebTech2._chebpts(2), array([-1., 1.]), eps),
+    (ChebTech2._chebpts(3), array([-1., 0., 1.]), eps),
+    (ChebTech2._chebpts(4), array([-1., -.5, .5, 1.]), 2*eps),
+    (ChebTech2._chebpts(5), array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
 )
 for k, (a,b,tol) in enumerate(chebpts2_testlist):
     _testfun_ = infNormLessThanTol(a,b,tol)
@@ -122,7 +121,7 @@ for k, (a,b,tol) in enumerate(chebpts2_testlist):
 # and 1, respectively, and that the sequence is monotonically increasing
 def chebptsLenTester(k):
     def asserter(self):
-        pts = ChebTech2.chebpts(k)
+        pts = ChebTech2._chebpts(k)
         self.assertEquals(pts.size, k)
         self.assertEquals(pts[0], -1.)
         self.assertEquals(pts[-1], 1.)
