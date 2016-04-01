@@ -27,6 +27,7 @@ from pyfun.algorithms import vals2coeffs2
 from pyfun.algorithms import coeffs2vals2
 from pyfun.algorithms import chebpts2
 from pyfun.algorithms import barywts2
+from pyfun.algorithms import rootsunit
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -226,6 +227,13 @@ class ChebTech(SmoothFun):
 
     __rmul__ = __mul__
 
+    # ---------------------------------
+    #           rootfinding
+    # ---------------------------------
+    def roots(self):
+        """Compute the roots of the ChebTech on [-1,1] using the
+        coefficients in the associated Chebyshev series approximation"""
+        return rootsunit(self.coeffs())
 
     # ---------------------------------
     #            calculus

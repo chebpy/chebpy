@@ -22,6 +22,7 @@ from numpy import exp
 from numpy import pi
 from numpy import all
 from numpy import diff
+from numpy import linspace
 from numpy.random import rand
 from numpy.random import seed
 
@@ -541,6 +542,40 @@ for unaryop in unaryops:
         _testfun_.__name__ = \
             "test{}{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
+
+class Roots(TestCase):
+
+    def test_empty(self):
+        ff = ChebTech2.initempty()
+        self.assertEquals(ff.roots().size, 0)
+
+    def test_const(self):
+        ff = ChebTech2.initconst(0.)
+        gg = ChebTech2.initconst(2.)
+        self.assertEquals(ff.roots().size, 0)
+        self.assertEquals(gg.roots().size, 0)
+
+# add tests for roots
+def rootsTester(f, roots, tol):
+    ff = ChebTech2.initfun_adaptive(f)
+    rts = ff.roots()
+    def tester(self):
+        self.assertLessEqual( infnorm(rts-roots), tol)
+    return tester
+
+rootstestfuns = (
+    (lambda x: 3*x+2., array([-2/3]), eps),
+    (lambda x: x**2, array([0.,0.]), eps),
+    (lambda x: x**2+.2*x-.08, array([-.4, .2]), eps),
+    (lambda x: sin(x), array([0]), 3*eps),
+    (lambda x: cos(2*pi*x), array([-0.75, -0.25,  0.25,  0.75]), 1e1*eps),
+    (lambda x: sin(100*pi*x), linspace(-1,1,201), 3*eps),
+    (lambda x: sin(5*pi/2*x), array([-.8, -.4, 0, .4, .8]), 3*eps)
+    )
+for k, args in enumerate(rootstestfuns):
+    _testfun_ = rootsTester(*args)
+    _testfun_.__name__ = "test_roots_{}".format(k)
+    setattr(Roots, _testfun_.__name__, _testfun_)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 _testfun_ = None

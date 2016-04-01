@@ -23,10 +23,14 @@ from numpy import isreal
 from numpy import array
 from numpy import cos
 from numpy import pi
-
+from numpy import diag
+from numpy import sort
 from numpy.fft import fft
 from numpy.fft import ifft
+from numpy.linalg import eigvals
 
+from pyfun.utilities import Domain
+from pyfun.settings import DefaultPrefs
 from pyfun.decorators import preandpostprocess
 
 eps = finfo(float).eps
@@ -34,6 +38,73 @@ eps = finfo(float).eps
 # local helpers
 def find(x):
     return where(x)[0]
+
+# constants
+eps = DefaultPrefs.eps
+SPLITPOINT = -0.004849834917525
+
+
+def rootsunit(ak, htol=1e2*eps):
+    """Compute the roots of a funciton on [-1,1] using the coefficeints
+    in the associated Chebyshev series representation.
+
+    References
+    ----------
+    .. [1] I. J. Good, "The colleague matrix, a Chebyshev analogue of the
+        companion matrix", Quarterly Journal of Mathematics 12 (1961).
+
+    .. [2] J. A. Boyd, "Computing zeros on a real interval through
+        Chebyshev =expansion and polynomial rootfinding", SIAM Journal on
+        Numerical Analysis 40 (2002).
+
+    .. [3] L. N. Trefethen, Approximation Theory and Approximation
+        Practice, SIAM, 2013, chapter 18.
+    """
+    n = standard_chop(ak)
+    ak = ak[:n]
+
+    # if n > 50, we split and recurse
+    if n > 50:
+        chebpts = chebpts2(ak.size)
+        lmap = Domain(-1, SPLITPOINT)
+        rmap = Domain(SPLITPOINT, 1)
+        lpts = lmap(chebpts)
+        rpts = rmap(chebpts)
+        lval = clenshaw(lpts, ak)
+        rval = clenshaw(rpts, ak)
+        lcfs = vals2coeffs2(lval)
+        rcfs = vals2coeffs2(rval)
+        lrts = rootsunit(lcfs, 2*htol)
+        rrts = rootsunit(rcfs, 2*htol)
+        return append(lmap(lrts), rmap(rrts))
+
+    # trivial base case
+    if n <= 1:
+        return array([])
+
+    # nontrivial bases case: either compute directly or solve
+    # a Collegaue matrix eigenvalue problem
+    if n == 2:
+        rts = array([-ak[0]/ak[1]])
+    elif n <= 50:
+        v = .5 * ones(n-2)
+        C = diag(v,-1) + diag(v, 1)
+        C[0,1] = 1
+        D = zeros(C.shape)
+        D[-1,:] = ak[:-1]
+        E = C - .5 * 1./ak[-1] * D
+        rts = eigvals(E)
+
+    # discard values with large imaginary part and treat the remaining
+    # ones as real; then sort and retain only the roots inside [-1,1]
+    mask = abs(imag(rts)) < htol
+    rts = real(rts[mask])
+    rts = rts[abs(rts)<=1.+htol]
+    rts = sort(rts)
+    if rts.size >= 2:
+        rts[ 0] = max([rts[ 0],-1])
+        rts[-1] = min([rts[-1], 1])
+    return rts
 
 @preandpostprocess
 def bary(xx, fk, xk, vk):
@@ -174,7 +245,7 @@ def adaptive(cls, fun, maxpow2=16):
 
 
 def coeffmult(fc, gc):
-    """Coefficient-Space multiplication of equal-length first-kind 
+    """Coefficient-Space multiplication of equal-length first-kind
     Chebyshev series."""
     Fc = append( 2.*fc[:1], (fc[1:], fc[:0:-1]) )
     Gc = append( 2.*gc[:1], (gc[1:], gc[:0:-1]) )
@@ -210,13 +281,13 @@ def chebpts2(n):
 
 
 def vals2coeffs2(vals):
-    """Map function values at Chebyshev points of 2nd kind to 
-    first-kind Chebyshev polynomial coefficients"""        
+    """Map function values at Chebyshev points of 2nd kind to
+    first-kind Chebyshev polynomial coefficients"""
     n = vals.size
     if n <= 1:
         coeffs = vals
         return coeffs
-    tmp = append( vals[::-1], vals[1:-1] )    
+    tmp = append( vals[::-1], vals[1:-1] )
     if isreal(vals).all():
         coeffs = ifft(tmp)
         coeffs = real(coeffs)
@@ -225,13 +296,13 @@ def vals2coeffs2(vals):
         coeffs = 1j * real(coeffs)
     else:
         coeffs = ifft(tmp)
-    coeffs = coeffs[:n]        
+    coeffs = coeffs[:n]
     coeffs[1:n-1] = 2*coeffs[1:n-1]
     return coeffs
 
 
 def coeffs2vals2(coeffs):
-    """Map first-kind Chebyshev polynomial coefficients to 
+    """Map first-kind Chebyshev polynomial coefficients to
     function values at Chebyshev points of 2nd kind"""
     n = coeffs.size
     if n <= 1:
@@ -247,6 +318,6 @@ def coeffs2vals2(coeffs):
         vals = fft( imag(tmp) )
         vals = 1j * real(vals)
     else:
-        vals = fft(tmp) 
+        vals = fft(tmp)
     vals = vals[n-1::-1]
     return vals

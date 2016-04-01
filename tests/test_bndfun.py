@@ -37,9 +37,9 @@ eps = DefaultPrefs.eps
 seed(0)
 
 
-# NOTE: since (Fun/ClassicFun/)BndFun is not a user-facing class 
-# (although it is not abstract) we will test the interface in the way 
-# Chebfun will interact with it, which means working explcitly with  
+# NOTE: since (Fun/ClassicFun/)BndFun is not a user-facing class
+# (although it is not abstract) we will test the interface in the way
+# Chebfun will interact with it, which means working explcitly with
 # Domain objects.
 
 # Furthermore, since we have already tested the adaptive constructor
@@ -152,7 +152,7 @@ class Plotting(TestCase):
     """Unit-tests for BndFun plotting methods"""
 
     def setUp(self):
-        f = lambda x: sin(1*x) + 5e-1*cos(10*x) + 5e-3*sin(100*x) 
+        f = lambda x: sin(1*x) + 5e-1*cos(10*x) + 5e-3*sin(100*x)
         domain = Domain(-6, 10)
         self.f0 = BndFun.initfun_fixedlen(f, domain, 1000)
         self.f1 = BndFun.initfun_adaptive(f, domain)
@@ -268,7 +268,7 @@ derivatives = [
 def derivativeTester(fun, ifn, interval, tol):
     domain = Domain(*interval)
     ff = BndFun.initfun_adaptive(fun, domain)
-    gg = BndFun.initfun_fixedlen(ifn, domain, max(ff.size()-1,1))    
+    gg = BndFun.initfun_fixedlen(ifn, domain, max(ff.size()-1,1))
     def tester(self):
         absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
         self.assertLessEqual(absdiff, tol)
@@ -321,7 +321,7 @@ def fixedlenTester(fun, domain, n):
 
 funs = []
 fun_details = [
-    # (function, name for the test printouts, 
+    # (function, name for the test printouts,
     #  Matlab chebfun adaptive degree on [-2,3])
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)", [-2,3],  4),
     (lambda x: exp(x),              "exp(x)",   [-2,3], 20),
@@ -331,8 +331,8 @@ fun_details = [
     (lambda x: 0.*x,                "zerofun",  [-2,3],  1),
 ]
 
-for k, (fun, name, interval, funlen) in enumerate(fun_details):    
-    
+for k, (fun, name, interval, funlen) in enumerate(fun_details):
+
     fun.__name__ = name
     domain = Domain(*interval)
 
@@ -482,7 +482,7 @@ def unaryOpTester(unaryop, f, domain):
         xx = domain(self.yy)
         self.assertLessEqual( infnorm(gg(xx)-GG(xx)), 2e2*eps)
     return tester
-    
+
 for unaryop in unaryops:
     for (f, _) in testfunctions:
         domain = Domain(-.5,.9)
