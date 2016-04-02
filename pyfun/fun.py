@@ -127,6 +127,13 @@ class Fun(object):
     def vscale(self):
         pass
 
+    # -------------
+    #  rootfinding
+    # -------------
+    @abstractmethod
+    def roots(self):
+        pass
+
     # ----------
     #  calculus
     # ----------

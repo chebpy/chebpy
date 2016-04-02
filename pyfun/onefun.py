@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Here we define the functionality that OneFun descendent classes are 
+Here we define the functionality that Onefun descendent classes are 
 required to implement.
 """
 
@@ -11,7 +11,7 @@ from abc import abstractmethod
 
 from pyfun.decorators import abstractclassmethod
 
-class OneFun(object):
+class Onefun(object):
     __metaclass__ = ABCMeta
        
     @abstractclassmethod
@@ -123,6 +123,13 @@ class OneFun(object):
     @abstractmethod
     def __rmul__(self):
         pass
+
+    # ---------------------------------
+    #          rootfinding
+    # ---------------------------------
+    @abstractmethod
+    def roots(self):
+        pass    
 
     # ---------------------------------
     #            calculus

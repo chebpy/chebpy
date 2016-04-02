@@ -14,12 +14,9 @@ from numpy import zeros
 from numpy import isscalar
 from numpy import max
 
-from numpy.linalg import norm
-from numpy import inf
-
 from matplotlib.pyplot import gca
 
-from pyfun.smoothfun import SmoothFun
+from pyfun.smoothfun import Smoothfun
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import checkempty
 from pyfun.algorithms import bary
@@ -36,11 +33,11 @@ from pyfun.algorithms import newtonroots
 # machine epsilon
 eps = DefaultPrefs.eps
 
-class ChebTech(SmoothFun):
-    """Abstract base class serving as the template for ChebTech1 and 
-    ChebTech2 subclasses. 
+class Chebtech(Smoothfun):
+    """Abstract base class serving as the template for Chebtech1 and 
+    Chebtech2 subclasses. 
 
-    ChebTech objects always work with first-kind coefficients, so much 
+    Chebtech objects always work with first-kind coefficients, so much 
     of the core operational functionality is defined this level.
 
     The user will rarely work with these classes directly so we make
@@ -50,14 +47,14 @@ class ChebTech(SmoothFun):
     
     @classmethod
     def initconst(cls, c):
-        """Initialise a ChebTech from a constant c"""
+        """Initialise a Chebtech from a constant c"""
         if not isscalar(c):
             raise ValueError(c)
         return cls(array([float(c)]))
 
     @classmethod
     def initempty(cls):
-        """Initialise an empty ChebTech"""
+        """Initialise an empty Chebtech"""
         return cls(array([]))
 
     @classmethod
@@ -112,7 +109,7 @@ class ChebTech(SmoothFun):
     #     "public" utility methods
     # ---------------------------------
     def prolong(self, n):
-        """Return a ChebTech of length n, obtained either by truncating
+        """Return a Chebtech of length n, obtained either by truncating
         if n < self.size or zero-padding if n > self.size. In all cases a
         deep copy is returned.
         """
@@ -128,7 +125,7 @@ class ChebTech(SmoothFun):
         return out
 
     def copy(self):
-        """Return a deep copy of the ChebTech"""
+        """Return a deep copy of the Chebtech"""
         return self.__class__(self.coeffs().copy())
 
     def coeffs(self):
@@ -144,11 +141,11 @@ class ChebTech(SmoothFun):
         return self.coeffs().size
 
     def isempty(self):
-        """Return True if the ChebTech is empty"""
+        """Return True if the Chebtech is empty"""
         return self.size() == 0
 
     def isconst(self):
-        """Return True if the ChebTech represents a constant"""
+        """Return True if the Chebtech represents a constant"""
         return self.size() == 1
 
     def simplify(self):
@@ -157,7 +154,7 @@ class ChebTech(SmoothFun):
 
     @checkempty(resultif=0.)
     def vscale(self):
-        """Estimate the vertical scale of a ChebTech"""
+        """Estimate the vertical scale of a Chebtech"""
         if self.isconst():
             values = self.coeffs()
         else:
@@ -166,7 +163,7 @@ class ChebTech(SmoothFun):
         return vscale
 
     # ---------------------------------
-    #        ChebTech algebra
+    #        Chebtech algebra
     # ---------------------------------
     @checkempty()
     def __add__(self, f):
@@ -177,7 +174,7 @@ class ChebTech(SmoothFun):
             return cls(cfs)
         else:
             # TODO: is a more general decorator approach better here?
-            # TODO: for constant chebtech, convert to constant and call __add__ again 
+            # TODO: for constant Chebtech, convert to constant and call __add__ again 
             if f.isempty():
                 return f.copy()
             g = self
@@ -235,7 +232,7 @@ class ChebTech(SmoothFun):
     #           rootfinding
     # ---------------------------------
     def roots(self):
-        """Compute the roots of the ChebTech on [-1,1] using the
+        """Compute the roots of the Chebtech on [-1,1] using the
         coefficients in the associated Chebyshev series approximation"""
         rts = rootsunit(self.coeffs())
         rts = newtonroots(self, rts)
@@ -246,7 +243,7 @@ class ChebTech(SmoothFun):
     # ---------------------------------
     @checkempty(resultif=0.)
     def sum(self):
-        """Definite integral of a ChebTech on the interval [-1,1]"""
+        """Definite integral of a Chebtech on the interval [-1,1]"""
         if self.isconst():
             out = 2.*self(0.)
         else:
@@ -259,8 +256,8 @@ class ChebTech(SmoothFun):
 
     @checkempty()
     def cumsum(self):
-        """Return a ChebTech object representing the indefinite integral
-        of a ChebTech on the interval [-1,1]. The constant term is chosen
+        """Return a Chebtech object representing the indefinite integral
+        of a Chebtech on the interval [-1,1]. The constant term is chosen
         such that F(-1) = 0."""
         n = self.size()
         ak = append(self.coeffs(), [0, 0])
@@ -276,8 +273,8 @@ class ChebTech(SmoothFun):
 
     @checkempty()
     def diff(self):
-        """Return a ChebTech object representing the derivative of a
-        ChebTech on the interval [-1,1]."""
+        """Return a Chebtech object representing the derivative of a
+        Chebtech on the interval [-1,1]."""
         if self.isconst():
             out = self.__class__(array([0.]))
         else:
@@ -330,7 +327,7 @@ class ChebTech(SmoothFun):
         pass
 
 
-class ChebTech2(ChebTech):
+class Chebtech2(Chebtech):
     """Second-Kind Chebyshev technology"""
     
     @staticmethod

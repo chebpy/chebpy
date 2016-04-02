@@ -10,5 +10,5 @@ from numpy import finfo
 
 class DefaultPrefs():
     eps  = finfo(float).eps
-    tech = "ChebTech2"
+    tech = "Chebtech2"
     domain = array([-1., 1.])

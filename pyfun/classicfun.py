@@ -12,36 +12,36 @@ from numpy import linspace
 from matplotlib.pyplot import gca
 
 from pyfun.fun import Fun
-from pyfun.chebtech import ChebTech2
+from pyfun.chebtech import Chebtech2
 from pyfun.utilities import Domain
 
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import checkempty
 
 Techs = {
-    "ChebTech2": ChebTech2,
+    "Chebtech2": Chebtech2,
 }
 
 Tech = Techs[DefaultPrefs.tech]
 
 class InconsistentDomains(Exception):
-    """Raised when two ClassicFun domains to not match"""
+    """Raised when two Classicfun domains to not match"""
 
-class ClassicFun(Fun):
+class Classicfun(Fun):
 
     __metaclass__ = ABCMeta
 
     def __init__(self, onefun, domain):
-        """Initialise a ClassicFun from its two defining properties: a
+        """Initialise a Classicfun from its two defining properties: a
         Domain object and a Onefun object"""
         self.domain = domain
         self.onefun = onefun
 
     @classmethod
     def initempty(cls):
-        """Adaptive initialisation of a ClassicFun from a callable
+        """Adaptive initialisation of a Classicfun from a callable
         function f and a Domain object. The domain's domain has no
-        relevance to the emptiness status of a ClassicFun so we
+        relevance to the emptiness status of a Classicfun so we
         arbitrarily set this to be DefaultPrefs.domain"""
         domain = Domain()
         onefun = Tech.initempty()
@@ -134,7 +134,7 @@ def addUtility(methodname):
         return getattr(self.onefun, methodname)(*args, **kwargs)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
-    setattr(ClassicFun, methodname, method)
+    setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_other:
     addUtility(methodname)
@@ -157,7 +157,7 @@ def addZeroArgOp(methodname):
         return self.__class__(onefun, self.domain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
-    setattr(ClassicFun, methodname, method)
+    setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_zeroargs:
     addZeroArgOp(methodname)
@@ -195,7 +195,7 @@ def addBinaryOp(methodname):
         return cls(onefun, self.domain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
-    setattr(ClassicFun, methodname, method)
+    setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_binary:
     addBinaryOp(methodname)

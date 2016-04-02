@@ -7,7 +7,7 @@ from __future__ import division
 
 from abc import ABCMeta
 
-from pyfun.onefun import OneFun
+from pyfun.onefun import Onefun
 
-class SmoothFun(OneFun):
+class Smoothfun(Onefun):
     __metaclass__ = ABCMeta

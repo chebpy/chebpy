@@ -16,7 +16,7 @@ from numpy.random import rand
 from numpy.random import seed
 
 from pyfun.settings import DefaultPrefs
-from pyfun.chebtech import ChebTech2
+from pyfun.chebtech import Chebtech2
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
@@ -36,8 +36,8 @@ class Evaluation(TestCase):
 
     def setUp(self):
         npts = 15
-        self.xk = ChebTech2._chebpts(npts)
-        self.vk = ChebTech2._barywts(npts)
+        self.xk = Chebtech2._chebpts(npts)
+        self.vk = Chebtech2._barywts(npts)
         self.fk = rand(npts)
         self.ak = rand(11)
         self.xx = -1 + 2*rand(9)
@@ -73,18 +73,18 @@ class Evaluation(TestCase):
             self.assertTrue( isscalar(bary(x, self.fk, self.xk, self.vk)) )
         self.assertFalse( isscalar(bary(xx, self.fk, self.xk, self.vk)) )
 
-    # Check that we always get float output for constant ChebTechs, even 
+    # Check that we always get float output for constant Chebtechs, even 
     # when passing in an integer input.
     # TODO: Move these tests elsewhere?
     def test_bary__float_output(self):
-        ff = ChebTech2.initconst(1)
-        gg = ChebTech2.initconst(1.)
+        ff = Chebtech2.initconst(1)
+        gg = Chebtech2.initconst(1.)
         self.assertTrue(isinstance(ff(0, "bary"), float))
         self.assertTrue(isinstance(gg(0, "bary"), float))
 
     def test_clenshaw__float_output(self):
-        ff = ChebTech2.initconst(1)
-        gg = ChebTech2.initconst(1.)
+        ff = Chebtech2.initconst(1)
+        gg = Chebtech2.initconst(1.)
         self.assertTrue(isinstance(ff(0, "clenshaw"), float))
         self.assertTrue(isinstance(gg(0, "clenshaw"), float))
 
@@ -94,14 +94,14 @@ class Evaluation(TestCase):
         coeffs = rand(3)
         evalpts = (0.5, array([]), array([.5]), array([.5, .6]))
         for n in range(len(coeffs)):
-            ff = ChebTech2(coeffs[:n])
+            ff = Chebtech2(coeffs[:n])
             for xx in evalpts:
                 fb = ff(xx, "bary")
                 fc = ff(xx, "clenshaw")
                 self.assertEquals(type(fb), type(fc))
 
 evalpts = [linspace(-1,1,n) for n in array([1e2, 1e3, 1e4, 1e5])]
-ptsarry = [ChebTech2._chebpts(n) for n in array([100, 200])]
+ptsarry = [Chebtech2._chebpts(n) for n in array([100, 200])]
 methods = [bary, clenshaw]
 
 def evalTester(method, fun, evalpts, chebpts):
@@ -111,12 +111,12 @@ def evalTester(method, fun, evalpts, chebpts):
     fvals = fun(xk)
 
     if method is bary:
-        vk = ChebTech2._barywts(fvals.size)
+        vk = Chebtech2._barywts(fvals.size)
         a = bary(x, fvals, xk, vk)
         tol_multiplier = 1e0
 
     elif method is clenshaw:
-        ak = ChebTech2._vals2coeffs(fvals)
+        ak = Chebtech2._vals2coeffs(fvals)
         a = clenshaw(x, ak)
         tol_multiplier = 2e1
 
@@ -149,10 +149,10 @@ class Misc(TestCase):
         fn, gn = self.fn, self.gn
         hn = fn + gn - 1
         h  = lambda x: self.f(x) * self.g(x)
-        fc = ChebTech2.initfun(f, fn).prolong(hn).coeffs()
-        gc = ChebTech2.initfun(g, gn).prolong(hn).coeffs()
+        fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs()
+        gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs()
         hc = coeffmult(fc, gc)
-        HC = ChebTech2.initfun(h, hn).coeffs()
+        HC = Chebtech2.initfun(h, hn).coeffs()
         self.assertLessEqual( infnorm(hc-HC), 2e1*eps)
 
 # tests for usage of the Domain class

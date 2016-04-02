@@ -25,9 +25,9 @@ from numpy.random import seed
 from matplotlib.pyplot import subplots
 
 from pyfun.settings import DefaultPrefs
-from pyfun.chebtech import ChebTech2
+from pyfun.chebtech import Chebtech2
 
-from pyfun.bndfun import BndFun
+from pyfun.bndfun import Bndfun
 from pyfun.utilities import Domain
 
 from utilities import testfunctions
@@ -38,28 +38,28 @@ eps = DefaultPrefs.eps
 seed(0)
 
 
-# NOTE: since (Fun/ClassicFun/)BndFun is not a user-facing class
+# NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class
 # (although it is not abstract) we will test the interface in the way
 # Chebfun will interact with it, which means working explcitly with
 # Domain objects.
 
 # Furthermore, since we have already tested the adaptive constructor
-# in the ChebTech-level tests, we jsut use the adaptive constructor in
+# in the Chebtech-level tests, we jsut use the adaptive constructor in
 # these tests.
 
 class ClassUsage(TestCase):
-    """Unit-tests for miscelaneous BndFun class usage"""
+    """Unit-tests for miscelaneous Bndfun class usage"""
 
     def setUp(self):
         f = lambda x: sin(30*x)
         domain = Domain(-2,3)
-        self.ff = BndFun.initfun_adaptive(f, domain)
+        self.ff = Bndfun.initfun_adaptive(f, domain)
         self.xx = domain(-1 + 2*rand(100))
 
-        self.emptyfun = BndFun(ChebTech2.initempty(), domain)
-        self.constfun = BndFun(ChebTech2.initconst(1.), domain)
+        self.emptyfun = Bndfun(Chebtech2.initempty(), domain)
+        self.constfun = Bndfun(Chebtech2.initconst(1.), domain)
 
-    # tests for emptiness of BndFun objects
+    # tests for emptiness of Bndfun objects
     def test_isempty_True(self):
         self.assertTrue(self.emptyfun.isempty())
         self.assertFalse(not self.emptyfun.isempty())
@@ -68,7 +68,7 @@ class ClassUsage(TestCase):
         self.assertFalse(self.constfun.isempty())
         self.assertTrue(not self.constfun.isempty())
 
-    # tests for constantness of BndFun objects
+    # tests for constantness of Bndfun objects
     def test_isconst_True(self):
         self.assertTrue(self.constfun.isconst())
         self.assertFalse(not self.constfun.isconst())
@@ -81,9 +81,9 @@ class ClassUsage(TestCase):
     def test_size(self):
         cfs = rand(10)
         domain = Domain()
-        b0 = BndFun(ChebTech2(array([])), domain)
-        b1 = BndFun(ChebTech2(array([1.])), domain)
-        b2 = BndFun(ChebTech2(cfs), domain)
+        b0 = Bndfun(Chebtech2(array([])), domain)
+        b1 = Bndfun(Chebtech2(array([1.])), domain)
+        b2 = Bndfun(Chebtech2(cfs), domain)
         self.assertEquals(b0.size(), 0)
         self.assertEquals(b1.size(), 1)
         self.assertEquals(b2.size(), cfs.size)
@@ -137,7 +137,7 @@ vscales = [
 
 def definiteIntegralTester(fun, interval, vscale):
     domain = Domain(*interval)
-    ff = BndFun.initfun_adaptive(fun, domain)
+    ff = Bndfun.initfun_adaptive(fun, domain)
     def tester(self):
         absdiff = abs(ff.vscale()-vscale)
         self.assertLessEqual(absdiff, .1*vscale)
@@ -150,13 +150,13 @@ for k, args in enumerate(vscales):
 
 
 class Plotting(TestCase):
-    """Unit-tests for BndFun plotting methods"""
+    """Unit-tests for Bndfun plotting methods"""
 
     def setUp(self):
         f = lambda x: sin(1*x) + 5e-1*cos(10*x) + 5e-3*sin(100*x)
         domain = Domain(-6, 10)
-        self.f0 = BndFun.initfun_fixedlen(f, domain, 1000)
-        self.f1 = BndFun.initfun_adaptive(f, domain)
+        self.f0 = Bndfun.initfun_fixedlen(f, domain, 1000)
+        self.f1 = Bndfun.initfun_adaptive(f, domain)
 
     def test_plot(self):
         fig, ax = subplots()
@@ -170,12 +170,12 @@ class Plotting(TestCase):
 
 
 class Calculus(TestCase):
-    """Unit-tests for BndFun calculus operations"""
+    """Unit-tests for Bndfun calculus operations"""
 
     def setUp(self):
-        self.emptyfun = BndFun(ChebTech2.initempty(), Domain())
+        self.emptyfun = Bndfun(Chebtech2.initempty(), Domain())
         self.yy = -1 + 2*rand(2000)
-#        self.constfun = BndFun(ChebTech2.initconst(1.), domain)
+#        self.constfun = Bndfun(Chebtech2.initconst(1.), domain)
 
     # tests for the correct results in the empty cases
     def test_sum_empty(self):
@@ -205,7 +205,7 @@ def_integrals = [
 
 def definiteIntegralTester(fun, interval, integral, tol):
     domain = Domain(*interval)
-    ff = BndFun.initfun_adaptive(fun, domain)
+    ff = Bndfun.initfun_adaptive(fun, domain)
     def tester(self):
         absdiff = abs(ff.sum()-integral)
         self.assertLessEqual(absdiff, tol)
@@ -235,8 +235,8 @@ indef_integrals = [
 
 def indefiniteIntegralTester(fun, ifn, interval, tol):
     domain = Domain(*interval)
-    ff = BndFun.initfun_adaptive(fun, domain)
-    gg = BndFun.initfun_fixedlen(ifn, domain, ff.size()+1)
+    ff = Bndfun.initfun_adaptive(fun, domain)
+    gg = Bndfun.initfun_fixedlen(ifn, domain, ff.size()+1)
     coeffs = gg.coeffs()
     coeffs[0] = coeffs[0] - ifn(array([interval[0]]))
     def tester(self):
@@ -268,8 +268,8 @@ derivatives = [
 
 def derivativeTester(fun, ifn, interval, tol):
     domain = Domain(*interval)
-    ff = BndFun.initfun_adaptive(fun, domain)
-    gg = BndFun.initfun_fixedlen(ifn, domain, max(ff.size()-1,1))
+    ff = Bndfun.initfun_adaptive(fun, domain)
+    gg = Bndfun.initfun_fixedlen(ifn, domain, max(ff.size()-1,1))
     def tester(self):
         absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
         self.assertLessEqual(absdiff, tol)
@@ -282,40 +282,40 @@ for k, (fun, der, n, tol) in enumerate(derivatives):
 
 
 class Construction(TestCase):
-    """Unit-tests for construction of BndFun objects"""
+    """Unit-tests for construction of Bndfun objects"""
 
     def test_onefun_construction(self):
         coeffs = rand(10)
         domain = Domain()
-        onefun = ChebTech2(coeffs)
-        f = BndFun(onefun, domain)
-        self.assertIsInstance(f, BndFun)
+        onefun = Chebtech2(coeffs)
+        f = Bndfun(onefun, domain)
+        self.assertIsInstance(f, Bndfun)
         self.assertLess(infnorm(f.coeffs()-coeffs), eps)
 
     def test_const_construction(self):
         domain = Domain()
-        ff = BndFun.initconst(1., domain)
+        ff = Bndfun.initconst(1., domain)
         self.assertEquals(ff.size(), 1)
         self.assertTrue(ff.isconst())
         self.assertFalse(ff.isempty())
-        self.assertRaises(ValueError, BndFun.initconst, [1.], domain)
+        self.assertRaises(ValueError, Bndfun.initconst, [1.], domain)
 
     def test_empty_construction(self):
-        ff = BndFun.initempty()
+        ff = Bndfun.initempty()
         self.assertEquals(ff.size(), 0)
         self.assertFalse(ff.isconst())
         self.assertTrue(ff.isempty())
-        self.assertRaises(TypeError, BndFun.initempty, [1.])
+        self.assertRaises(TypeError, Bndfun.initempty, [1.])
 
 
 def adaptiveTester(fun, domain, funlen):
-    ff = BndFun.initfun_adaptive(fun, domain)
+    ff = Bndfun.initfun_adaptive(fun, domain)
     def tester(self):
         self.assertEquals(ff.size(), funlen)
     return tester
 
 def fixedlenTester(fun, domain, n):
-    ff = BndFun.initfun_fixedlen(fun, domain, n)
+    ff = Bndfun.initfun_fixedlen(fun, domain, n)
     def tester(self):
         self.assertEquals(ff.size(), n)
     return tester
@@ -351,52 +351,52 @@ for k, (fun, name, interval, funlen) in enumerate(fun_details):
 
 
 class Algebra(TestCase):
-    """Unit-tests for BndFun algebraic operations"""
+    """Unit-tests for Bndfun algebraic operations"""
     def setUp(self):
         self.yy = -1 + 2 * rand(1000)
-        self.emptyfun = BndFun.initempty()
+        self.emptyfun = Bndfun.initempty()
 
-    # check (empty BndFun) + (BndFun) = (empty BndFun)
-    #   and (BndFun) + (empty BndFun) = (empty BndFun)
+    # check (empty Bndfun) + (Bndfun) = (empty Bndfun)
+    #   and (Bndfun) + (empty Bndfun) = (empty Bndfun)
     def test__add__radd__empty(self):
         domain = Domain(-2,3)
         for (fun, funlen) in testfunctions:
-            chebtech = BndFun.initfun_fixedlen(fun, domain, funlen)
+            chebtech = Bndfun.initfun_fixedlen(fun, domain, funlen)
             self.assertTrue((self.emptyfun+chebtech).isempty())
             self.assertTrue((chebtech+self.emptyfun).isempty())
 
-    # check the output of (constant + BndFun)
-    #                 and (BndFun + constant)
+    # check the output of (constant + Bndfun)
+    #                 and (Bndfun + constant)
     def test__add__radd__constant(self):
         domain = Domain(-.5,.9)
         xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
-                boundedfun = BndFun.initfun_fixedlen(fun, domain, funlen)
+                boundedfun = Bndfun.initfun_fixedlen(fun, domain, funlen)
                 f1 = const + boundedfun
                 f2 = boundedfun + const
                 tol = 3e1 * eps * abs(const)
                 self.assertLessEqual( infnorm(f(xx)-f1(xx)), tol )
                 self.assertLessEqual( infnorm(f(xx)-f2(xx)), tol )
 
-    # check (empty BndFun) - (BndFun) = (empty BndFun)
-    #   and (BndFun) - (empty BndFun) = (empty BndFun)
+    # check (empty Bndfun) - (Bndfun) = (empty Bndfun)
+    #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
     def test__sub__rsub__empty(self):
         domain = Domain(-2,3)
         for (fun, funlen) in testfunctions:
-            chebtech = BndFun.initfun_fixedlen(fun, domain, funlen)
+            chebtech = Bndfun.initfun_fixedlen(fun, domain, funlen)
             self.assertTrue((self.emptyfun-chebtech).isempty())
             self.assertTrue((chebtech-self.emptyfun).isempty())
 
-    # check the output of constant - BndFun
-    #                 and BndFun - constant
+    # check the output of constant - Bndfun
+    #                 and Bndfun - constant
     def test__sub__rsub__constant(self):
         domain = Domain(-.5,.9)
         xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                boundedfun = BndFun.initfun_fixedlen(fun, domain, funlen)
+                boundedfun = Bndfun.initfun_fixedlen(fun, domain, funlen)
                 f = lambda x: const - fun(x)
                 g = lambda x: fun(x) - const
                 ff = const - boundedfun
@@ -405,23 +405,23 @@ class Algebra(TestCase):
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
                 self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
 
-    # check (empty BndFun) * (BndFun) = (empty BndFun)
-    #   and (BndFun) * (empty BndFun) = (empty BndFun)
+    # check (empty Bndfun) * (Bndfun) = (empty Bndfun)
+    #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
     def test__mul__rmul__empty(self):
         domain = Domain(-2,3)
         for (fun, funlen) in testfunctions:
-            chebtech = BndFun.initfun_fixedlen(fun, domain, funlen)
+            chebtech = Bndfun.initfun_fixedlen(fun, domain, funlen)
             self.assertTrue((self.emptyfun*chebtech).isempty())
             self.assertTrue((chebtech*self.emptyfun).isempty())
 
-    # check the output of constant * BndFun
-    #                 and BndFun * constant
+    # check the output of constant * Bndfun
+    #                 and Bndfun * constant
     def test__rmul__constant(self):
         domain = Domain(-.5,.9)
         xx = domain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                boundedfun = BndFun.initfun_fixedlen(fun, domain, funlen)
+                boundedfun = Bndfun.initfun_fixedlen(fun, domain, funlen)
                 f = lambda x: const * fun(x)
                 g = lambda x: fun(x) * const
                 ff = const * boundedfun
@@ -430,11 +430,11 @@ class Algebra(TestCase):
                 self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
                 self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
 
-    # check    +(empty BndFun) = (empty BndFun)
+    # check    +(empty Bndfun) = (empty Bndfun)
     def test__pos__empty(self):
         self.assertTrue( (+self.emptyfun).isempty() )
 
-    # check -(empty BndFun) = (empty BndFun)
+    # check -(empty Bndfun) = (empty Bndfun)
     def test__neg__empty(self):
         self.assertTrue( (-self.emptyfun).isempty() )
 
@@ -447,9 +447,9 @@ binops = (
 
 # add tests for the binary operators
 def binaryOpTester(f, g, domain, binop):
-    ff = BndFun.initfun_adaptive(f, domain)
-    gg = BndFun.initfun_adaptive(g, domain)
-    FG = BndFun.initfun_adaptive(lambda x: binop(f(x),g(x)), domain)
+    ff = Bndfun.initfun_adaptive(f, domain)
+    gg = Bndfun.initfun_adaptive(g, domain)
+    FG = Bndfun.initfun_adaptive(lambda x: binop(f(x),g(x)), domain)
     fg = binop(ff, gg)
     def tester(self):
         xx = domain(self.yy)
@@ -476,8 +476,8 @@ unaryops = (
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, domain):
-    ff = BndFun.initfun_adaptive(f, domain)
-    gg = BndFun.initfun_adaptive(lambda x: unaryop(f(x)), domain)
+    ff = Bndfun.initfun_adaptive(f, domain)
+    gg = Bndfun.initfun_adaptive(lambda x: unaryop(f(x)), domain)
     GG = unaryop(ff)
     def tester(self):
         xx = domain(self.yy)
@@ -495,19 +495,19 @@ for unaryop in unaryops:
 class Roots(TestCase):
 
     def test_empty(self):
-        ff = BndFun.initempty()
+        ff = Bndfun.initempty()
         self.assertEquals(ff.roots().size, 0)
 
     def test_const(self):
-        ff = BndFun.initconst(0., Domain(-2,3))
-        gg = BndFun.initconst(2., Domain(-2,3))
+        ff = Bndfun.initconst(0., Domain(-2,3))
+        gg = Bndfun.initconst(2., Domain(-2,3))
         self.assertEquals(ff.roots().size, 0)
         self.assertEquals(gg.roots().size, 0)
 
 # add tests for roots
 def rootsTester(f, interval, roots, tol):
     domain = Domain(*interval)
-    ff = BndFun.initfun_adaptive(f, domain)
+    ff = Bndfun.initfun_adaptive(f, domain)
     rts = ff.roots()
     def tester(self):
         self.assertLessEqual( infnorm(rts-roots), tol)
