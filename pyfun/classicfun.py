@@ -13,7 +13,7 @@ from matplotlib.pyplot import gca
 
 from pyfun.fun import Fun
 from pyfun.chebtech import Chebtech2
-from pyfun.utilities import Domain
+from pyfun.utilities import Subdomain
 
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import checkempty
@@ -24,53 +24,53 @@ Techs = {
 
 Tech = Techs[DefaultPrefs.tech]
 
-class InconsistentDomains(Exception):
-    """Raised when two Classicfun domains to not match"""
+class InconsistentSubdomains(Exception):
+    """Raised when two Classicfun subdomains to not match"""
 
 class Classicfun(Fun):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, onefun, domain):
+    def __init__(self, onefun, subdomain):
         """Initialise a Classicfun from its two defining properties: a
-        Domain object and a Onefun object"""
-        self.domain = domain
+        Subdomain object and a Onefun object"""
         self.onefun = onefun
+        self.subdomain = subdomain
 
     @classmethod
     def initempty(cls):
         """Adaptive initialisation of a Classicfun from a callable
-        function f and a Domain object. The domain's domain has no
+        function f and a Subdomain object. The subdomain's subdomain has no
         relevance to the emptiness status of a Classicfun so we
-        arbitrarily set this to be DefaultPrefs.domain"""
-        domain = Domain()
+        arbitrarily set this to be DefaultPrefs.subdomain"""
+        subdomain = Subdomain()
         onefun = Tech.initempty()
-        return cls(onefun, domain)
+        return cls(onefun, subdomain)
 
     @classmethod
-    def initconst(cls, c, domain):
+    def initconst(cls, c, subdomain):
         """ """
         onefun = Tech.initconst(c)
-        return cls(onefun, domain)
+        return cls(onefun, subdomain)
 
     @classmethod
-    def initfun_adaptive(cls, f, domain):
+    def initfun_adaptive(cls, f, subdomain):
         """Adaptive initialisation of a BndFun from a callable function f
-        and a Domain object"""
-        uifunc = lambda y: f(domain(y))
+        and a Subdomain object"""
+        uifunc = lambda y: f(subdomain(y))
         onefun = Tech.initfun(uifunc)
-        return cls(onefun, domain)
+        return cls(onefun, subdomain)
 
     @classmethod
-    def initfun_fixedlen(cls, f, domain, n):
+    def initfun_fixedlen(cls, f, subdomain, n):
         """Fixed length initialisation of a BndFun from a callable
-        function f and a Domain object"""
-        uifunc = lambda y: f(domain(y))
+        function f and a Subdomain object"""
+        uifunc = lambda y: f(subdomain(y))
         onefun = Tech.initfun(uifunc, n)
-        return cls(onefun, domain)
+        return cls(onefun, subdomain)
 
     def __call__(self, x, how="clenshaw"):
-        y = self.domain.invmap(x)
+        y = self.subdomain.invmap(x)
         return self.onefun(y, how)
 
     def plot(self, ax=None, *args, **kwargs):
@@ -89,13 +89,13 @@ class Classicfun(Fun):
     def __repr__(self):
         return self.__str__()
 
-    def domain(self):
-        """Return the Domain object associated with the Classicfun"""
-        return self.domain
+    def subdomain(self):
+        """Return the Subdomain object associated with the Classicfun"""
+        return self.subdomain
 
     def endpoints(self):
-        """Return a 2-array of endpointvalues taken from the domain"""
-        return self.domain.values
+        """Return a 2-array of endpointvalues taken from the subdomain"""
+        return self.subdomain.values
 
     def sum(self):
         a, b = self.endpoints()
@@ -104,16 +104,16 @@ class Classicfun(Fun):
     def cumsum(self):
         a, b = self.endpoints()
         onefun = .5*(b-a) * self.onefun.cumsum()
-        return self.__class__(onefun, self.domain)
+        return self.__class__(onefun, self.subdomain)
 
     def diff(self):
         a, b = self.endpoints()
         onefun = 2./(b-a) * self.onefun.diff()
-        return self.__class__(onefun, self.domain)
+        return self.__class__(onefun, self.subdomain)
 
     def roots(self):
         uroots = self.onefun.roots()
-        return self.domain(uroots)
+        return self.subdomain(uroots)
 
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is
@@ -154,7 +154,7 @@ methods_onefun_zeroargs = (
 def addZeroArgOp(methodname):
     def method(self, *args, **kwargs):
         onefun = getattr(self.onefun, methodname)(*args, **kwargs)
-        return self.__class__(onefun, self.domain)
+        return self.__class__(onefun, self.subdomain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
     setattr(Classicfun, methodname, method)
@@ -185,14 +185,14 @@ def addBinaryOp(methodname):
             if f.isempty():
                 return f.copy()
             g = f.onefun
-            # raise Exception if domains are not consistent
-            if self.domain != f.domain:
-                raise InconsistentDomains(self.domain(), f.domain())
+            # raise Exception if subdomains are not consistent
+            if self.subdomain != f.subdomain:
+                raise InconsistentSubdomains(self.subdomain(), f.subdomain())
         else:
             # let the lower level classes raise any other exceptions
             g = f
         onefun = getattr(self.onefun, methodname)(g, *args, **kwargs)
-        return cls(onefun, self.domain)
+        return cls(onefun, self.subdomain)
     method.__name__ = methodname
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
     setattr(Classicfun, methodname, method)

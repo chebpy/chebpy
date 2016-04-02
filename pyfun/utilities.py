@@ -4,21 +4,20 @@ from __future__ import division
 
 from numpy import array
 
-class Domain(object):
+class Subdomain(object):
     """
-    Utility class to implement domain logic. The purpose of this class
-    is to both enforce certain properties of domain components such as
-    having exactly two monotonically increasing elements which are
-    monotonically, and also to implment mapping to and from the unit
-    interval.
+    Utility class to implement subdomain logic. The purpose of this class is to
+    both enforce certain properties of domain components such as having exactly
+    two monotonically increasing elements and also to implement the
+    functionality of mapping to and from the unit interval.
 
         formap: y in [-1,1] -> x in [a,b]
         invmap: x in  [a,b] -> y in [-1,1]
         drvmap: y in [-1,1] -> x in [a,b]
 
-    We also provide a convenience __eq__ method amd set the __call__
-    method to evaluate self.formap since this will be used the most
-    frequently.
+    We also provide a convenience __eq__ method amd set the __call__ method to
+    evaluate self.formap since this will be used the most frequently used
+    operation.
 
     Currently only implemented for finite a and b.
     """
@@ -28,7 +27,7 @@ class Domain(object):
         self.values = array([a, b])
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
-        self.dermap = lambda y: 0.*y + .5*(b-a)
+        self.drvmap = lambda y: 0.*y + .5*(b-a)
         
     def __eq__(self, other):
         return (self.values == other.values).all() 

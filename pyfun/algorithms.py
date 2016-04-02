@@ -30,7 +30,7 @@ from numpy.fft import ifft
 from numpy.linalg import norm
 from numpy.linalg import eigvals
 
-from pyfun.utilities import Domain
+from pyfun.utilities import Subdomain
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import preandpostprocess
 
@@ -65,8 +65,8 @@ def rootsunit(ak, htol=1e2*eps):
     # if n > 50, we split and recurse
     if n > 50:
         chebpts = chebpts2(ak.size)
-        lmap = Domain(-1, SPLITPOINT)
-        rmap = Domain(SPLITPOINT, 1)
+        lmap = Subdomain(-1, SPLITPOINT)
+        rmap = Subdomain(SPLITPOINT, 1)
         lpts = lmap(chebpts)
         rpts = rmap(chebpts)
         lval = clenshaw(lpts, ak)

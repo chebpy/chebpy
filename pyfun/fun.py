@@ -92,7 +92,7 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def domain(self):
+    def subdomain(self):
         pass
 
     @abstractmethod
