@@ -44,7 +44,7 @@ seed(0)
 # Subdomain objects.
 
 # Furthermore, since we have already tested the adaptive constructor
-# in the Chebtech-level tests, we jsut use the adaptive constructor in
+# in the Chebtech-level tests, we just use the adaptive constructor in
 # these tests.
 
 class ClassUsage(TestCase):
@@ -53,6 +53,7 @@ class ClassUsage(TestCase):
     def setUp(self):
         f = lambda x: sin(30*x)
         subdomain = Subdomain(-2,3)
+        self.f = f
         self.ff = Bndfun.initfun_adaptive(f, subdomain)
         self.xx = subdomain(-1 + 2*rand(100))
 
@@ -87,6 +88,17 @@ class ClassUsage(TestCase):
         self.assertEquals(b0.size(), 0)
         self.assertEquals(b1.size(), 1)
         self.assertEquals(b2.size(), cfs.size)
+
+    def test_endpoints(self):
+        a, b = self.ff.endpoints()
+        self.assertEqual(a, -2)
+        self.assertEqual(b, 3)
+
+    def test_endvalues(self):
+        a, b = self.ff.endpoints()
+        fa, fb = self.ff.endvalues()
+        self.assertLessEqual(abs(fa-self.f(a)), 2e1*eps)
+        self.assertLessEqual(abs(fb-self.f(b)), 2e1*eps)
 
     # test the different permutations of self(xx, ..)
     def test_call(self):

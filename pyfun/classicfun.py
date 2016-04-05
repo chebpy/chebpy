@@ -97,6 +97,10 @@ class Classicfun(Fun):
         """Return a 2-array of endpointvalues taken from the subdomain"""
         return self.subdomain.values
 
+    def endvalues(self):
+        """Return a 2-array of endpointvalues taken from the subdomain"""
+        return self(self.endpoints())
+
     def sum(self):
         a, b = self.endpoints()
         return .5*(b-a) * self.onefun.sum()
