@@ -25,10 +25,11 @@ from numpy import inf
 from numpy import pi
 from numpy import diag
 from numpy import sort
-from numpy.fft import fft
-from numpy.fft import ifft
 from numpy.linalg import norm
 from numpy.linalg import eigvals
+
+from pyfun.ffts import fft
+from pyfun.ffts import ifft
 
 from pyfun.utilities import Subdomain
 from pyfun.settings import DefaultPrefs

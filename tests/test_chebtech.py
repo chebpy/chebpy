@@ -339,7 +339,7 @@ derivatives = [
     (lambda x: x,           lambda x: 0*x+1,        2,        2*eps),
     (lambda x: x**2,        lambda x: 2*x,          3,        2*eps),
     (lambda x: x**3,        lambda x: 3*x**2,       4,        2*eps),
-    (lambda x: x**4,        lambda x: 4*x**3,       5,        2*eps),
+    (lambda x: x**4,        lambda x: 4*x**3,       5,        3*eps),
     (lambda x: x**5,        lambda x: 5*x**4,       6,        4*eps),
     (lambda x: sin(x),      lambda x: cos(x),      16,      5e1*eps),
     (lambda x: cos(3*x),    lambda x: -3*sin(3*x), 23,      5e2*eps),
