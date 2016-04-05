@@ -4,7 +4,6 @@ from __future__ import division
 
 from numpy import array
 from numpy import logical_and
-from numpy import logical_or
 
 class Subdomain(object):
     """
