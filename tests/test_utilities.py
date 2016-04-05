@@ -182,6 +182,18 @@ class TestSubdomain(TestCase):
         vals = subdomain.invmap( subdomain(yy) ) - yy
         self.assertLessEqual( infnorm(vals), eps)
 
+    def test_isinterior(self):
+        npts = 1000
+        x1 = linspace(-2, 3,npts)
+        x2 = linspace(-3,-2,npts)
+        x3 = linspace(3,4,npts)
+        x4 = linspace(5,6,npts)
+        subdomain = Subdomain(-2,3)
+        self.assertEquals(subdomain.isinterior(x1).sum(), npts-2)
+        self.assertEquals(subdomain.isinterior(x2).sum(), 0)
+        self.assertEquals(subdomain.isinterior(x3).sum(), 0)
+        self.assertEquals(subdomain.isinterior(x4).sum(), 0)
+
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

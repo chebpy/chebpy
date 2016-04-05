@@ -3,6 +3,8 @@
 from __future__ import division
 
 from numpy import array
+from numpy import logical_and
+from numpy import logical_or
 
 class Subdomain(object):
     """
@@ -42,3 +44,7 @@ class Subdomain(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def isinterior(self, x):
+        a, b = self.values
+        return logical_and(a<x, x<b)
