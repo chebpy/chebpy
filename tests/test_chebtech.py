@@ -89,7 +89,7 @@ def coeffs2vals2coeffsTester(n):
         self.assertLessEqual( infnorm(coeffs-_coeffs_), scaled_tol(n) )
     return asserter
 
-for k, n in enumerate(2**arange(2,18,2)):
+for k, n in enumerate(2**arange(2,18,2)+1):
 
     # vals2coeffs2vals
     _testfun_ = vals2coeffs2valsTester(n)
