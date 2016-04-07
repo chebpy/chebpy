@@ -20,15 +20,10 @@ from pyfun.bndfun import Bndfun
 from pyfun.utilities import Subdomain
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import checkempty
+from pyfun.exceptions import SubdomainGap
+from pyfun.exceptions import SubdomainOverlap
 
 defaultdomain = DefaultPrefs.domain
-
-class SubdomainOverlap(Exception):
-    pass
-
-class SubdomainGap(Exception):
-    pass
-
 
 class Chebfun(object):
 
