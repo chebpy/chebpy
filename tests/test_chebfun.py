@@ -22,7 +22,6 @@ from numpy import exp
 #from numpy import all
 #from numpy import diff
 #from numpy import linspace
-from numpy import allclose
 #from numpy.random import rand
 #from numpy.random import seed
 #
@@ -32,12 +31,12 @@ from pyfun.settings import DefaultPrefs
 from pyfun.bndfun import Bndfun
 from pyfun.utilities import Subdomain
 
-#from pyfun.chebfun import Chebfun
+from pyfun.chebfun import Chebfun
 from pyfun.chebfun import verify
 from pyfun.chebfun import breakdata
 
-from pyfun.chebfun import SubdomainGap
-from pyfun.chebfun import SubdomainOverlap
+from pyfun.exceptions import SubdomainGap
+from pyfun.exceptions import SubdomainOverlap
 
 #from utilities import testfunctions
 from utilities import infnorm
@@ -46,8 +45,9 @@ from utilities import infnorm
 
 eps = DefaultPrefs.eps
 
+
 # ------------------------
-class Construction(TestCase):
+class Auxilliary(TestCase):
     """Unit-tests for Chebtech2"""
 
     def setUp(self):
@@ -102,11 +102,76 @@ class Construction(TestCase):
         self.assertLessEqual(infnorm(x-array([-1,0,1])), eps)
         self.assertLessEqual(infnorm(y-array([exp(-1),exp(0),exp(1)])), 2*eps) 
 
-#    def test_isempty(self):
       
-      
+class Construction(TestCase):
 
-    # TODO: further checks for chepbts
+    def setUp(self):
+        f = lambda x: exp(x)
+        self.f = f
+        self.fun0 = Bndfun.initfun_adaptive(f, Subdomain(-1,0) )
+        self.fun1 = Bndfun.initfun_adaptive(f, Subdomain(0,1) )
+        self.fun2 = Bndfun.initfun_adaptive(f, Subdomain(-.5,0.5) )
+        self.fun3 = Bndfun.initfun_adaptive(f, Subdomain(2,2.5) )
+        self.fun4 = Bndfun.initfun_adaptive(f, Subdomain(-3,-2) )
+        self.funs_a = array([self.fun1, self.fun0, self.fun2])
+        self.funs_b = array([self.fun1, self.fun2])
+        self.funs_c = array([self.fun0, self.fun3])
+        self.funs_d = array([self.fun1, self.fun4])
+
+    def test__init__pass(self):
+        Chebfun([self.fun0])
+        Chebfun([self.fun1])
+        Chebfun([self.fun2])
+        Chebfun([self.fun0, self.fun1])
+
+    def test__init__fail(self):
+        self.assertRaises(SubdomainOverlap, Chebfun, self.funs_a)
+        self.assertRaises(SubdomainOverlap, Chebfun, self.funs_b)
+        self.assertRaises(SubdomainGap, Chebfun, self.funs_c)
+        self.assertRaises(SubdomainGap, Chebfun, self.funs_d)
+
+    def test__init__empty(self):
+        emptyfun = Chebfun.initempty()
+        self.assertEqual(emptyfun.funs.size, 0)
+
+    def test_initfun_adaptive_default_domain(self):
+        ff = Chebfun.initfun_adaptive(self.f)
+        self.assertEqual(ff.funs.size, 1)
+        a, b = ff.breaks.keys()
+        fa, fb, = ff.breaks.values()
+        self.assertEqual(a,-1)
+        self.assertEqual(b, 1)
+        self.assertLessEqual(abs(fa-self.f(-1)), eps)
+        self.assertLessEqual(abs(fb-self.f(1)), 2*eps)
+
+    def test_initfun_adaptive_nondefault_domain(self):
+        ff = Chebfun.initfun_adaptive(self.f, [-2,-1])
+        self.assertEqual(ff.funs.size, 1)
+        a, b = ff.breaks.keys()
+        fa, fb, = ff.breaks.values()
+        self.assertEqual(a,-2)
+        self.assertEqual(b,-1)
+        self.assertLessEqual(abs(fa-self.f(-2)), eps)
+        self.assertLessEqual(abs(fb-self.f(-1)), eps)
+
+    def test_initfun_adaptive_piecewise_domain(self):
+        ff = Chebfun.initfun_adaptive(self.f, [-2,0,1])
+        self.assertEqual(ff.funs.size, 2)
+        a, b, c = ff.breaks.keys()
+        fa, fb, fc = ff.breaks.values()
+        self.assertEqual(a,-2)
+        self.assertEqual(b, 0)
+        self.assertEqual(c, 1)
+        self.assertLessEqual(abs(fa-self.f(-2)), eps)
+        self.assertLessEqual(abs(fb-self.f( 0)), eps)
+        self.assertLessEqual(abs(fc-self.f( 1)), eps)
+
+    def test_initfun_adaptive_raises(self):
+        initfun = Chebfun.initfun_adaptive
+        self.assertRaises(ValueError, initfun, self.f, [-2])
+        self.assertRaises(ValueError, initfun, self.f, domain=[-2])
+        self.assertRaises(ValueError, initfun, self.f, domain=None)
+
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
