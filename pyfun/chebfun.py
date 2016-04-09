@@ -169,6 +169,22 @@ class Chebfun(object):
         return concatenate([fun.roots() for fun in self])
 
 
+def chebfun(f, domain=DefaultPrefs.domain, n=None):
+    if hasattr(f, "__call__"):
+        f = f
+    elif isinstance(f, str):
+        if len(f) is 1 and f.isalpha():
+            f = lambda x: x
+        else:
+            raise ValueError(f)
+    else:
+        raise ValueError(f)
+    if n is None:
+        return Chebfun.initfun_adaptive(f, domain)
+    else:
+        return Chebfun.initfun_fixedlen(f, domain, n)
+
+
 def verify(funs):
     """funs is in principle arbitrary, thus it is necessary to first sort
     and then verify that the corresponding subdomains: (1) do not overlap,
