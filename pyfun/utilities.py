@@ -5,6 +5,8 @@ from __future__ import division
 from numpy import array
 from numpy import logical_and
 
+from pyfun.exceptions import SubdomainValues
+
 class Subdomain(object):
     """
     Utility class to implement subdomain logic. The purpose of this class is to
@@ -24,7 +26,7 @@ class Subdomain(object):
     """
     def __init__(self, a=-1, b=1):
         if a >= b:
-            raise ValueError("Domain values must be strictly increasing")
+            raise SubdomainValues
         self.values = array([a, b])
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)

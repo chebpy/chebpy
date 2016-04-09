@@ -9,21 +9,24 @@ from numpy import max
 from numpy import nan
 from numpy import full
 from numpy import sort
-from numpy import inf
+from numpy import ones
+#from numpy import inf
 from numpy import linspace
 from numpy import concatenate
-from numpy.linalg import norm
+#from numpy.linalg import norm
 
 from matplotlib.pyplot import gca
 
 from pyfun.bndfun import Bndfun
-from pyfun.utilities import Subdomain
 from pyfun.settings import DefaultPrefs
+from pyfun.utilities import Subdomain
 from pyfun.decorators import checkempty
+
 from pyfun.exceptions import SubdomainGap
 from pyfun.exceptions import SubdomainOverlap
+from pyfun.exceptions import BadDomainArgument
+from pyfun.exceptions import BadFunLengthArgument
 
-defaultdomain = DefaultPrefs.domain
 
 class Chebfun(object):
 
@@ -40,13 +43,10 @@ class Chebfun(object):
         return cls(array([]))
 
     @classmethod
-    def initfun_adaptive(cls, f, domain=defaultdomain):
+    def initfun_adaptive(cls, f, domain):
         domain = array(domain)
-        hscale = norm(domain, inf)
-        print "hscale = {}".format(hscale) # divided by subinterval length
         if domain.size < 2:
-            raise ValueError(
-                "domain must be an iterable with two or more components")
+            raise BadDomainArgument
         funs = array([])
         for interval in zip(domain[:-1], domain[1:]):
             subdomain = Subdomain(*interval)
@@ -55,8 +55,23 @@ class Chebfun(object):
         return cls(funs)
 
     @classmethod
-    def initfun_fixedlen(cls):
-        pass
+    def initfun_fixedlen(cls, f, domain, n):
+        domain = array(domain)
+        if domain.size < 2:
+            raise BadDomainArgument
+        nn = array(n)
+        if nn.size == 1:
+            nn = nn * ones(domain.size-1)
+        elif nn.size > 1:
+            if nn.size != domain.size - 1:
+                raise BadFunLengthArgument
+        funs = array([])
+        intervals = zip(domain[:-1], domain[1:])
+        for interval, length in zip(intervals, nn):
+            subdomain = Subdomain(*interval)
+            fun = Bndfun.initfun_fixedlen(f, subdomain, length)
+            funs = append(funs, fun)
+        return cls(funs)
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
