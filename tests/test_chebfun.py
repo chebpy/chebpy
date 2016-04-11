@@ -167,7 +167,7 @@ class Construction(TestCase):
         self.assertEqual(c, 1)
         self.assertLessEqual(abs(fa-self.f(-2)), eps)
         self.assertLessEqual(abs(fb-self.f( 0)), eps)
-        self.assertLessEqual(abs(fc-self.f( 1)), eps)
+        self.assertLessEqual(abs(fc-self.f( 1)), 2*eps)
 
     def test_initfun_adaptive_raises(self):
         initfun = Chebfun.initfun_adaptive
@@ -207,7 +207,7 @@ class Construction(TestCase):
         self.assertEqual(c, 1)
         self.assertLessEqual(abs(fa-self.f(-2)), 3*eps)
         self.assertLessEqual(abs(fb-self.f( 0)), 3*eps)
-        self.assertLessEqual(abs(fc-self.f( 1)), 3*eps)
+        self.assertLessEqual(abs(fc-self.f( 1)), 6*eps)
 
     def test_initfun_fixedlen_raises(self):
         initfun = Chebfun.initfun_fixedlen

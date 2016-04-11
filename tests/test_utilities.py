@@ -21,6 +21,7 @@ from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
 from pyfun.utilities import Subdomain
+from pyfun.exceptions import SubdomainValues
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -163,8 +164,8 @@ class TestSubdomain(TestCase):
         self.assertTrue((Subdomain().values==array([-1,1])).all())
 
     def test_init_disallow(self):
-        self.assertRaises(ValueError, Subdomain, 2, 0)
-        self.assertRaises(ValueError, Subdomain, 0, 0)
+        self.assertRaises(SubdomainValues, Subdomain, 2, 0)
+        self.assertRaises(SubdomainValues, Subdomain, 0, 0)
 
     def test__eq__(self):
         d1 = Subdomain(-2,3)
