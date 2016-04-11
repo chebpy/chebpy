@@ -51,7 +51,7 @@ eps = DefaultPrefs.eps
 
 # ------------------------
 class Auxilliary(TestCase):
-    """Unit-tests for Chebtech2"""
+    """Unit-tests for Chebfun"""
 
     def setUp(self):
         f = lambda x: exp(x)
@@ -137,16 +137,6 @@ class Construction(TestCase):
         emptyfun = Chebfun.initempty()
         self.assertEqual(emptyfun.funs.size, 0)
 
-#    def test_initfun_adaptive_default_domain(self):
-#        ff = Chebfun.initfun_adaptive(self.f)
-#        self.assertEqual(ff.funs.size, 1)
-#        a, b = ff.breaks.keys()
-#        fa, fb, = ff.breaks.values()
-#        self.assertEqual(a,-1)
-#        self.assertEqual(b, 1)
-#        self.assertLessEqual(abs(fa-self.f(-1)), eps)
-#        self.assertLessEqual(abs(fb-self.f(1)), 2*eps)
-
     def test_initfun_adaptive_continuous_domain(self):
         ff = Chebfun.initfun_adaptive(self.f, [-2,-1])
         self.assertEqual(ff.funs.size, 1)
@@ -227,6 +217,17 @@ class Construction(TestCase):
         for fun1, fun2 in zip(g1,g0):
             self.assertEqual(sum(fun1.coeffs()-fun2.coeffs()), 0)
         self.assertEqual(sum(g2.funs[0].coeffs()-g0.funs[0].coeffs()), 0)
+
+
+class ClassUsage(TestCase):
+
+    def setUp(self):
+        self.f0 = Chebfun.initempty()
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
+
+    def test_isempty(self):
+        self.assertTrue(self.f0.isempty())
+        self.assertFalse(self.f1.isempty())
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals

@@ -96,15 +96,11 @@ class Chebfun(object):
             rowdta += row
         btmrow = "vertical scale = {:3.2g}".format(self.vscale())
         btmxtr = "" if numpcs == 1 else \
-            "    total length = {}".format(self.size())
+            "    total length = {}".format(sum([f.size() for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
     def isempty(self):
         return self.funs.size == 0
-
-    @checkempty(0)
-    def size(self):
-        return sum([fun.size() for fun in self])
 
     @checkempty(None)
     def vscale(self):
