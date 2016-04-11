@@ -102,7 +102,10 @@ class Chebfun(object):
     def isempty(self):
         return self.funs.size == 0
 
-    @checkempty(None)
+    def copy(self):
+        return self.__class__([fun.copy() for fun in self])
+
+    @checkempty(0)
     def vscale(self):
         return max([fun.vscale() for fun in self])
 

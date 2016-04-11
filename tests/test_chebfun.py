@@ -236,6 +236,23 @@ class ClassUsage(TestCase):
         self.assertEqual(self.f1.vscale(), 1)
         self.assertEqual(self.f2.vscale(), 4)
 
+    def test_copy(self):
+        f0_copy = self.f0.copy()
+        f1_copy = self.f1.copy()
+        f2_copy = self.f2.copy()
+        self.assertTrue(f0_copy.isempty())
+        self.assertEquals(f1_copy.funs.size, 1)
+        for k in range(self.f1.funs.size):
+            fun = self.f1.funs[k]
+            funcopy = f1_copy.funs[k]
+            self.assertNotEqual(fun, funcopy)
+            self.assertEquals(sum(fun.coeffs()-funcopy.coeffs()), 0)
+        for k in range(self.f2.funs.size):
+            fun = self.f2.funs[k]
+            funcopy = f2_copy.funs[k]
+            self.assertNotEqual(fun, funcopy)
+            self.assertEquals(sum(fun.coeffs()-funcopy.coeffs()), 0)
+
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
