@@ -45,5 +45,5 @@ if __name__ == "__main__":
 #    test_chebtech()
 #    test_utilities()
 #    test_bndfun()
-#    test_chebfun()
-    test_all()
+    test_chebfun()
+#    test_all()

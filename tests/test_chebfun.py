@@ -19,6 +19,7 @@ from numpy import array
 #from numpy import cos
 from numpy import exp
 from numpy import sum
+from numpy import nan
 #from numpy import pi
 #from numpy import all
 #from numpy import diff
@@ -224,10 +225,17 @@ class ClassUsage(TestCase):
     def setUp(self):
         self.f0 = Chebfun.initempty()
         self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
     def test_isempty(self):
         self.assertTrue(self.f0.isempty())
         self.assertFalse(self.f1.isempty())
+
+    def test_vscale(self):
+        self.assertEqual(self.f0.vscale(), 0)
+        self.assertEqual(self.f1.vscale(), 1)
+        self.assertEqual(self.f2.vscale(), 4)
+
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals

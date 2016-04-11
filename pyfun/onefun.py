@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Here we define the functionality that Onefun descendent classes are 
+Here we define the functionality that Onefun descendent classes are
 required to implement.
 """
 
@@ -13,7 +13,7 @@ from pyfun.decorators import abstractclassmethod
 
 class Onefun(object):
     __metaclass__ = ABCMeta
-       
+
     @abstractclassmethod
     def initconst(cls):
         pass
@@ -30,7 +30,7 @@ class Onefun(object):
     def initfun_fixedlen(cls):
         pass
 
-    @abstractclassmethod    
+    @abstractclassmethod
     def initfun_adaptive(cls):
         pass
 
@@ -84,7 +84,7 @@ class Onefun(object):
     @abstractmethod
     def simplify(self):
         pass
-    
+
     @abstractmethod
     def vscale(self):
         pass
@@ -103,7 +103,7 @@ class Onefun(object):
     @abstractmethod
     def __pos__(self):
         pass
-    
+
     @abstractmethod
     def __neg__(self):
         pass
@@ -129,7 +129,7 @@ class Onefun(object):
     # ---------------------------------
     @abstractmethod
     def roots(self):
-        pass    
+        pass
 
     # ---------------------------------
     #            calculus
@@ -137,7 +137,7 @@ class Onefun(object):
     @abstractmethod
     def sum(self):
         pass
-    
+
     @abstractmethod
     def cumsum(self):
         pass
