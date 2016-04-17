@@ -255,6 +255,11 @@ class ClassUsage(TestCase):
             self.assertNotEqual(fun, funcopy)
             self.assertEquals(sum(fun.coeffs()-funcopy.coeffs()), 0)
 
+    def test_breakpoints(self):
+        self.assertEqual(self.f0.breakpoints().size, 0)
+        self.assertTrue(equal(self.f1.breakpoints(),[-1,1]).all())
+        self.assertTrue(equal(self.f2.breakpoints(),[-1,0,1,2]).all())
+
 
 class Evaluation(TestCase):
 
@@ -275,6 +280,7 @@ class Evaluation(TestCase):
         # check we get back a scalar for scalar input
         self.assertTrue(isscalar(self.f1(0.1)))
 
+    def test__call__singleton(self):
         # check that the output is the same for the following inputs:
         # array(x), array([x]), [x]
         a = self.f1(array(0.1))
@@ -286,8 +292,6 @@ class Evaluation(TestCase):
         self.assertTrue(equal(a,b).all())
         self.assertTrue(equal(b,c).all())
         self.assertTrue(equal(a,c).all())
-
-#        self.assertEqual(self.f2(array([])).size, 0)
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
