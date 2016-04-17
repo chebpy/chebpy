@@ -21,6 +21,7 @@ from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
 from pyfun.decorators import checkempty
+from pyfun.decorators import singletoncase
 
 from pyfun.exceptions import SubdomainGap
 from pyfun.exceptions import SubdomainOverlap
@@ -109,8 +110,11 @@ class Chebfun(object):
     def vscale(self):
         return max([fun.vscale() for fun in self])
 
+    @checkempty(array([]))
+    @singletoncase
     def __call__(self, x):
-        x = array(x)
+
+        # initialise output
         out = full(x.size, nan)
 
         # evaluate a fun when x is an interior point

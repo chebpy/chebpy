@@ -70,3 +70,22 @@ def preandpostprocess(f):
             return out[0] if isscalar(xx) else out
 
     return thewrapper
+
+# Chebfun classmethod wrapper for call: ensure that we provide float
+# output for float input and array output otherwise
+def singletoncase(f):
+    @wraps(f)
+    def thewrapper(self, *args, **kwargs):
+        x = args[0]
+        xx = array([x]) if isscalar(x) else array(x)
+        # discern between the array(0.1) and array([0.1]) cases
+        if xx.size == 1:
+            try:
+                xx[0]
+            except:
+                xx = array([xx])
+        args = list(args)
+        args[0] = xx
+        out = f(self, *args, **kwargs)
+        return out[0] if isscalar(x) else out
+    return thewrapper
