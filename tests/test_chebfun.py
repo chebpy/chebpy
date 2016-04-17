@@ -4,35 +4,18 @@ Unit-tests for pyfun/chebtech.py
 """
 from __future__ import division
 
-#from itertools import combinations
 from unittest import TestCase
 
-#from operator import __add__
-#from operator import __sub__
-#from operator import __pos__
-#from operator import __neg__
-#from operator import __mul__
-
-#from numpy import arange
 from numpy import array
-#from numpy import sin
-#from numpy import cos
 from numpy import exp
 from numpy import sum
-from numpy import nan
-#from numpy import pi
-#from numpy import all
-#from numpy import diff
 from numpy import linspace
 from numpy import equal
 from numpy import isscalar
-#from numpy.random import rand
-#from numpy.random import seed
-#
-#from matplotlib.pyplot import subplots
+from numpy import isfinite
 
-from pyfun.settings import DefaultPrefs
 from pyfun.bndfun import Bndfun
+from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
 
 from pyfun.chebfun import Chebfun
@@ -303,6 +286,13 @@ class Evaluation(TestCase):
         x2 = self.f2.breakpoints()
         self.assertTrue(equal(self.f1(x1), [1,1]).all())
         self.assertTrue(equal(self.f2(x2), [1,0,1,4]).all())
+
+    def test__call__outside_interval(self):
+        # check we are able to evaluate the Chebfun outside the
+        # interval of definition
+        x = linspace(-3,3,100)
+        self.assertTrue(isfinite(self.f1(x)).all())
+        self.assertTrue(isfinite(self.f2(x)).all())
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
