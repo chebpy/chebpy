@@ -260,6 +260,10 @@ class ClassUsage(TestCase):
         self.assertTrue(equal(self.f1.breakpoints(),[-1,1]).all())
         self.assertTrue(equal(self.f2.breakpoints(),[-1,0,1,2]).all())
 
+    def test_endpoints(self):
+        self.assertEqual(self.f0.endpoints().size, 0)
+        self.assertTrue(equal(self.f1.endpoints(),[-1,1]).all())
+        self.assertTrue(equal(self.f2.endpoints(),[-1,2]).all())
 
 class Evaluation(TestCase):
 
@@ -292,6 +296,11 @@ class Evaluation(TestCase):
         self.assertTrue(equal(a,b).all())
         self.assertTrue(equal(b,c).all())
         self.assertTrue(equal(a,c).all())
+
+#    def test__call__breakpoints(self):
+#        # check we ger the values at the breakpoints back
+#        x1 = self.f1.funs
+        
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals

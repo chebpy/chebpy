@@ -150,6 +150,7 @@ class Chebfun(object):
     def breakpoints(self):
         return sort(self.breaks.keys())
 
+    @checkempty(array([]))
     def endpoints(self):
         breakpoints = self.breakpoints()
         return breakpoints[0], breakpoints[-1]
