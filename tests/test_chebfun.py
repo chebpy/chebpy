@@ -8,6 +8,8 @@ from unittest import TestCase
 
 from numpy import array
 from numpy import exp
+from numpy import sin
+from numpy import cos
 from numpy import sum
 from numpy import linspace
 from numpy import equal
@@ -293,6 +295,21 @@ class Evaluation(TestCase):
         x = linspace(-3,3,100)
         self.assertTrue(isfinite(self.f1(x)).all())
         self.assertTrue(isfinite(self.f2(x)).all())
+
+    def test__call__general_evaluation(self):
+        f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        dom1 = [-1,1]
+        dom2 = [-1,0,1]
+        dom3 = [-2,-0.3,1.2]
+        ff1 = Chebfun.initfun_adaptive(f, [-1,1])
+        ff2 = Chebfun.initfun_adaptive(f, [-1,0,1])
+        ff3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+        x1 = linspace(dom1[0], dom1[1], 5000)
+        x2 = linspace(dom2[0], dom2[1], 5000)
+        x3 = linspace(dom3[0], dom3[1], 5000)
+        self.assertLessEqual(infnorm(f(x1)-ff1(x1)), 4e1*eps)
+        self.assertLessEqual(infnorm(f(x2)-ff2(x2)), 2e1*eps)
+        self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 4e1*eps)
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
