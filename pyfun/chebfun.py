@@ -134,11 +134,10 @@ class Chebfun(object):
         return out
 
     def plot(self, ax=None, *args, **kwargs):
-        a, b = self.endpoints()
         ax = ax if ax else gca()
+        a, b = self.endpoints()
         xx = linspace(a, b, 2001)
-        yy = self(xx)
-        ax.plot(xx, yy, *args, **kwargs)
+        ax.plot(xx, self(xx), *args, **kwargs)
         return ax
 
     def plotcoeffs(self, ax=None, *args, **kwargs):

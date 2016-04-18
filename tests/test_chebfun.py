@@ -16,6 +16,8 @@ from numpy import equal
 from numpy import isscalar
 from numpy import isfinite
 
+from matplotlib.pyplot import subplots
+
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
@@ -298,18 +300,37 @@ class Evaluation(TestCase):
 
     def test__call__general_evaluation(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        npts = 50000
         dom1 = [-1,1]
         dom2 = [-1,0,1]
         dom3 = [-2,-0.3,1.2]
-        ff1 = Chebfun.initfun_adaptive(f, [-1,1])
-        ff2 = Chebfun.initfun_adaptive(f, [-1,0,1])
-        ff3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
-        x1 = linspace(dom1[0], dom1[1], 5000)
-        x2 = linspace(dom2[0], dom2[1], 5000)
-        x3 = linspace(dom3[0], dom3[1], 5000)
+        ff1 = Chebfun.initfun_adaptive(f, dom1)
+        ff2 = Chebfun.initfun_adaptive(f, dom2)
+        ff3 = Chebfun.initfun_adaptive(f, dom3)
+        x1 = linspace(dom1[0], dom1[-1], npts)
+        x2 = linspace(dom2[0], dom2[-1], npts)
+        x3 = linspace(dom3[0], dom3[-1], npts)
         self.assertLessEqual(infnorm(f(x1)-ff1(x1)), 4e1*eps)
         self.assertLessEqual(infnorm(f(x2)-ff2(x2)), 2e1*eps)
-        self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 4e1*eps)
+        self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
+
+class Plotting(TestCase):
+
+    def setUp(self):
+        f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
+        self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
+        self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+
+    def test_plot(self):
+        for fun in [self.f1, self.f2, self.f3]:
+            fig, ax = subplots()
+            fun.plot(ax=ax)
+
+    def test_plotcoeffs(self):
+        for fun in [self.f1, self.f2, self.f3]:
+            fig, ax = subplots()
+            fun.plotcoeffs(ax=ax)
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
