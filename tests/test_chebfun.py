@@ -326,17 +326,25 @@ class Evaluation(TestCase):
 class Calculus(TestCase):
 
     def setUp(self):
-        f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        f = lambda x: sin(4*x-1.4)
+        self.df = lambda x: 4*cos(4*x-1.4)
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
         self.f4 = Chebfun.initfun_adaptive(f, linspace(-1,1,11))
 
     def test_sum(self):
-        self.assertLessEqual(abs(self.f1.sum()-(-0.104681586467504)),2*eps)
-        self.assertLessEqual(abs(self.f2.sum()-(-0.146401970007272)),2*eps)
-        self.assertLessEqual(abs(self.f3.sum()-(-0.533004717923132)),2*eps)
-        self.assertLessEqual(abs(self.f4.sum()-(-0.104681586467504)),2*eps)
+        self.assertLessEqual(abs(self.f1.sum()-0.372895407327895),2*eps)
+        self.assertLessEqual(abs(self.f2.sum()-0.382270459230604),2*eps)
+        self.assertLessEqual(abs(self.f3.sum()--0.008223712363936),2*eps)
+        self.assertLessEqual(abs(self.f4.sum()-0.372895407327895),2*eps)
+
+    def test_diff(self):
+        xx = linspace(-5,5,10000)
+        for f in [self.f1, self.f2, self.f3, self.f4]:
+            a, b = self.f1.endpoints()
+            x = xx[(xx>a)&(xx<b)]
+            self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 1e3*eps)
 
 
 @skip
