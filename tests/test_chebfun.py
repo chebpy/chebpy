@@ -5,6 +5,7 @@ Unit-tests for pyfun/chebtech.py
 from __future__ import division
 
 from unittest import TestCase
+from unittest import skip
 
 from numpy import array
 from numpy import exp
@@ -252,6 +253,12 @@ class ClassUsage(TestCase):
         self.assertTrue(equal(self.f1.endpoints(),[-1,1]).all())
         self.assertTrue(equal(self.f2.endpoints(),[-1,2]).all())
 
+    def test__iter__(self):
+        for f in [self.f0, self.f1, self.f2]:
+            a1 = [x for x in f]
+            a2 = [x for x in f.funs]
+            self.assertTrue(equal(a1,a2).all())
+
 class Evaluation(TestCase):
 
     def setUp(self):
@@ -314,6 +321,7 @@ class Evaluation(TestCase):
         self.assertLessEqual(infnorm(f(x2)-ff2(x2)), 2e1*eps)
         self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
 
+@skip
 class Plotting(TestCase):
 
     def setUp(self):
