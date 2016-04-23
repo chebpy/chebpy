@@ -12,6 +12,7 @@ from numpy import exp
 from numpy import sin
 from numpy import cos
 from numpy import sum
+from numpy import abs
 from numpy import linspace
 from numpy import equal
 from numpy import isscalar
@@ -320,6 +321,23 @@ class Evaluation(TestCase):
         self.assertLessEqual(infnorm(f(x1)-ff1(x1)), 4e1*eps)
         self.assertLessEqual(infnorm(f(x2)-ff2(x2)), 2e1*eps)
         self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
+
+
+class Calculus(TestCase):
+
+    def setUp(self):
+        f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
+        self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
+        self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+        self.f4 = Chebfun.initfun_adaptive(f, linspace(-1,1,11))
+
+    def test_sum(self):
+        self.assertLessEqual(abs(self.f1.sum()-(-0.104681586467504)),2*eps)
+        self.assertLessEqual(abs(self.f2.sum()-(-0.146401970007272)),2*eps)
+        self.assertLessEqual(abs(self.f3.sum()-(-0.533004717923132)),2*eps)
+        self.assertLessEqual(abs(self.f4.sum()-(-0.104681586467504)),2*eps)
+
 
 @skip
 class Plotting(TestCase):
