@@ -328,6 +328,7 @@ class Calculus(TestCase):
     def setUp(self):
         f = lambda x: sin(4*x-1.4)
         self.df = lambda x: 4*cos(4*x-1.4)
+        self.If = lambda x: -.25*cos(4*x-1.4)
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
@@ -342,10 +343,17 @@ class Calculus(TestCase):
     def test_diff(self):
         xx = linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
-            a, b = self.f1.endpoints()
+            a, b = f.endpoints()
             x = xx[(xx>a)&(xx<b)]
             self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 1e3*eps)
 
+    def test_cumsum(self):
+        xx = linspace(-5,5,10000)
+        for f in [self.f1, self.f2, self.f3, self.f4]:
+            a, b = f.endpoints()
+            x = xx[(xx>a)&(xx<b)]
+            fa = self.If(a)
+            self.assertLessEqual(infnorm(f.cumsum()(x)-self.If(x)+fa), 3*eps)
 
 @skip
 class Plotting(TestCase):
