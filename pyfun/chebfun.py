@@ -161,14 +161,16 @@ class Chebfun(object):
         return sum([fun.sum() for fun in self])
 
     def cumsum(self):
-        fb = 0
-        res = []
+        newfuns = []
+        prevfun = None
         for fun in self:
-            ifun = fun.cumsum()
-            ifun = ifun + fb
-            res.append(ifun)
-            fb = ifun(ifun.endpoints()[1])
-        return self.__class__(res)
+            integral = fun.cumsum()
+            if prevfun:
+                _, fb = prevfun.endvalues()
+                integral = integral + fb
+            newfuns.append(integral)
+            prevfun = integral
+        return self.__class__(newfuns)
 
     def diff(self):
         dfuns = array([fun.diff() for fun in self])
