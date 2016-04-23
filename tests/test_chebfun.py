@@ -355,6 +355,20 @@ class Calculus(TestCase):
             fa = self.If(a)
             self.assertLessEqual(infnorm(f.cumsum()(x)-self.If(x)+fa), 3*eps)
 
+    def test_sum_empty(self):
+        f = Chebfun.initempty()
+        self.assertEqual(f.sum(), .0)
+
+    def test_cumsum_empty(self):
+        If = Chebfun.initempty().cumsum()
+        self.assertIsInstance(If, Chebfun)
+        self.assertTrue(If.isempty())
+
+    def test_diff_empty(self):
+        df = Chebfun.initempty().diff()
+        self.assertIsInstance(df, Chebfun)
+        self.assertTrue(df.isempty())
+
 @skip
 class Plotting(TestCase):
 
