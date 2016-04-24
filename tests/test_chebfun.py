@@ -230,6 +230,11 @@ class ClassUsage(TestCase):
         self.assertEqual(self.f1.vscale(), 1)
         self.assertEqual(self.f2.vscale(), 4)
 
+    def test_hscale(self):
+        self.assertEqual(self.f0.hscale(), 0)
+        self.assertEqual(self.f1.hscale(), 1)
+        self.assertEqual(self.f2.hscale(), 2)
+
     def test_copy(self):
         f0_copy = self.f0.copy()
         f1_copy = self.f1.copy()
