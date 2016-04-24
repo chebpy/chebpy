@@ -71,9 +71,10 @@ def preandpostprocess(f):
 
     return thewrapper
 
-# Chebfun classmethod wrapper for call: ensure that we provide float
-# output for float input and array output otherwise
+# Chebfun classmethod wrapper for __call__: ensure that we provide
+# float output for float input and array output otherwise
 def singletoncase(f):
+
     @wraps(f)
     def thewrapper(self, *args, **kwargs):
         x = args[0]

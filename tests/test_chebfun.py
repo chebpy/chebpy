@@ -26,11 +26,9 @@ from matplotlib.pyplot import subplots
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
-
 from pyfun.chebfun import Chebfun
-from pyfun.chebfun import verify
 from pyfun.chebfun import breakdata
-
+from pyfun.chebfun import sortandverify
 from pyfun.exceptions import SubdomainGap
 from pyfun.exceptions import SubdomainOverlap
 from pyfun.exceptions import BadDomainArgument
@@ -61,26 +59,26 @@ class Auxilliary(TestCase):
         self.funs_d = array([self.fun1, self.fun4])
 
     def test_verify_empty(self):
-        funs = verify(array([]))
+        funs = sortandverify(array([]))
         self.assertTrue(funs.size==0)
 
     def test_verify_contiguous(self):
-        funs = verify(array([self.fun0, self.fun1]))
+        funs = sortandverify(array([self.fun0, self.fun1]))
         self.assertTrue(funs[0]==self.fun0)
         self.assertTrue(funs[1]==self.fun1)
 
     def test_verify_sort(self):
-        funs = verify(array([self.fun1, self.fun0]))
+        funs = sortandverify(array([self.fun1, self.fun0]))
         self.assertTrue(funs[0]==self.fun0)
         self.assertTrue(funs[1]==self.fun1)
     
     def test_verify_overlapping(self):
-        self.assertRaises(SubdomainOverlap, verify, self.funs_a)
-        self.assertRaises(SubdomainOverlap, verify, self.funs_b)
+        self.assertRaises(SubdomainOverlap, sortandverify, self.funs_a)
+        self.assertRaises(SubdomainOverlap, sortandverify, self.funs_b)
 
     def test_verify_gap(self):
-        self.assertRaises(SubdomainGap, verify, self.funs_c)
-        self.assertRaises(SubdomainGap, verify, self.funs_d)
+        self.assertRaises(SubdomainGap, sortandverify, self.funs_c)
+        self.assertRaises(SubdomainGap, sortandverify, self.funs_d)
 
     def test_breakdata_empty(self):
         breaks = breakdata(array([]))
@@ -411,7 +409,7 @@ class Roots(TestCase):
         self.assertLessEqual(infnorm(rts-arange(-10,10.25,.25)), 1e1*eps)
 
 
-@skip
+
 class Plotting(TestCase):
 
     def setUp(self):

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
-
 from numpy import array
 from numpy import append
 from numpy import sum
@@ -10,21 +8,19 @@ from numpy import nan
 from numpy import full
 from numpy import sort
 from numpy import ones
-#from numpy import inf
 from numpy import linspace
 from numpy import concatenate
-#from numpy.linalg import norm
 
 from matplotlib.pyplot import gca
 
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
+from pyfun.utilities import Domain
+from pyfun.utilities import sortandverify
+from pyfun.utilities import breakdata
 from pyfun.decorators import emptycase
 from pyfun.decorators import singletoncase
-
-from pyfun.exceptions import SubdomainGap
-from pyfun.exceptions import SubdomainOverlap
 from pyfun.exceptions import BadDomainArgument
 from pyfun.exceptions import BadFunLengthArgument
 
@@ -32,11 +28,11 @@ from pyfun.exceptions import BadFunLengthArgument
 class Chebfun(object):
 
     def __init__(self, funs):
-        funs = array(funs)
-        funs = verify(funs)
-        breaks = breakdata(funs)
-        self.funs = funs
-        self.breaks = breaks
+        # TODO: there is a minor inefficiency here - sortandverify()
+        # and Domain.from_funs() do the same integrity check
+        self.funs = sortandverify(funs)
+        self.domain = Domain.init_from_funs(funs)
+        self.breaks = breakdata(self.funs)
         self.transposed = False
 
     @classmethod
@@ -213,44 +209,3 @@ def chebfun(f, domain=DefaultPrefs.domain, n=None):
         return Chebfun.initfun_adaptive(f, domain)
     else:
         return Chebfun.initfun_fixedlen(f, domain, n)
-
-
-def verify(funs):
-    """funs is in principle arbitrary, thus it is necessary to first sort
-    and then verify that the corresponding subdomains: (1) do not overlap,
-    and (2) represent a complete partition of the broader approximation
-    interval"""
-    if funs.size == 0:
-        return array([])
-    else:
-        subintervals = array([fun.endpoints() for fun in funs])
-        leftbreakpts = array([s[0] for s in subintervals])
-        idx = leftbreakpts.argsort()
-        srt = subintervals[idx]
-        x = srt.flatten()[1:-1]
-        d = x[1::2] - x[::2]
-        if (d<0).any():
-            raise SubdomainOverlap
-        if (d>0).any():
-            raise SubdomainGap
-        return array(funs[idx])
-
-def breakdata(funs):
-    """Define function values at the interior breakpoints by averaging the
-    left and right limits. This method is called after verify() so we are
-    guaranteed to have a fully partitioned and nonoverlapping domain."""
-    if funs.size == 0:
-        return OrderedDict()
-    else:
-        points = array([fun.endpoints() for fun in funs])
-        values = array([fun.endvalues() for fun in funs])
-        points = points.flatten()
-        values = values.flatten()
-        xl, xr = points[0], points[-1]
-        yl, yr = values[0], values[-1]
-        xx, yy = points[1:-1], values[1:-1]
-        x = .5 * (xx[::2] + xx[1::2])
-        y = .5 * (yy[::2] + yy[1::2])
-        xout = append(append(xl, x), xr)
-        yout = append(append(yl, y), yr)
-        return OrderedDict(zip(xout, yout))
