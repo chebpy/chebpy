@@ -20,7 +20,7 @@ from matplotlib.pyplot import gca
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Subdomain
-from pyfun.decorators import checkempty
+from pyfun.decorators import emptycase
 from pyfun.decorators import singletoncase
 
 from pyfun.exceptions import SubdomainGap
@@ -79,7 +79,7 @@ class Chebfun(object):
         out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, self.size())
         return out
 
-    @checkempty("chebfun<empty>")
+    @emptycase("chebfun<empty>")
     def __repr__(self):
         rowcol = "row" if self.transposed else "column"
         numpcs = self.funs.size
@@ -106,15 +106,15 @@ class Chebfun(object):
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
-    @checkempty(0)
+    @emptycase(0)
     def vscale(self):
         return max([fun.vscale() for fun in self])
 
-    @checkempty(0)
+    @emptycase(0)
     def hscale(self):
         return abs(self.endpoints()).max()
 
-    @checkempty(array([]))
+    @emptycase(array([]))
     @singletoncase
     def __call__(self, x):
 
@@ -153,7 +153,7 @@ class Chebfun(object):
     def breakpoints(self):
         return sort(self.breaks.keys())
 
-    @checkempty(array([]))
+    @emptycase(array([]))
     def endpoints(self):
         breakpoints = self.breakpoints()
         return array([breakpoints[0], breakpoints[-1]])
@@ -182,7 +182,7 @@ class Chebfun(object):
         dfuns = array([fun.diff() for fun in self])
         return self.__class__(dfuns)
 
-    @checkempty(array([]))
+    @emptycase(array([]))
     def roots(self):
         allrts = []
         prvrts = array([])

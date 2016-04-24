@@ -24,7 +24,7 @@ class abstractclassmethod(classmethod):
 # whose classmethod is being wrapped is empty, returning the object if
 # so, but returning the supplied resultif if not. (Used in chebtech.py)
 # TODO: add unit test for this
-def checkempty(resultif=None):
+def emptycase(resultif=None):
     def decorator(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):

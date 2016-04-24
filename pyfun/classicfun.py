@@ -16,7 +16,7 @@ from pyfun.chebtech import Chebtech2
 from pyfun.utilities import Subdomain
 
 from pyfun.settings import DefaultPrefs
-from pyfun.decorators import checkempty
+from pyfun.decorators import emptycase
 
 Techs = {
     "Chebtech2": Chebtech2,
@@ -181,7 +181,7 @@ methods_onefun_binary= (
 )
 
 def addBinaryOp(methodname):
-    @checkempty()
+    @emptycase()
     def method(self, f, *args, **kwargs):
         cls = self.__class__
         if isinstance(f, cls):
