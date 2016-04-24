@@ -110,6 +110,10 @@ class Chebfun(object):
     def vscale(self):
         return max([fun.vscale() for fun in self])
 
+    @checkempty(0)
+    def hscale(self):
+        return abs(self.endpoints()).max()
+
     @checkempty(array([]))
     @singletoncase
     def __call__(self, x):
@@ -152,7 +156,7 @@ class Chebfun(object):
     @checkempty(array([]))
     def endpoints(self):
         breakpoints = self.breakpoints()
-        return breakpoints[0], breakpoints[-1]
+        return array([breakpoints[0], breakpoints[-1]])
 
     def __iter__(self):
         return self.funs.__iter__()
@@ -166,6 +170,8 @@ class Chebfun(object):
         for fun in self:
             integral = fun.cumsum()
             if prevfun:
+                # enforce continuity by adding the function value
+                # at the right endpoint of the previous fun
                 _, fb = prevfun.endvalues()
                 integral = integral + fb
             newfuns.append(integral)
@@ -176,8 +182,21 @@ class Chebfun(object):
         dfuns = array([fun.diff() for fun in self])
         return self.__class__(dfuns)
 
+    @checkempty(array([]))
     def roots(self):
-        return concatenate([fun.roots() for fun in self])
+        allrts = []
+        prvrts = array([])
+        htol = 1e2 * self.hscale() * DefaultPrefs.eps
+        for fun in self:
+            rts = fun.roots()
+            # ignore first root if equal to the last root of previous fun
+            # TODO: there could be multiple roots at breakpoints
+            if prvrts.size > 0 and rts.size > 0:
+                if abs(prvrts[-1]-rts[0]) <= htol:
+                    rts = rts[1:]
+            allrts.append(rts)
+            prvrts = rts
+        return concatenate([x for x in allrts])
 
 
 def chebfun(f, domain=DefaultPrefs.domain, n=None):

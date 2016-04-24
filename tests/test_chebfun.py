@@ -7,12 +7,15 @@ from __future__ import division
 from unittest import TestCase
 from unittest import skip
 
+from numpy import ndarray
 from numpy import array
+from numpy import arange
 from numpy import exp
 from numpy import sin
 from numpy import cos
 from numpy import sum
 from numpy import abs
+from numpy import pi
 from numpy import linspace
 from numpy import equal
 from numpy import isscalar
@@ -250,6 +253,9 @@ class ClassUsage(TestCase):
         self.assertTrue(equal(self.f2.breakpoints(),[-1,0,1,2]).all())
 
     def test_endpoints(self):
+        self.assertIsInstance(self.f0.endpoints(), ndarray)
+        self.assertIsInstance(self.f1.endpoints(), ndarray)
+        self.assertIsInstance(self.f2.endpoints(), ndarray)
         self.assertEqual(self.f0.endpoints().size, 0)
         self.assertTrue(equal(self.f1.endpoints(),[-1,1]).all())
         self.assertTrue(equal(self.f2.endpoints(),[-1,2]).all())
@@ -368,6 +374,37 @@ class Calculus(TestCase):
         df = Chebfun.initempty().diff()
         self.assertIsInstance(df, Chebfun)
         self.assertTrue(df.isempty())
+
+
+class Roots(TestCase):
+
+    def setUp(self):
+        self.f1 = Chebfun.initfun_adaptive(lambda x: cos(4*pi*x), linspace(-10,10,101))        
+        self.f2 = Chebfun.initfun_adaptive(lambda x: sin(2*pi*x), linspace(-1,1,5))
+        self.f3 = Chebfun.initfun_adaptive(lambda x: sin(4*pi*x), linspace(-10,10,101))        
+
+    def test_empty(self):
+        rts = Chebfun.initempty().roots()
+        self.assertIsInstance(rts, ndarray)
+        self.assertEqual(rts.size, 0)
+
+    def test_multiple_pieces(self):
+        rts = self.f1.roots()
+        self.assertEqual(rts.size, 80)
+        self.assertLessEqual(infnorm(rts-arange(-9.875,10,.25)), 10*eps)
+
+    # check we don't get repeated roots at breakpoints
+    def test_breakpoint_roots_1(self):
+        rts = self.f2.roots()
+        self.assertEqual(rts.size, 5)
+        self.assertLessEqual(infnorm(rts-self.f2.breakpoints()), eps)
+
+    # check we don't get repeated roots at breakpoints
+    def test_breakpoint_roots_2(self):
+        rts = self.f3.roots()
+        self.assertEqual(rts.size, 81)
+        self.assertLessEqual(infnorm(rts-arange(-10,10.25,.25)), 1e1*eps)
+
 
 @skip
 class Plotting(TestCase):
