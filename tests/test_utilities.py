@@ -17,11 +17,16 @@ from numpy.random import seed
 
 from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import Chebtech2
+from pyfun.chebfun import chebfun
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
 from pyfun.utilities import Subdomain
+from pyfun.utilities import Domain
+
 from pyfun.exceptions import SubdomainValues
+from pyfun.exceptions import SubdomainGap
+from pyfun.exceptions import SubdomainOverlap
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -194,6 +199,29 @@ class TestSubdomain(TestCase):
         self.assertEquals(subdomain.isinterior(x2).sum(), 0)
         self.assertEquals(subdomain.isinterior(x3).sum(), 0)
         self.assertEquals(subdomain.isinterior(x4).sum(), 0)
+
+
+# tests for usage of the Subdomain class
+class TestDomain(TestCase):
+
+    def setUp(self):
+        self.s1 = Subdomain(-1,1)
+        self.s2 = Subdomain(1,2)
+        self.s3 = Subdomain(0.5,2)
+        self.s4 = Subdomain(-2,0)
+
+    def test_init(self):
+        Domain([self.s1])
+        Domain([self.s1, self.s2])
+
+    def test_init_disallow(self):
+        self.assertRaises(SubdomainGap, Domain, [self.s2,self.s4])
+        self.assertRaises(SubdomainOverlap, Domain, [self.s2,self.s3])
+
+    def test_init_from_funs(self):
+        ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
+        Domain.init_from_funs(ff.funs)
+        self.assertRaises(SubdomainGap, Domain.init_from_funs, ff.funs[::2])
 
 
 # reset the testsfun variable so it doesn't get picked up by nose

@@ -45,7 +45,7 @@ class Subdomain(object):
 
     def __str__(self):
         cls = self.__class__
-        out = "{0}([{1}, {2}])".format(cls.__name__, *self.values)
+        out = "{}({:4.2g},{:4.2g})".format(cls.__name__, *self.values)
         return out
 
     def __repr__(self):
@@ -73,6 +73,16 @@ class Domain(object):
     def init_from_funs(cls, funs):
         subdomains = [fun.subdomain for fun in funs]
         return cls(subdomains)
+
+    def __str__(self):
+        out = "Domain("
+        for s in self.subdomains:
+            out += "\n    " + str(s)
+        out += "\n)"
+        return out
+
+    def __repr__(self):
+        return self.__str__()
 
 
 def sortindex(subdomains):
