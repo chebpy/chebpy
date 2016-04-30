@@ -29,6 +29,7 @@ from pyfun.algorithms import chebpts2
 from pyfun.algorithms import barywts2
 from pyfun.algorithms import rootsunit
 from pyfun.algorithms import newtonroots
+from pyfun.algorithms import standard_chop
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -149,8 +150,11 @@ class Chebtech(Smoothfun):
         return self.size() == 1
 
     def simplify(self):
-        """Placeholder: Implement This"""
-        return self
+        """Call standard_chop on the coefficients of self, returning a
+        Chebtech comprised of a copy of the truncated coefficients."""
+        cfs = self.coeffs()
+        npts = standard_chop(cfs)
+        return self.__class__(cfs[:npts].copy())
 
     @emptycase(resultif=0.)
     def vscale(self):

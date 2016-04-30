@@ -29,6 +29,7 @@ from matplotlib.pyplot import subplots
 
 from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import Chebtech2
+from pyfun.algorithms import standard_chop
 
 from utilities import testfunctions
 from utilities import infnorm
@@ -206,6 +207,18 @@ class ClassUsage(TestCase):
         self.assertEquals(gg, gg)
         self.assertNotEquals(ff, gg)
         self.assertEquals( infnorm(ff.coeffs() - gg.coeffs()), 0)
+
+    def test_simplify(self):
+        gg = self.ff.simplify()
+        # check that simplify is calling standard_chop underneath
+        self.assertEqual(gg.size(), standard_chop(self.ff.coeffs()))
+        # check we are returned a copy of self's coeffcients by changing
+        # one entry of gg
+        fcfs = self.ff.coeffs()
+        gcfs = gg.coeffs()
+        self.assertEqual((fcfs[:gg.size()]-gcfs).sum(),0)
+        gg.coeffs()[0] = 1
+        self.assertNotEqual((fcfs[:gg.size()]-gcfs).sum(),0)
 
 # --------------------------------------
 #          vscale estimates
