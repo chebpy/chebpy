@@ -28,7 +28,7 @@ from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import Chebtech2
 
 from pyfun.bndfun import Bndfun
-from pyfun.utilities import Subdomain
+from pyfun.utilities import Interval
 
 from utilities import testfunctions
 from utilities import infnorm
@@ -41,7 +41,7 @@ seed(0)
 # NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class
 # (although it is not abstract) we will test the interface in the way
 # Chebfun will interact with it, which means working explcitly with
-# Subdomain objects.
+# Interval objects.
 
 # Furthermore, since we have already tested the adaptive constructor
 # in the Chebtech-level tests, we just use the adaptive constructor in
@@ -52,7 +52,7 @@ class ClassUsage(TestCase):
 
     def setUp(self):
         f = lambda x: sin(30*x)
-        subdomain = Subdomain(-2,3)
+        subdomain = Interval(-2,3)
         self.f = f
         self.ff = Bndfun.initfun_adaptive(f, subdomain)
         self.xx = subdomain(-1 + 2*rand(100))
@@ -81,7 +81,7 @@ class ClassUsage(TestCase):
     # check the size() method is working properly
     def test_size(self):
         cfs = rand(10)
-        subdomain = Subdomain()
+        subdomain = Interval()
         b0 = Bndfun(Chebtech2(array([])), subdomain)
         b1 = Bndfun(Chebtech2(array([1.])), subdomain)
         b2 = Bndfun(Chebtech2(cfs), subdomain)
@@ -148,7 +148,7 @@ vscales = [
 ]
 
 def definiteIntegralTester(fun, interval, vscale):
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     def tester(self):
         absdiff = abs(ff.vscale()-vscale)
@@ -166,7 +166,7 @@ class Plotting(TestCase):
 
     def setUp(self):
         f = lambda x: sin(1*x) + 5e-1*cos(10*x) + 5e-3*sin(100*x)
-        subdomain = Subdomain(-6, 10)
+        subdomain = Interval(-6, 10)
         self.f0 = Bndfun.initfun_fixedlen(f, subdomain, 1000)
         self.f1 = Bndfun.initfun_adaptive(f, subdomain)
 
@@ -185,7 +185,7 @@ class Calculus(TestCase):
     """Unit-tests for Bndfun calculus operations"""
 
     def setUp(self):
-        self.emptyfun = Bndfun(Chebtech2.initempty(), Subdomain())
+        self.emptyfun = Bndfun(Chebtech2.initempty(), Interval())
         self.yy = -1 + 2*rand(2000)
 #        self.constfun = Bndfun(Chebtech2.initconst(1.), subdomain)
 
@@ -216,7 +216,7 @@ def_integrals = [
 ]
 
 def definiteIntegralTester(fun, interval, integral, tol):
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     def tester(self):
         absdiff = abs(ff.sum()-integral)
@@ -246,7 +246,7 @@ indef_integrals = [
 ]
 
 def indefiniteIntegralTester(fun, ifn, interval, tol):
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     gg = Bndfun.initfun_fixedlen(ifn, subdomain, ff.size()+1)
     coeffs = gg.coeffs()
@@ -279,7 +279,7 @@ derivatives = [
 ]
 
 def derivativeTester(fun, ifn, interval, tol):
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     gg = Bndfun.initfun_fixedlen(ifn, subdomain, max(ff.size()-1,1))
     def tester(self):
@@ -298,14 +298,14 @@ class Construction(TestCase):
 
     def test_onefun_construction(self):
         coeffs = rand(10)
-        subdomain = Subdomain()
+        subdomain = Interval()
         onefun = Chebtech2(coeffs)
         f = Bndfun(onefun, subdomain)
         self.assertIsInstance(f, Bndfun)
         self.assertLess(infnorm(f.coeffs()-coeffs), eps)
 
     def test_const_construction(self):
-        subdomain = Subdomain()
+        subdomain = Interval()
         ff = Bndfun.initconst(1., subdomain)
         self.assertEquals(ff.size(), 1)
         self.assertTrue(ff.isconst())
@@ -347,7 +347,7 @@ fun_details = [
 for k, (fun, name, interval, funlen) in enumerate(fun_details):
 
     fun.__name__ = name
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
 
     # add the adaptive tests
     _testfun_ = adaptiveTester(fun, subdomain, funlen)
@@ -371,7 +371,7 @@ class Algebra(TestCase):
     # check (empty Bndfun) + (Bndfun) = (empty Bndfun)
     #   and (Bndfun) + (empty Bndfun) = (empty Bndfun)
     def test__add__radd__empty(self):
-        subdomain = Subdomain(-2,3)
+        subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun+chebtech).isempty())
@@ -380,7 +380,7 @@ class Algebra(TestCase):
     # check the output of (constant + Bndfun)
     #                 and (Bndfun + constant)
     def test__add__radd__constant(self):
-        subdomain = Subdomain(-.5,.9)
+        subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
@@ -395,7 +395,7 @@ class Algebra(TestCase):
     # check (empty Bndfun) - (Bndfun) = (empty Bndfun)
     #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
     def test__sub__rsub__empty(self):
-        subdomain = Subdomain(-2,3)
+        subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun-chebtech).isempty())
@@ -404,7 +404,7 @@ class Algebra(TestCase):
     # check the output of constant - Bndfun
     #                 and Bndfun - constant
     def test__sub__rsub__constant(self):
-        subdomain = Subdomain(-.5,.9)
+        subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
@@ -420,7 +420,7 @@ class Algebra(TestCase):
     # check (empty Bndfun) * (Bndfun) = (empty Bndfun)
     #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
     def test__mul__rmul__empty(self):
-        subdomain = Subdomain(-2,3)
+        subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun*chebtech).isempty())
@@ -429,7 +429,7 @@ class Algebra(TestCase):
     # check the output of constant * Bndfun
     #                 and Bndfun * constant
     def test__rmul__constant(self):
-        subdomain = Subdomain(-.5,.9)
+        subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
         for (fun, funlen) in testfunctions:
             for const in (-1, 1, 10, -1e5):
@@ -475,7 +475,7 @@ def binaryOpTester(f, g, subdomain, binop):
 for binop in binops:
     # add the generic binary operator tests
     for (f, _), (g, _) in combinations(testfunctions, 2):
-        subdomain = Subdomain(-.5,.9)
+        subdomain = Interval(-.5,.9)
         _testfun_ = binaryOpTester(f, g, subdomain, binop)
         _testfun_.__name__ = \
             "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
@@ -498,7 +498,7 @@ def unaryOpTester(unaryop, f, subdomain):
 
 for unaryop in unaryops:
     for (f, _) in testfunctions:
-        subdomain = Subdomain(-.5,.9)
+        subdomain = Interval(-.5,.9)
         _testfun_ = unaryOpTester(unaryop, f, subdomain)
         _testfun_.__name__ = \
             "test{}{}".format(unaryop.__name__, f.__name__)
@@ -511,14 +511,14 @@ class Roots(TestCase):
         self.assertEquals(ff.roots().size, 0)
 
     def test_const(self):
-        ff = Bndfun.initconst(0., Subdomain(-2,3))
-        gg = Bndfun.initconst(2., Subdomain(-2,3))
+        ff = Bndfun.initconst(0., Interval(-2,3))
+        gg = Bndfun.initconst(2., Interval(-2,3))
         self.assertEquals(ff.roots().size, 0)
         self.assertEquals(gg.roots().size, 0)
 
 # add tests for roots
 def rootsTester(f, interval, roots, tol):
-    subdomain = Subdomain(*interval)
+    subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(f, subdomain)
     rts = ff.roots()
     def tester(self):

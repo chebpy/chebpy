@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-class SubdomainOverlap(Exception):
+class IntervalOverlap(Exception):
     pass
 
-class SubdomainGap(Exception):
+class IntervalGap(Exception):
     pass
 
-class SubdomainValues(Exception):
+class IntervalValues(Exception):
     def __init__(self, message=None):
         if message is None:
-            message = "The defining values of a Subdomain object must "\
+            message = "The defining values of a Interval object must "\
             "be strictly increasing"
         super(self.__class__, self).__init__(message)
 

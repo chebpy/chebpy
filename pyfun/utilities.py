@@ -9,13 +9,13 @@ from numpy import array
 from numpy import logical_and
 from numpy import all
 
-from pyfun.exceptions import SubdomainGap
-from pyfun.exceptions import SubdomainOverlap
-from pyfun.exceptions import SubdomainValues
+from pyfun.exceptions import IntervalGap
+from pyfun.exceptions import IntervalOverlap
+from pyfun.exceptions import IntervalValues
 
-class Subdomain(object):
+class Interval(object):
     """
-    Utility class to implement subdomain logic. The purpose of this class
+    Utility class to implement Interval logic. The purpose of this class
     is to both enforce certain properties of domain components such as
     having exactly two monotonically increasing elements and also to
     implement the functionality of mapping to and from the unit interval.
@@ -32,7 +32,7 @@ class Subdomain(object):
     """
     def __init__(self, a=-1, b=1):
         if a >= b:
-            raise SubdomainValues
+            raise IntervalValues
         self.values = array([a, b])
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
@@ -62,30 +62,30 @@ class Subdomain(object):
 
 class Domain(object):
     """Convenience class to express key relationships between collections
-    of Subdomain objects"""
+    of Interval objects"""
 
-    def __init__(self, subdomains):
-        subdomains = array(subdomains)
-        if subdomains.size == 0:
-            sortedsubdomains = array([])
+    def __init__(self, intervals):
+        intervals = array(intervals)
+        if intervals.size == 0:
+            sortedintervals = array([])
         else:
-            idx = sortindex(subdomains)
-            sortedsubdomains = subdomains[idx]
-        self.subdomains = sortedsubdomains
+            idx = sortindex(intervals)
+            sortedintervals = intervals[idx]
+        self.intervals = sortedintervals
 
     @classmethod
     def init_from_funs(cls, funs):
-        subdomains = [fun.subdomain for fun in funs]
-        return cls(subdomains)
+        intervals = [fun.interval for fun in funs]
+        return cls(intervals)
 
     def size(self):
-        return self.subdomains.size
+        return self.intervals.size
 
     def __eq__(self, other):
         if self.size() != other.size():
             return False
         else:
-            subdoms = zip(self.subdomains, other.subdomains)
+            subdoms = zip(self.intervals, other.intervals)
             return all([x==y for x,y in subdoms])
 
     def __ne__(self, other):
@@ -93,7 +93,7 @@ class Domain(object):
 
     def __str__(self):
         out = "Domain("
-        for s in self.subdomains:
+        for s in self.Intervals:
             out += "\n    " + str(s)
         out += "\n)"
         return out
@@ -102,13 +102,13 @@ class Domain(object):
         return self.__str__()
 
 
-def sortindex(subdomains):
-    """Return an index determining the ordering of the subdomains.
-    The methods ensures that the subdomains: (1) do not overlap, and
+def sortindex(Intervals):
+    """Return an index determining the ordering of the Intervals.
+    The methods ensures that the Intervals: (1) do not overlap, and
     (2) represent a complete partition of the broader domain"""
 
-    # sort by the left endpoint subdomain values
-    subintervals = array([x.values for x in subdomains])
+    # sort by the left endpoint Interval values
+    subintervals = array([x.values for x in Intervals])
     leftbreakpts = array([s[0] for s in subintervals])
     idx = leftbreakpts.argsort()
 
@@ -117,9 +117,9 @@ def sortindex(subdomains):
     x = srt.flatten()[1:-1]
     d = x[1::2] - x[::2]
     if (d<0).any():
-        raise SubdomainOverlap
+        raise IntervalOverlap
     if (d>0).any():
-        raise SubdomainGap
+        raise IntervalGap
 
     return idx
 
@@ -132,8 +132,8 @@ def sortandverify(funs):
         sortedfuns = array([])
         return sortedfuns
     else:
-        subdomains = array([fun.subdomain for fun in funs])
-        idx = sortindex(subdomains)
+        intervals = array([fun.interval for fun in funs])
+        idx = sortindex(intervals)
         sortedfuns = array(funs[idx])
         return sortedfuns
 

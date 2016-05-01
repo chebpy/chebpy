@@ -15,7 +15,7 @@ from matplotlib.pyplot import gca
 
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
-from pyfun.utilities import Subdomain
+from pyfun.utilities import Interval
 from pyfun.utilities import Domain
 from pyfun.utilities import sortandverify
 from pyfun.utilities import breakdata
@@ -46,8 +46,8 @@ class Chebfun(object):
             raise BadDomainArgument
         funs = array([])
         for interval in zip(domain[:-1], domain[1:]):
-            subdomain = Subdomain(*interval)
-            fun = Bndfun.initfun_adaptive(f, subdomain)
+            interval = Interval(*interval)
+            fun = Bndfun.initfun_adaptive(f, interval)
             funs = append(funs, fun)
         return cls(funs)
 
@@ -65,8 +65,8 @@ class Chebfun(object):
         funs = array([])
         intervals = zip(domain[:-1], domain[1:])
         for interval, length in zip(intervals, nn):
-            subdomain = Subdomain(*interval)
-            fun = Bndfun.initfun_fixedlen(f, subdomain, length)
+            interval = Interval(*interval)
+            fun = Bndfun.initfun_fixedlen(f, interval, length)
             funs = append(funs, fun)
         return cls(funs)
 
@@ -119,7 +119,7 @@ class Chebfun(object):
 
         # evaluate a fun when x is an interior point
         for fun in self:
-            idx = fun.subdomain.isinterior(x)
+            idx = fun.interval.isinterior(x)
             out[idx] = fun(x[idx])
 
         # evaluate the breakpoint data for x at a breakpoint

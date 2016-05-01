@@ -25,12 +25,12 @@ from matplotlib.pyplot import subplots
 
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
-from pyfun.utilities import Subdomain
+from pyfun.utilities import Interval
 from pyfun.chebfun import Chebfun
 from pyfun.chebfun import breakdata
 from pyfun.chebfun import sortandverify
-from pyfun.exceptions import SubdomainGap
-from pyfun.exceptions import SubdomainOverlap
+from pyfun.exceptions import IntervalGap
+from pyfun.exceptions import IntervalOverlap
 from pyfun.exceptions import BadDomainArgument
 from pyfun.exceptions import BadFunLengthArgument
 
@@ -48,11 +48,11 @@ class Auxilliary(TestCase):
 
     def setUp(self):
         f = lambda x: exp(x)
-        self.fun0 = Bndfun.initfun_adaptive(f, Subdomain(-1,0) )
-        self.fun1 = Bndfun.initfun_adaptive(f, Subdomain(0,1) )
-        self.fun2 = Bndfun.initfun_adaptive(f, Subdomain(-.5,0.5) )
-        self.fun3 = Bndfun.initfun_adaptive(f, Subdomain(2,2.5) )
-        self.fun4 = Bndfun.initfun_adaptive(f, Subdomain(-3,-2) )
+        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
+        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
+        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5) )
+        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5) )
+        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2) )
         self.funs_a = array([self.fun1, self.fun0, self.fun2])
         self.funs_b = array([self.fun1, self.fun2])       
         self.funs_c = array([self.fun0, self.fun3])
@@ -73,12 +73,12 @@ class Auxilliary(TestCase):
         self.assertTrue(funs[1]==self.fun1)
     
     def test_verify_overlapping(self):
-        self.assertRaises(SubdomainOverlap, sortandverify, self.funs_a)
-        self.assertRaises(SubdomainOverlap, sortandverify, self.funs_b)
+        self.assertRaises(IntervalOverlap, sortandverify, self.funs_a)
+        self.assertRaises(IntervalOverlap, sortandverify, self.funs_b)
 
     def test_verify_gap(self):
-        self.assertRaises(SubdomainGap, sortandverify, self.funs_c)
-        self.assertRaises(SubdomainGap, sortandverify, self.funs_d)
+        self.assertRaises(IntervalGap, sortandverify, self.funs_c)
+        self.assertRaises(IntervalGap, sortandverify, self.funs_d)
 
     def test_breakdata_empty(self):
         breaks = breakdata(array([]))
@@ -104,11 +104,11 @@ class Construction(TestCase):
     def setUp(self):
         f = lambda x: exp(x)
         self.f = f
-        self.fun0 = Bndfun.initfun_adaptive(f, Subdomain(-1,0) )
-        self.fun1 = Bndfun.initfun_adaptive(f, Subdomain(0,1) )
-        self.fun2 = Bndfun.initfun_adaptive(f, Subdomain(-.5,0.5) )
-        self.fun3 = Bndfun.initfun_adaptive(f, Subdomain(2,2.5) )
-        self.fun4 = Bndfun.initfun_adaptive(f, Subdomain(-3,-2) )
+        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
+        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
+        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5) )
+        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5) )
+        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2) )
         self.funs_a = array([self.fun1, self.fun0, self.fun2])
         self.funs_b = array([self.fun1, self.fun2])
         self.funs_c = array([self.fun0, self.fun3])
@@ -121,10 +121,10 @@ class Construction(TestCase):
         Chebfun([self.fun0, self.fun1])
 
     def test__init__fail(self):
-        self.assertRaises(SubdomainOverlap, Chebfun, self.funs_a)
-        self.assertRaises(SubdomainOverlap, Chebfun, self.funs_b)
-        self.assertRaises(SubdomainGap, Chebfun, self.funs_c)
-        self.assertRaises(SubdomainGap, Chebfun, self.funs_d)
+        self.assertRaises(IntervalOverlap, Chebfun, self.funs_a)
+        self.assertRaises(IntervalOverlap, Chebfun, self.funs_b)
+        self.assertRaises(IntervalGap, Chebfun, self.funs_c)
+        self.assertRaises(IntervalGap, Chebfun, self.funs_d)
 
     def test__init__empty(self):
         emptyfun = Chebfun.initempty()

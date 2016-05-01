@@ -92,7 +92,7 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def subdomain(self):
+    def interval(self):
         pass
 
     @abstractmethod

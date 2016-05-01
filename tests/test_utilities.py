@@ -21,12 +21,12 @@ from pyfun.chebfun import chebfun
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
-from pyfun.utilities import Subdomain
+from pyfun.utilities import Interval
 from pyfun.utilities import Domain
 
-from pyfun.exceptions import SubdomainValues
-from pyfun.exceptions import SubdomainGap
-from pyfun.exceptions import SubdomainOverlap
+from pyfun.exceptions import IntervalValues
+from pyfun.exceptions import IntervalGap
+from pyfun.exceptions import IntervalOverlap
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -161,32 +161,32 @@ class Misc(TestCase):
         HC = Chebtech2.initfun(h, hn).coeffs()
         self.assertLessEqual( infnorm(hc-HC), 2e1*eps)
 
-# tests for usage of the Subdomain class
-class TestSubdomain(TestCase):
+# tests for usage of the Interval class
+class TestInterval(TestCase):
 
     def test_init(self):
-        Subdomain(-1,1)
-        self.assertTrue((Subdomain().values==array([-1,1])).all())
+        Interval(-1,1)
+        self.assertTrue((Interval().values==array([-1,1])).all())
 
     def test_init_disallow(self):
-        self.assertRaises(SubdomainValues, Subdomain, 2, 0)
-        self.assertRaises(SubdomainValues, Subdomain, 0, 0)
+        self.assertRaises(IntervalValues, Interval, 2, 0)
+        self.assertRaises(IntervalValues, Interval, 0, 0)
 
     def test__eq__(self):
-        d1 = Subdomain(-2,3)
-        d2 = Subdomain(-2,3)
-        d3 = Subdomain(-1,1)
-        self.assertTrue(Subdomain()==Subdomain())
+        d1 = Interval(-2,3)
+        d2 = Interval(-2,3)
+        d3 = Interval(-1,1)
+        self.assertTrue(Interval()==Interval())
         self.assertTrue(d1==d2)
         self.assertTrue(d2==d1)
         self.assertFalse(d3==d1)
         self.assertFalse(d2==d3)
 
     def test__ne__(self):
-        d1 = Subdomain(-2,3)
-        d2 = Subdomain(-2,3)
-        d3 = Subdomain(-1,1)
-        self.assertFalse(Subdomain()!=Subdomain())
+        d1 = Interval(-2,3)
+        d2 = Interval(-2,3)
+        d3 = Interval(-1,1)
+        self.assertFalse(Interval()!=Interval())
         self.assertFalse(d1!=d2)
         self.assertFalse(d2!=d1)
         self.assertTrue(d3!=d1)
@@ -194,8 +194,8 @@ class TestSubdomain(TestCase):
 
     def test_maps(self):
         yy = -1 + 2 * rand(1000)
-        subdomain = Subdomain(-2,3)
-        vals = subdomain.invmap( subdomain(yy) ) - yy
+        interval = Interval(-2,3)
+        vals = interval.invmap( interval(yy) ) - yy
         self.assertLessEqual( infnorm(vals), eps)
 
     def test_isinterior(self):
@@ -204,47 +204,47 @@ class TestSubdomain(TestCase):
         x2 = linspace(-3,-2,npts)
         x3 = linspace(3,4,npts)
         x4 = linspace(5,6,npts)
-        subdomain = Subdomain(-2,3)
-        self.assertEquals(subdomain.isinterior(x1).sum(), npts-2)
-        self.assertEquals(subdomain.isinterior(x2).sum(), 0)
-        self.assertEquals(subdomain.isinterior(x3).sum(), 0)
-        self.assertEquals(subdomain.isinterior(x4).sum(), 0)
+        interval = Interval(-2,3)
+        self.assertEquals(interval.isinterior(x1).sum(), npts-2)
+        self.assertEquals(interval.isinterior(x2).sum(), 0)
+        self.assertEquals(interval.isinterior(x3).sum(), 0)
+        self.assertEquals(interval.isinterior(x4).sum(), 0)
 
 
-# tests for usage of the Subdomain class
+# tests for usage of the Interval class
 class TestDomain(TestCase):
 
     def setUp(self):
-        self.sd1 = Subdomain(-2,-1)
-        self.sd2 = Subdomain(-1,1)
-        self.sd3 = Subdomain(1,2)
-        self.sd4 = Subdomain(2,3)
-        self.sd5 = Subdomain(-2,1)
+        self.i1 = Interval(-2,-1)
+        self.i2 = Interval(-1,1)
+        self.i3 = Interval(1,2)
+        self.i4 = Interval(2,3)
+        self.i5 = Interval(-2,1)
 
     def test_init(self):
-        Domain([self.sd1])
-        Domain([self.sd1, self.sd2])
+        Domain([self.i1])
+        Domain([self.i1, self.i2])
 
     def test_init_disallow(self):
-        self.assertRaises(SubdomainGap, Domain, [self.sd2,self.sd4])
-        self.assertRaises(SubdomainOverlap, Domain, [self.sd1,self.sd5])
+        self.assertRaises(IntervalGap, Domain, [self.i2,self.i4])
+        self.assertRaises(IntervalOverlap, Domain, [self.i1,self.i5])
 
     def test_init_from_funs(self):
         ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
         Domain.init_from_funs(ff.funs)
-        self.assertRaises(SubdomainGap, Domain.init_from_funs, ff.funs[::2])
+        self.assertRaises(IntervalGap, Domain.init_from_funs, ff.funs[::2])
 
     def test__eq__(self):
-        d1 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
-        d2 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
-        d3 = Domain([self.sd1])
+        d1 = Domain([self.i1, self.i2, self.i3, self.i4])
+        d2 = Domain([self.i1, self.i2, self.i3, self.i4])
+        d3 = Domain([self.i1])
         self.assertTrue(d1==d2)
         self.assertFalse(d1==d3)
 
     def test__ne__(self):
-        d1 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
-        d2 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
-        d3 = Domain([self.sd1])
+        d1 = Domain([self.i1, self.i2, self.i3, self.i4])
+        d2 = Domain([self.i1, self.i2, self.i3, self.i4])
+        d3 = Domain([self.i1])
         self.assertFalse(d1!=d2)
         self.assertTrue(d1!=d3)
 
