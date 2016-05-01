@@ -14,6 +14,9 @@ from pyfun.decorators import abstractclassmethod
 class Onefun(object):
     __metaclass__ = ABCMeta
 
+    # --------------------------
+    #  alternative constructors
+    # --------------------------
     @abstractclassmethod
     def initconst(cls):
         pass
@@ -27,11 +30,18 @@ class Onefun(object):
         pass
 
     @abstractclassmethod
-    def initfun_fixedlen(cls):
+    def initfun_adaptive(cls):
         pass
 
     @abstractclassmethod
-    def initfun_adaptive(cls):
+    def initfun_fixedlen(cls):
+        pass
+
+    # -------------------
+    #  "private" methods
+    # -------------------
+    @abstractmethod
+    def __call__(self):
         pass
 
     @abstractmethod
@@ -39,81 +49,18 @@ class Onefun(object):
         pass
 
     @abstractmethod
-    def __call__(self):
+    def __repr__(self):
         pass
 
     @abstractmethod
     def __str__(self):
         pass
 
-    @abstractmethod
-    def __repr__(self):
-        pass
-
-    # ---------------------------------
-    #      utilities
-    # ---------------------------------
-    @abstractmethod
-    def prolong(self):
-        pass
-
-    @abstractmethod
-    def copy(self):
-        pass
-
-    @abstractmethod
-    def coeffs(self):
-        pass
-
-    @abstractmethod
-    def values(self):
-        pass
-
-    @abstractmethod
-    def size(self):
-        pass
-
-    @abstractmethod
-    def isempty(self):
-        pass
-
-    @abstractmethod
-    def isconst(self):
-        pass
-
-    @abstractmethod
-    def simplify(self):
-        pass
-
-    @abstractmethod
-    def vscale(self):
-        pass
-
-    # ---------------------------------
-    #        algebra
-    # ---------------------------------
+    # ----------------
+    #    algebra
+    # ----------------
     @abstractmethod
     def __add__(self):
-        pass
-
-    @abstractmethod
-    def __sub__(self):
-        pass
-
-    @abstractmethod
-    def __pos__(self):
-        pass
-
-    @abstractmethod
-    def __neg__(self):
-        pass
-
-    @abstractmethod
-    def __radd__(self):
-        pass
-
-    @abstractmethod
-    def __rsub__(self):
         pass
 
     @abstractmethod
@@ -121,19 +68,78 @@ class Onefun(object):
         pass
 
     @abstractmethod
+    def __neg__(self):
+        pass
+
+    @abstractmethod
+    def __pos__(self):
+        pass
+
+    @abstractmethod
+    def __radd__(self):
+        pass
+
+    @abstractmethod
     def __rmul__(self):
         pass
 
-    # ---------------------------------
-    #          rootfinding
-    # ---------------------------------
+    @abstractmethod
+    def __rsub__(self):
+        pass
+
+    @abstractmethod
+    def __sub__(self):
+        pass
+
+    # ---------------
+    #   utilities
+    # ---------------
+    @abstractmethod
+    def coeffs(self):
+        pass
+
+    @abstractmethod
+    def copy(self):
+        pass
+
+    @abstractmethod
+    def isconst(self):
+        pass
+
+    @abstractmethod
+    def isempty(self):
+        pass
+
+    @abstractmethod
+    def prolong(self):
+        pass
+
+    @abstractmethod
+    def simplify(self):
+        pass
+
+    @abstractmethod
+    def size(self):
+        pass
+
+    @abstractmethod
+    def values(self):
+        pass
+
+    @abstractmethod
+    def vscale(self):
+        pass
+
+    # --------------
+    #  rootfinding
+    # --------------
     @abstractmethod
     def roots(self):
         pass
 
-    # ---------------------------------
-    #            calculus
-    # ---------------------------------
+    # -------------
+    #   calculus
+    # -------------
     @abstractmethod
     def sum(self):
         pass
@@ -146,9 +152,9 @@ class Onefun(object):
     def diff(self):
         pass
 
-    # ---------------------------------
-    #            plotting
-    # ---------------------------------
+    # -------------
+    #   plotting
+    # -------------
     @abstractmethod
     def plot(self):
         pass
