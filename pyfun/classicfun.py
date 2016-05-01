@@ -18,6 +18,7 @@ from pyfun.utilities import Interval
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import emptycase
 from pyfun.exceptions import IntervalMismatch
+from pyfun.exceptions import NotSubinterval
 
 Techs = {
     "Chebtech2": Chebtech2,
@@ -101,10 +102,14 @@ class Classicfun(Fun):
         """Return the Interval object associated with the Classicfun"""
         return self.interval
 
-    def restrict(self):
+    def restrict(self, subinterval):
         """Return a Classicfun that matches self on a subinterval of its
-        interval of definition"""
-        pass
+        interval of definition. The output is formed using a fixed length
+        construction using same number of degrees of freedom as self."""
+        if subinterval not in self.interval:
+            raise NotSubinterval(self.interval, subinterval)
+        cls = self.__class__
+        return cls.initfun_fixedlen(self, subinterval, self.size())
 
     # -------------
     #  rootfinding

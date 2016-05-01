@@ -20,6 +20,9 @@ class IntervalMismatch(Exception):
             "objects defined on identical intervals"
         super(self.__class__, self).__init__(message)
 
+class NotSubinterval(Exception):
+    pass
+
 class IntervalValues(Exception):
     def __init__(self, message=None):
         if message is None:

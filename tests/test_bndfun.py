@@ -56,7 +56,6 @@ class ClassUsage(TestCase):
         self.f = f
         self.ff = Bndfun.initfun_adaptive(f, subdomain)
         self.xx = subdomain(-1 + 2*rand(100))
-
         self.emptyfun = Bndfun(Chebtech2.initempty(), subdomain)
         self.constfun = Bndfun(Chebtech2.initconst(1.), subdomain)
 
@@ -130,7 +129,14 @@ class ClassUsage(TestCase):
         self.assertEquals(ff, ff)
         self.assertEquals(gg, gg)
         self.assertNotEquals(ff, gg)
-        self.assertEquals( infnorm(ff.coeffs() - gg.coeffs()) , 0)
+        self.assertEquals(infnorm(ff.coeffs()-gg.coeffs()), 0)
+
+    # check that the restricted fun matches self on the subinterval
+    def test_restrict(self):
+        i1 = Interval(-1,1)
+        gg = self.ff.restrict(i1)
+        yy = -1 + 2*rand(1000)
+        self.assertLessEqual(infnorm(self.ff(yy)-gg(yy)), 1e2*eps)
 
 # --------------------------------------
 #          vscale estimates
