@@ -17,6 +17,7 @@ from pyfun.utilities import Interval
 
 from pyfun.settings import DefaultPrefs
 from pyfun.decorators import emptycase
+from pyfun.exceptions import IntervalMismatch
 
 Techs = {
     "Chebtech2": Chebtech2,
@@ -24,8 +25,6 @@ Techs = {
 
 Tech = Techs[DefaultPrefs.tech]
 
-class InconsistentIntervals(Exception):
-    """Raised when two Classicfun intervals to not match"""
 
 class Classicfun(Fun):
 
@@ -191,7 +190,7 @@ def addBinaryOp(methodname):
             g = f.onefun
             # raise Exception if intervals are not consistent
             if self.interval != f.interval:
-                raise InconsistentIntervals(self.interval(), f.interval())
+                raise IntervalMismatch(self.interval(), f.interval())
         else:
             # let the lower level classes raise any other exceptions
             g = f

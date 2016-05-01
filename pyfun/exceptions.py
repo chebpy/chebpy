@@ -6,6 +6,9 @@ class IntervalOverlap(Exception):
 class IntervalGap(Exception):
     pass
 
+class IntervalMismatch(Exception):
+    """Raised when two Classicfun intervals do not match"""
+
 class IntervalValues(Exception):
     def __init__(self, message=None):
         if message is None:
