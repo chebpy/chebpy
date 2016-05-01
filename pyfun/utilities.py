@@ -47,6 +47,12 @@ class Interval(object):
     def __call__(self, y):
         return self.formap(y)
 
+    def __contains__(self, other):
+        """Check that another Interval object is a subinterval of self"""
+        a,b = self.values
+        x,y = other.values
+        return (a<=x) & (y<=b)
+
     def __str__(self):
         cls = self.__class__
         out = "{}({:4.2g},{:4.2g})".format(cls.__name__, *self.values)

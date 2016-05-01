@@ -164,6 +164,12 @@ class Misc(TestCase):
 # tests for usage of the Interval class
 class TestInterval(TestCase):
 
+    def setUp(self):
+        self.i1 = Interval(-2,3)
+        self.i2 = Interval(-2,3)
+        self.i3 = Interval(-1,1)
+        self.i4 = Interval(-1,2)
+
     def test_init(self):
         Interval(-1,1)
         self.assertTrue((Interval().values==array([-1,1])).all())
@@ -173,30 +179,36 @@ class TestInterval(TestCase):
         self.assertRaises(IntervalValues, Interval, 0, 0)
 
     def test__eq__(self):
-        d1 = Interval(-2,3)
-        d2 = Interval(-2,3)
-        d3 = Interval(-1,1)
         self.assertTrue(Interval()==Interval())
-        self.assertTrue(d1==d2)
-        self.assertTrue(d2==d1)
-        self.assertFalse(d3==d1)
-        self.assertFalse(d2==d3)
+        self.assertTrue(self.i1==self.i2)
+        self.assertTrue(self.i2==self.i1)
+        self.assertFalse(self.i3==self.i1)
+        self.assertFalse(self.i2==self.i3)
 
     def test__ne__(self):
-        d1 = Interval(-2,3)
-        d2 = Interval(-2,3)
-        d3 = Interval(-1,1)
         self.assertFalse(Interval()!=Interval())
-        self.assertFalse(d1!=d2)
-        self.assertFalse(d2!=d1)
-        self.assertTrue(d3!=d1)
-        self.assertTrue(d2!=d3)
+        self.assertFalse(self.i1!=self.i2)
+        self.assertFalse(self.i2!=self.i1)
+        self.assertTrue(self.i3!=self.i1)
+        self.assertTrue(self.i2!=self.i3)
+
+    def test__contains__(self):
+        self.assertTrue(self.i1 in self.i2)
+        self.assertTrue(self.i3 in self.i1)
+        self.assertTrue(self.i4 in self.i1)
+        self.assertFalse(self.i1 in self.i3)
+        self.assertFalse(self.i1 in self.i4)
+        self.assertFalse(self.i1 not in self.i2)
+        self.assertFalse(self.i3 not in self.i1)
+        self.assertFalse(self.i4 not in self.i1)
+        self.assertTrue(self.i1 not in self.i3)
+        self.assertTrue(self.i1 not in self.i4)
 
     def test_maps(self):
         yy = -1 + 2 * rand(1000)
         interval = Interval(-2,3)
-        vals = interval.invmap( interval(yy) ) - yy
-        self.assertLessEqual( infnorm(vals), eps)
+        vals = interval.invmap(interval(yy)) - yy
+        self.assertLessEqual(infnorm(vals), eps)
 
     def test_isinterior(self):
         npts = 1000
