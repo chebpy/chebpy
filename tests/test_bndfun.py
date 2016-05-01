@@ -26,6 +26,7 @@ from matplotlib.pyplot import subplots
 
 from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import Chebtech2
+from pyfun.algorithms import standard_chop
 
 from pyfun.bndfun import Bndfun
 from pyfun.utilities import Interval
@@ -138,6 +139,14 @@ class ClassUsage(TestCase):
         yy = -1 + 2*rand(1000)
         self.assertLessEqual(infnorm(self.ff(yy)-gg(yy)), 1e2*eps)
 
+    # check that the restricted fun matches self on the subinterval
+    def test_simplify(self):
+        interval = Interval(-2,1)
+        ff = Bndfun.initfun_fixedlen(self.f, interval, 1000)
+        gg = ff.simplify()
+        self.assertEqual(gg.size(), standard_chop(ff.onefun.coeffs()))
+        self.assertEqual(infnorm(ff.coeffs()[:gg.size()]-gg.coeffs()), 0)
+        self.assertEqual(ff.interval, gg.interval)
 # --------------------------------------
 #          vscale estimates
 # --------------------------------------
