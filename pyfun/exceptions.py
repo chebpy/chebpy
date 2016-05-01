@@ -1,13 +1,24 @@
 # -*- coding: utf-8 -*-
 
 class IntervalOverlap(Exception):
-    pass
+    def __init__(self, message=None):
+        if message is None:
+            message = "The supplied Interval objects overlap"
+        super(self.__class__, self).__init__(message)
 
 class IntervalGap(Exception):
-    pass
+    def __init__(self, message=None):
+        if message is None:
+            message = "The supplied Interval objects do not form a "\
+            "complete partition of the approximation interval"
+        super(self.__class__, self).__init__(message)
 
 class IntervalMismatch(Exception):
-    """Raised when two Classicfun intervals do not match"""
+    def __init__(self, message=None):
+        if message is None:
+            message = "This operation can only be performed for Fun "\
+            "objects defined on identical intervals"
+        super(self.__class__, self).__init__(message)
 
 class IntervalValues(Exception):
     def __init__(self, message=None):
