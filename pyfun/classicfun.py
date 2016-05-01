@@ -30,12 +30,9 @@ class Classicfun(Fun):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, onefun, interval):
-        """Initialise a Classicfun from its two defining properties: a
-        Interval object and a Onefun object"""
-        self.onefun = onefun
-        self.interval = interval
-
+    # --------------------------
+    #  alternative constructors
+    # --------------------------
     @classmethod
     def initempty(cls):
         """Adaptive initialisation of a Classicfun from a callable
@@ -68,30 +65,30 @@ class Classicfun(Fun):
         onefun = Tech.initfun(uifunc, n)
         return cls(onefun, interval)
 
+    # -------------------
+    #  "private" methods
+    # -------------------
     def __call__(self, x, how="clenshaw"):
         y = self.interval.invmap(x)
         return self.onefun(y, how)
 
-    def plot(self, ax=None, *args, **kwargs):
-        a, b = self.endpoints()
-        ax = ax if ax else gca()
-        xx = linspace(a, b, 2001)
-        yy = self(xx)
-        ax.plot(xx, yy, *args, **kwargs)
-        return ax
+    def __init__(self, onefun, interval):
+        """Initialise a Classicfun from its two defining properties: a
+        Interval object and a Onefun object"""
+        self.onefun = onefun
+        self.interval = interval
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         out = "{0}([{2}, {3}], {1})".format(
             self.__class__.__name__, self.size(), *self.endpoints())
         return out
 
-    def __repr__(self):
-        return self.__str__()
-
-    def interval(self):
-        """Return the Interval object associated with the Classicfun"""
-        return self.interval
-
+    # -----------
+    #  utilities
+    # -----------
     def endpoints(self):
         """Return a 2-array of endpointvalues taken from the interval"""
         return self.interval.values
@@ -100,10 +97,25 @@ class Classicfun(Fun):
         """Return a 2-array of endpointvalues taken from the interval"""
         return self(self.endpoints())
 
-    def sum(self):
-        a, b = self.endpoints()
-        return .5*(b-a) * self.onefun.sum()
+    def interval(self):
+        """Return the Interval object associated with the Classicfun"""
+        return self.interval
 
+    def restrict(self):
+        """Return a Classicfun that matches self on a subinterval of its
+        interval of definition"""
+        pass
+
+    # -------------
+    #  rootfinding
+    # -------------
+    def roots(self):
+        uroots = self.onefun.roots()
+        return self.interval(uroots)
+
+    # ----------
+    #  calculus
+    # ----------
     def cumsum(self):
         a, b = self.endpoints()
         onefun = .5*(b-a) * self.onefun.cumsum()
@@ -114,9 +126,21 @@ class Classicfun(Fun):
         onefun = 2./(b-a) * self.onefun.diff()
         return self.__class__(onefun, self.interval)
 
-    def roots(self):
-        uroots = self.onefun.roots()
-        return self.interval(uroots)
+    def sum(self):
+        a, b = self.endpoints()
+        return .5*(b-a) * self.onefun.sum()
+
+    # ----------
+    #  plotting
+    # ----------
+    def plot(self, ax=None, *args, **kwargs):
+        a, b = self.endpoints()
+        ax = ax if ax else gca()
+        xx = linspace(a, b, 2001)
+        yy = self(xx)
+        ax.plot(xx, yy, *args, **kwargs)
+        return ax
+
 
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is

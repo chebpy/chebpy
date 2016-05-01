@@ -112,6 +112,10 @@ class Fun(object):
         pass
 
     @abstractmethod
+    def restrict(self):
+        pass
+
+    @abstractmethod
     def simplify(self):
         pass
 
