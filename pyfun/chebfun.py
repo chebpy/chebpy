@@ -27,14 +27,9 @@ from pyfun.exceptions import BadFunLengthArgument
 
 class Chebfun(object):
 
-    def __init__(self, funs):
-        # TODO: there is a minor inefficiency here - sortandverify()
-        # and Domain.from_funs() do the same integrity check
-        self.funs = sortandverify(funs)
-        self.domain = Domain.init_from_funs(funs)
-        self.breaks = breakdata(self.funs)
-        self.transposed = False
-
+    # --------------------------
+    #  alternative constructors
+    # --------------------------
     @classmethod
     def initempty(cls):
         return cls(array([]))
@@ -70,46 +65,9 @@ class Chebfun(object):
             funs = append(funs, fun)
         return cls(funs)
 
-    def __str__(self):
-        rowcol = "row" if self.transposed else "col"
-        out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, self.size())
-        return out
-
-    @emptycase("chebfun<empty>")
-    def __repr__(self):
-        rowcol = "row" if self.transposed else "column"
-        numpcs = self.funs.size
-        plural = "" if numpcs == 1 else "s"
-        header = "chebfun {} ({} smooth piece{})\n"\
-            .format(rowcol, numpcs, plural)
-        toprow = "       interval       length     endpoint values\n"
-        tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
-        rowdta = ""
-        for fun in self:
-            endpts = fun.endpoints()
-            xl, xr = endpts
-            fl, fr = fun(endpts)
-            row = tmplat.format(xl, xr, fun.size(), fl, fr)
-            rowdta += row
-        btmrow = "vertical scale = {:3.2g}".format(self.vscale())
-        btmxtr = "" if numpcs == 1 else \
-            "    total length = {}".format(sum([f.size() for f in self]))
-        return header + toprow + rowdta + btmrow + btmxtr
-
-    def isempty(self):
-        return self.funs.size == 0
-
-    def copy(self):
-        return self.__class__([fun.copy() for fun in self])
-
-    @emptycase(0)
-    def vscale(self):
-        return max([fun.vscale() for fun in self])
-
-    @emptycase(0)
-    def hscale(self):
-        return abs(self.endpoints()).max()
-
+    # -------------------
+    #  "private" methods
+    # -------------------
     @emptycase(array([]))
     @singletoncase
     def __call__(self, x):
@@ -133,33 +91,90 @@ class Chebfun(object):
         out[rpts] = self.funs[-1](x[rpts])
         return out
 
-    def plot(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
-        a, b = self.endpoints()
-        xx = linspace(a, b, 2001)
-        ax.plot(xx, self(xx), *args, **kwargs)
-        return ax
+    def __init__(self, funs):
+        # TODO: there is a minor inefficiency here - sortandverify()
+        # and Domain.from_funs() do the same integrity check
+        self.funs = sortandverify(funs)
+        self.domain = Domain.init_from_funs(funs)
+        self.breaks = breakdata(self.funs)
+        self.transposed = False
 
-    def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
+    def __iter__(self):
+        return self.funs.__iter__()
+
+    @emptycase("chebfun<empty>")
+    def __repr__(self):
+        rowcol = "row" if self.transposed else "column"
+        numpcs = self.funs.size
+        plural = "" if numpcs == 1 else "s"
+        header = "chebfun {} ({} smooth piece{})\n"\
+            .format(rowcol, numpcs, plural)
+        toprow = "       interval       length     endpoint values\n"
+        tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
+        rowdta = ""
         for fun in self:
-            fun.plotcoeffs(ax=ax)
-        return ax
+            endpts = fun.endpoints()
+            xl, xr = endpts
+            fl, fr = fun(endpts)
+            row = tmplat.format(xl, xr, fun.size(), fl, fr)
+            rowdta += row
+        btmrow = "vertical scale = {:3.2g}".format(self.vscale())
+        btmxtr = "" if numpcs == 1 else \
+            "    total length = {}".format(sum([f.size() for f in self]))
+        return header + toprow + rowdta + btmrow + btmxtr
 
+    def __str__(self):
+        rowcol = "row" if self.transposed else "col"
+        out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, self.size())
+        return out
+
+    # -----------
+    #  utilities
+    # -----------
     def breakpoints(self):
         return sort(self.breaks.keys())
+
+    def copy(self):
+        return self.__class__([fun.copy() for fun in self])
 
     @emptycase(array([]))
     def endpoints(self):
         breakpoints = self.breakpoints()
         return array([breakpoints[0], breakpoints[-1]])
 
-    def __iter__(self):
-        return self.funs.__iter__()
+    @emptycase(0)
+    def hscale(self):
+        return abs(self.endpoints()).max()
 
-    def sum(self):
-        return sum([fun.sum() for fun in self])
+    def isempty(self):
+        return self.funs.size == 0
 
+    @emptycase(0)
+    def vscale(self):
+        return max([fun.vscale() for fun in self])
+
+    # -------------
+    #  rootfinding
+    # -------------
+    @emptycase(array([]))
+    def roots(self):
+        allrts = []
+        prvrts = array([])
+        htol = 1e2 * self.hscale() * DefaultPrefs.eps
+        for fun in self:
+            rts = fun.roots()
+            # ignore first root if equal to the last root of previous fun
+            # TODO: there could be multiple roots at breakpoints
+            if prvrts.size > 0 and rts.size > 0:
+                if abs(prvrts[-1]-rts[0]) <= htol:
+                    rts = rts[1:]
+            allrts.append(rts)
+            prvrts = rts
+        return concatenate([x for x in allrts])
+
+    # ----------
+    #  calculus
+    # ----------
     def cumsum(self):
         newfuns = []
         prevfun = None
@@ -178,23 +193,27 @@ class Chebfun(object):
         dfuns = array([fun.diff() for fun in self])
         return self.__class__(dfuns)
 
-    @emptycase(array([]))
-    def roots(self):
-        allrts = []
-        prvrts = array([])
-        htol = 1e2 * self.hscale() * DefaultPrefs.eps
+    def sum(self):
+        return sum([fun.sum() for fun in self])
+
+    # ----------
+    #  plotting
+    # ----------
+    def plot(self, ax=None, *args, **kwargs):
+        ax = ax if ax else gca()
+        a, b = self.endpoints()
+        xx = linspace(a, b, 2001)
+        ax.plot(xx, self(xx), *args, **kwargs)
+        return ax
+
+    def plotcoeffs(self, ax=None, *args, **kwargs):
+        ax = ax if ax else gca()
         for fun in self:
-            rts = fun.roots()
-            # ignore first root if equal to the last root of previous fun
-            # TODO: there could be multiple roots at breakpoints
-            if prvrts.size > 0 and rts.size > 0:
-                if abs(prvrts[-1]-rts[0]) <= htol:
-                    rts = rts[1:]
-            allrts.append(rts)
-            prvrts = rts
-        return concatenate([x for x in allrts])
+            fun.plotcoeffs(ax=ax)
+        return ax
 
 
+# metac-onstructor
 def chebfun(f, domain=DefaultPrefs.domain, n=None):
     if hasattr(f, "__call__"):
         f = f
