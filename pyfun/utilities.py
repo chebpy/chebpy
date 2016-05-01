@@ -7,6 +7,7 @@ from collections import OrderedDict
 from numpy import append
 from numpy import array
 from numpy import logical_and
+from numpy import all
 
 from pyfun.exceptions import SubdomainGap
 from pyfun.exceptions import SubdomainOverlap
@@ -38,7 +39,10 @@ class Subdomain(object):
         self.drvmap = lambda y: 0.*y + .5*(b-a)
         
     def __eq__(self, other):
-        return (self.values == other.values).all() 
+        return (self.values==other.values).all()
+
+    def __ne__(self, other):
+        return not self==other
 
     def __call__(self, y):
         return self.formap(y)
@@ -73,6 +77,19 @@ class Domain(object):
     def init_from_funs(cls, funs):
         subdomains = [fun.subdomain for fun in funs]
         return cls(subdomains)
+
+    def size(self):
+        return self.subdomains.size
+
+    def __eq__(self, other):
+        if self.size() != other.size():
+            return False
+        else:
+            subdoms = zip(self.subdomains, other.subdomains)
+            return all([x==y for x,y in subdoms])
+
+    def __ne__(self, other):
+        return not self==other
 
     def __str__(self):
         out = "Domain("

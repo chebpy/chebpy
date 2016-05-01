@@ -182,6 +182,16 @@ class TestSubdomain(TestCase):
         self.assertFalse(d3==d1)
         self.assertFalse(d2==d3)
 
+    def test__ne__(self):
+        d1 = Subdomain(-2,3)
+        d2 = Subdomain(-2,3)
+        d3 = Subdomain(-1,1)
+        self.assertFalse(Subdomain()!=Subdomain())
+        self.assertFalse(d1!=d2)
+        self.assertFalse(d2!=d1)
+        self.assertTrue(d3!=d1)
+        self.assertTrue(d2!=d3)
+
     def test_maps(self):
         yy = -1 + 2 * rand(1000)
         subdomain = Subdomain(-2,3)
@@ -205,24 +215,38 @@ class TestSubdomain(TestCase):
 class TestDomain(TestCase):
 
     def setUp(self):
-        self.s1 = Subdomain(-1,1)
-        self.s2 = Subdomain(1,2)
-        self.s3 = Subdomain(0.5,2)
-        self.s4 = Subdomain(-2,0)
+        self.sd1 = Subdomain(-2,-1)
+        self.sd2 = Subdomain(-1,1)
+        self.sd3 = Subdomain(1,2)
+        self.sd4 = Subdomain(2,3)
+        self.sd5 = Subdomain(-2,1)
 
     def test_init(self):
-        Domain([self.s1])
-        Domain([self.s1, self.s2])
+        Domain([self.sd1])
+        Domain([self.sd1, self.sd2])
 
     def test_init_disallow(self):
-        self.assertRaises(SubdomainGap, Domain, [self.s2,self.s4])
-        self.assertRaises(SubdomainOverlap, Domain, [self.s2,self.s3])
+        self.assertRaises(SubdomainGap, Domain, [self.sd2,self.sd4])
+        self.assertRaises(SubdomainOverlap, Domain, [self.sd1,self.sd5])
 
     def test_init_from_funs(self):
         ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
         Domain.init_from_funs(ff.funs)
         self.assertRaises(SubdomainGap, Domain.init_from_funs, ff.funs[::2])
 
+    def test__eq__(self):
+        d1 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
+        d2 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
+        d3 = Domain([self.sd1])
+        self.assertTrue(d1==d2)
+        self.assertFalse(d1==d3)
+
+    def test__ne__(self):
+        d1 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
+        d2 = Domain([self.sd1, self.sd2, self.sd3, self.sd4])
+        d3 = Domain([self.sd1])
+        self.assertFalse(d1!=d2)
+        self.assertTrue(d1!=d3)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None
