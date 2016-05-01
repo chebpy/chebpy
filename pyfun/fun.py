@@ -18,11 +18,11 @@ class Fun(object):
     #  alternative constructors
     # --------------------------
     @abstractclassmethod
-    def initempty(cls):
+    def initconst(cls):
         pass
 
     @abstractclassmethod
-    def initconst(cls):
+    def initempty(cls):
         pass
 
     @abstractclassmethod
@@ -37,7 +37,7 @@ class Fun(object):
     #  "private" methods
     # -------------------
     @abstractmethod
-    def __init__(self):
+    def __add__(self):
         pass
 
     @abstractmethod
@@ -45,27 +45,7 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def __str__(self):
-        pass
-
-    @abstractmethod
-    def __repr__(self):
-        pass
-
-    @abstractmethod
-    def __pos__(self):
-        pass
-
-    @abstractmethod
-    def __neg__(self):
-        pass
-
-    @abstractmethod
-    def __add__(self):
-        pass
-
-    @abstractmethod
-    def __sub__(self):
+    def __init__(self):
         pass
 
     @abstractmethod
@@ -73,7 +53,23 @@ class Fun(object):
         pass
 
     @abstractmethod
+    def __neg__(self):
+        pass
+
+    @abstractmethod
+    def __pos__(self):
+        pass
+
+    @abstractmethod
     def __radd__(self):
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        pass
+
+    @abstractmethod
+    def __rmul__(self):
         pass
 
     @abstractmethod
@@ -81,14 +77,26 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def __rmul__(self):
+    def __str__(self):
+        pass
+
+    @abstractmethod
+    def __sub__(self):
         pass
 
     # -----------
     #  utilities
     # -----------
     @abstractmethod
+    def coeffs(self):
+        pass
+
+    @abstractmethod
     def copy(self):
+        pass
+
+    @abstractmethod
+    def endpoints(self):
         pass
 
     @abstractmethod
@@ -96,7 +104,11 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def endpoints(self):
+    def isconst(self):
+        pass
+
+    @abstractmethod
+    def isempty(self):
         pass
 
     @abstractmethod
@@ -109,18 +121,6 @@ class Fun(object):
 
     @abstractmethod
     def values(self):
-        pass
-
-    @abstractmethod
-    def coeffs(self):
-        pass
-
-    @abstractmethod
-    def isempty(self):
-        pass
-
-    @abstractmethod
-    def isconst(self):
         pass
 
     @abstractmethod
@@ -138,15 +138,15 @@ class Fun(object):
     #  calculus
     # ----------
     @abstractmethod
-    def sum(self):
-        pass
-
-    @abstractmethod
     def cumsum(self):
         pass
 
     @abstractmethod
     def diff(self):
+        pass
+
+    @abstractmethod
+    def sum(self):
         pass
 
     # ----------
