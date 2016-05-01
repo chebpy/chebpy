@@ -212,6 +212,7 @@ class ClassUsage(TestCase):
         gg = self.ff.simplify()
         # check that simplify is calling standard_chop underneath
         self.assertEqual(gg.size(), standard_chop(self.ff.coeffs()))
+        self.assertEqual(infnorm(self.ff.coeffs()[:gg.size()]-gg.coeffs()), 0)
         # check we are returned a copy of self's coeffcients by changing
         # one entry of gg
         fcfs = self.ff.coeffs()
