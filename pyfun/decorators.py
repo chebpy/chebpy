@@ -73,7 +73,7 @@ def preandpostprocess(f):
 
 # Chebfun classmethod wrapper for __call__: ensure that we provide
 # float output for float input and array output otherwise
-def float_input(f):
+def float_argument(f):
 
     @wraps(f)
     def thewrapper(self, *args, **kwargs):
