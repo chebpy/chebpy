@@ -16,7 +16,7 @@ from pyfun.chebtech import Chebtech2
 from pyfun.utilities import Interval
 
 from pyfun.settings import DefaultPrefs
-from pyfun.decorators import emptycase
+from pyfun.decorators import self_empty
 from pyfun.exceptions import IntervalMismatch
 from pyfun.exceptions import NotSubinterval
 
@@ -209,7 +209,7 @@ methods_onefun_binary= (
 )
 
 def addBinaryOp(methodname):
-    @emptycase()
+    @self_empty()
     def method(self, f, *args, **kwargs):
         cls = self.__class__
         if isinstance(f, cls):

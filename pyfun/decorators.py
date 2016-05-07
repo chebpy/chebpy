@@ -24,7 +24,7 @@ class abstractclassmethod(classmethod):
 # whose classmethod is being wrapped is empty, returning the object if
 # so, but returning the supplied resultif if not. (Used in chebtech.py)
 # TODO: add unit test for this
-def emptycase(resultif=None):
+def self_empty(resultif=None):
     def decorator(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
@@ -73,7 +73,7 @@ def preandpostprocess(f):
 
 # Chebfun classmethod wrapper for __call__: ensure that we provide
 # float output for float input and array output otherwise
-def singletoncase(f):
+def float_input(f):
 
     @wraps(f)
     def thewrapper(self, *args, **kwargs):

@@ -18,8 +18,8 @@ from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Interval
 from pyfun.utilities import check_funs
 from pyfun.utilities import compute_breakdata
-from pyfun.decorators import emptycase
-from pyfun.decorators import singletoncase
+from pyfun.decorators import self_empty
+from pyfun.decorators import float_input
 from pyfun.exceptions import BadDomainArgument
 from pyfun.exceptions import BadFunLengthArgument
 
@@ -67,8 +67,8 @@ class Chebfun(object):
     # -------------------
     #  "private" methods
     # -------------------
-    @emptycase(array([]))
-    @singletoncase
+    @self_empty(array([]))
+    @float_input
     def __call__(self, x):
 
         # initialise output
@@ -98,7 +98,7 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
-    @emptycase("chebfun<empty>")
+    @self_empty("chebfun<empty>")
     def __repr__(self):
         rowcol = "row" if self.transposed else "column"
         numpcs = self.funs.size
@@ -133,26 +133,26 @@ class Chebfun(object):
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
-    @emptycase(array([]))
+    @self_empty(array([]))
     def endpoints(self):
         breakpoints = self.breakpoints()
         return array([breakpoints[0], breakpoints[-1]])
 
-    @emptycase(0)
+    @self_empty(0)
     def hscale(self):
         return abs(self.endpoints()).max()
 
     def isempty(self):
         return self.funs.size == 0
 
-    @emptycase(0)
+    @self_empty(0)
     def vscale(self):
         return max([fun.vscale() for fun in self])
 
     # -------------
     #  rootfinding
     # -------------
-    @emptycase(array([]))
+    @self_empty(array([]))
     def roots(self):
         allrts = []
         prvrts = array([])

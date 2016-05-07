@@ -18,7 +18,7 @@ from matplotlib.pyplot import gca
 
 from pyfun.smoothfun import Smoothfun
 from pyfun.settings import DefaultPrefs
-from pyfun.decorators import emptycase
+from pyfun.decorators import self_empty
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import adaptive
@@ -156,7 +156,7 @@ class Chebtech(Smoothfun):
         npts = standard_chop(cfs)
         return self.__class__(cfs[:npts].copy())
 
-    @emptycase(resultif=0.)
+    @self_empty(resultif=0.)
     def vscale(self):
         """Estimate the vertical scale of a Chebtech"""
         if self.isconst():
@@ -169,7 +169,7 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     #        Chebtech algebra
     # ---------------------------------
-    @emptycase()
+    @self_empty()
     def __add__(self, f):
         cls = self.__class__
         if isscalar(f):
@@ -211,7 +211,7 @@ class Chebtech(Smoothfun):
     def __rsub__(self, f):
         return -(self-f)
 
-    @emptycase()
+    @self_empty()
     def __mul__(self, g):
         cls = self.__class__
         if isscalar(g):
@@ -245,7 +245,7 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     #            calculus
     # ---------------------------------
-    @emptycase(resultif=0.)
+    @self_empty(resultif=0.)
     def sum(self):
         """Definite integral of a Chebtech on the interval [-1,1]"""
         if self.isconst():
@@ -258,7 +258,7 @@ class Chebtech(Smoothfun):
             out = (ak*ii).sum()
         return out
 
-    @emptycase()
+    @self_empty()
     def cumsum(self):
         """Return a Chebtech object representing the indefinite integral
         of a Chebtech on the interval [-1,1]. The constant term is chosen
@@ -275,7 +275,7 @@ class Chebtech(Smoothfun):
         out = self.__class__(bk)
         return out
 
-    @emptycase()
+    @self_empty()
     def diff(self):
         """Return a Chebtech object representing the derivative of a
         Chebtech on the interval [-1,1]."""
