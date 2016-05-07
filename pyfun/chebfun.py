@@ -67,6 +67,9 @@ class Chebfun(object):
     # -------------------
     #  "private" methods
     # -------------------
+    def __add__(self):
+        raise NotImplementedError
+
     @self_empty(array([]))
     @float_argument
     def __call__(self, x):
@@ -98,6 +101,18 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
+    def __mul__(self):
+        raise NotImplementedError
+
+    def __neg__(self):
+        raise NotImplementedError
+
+    def __pos__(self):
+        raise NotImplementedError
+
+    def __radd__(self):
+        raise NotImplementedError
+
     @self_empty("chebfun<empty>")
     def __repr__(self):
         rowcol = "row" if self.transposed else "column"
@@ -119,10 +134,19 @@ class Chebfun(object):
             "    total length = {}".format(sum([f.size() for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
+    def __rmul__(self):
+        raise NotImplementedError
+
+    def __rsub__(self):
+        raise NotImplementedError
+
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
         out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, self.size())
         return out
+
+    def __sub__(self):
+        raise NotImplementedError
 
     # -----------
     #  utilities
