@@ -65,10 +65,11 @@ class Interval(object):
         return logical_and(a<x, x<b)
 
 
-def sortindex(intervals):
-    """Return an index determining the ordering of the intervals.
-    The methods ensures that the intervals: (1) do not overlap, and
-    (2) represent a complete partition of the broader domain"""
+def _sortindex(intervals):
+    """Helper function to return an index determining the ordering of the
+    suppled array of interval objects. We also check that the intervals
+    (1) do not overlap, and (2) represent a complete partition of the
+    broader approximation domain"""
 
     # sort by the left endpoint Interval values
     subintervals = array([x.values for x in intervals])
@@ -96,7 +97,7 @@ def check_funs(funs):
         return sortedfuns
     else:
         intervals = array([fun.interval for fun in funs])
-        idx = sortindex(intervals)
+        idx = _sortindex(intervals)
         sortedfuns = array(funs[idx])
         return sortedfuns
 
