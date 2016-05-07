@@ -87,7 +87,7 @@ def sortindex(intervals):
     return idx
 
 # TODO: move elsewhere (currently being tested in test_chebfun)
-def sortandverify(funs):
+def check_funs(funs):
     """Return an array of sorted funs and a corresponding Domain
     object"""
     funs = array(funs)

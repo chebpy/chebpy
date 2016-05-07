@@ -27,7 +27,6 @@ from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Interval
 from pyfun.chebfun import Chebfun
-from pyfun.chebfun import sortandverify
 from pyfun.exceptions import IntervalGap
 from pyfun.exceptions import IntervalOverlap
 from pyfun.exceptions import BadDomainArgument
@@ -41,55 +40,16 @@ from utilities import infnorm
 eps = DefaultPrefs.eps
 
 
-# ------------------------
-class Auxilliary(TestCase):
-    """Unit-tests for Chebfun"""
-
-    def setUp(self):
-        f = lambda x: exp(x)
-        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
-        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
-        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5) )
-        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5) )
-        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2) )
-        self.funs_a = array([self.fun1, self.fun0, self.fun2])
-        self.funs_b = array([self.fun1, self.fun2])       
-        self.funs_c = array([self.fun0, self.fun3])
-        self.funs_d = array([self.fun1, self.fun4])
-
-    def test_verify_empty(self):
-        funs = sortandverify(array([]))
-        self.assertTrue(funs.size==0)
-
-    def test_verify_contiguous(self):
-        funs = sortandverify(array([self.fun0, self.fun1]))
-        self.assertTrue(funs[0]==self.fun0)
-        self.assertTrue(funs[1]==self.fun1)
-
-    def test_verify_sort(self):
-        funs = sortandverify(array([self.fun1, self.fun0]))
-        self.assertTrue(funs[0]==self.fun0)
-        self.assertTrue(funs[1]==self.fun1)
-    
-    def test_verify_overlapping(self):
-        self.assertRaises(IntervalOverlap, sortandverify, self.funs_a)
-        self.assertRaises(IntervalOverlap, sortandverify, self.funs_b)
-
-    def test_verify_gap(self):
-        self.assertRaises(IntervalGap, sortandverify, self.funs_c)
-        self.assertRaises(IntervalGap, sortandverify, self.funs_d)
-
-      
 class Construction(TestCase):
 
     def setUp(self):
         f = lambda x: exp(x)
         self.f = f
-        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
-        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
-        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5) )
-        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5) )
-        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2) )
+        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0))
+        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1))
+        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5))
+        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5))
+        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2))
         self.funs_a = array([self.fun1, self.fun0, self.fun2])
         self.funs_b = array([self.fun1, self.fun2])
         self.funs_c = array([self.fun0, self.fun3])

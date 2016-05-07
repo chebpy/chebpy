@@ -16,7 +16,7 @@ from matplotlib.pyplot import gca
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Interval
-from pyfun.utilities import sortandverify
+from pyfun.utilities import check_funs
 from pyfun.utilities import compute_breakdata
 from pyfun.decorators import emptycase
 from pyfun.decorators import singletoncase
@@ -91,7 +91,7 @@ class Chebfun(object):
         return out
 
     def __init__(self, funs):
-        self.funs = sortandverify(funs)
+        self.funs = check_funs(funs)
         self.breakdata = compute_breakdata(self.funs)
         self.transposed = False
 

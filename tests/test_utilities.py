@@ -19,12 +19,14 @@ from pyfun.bndfun import Bndfun
 from pyfun.chebtech import Chebtech2
 from pyfun.utilities import Interval
 from pyfun.utilities import compute_breakdata
+from pyfun.utilities import check_funs
+from pyfun.exceptions import IntervalGap
+from pyfun.exceptions import IntervalOverlap
+from pyfun.exceptions import IntervalValues
 
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
-
-from pyfun.exceptions import IntervalValues
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -219,6 +221,44 @@ class TestInterval(TestCase):
         self.assertEquals(interval.isinterior(x2).sum(), 0)
         self.assertEquals(interval.isinterior(x3).sum(), 0)
         self.assertEquals(interval.isinterior(x4).sum(), 0)
+
+
+class CheckFuns(TestCase):
+    """Tests for the pyfun.utilities check_funs method"""
+
+    def setUp(self):
+        f = lambda x: exp(x)
+        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0))
+        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1))
+        self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5))
+        self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5))
+        self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2))
+        self.funs_a = array([self.fun1, self.fun0, self.fun2])
+        self.funs_b = array([self.fun1, self.fun2])
+        self.funs_c = array([self.fun0, self.fun3])
+        self.funs_d = array([self.fun1, self.fun4])
+
+    def test_verify_empty(self):
+        funs = check_funs(array([]))
+        self.assertTrue(funs.size==0)
+
+    def test_verify_contiguous(self):
+        funs = check_funs(array([self.fun0, self.fun1]))
+        self.assertTrue(funs[0]==self.fun0)
+        self.assertTrue(funs[1]==self.fun1)
+
+    def test_verify_sort(self):
+        funs = check_funs(array([self.fun1, self.fun0]))
+        self.assertTrue(funs[0]==self.fun0)
+        self.assertTrue(funs[1]==self.fun1)
+
+    def test_verify_overlapping(self):
+        self.assertRaises(IntervalOverlap, check_funs, self.funs_a)
+        self.assertRaises(IntervalOverlap, check_funs, self.funs_b)
+
+    def test_verify_gap(self):
+        self.assertRaises(IntervalGap, check_funs, self.funs_c)
+        self.assertRaises(IntervalGap, check_funs, self.funs_d)
 
 # tests for the pyfun.utilities compute_breakdata function
 class ComputeBreakdata(TestCase):
