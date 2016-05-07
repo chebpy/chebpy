@@ -19,7 +19,7 @@ from pyfun.utilities import Interval
 from pyfun.utilities import check_funs
 from pyfun.utilities import compute_breakdata
 from pyfun.decorators import self_empty
-from pyfun.decorators import float_input
+from pyfun.decorators import float_argument
 from pyfun.exceptions import BadDomainArgument
 from pyfun.exceptions import BadFunLengthArgument
 
@@ -68,7 +68,7 @@ class Chebfun(object):
     #  "private" methods
     # -------------------
     @self_empty(array([]))
-    @float_input
+    @float_argument
     def __call__(self, x):
 
         # initialise output
