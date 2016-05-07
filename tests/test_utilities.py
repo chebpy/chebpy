@@ -15,11 +15,14 @@ from numpy.random import rand
 from numpy.random import seed
 
 from pyfun.settings import DefaultPrefs
+from pyfun.bndfun import Bndfun
 from pyfun.chebtech import Chebtech2
+from pyfun.utilities import Interval
+from pyfun.utilities import compute_breakdata
+
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
-from pyfun.utilities import Interval
 
 from pyfun.exceptions import IntervalValues
 
@@ -216,6 +219,32 @@ class TestInterval(TestCase):
         self.assertEquals(interval.isinterior(x2).sum(), 0)
         self.assertEquals(interval.isinterior(x3).sum(), 0)
         self.assertEquals(interval.isinterior(x4).sum(), 0)
+
+# tests for the pyfun.utilities compute_breakdata function
+class ComputeBreakdata(TestCase):
+
+    def setUp(self):
+        f = lambda x: exp(x)
+        self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
+        self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
+
+    def test_compute_breakdata_empty(self):
+        breaks = compute_breakdata(array([]))
+        self.assertTrue(array(breaks.items()).size==0)
+
+    def test_compute_breakdata_1(self):
+        funs = array([self.fun0])
+        breaks = compute_breakdata(funs)
+        x, y = breaks.keys(), breaks.values()
+        self.assertLessEqual(infnorm(x-array([-1,0])), eps)
+        self.assertLessEqual(infnorm(y-array([exp(-1),exp(0)])), 2*eps)
+
+    def test_compute_breakdata_2(self):
+        funs = array([self.fun0, self.fun1])
+        breaks = compute_breakdata(funs)
+        x, y = breaks.keys(), breaks.values()
+        self.assertLessEqual(infnorm(x-array([-1,0,1])), eps)
+        self.assertLessEqual(infnorm(y-array([exp(-1),exp(0),exp(1)])), 2*eps)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None
