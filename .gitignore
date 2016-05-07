@@ -2,4 +2,6 @@
 *.py~
 checks.py
 .dropbox
+.gitignore~
+*.savedforlater
 

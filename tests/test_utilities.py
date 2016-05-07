@@ -4,7 +4,6 @@ Unit-tests for pyfun/utilities.py
 """
 from __future__ import division
 
-#from functools import wraps
 from unittest import TestCase
 
 from numpy import array
@@ -17,16 +16,12 @@ from numpy.random import seed
 
 from pyfun.settings import DefaultPrefs
 from pyfun.chebtech import Chebtech2
-from pyfun.chebfun import chebfun
 from pyfun.algorithms import bary
 from pyfun.algorithms import clenshaw
 from pyfun.algorithms import coeffmult
 from pyfun.utilities import Interval
-from pyfun.utilities import Domain
 
 from pyfun.exceptions import IntervalValues
-from pyfun.exceptions import IntervalGap
-from pyfun.exceptions import IntervalOverlap
 
 from utilities import testfunctions
 from utilities import scaled_tol
@@ -221,44 +216,6 @@ class TestInterval(TestCase):
         self.assertEquals(interval.isinterior(x2).sum(), 0)
         self.assertEquals(interval.isinterior(x3).sum(), 0)
         self.assertEquals(interval.isinterior(x4).sum(), 0)
-
-
-# tests for usage of the Interval class
-class TestDomain(TestCase):
-
-    def setUp(self):
-        self.i1 = Interval(-2,-1)
-        self.i2 = Interval(-1,1)
-        self.i3 = Interval(1,2)
-        self.i4 = Interval(2,3)
-        self.i5 = Interval(-2,1)
-
-    def test_init(self):
-        Domain([self.i1])
-        Domain([self.i1, self.i2])
-
-    def test_init_disallow(self):
-        self.assertRaises(IntervalGap, Domain, [self.i2,self.i4])
-        self.assertRaises(IntervalOverlap, Domain, [self.i1,self.i5])
-
-    def test_init_from_funs(self):
-        ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
-        Domain.init_from_funs(ff.funs)
-        self.assertRaises(IntervalGap, Domain.init_from_funs, ff.funs[::2])
-
-    def test__eq__(self):
-        d1 = Domain([self.i1, self.i2, self.i3, self.i4])
-        d2 = Domain([self.i1, self.i2, self.i3, self.i4])
-        d3 = Domain([self.i1])
-        self.assertTrue(d1==d2)
-        self.assertFalse(d1==d3)
-
-    def test__ne__(self):
-        d1 = Domain([self.i1, self.i2, self.i3, self.i4])
-        d2 = Domain([self.i1, self.i2, self.i3, self.i4])
-        d3 = Domain([self.i1])
-        self.assertFalse(d1!=d2)
-        self.assertTrue(d1!=d3)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None

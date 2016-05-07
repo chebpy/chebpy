@@ -16,9 +16,8 @@ from matplotlib.pyplot import gca
 from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Interval
-from pyfun.utilities import Domain
 from pyfun.utilities import sortandverify
-from pyfun.utilities import breakdata
+from pyfun.utilities import compute_breakdata
 from pyfun.decorators import emptycase
 from pyfun.decorators import singletoncase
 from pyfun.exceptions import BadDomainArgument
@@ -83,7 +82,7 @@ class Chebfun(object):
         # evaluate the breakpoint data for x at a breakpoint
         breakpoints = self.breakpoints()
         for breakpoint in breakpoints:
-            out[x==breakpoint] = self.breaks[breakpoint]
+            out[x==breakpoint] = self.breakdata[breakpoint]
 
         # first and last funs used to evaluate outside of the chebfun domain
         lpts, rpts = x < breakpoints[0], x > breakpoints[-1]
@@ -92,11 +91,8 @@ class Chebfun(object):
         return out
 
     def __init__(self, funs):
-        # TODO: there is a minor inefficiency here - sortandverify()
-        # and Domain.from_funs() do the same integrity check
         self.funs = sortandverify(funs)
-        self.domain = Domain.init_from_funs(funs)
-        self.breaks = breakdata(self.funs)
+        self.breakdata = compute_breakdata(self.funs)
         self.transposed = False
 
     def __iter__(self):
@@ -132,7 +128,7 @@ class Chebfun(object):
     #  utilities
     # -----------
     def breakpoints(self):
-        return sort(self.breaks.keys())
+        return sort(self.breakdata.keys())
 
     def copy(self):
         return self.__class__([fun.copy() for fun in self])

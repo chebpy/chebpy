@@ -7,7 +7,6 @@ from collections import OrderedDict
 from numpy import append
 from numpy import array
 from numpy import logical_and
-from numpy import all
 
 from pyfun.exceptions import IntervalGap
 from pyfun.exceptions import IntervalOverlap
@@ -66,48 +65,6 @@ class Interval(object):
         return logical_and(a<x, x<b)
 
 
-class Domain(object):
-    """Convenience class to express key relationships between collections
-    of Interval objects"""
-
-    def __init__(self, intervals):
-        intervals = array(intervals)
-        if intervals.size == 0:
-            sortedintervals = array([])
-        else:
-            idx = sortindex(intervals)
-            sortedintervals = intervals[idx]
-        self.intervals = sortedintervals
-
-    @classmethod
-    def init_from_funs(cls, funs):
-        intervals = [fun.interval for fun in funs]
-        return cls(intervals)
-
-    def size(self):
-        return self.intervals.size
-
-    def __eq__(self, other):
-        if self.size() != other.size():
-            return False
-        else:
-            subdoms = zip(self.intervals, other.intervals)
-            return all([x==y for x,y in subdoms])
-
-    def __ne__(self, other):
-        return not self==other
-
-    def __str__(self):
-        out = "Domain("
-        for s in self.intervals:
-            out += "\n    " + str(s)
-        out += "\n)"
-        return out
-
-    def __repr__(self):
-        return self.__str__()
-
-
 def sortindex(intervals):
     """Return an index determining the ordering of the intervals.
     The methods ensures that the intervals: (1) do not overlap, and
@@ -144,7 +101,7 @@ def sortandverify(funs):
         return sortedfuns
 
 # TODO: move elsewhere (currently being tested in test_chebfun)
-def breakdata(funs):
+def compute_breakdata(funs):
     """Define function values at the interior breakpoints by averaging the
     left and right limits. This method is called after verify() so we are
     guaranteed to have a fully partitioned and nonoverlapping domain."""

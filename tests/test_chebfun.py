@@ -27,7 +27,7 @@ from pyfun.bndfun import Bndfun
 from pyfun.settings import DefaultPrefs
 from pyfun.utilities import Interval
 from pyfun.chebfun import Chebfun
-from pyfun.chebfun import breakdata
+from pyfun.chebfun import compute_breakdata
 from pyfun.chebfun import sortandverify
 from pyfun.exceptions import IntervalGap
 from pyfun.exceptions import IntervalOverlap
@@ -80,20 +80,20 @@ class Auxilliary(TestCase):
         self.assertRaises(IntervalGap, sortandverify, self.funs_c)
         self.assertRaises(IntervalGap, sortandverify, self.funs_d)
 
-    def test_breakdata_empty(self):
-        breaks = breakdata(array([]))
+    def test_compute_breakdata_empty(self):
+        breaks = compute_breakdata(array([]))
         self.assertTrue(array(breaks.items()).size==0)
 
-    def test_breakdata_1(self):
+    def test_compute_breakdata_1(self):
         funs = array([self.fun0])
-        breaks = breakdata(funs)
+        breaks = compute_breakdata(funs)
         x, y = breaks.keys(), breaks.values()
         self.assertLessEqual(infnorm(x-array([-1,0])), eps)
         self.assertLessEqual(infnorm(y-array([exp(-1),exp(0)])), 2*eps) 
 
-    def test_breakdata_2(self):
+    def test_compute_breakdata_2(self):
         funs = array([self.fun0, self.fun1])
-        breaks = breakdata(funs)
+        breaks = compute_breakdata(funs)
         x, y = breaks.keys(), breaks.values()
         self.assertLessEqual(infnorm(x-array([-1,0,1])), eps)
         self.assertLessEqual(infnorm(y-array([exp(-1),exp(0),exp(1)])), 2*eps) 
@@ -133,8 +133,8 @@ class Construction(TestCase):
     def test_initfun_adaptive_continuous_domain(self):
         ff = Chebfun.initfun_adaptive(self.f, [-2,-1])
         self.assertEqual(ff.funs.size, 1)
-        a, b = ff.breaks.keys()
-        fa, fb, = ff.breaks.values()
+        a, b = ff.breakdata.keys()
+        fa, fb, = ff.breakdata.values()
         self.assertEqual(a,-2)
         self.assertEqual(b,-1)
         self.assertLessEqual(abs(fa-self.f(-2)), eps)
@@ -143,8 +143,8 @@ class Construction(TestCase):
     def test_initfun_adaptive_piecewise_domain(self):
         ff = Chebfun.initfun_adaptive(self.f, [-2,0,1])
         self.assertEqual(ff.funs.size, 2)
-        a, b, c = ff.breaks.keys()
-        fa, fb, fc = ff.breaks.values()
+        a, b, c = ff.breakdata.keys()
+        fa, fb, fc = ff.breakdata.values()
         self.assertEqual(a,-2)
         self.assertEqual(b, 0)
         self.assertEqual(c, 1)
@@ -161,8 +161,8 @@ class Construction(TestCase):
     def test_initfun_fixedlen_continuous_domain(self):
         ff = Chebfun.initfun_fixedlen(self.f, [-2,-1], 20)
         self.assertEqual(ff.funs.size, 1)
-        a, b = ff.breaks.keys()
-        fa, fb, = ff.breaks.values()
+        a, b = ff.breakdata.keys()
+        fa, fb, = ff.breakdata.values()
         self.assertEqual(a,-2)
         self.assertEqual(b,-1)
         self.assertLessEqual(abs(fa-self.f(-2)), eps)
@@ -171,8 +171,8 @@ class Construction(TestCase):
     def test_initfun_fixedlen_piecewise_domain_0(self):
         ff = Chebfun.initfun_fixedlen(self.f, [-2,0,1], 30)
         self.assertEqual(ff.funs.size, 2)
-        a, b, c = ff.breaks.keys()
-        fa, fb, fc = ff.breaks.values()
+        a, b, c = ff.breakdata.keys()
+        fa, fb, fc = ff.breakdata.values()
         self.assertEqual(a,-2)
         self.assertEqual(b, 0)
         self.assertEqual(c, 1)
@@ -183,8 +183,8 @@ class Construction(TestCase):
     def test_initfun_fixedlen_piecewise_domain_1(self):
         ff = Chebfun.initfun_fixedlen(self.f, [-2,0,1], [30,20])
         self.assertEqual(ff.funs.size, 2)
-        a, b, c = ff.breaks.keys()
-        fa, fb, fc = ff.breaks.values()
+        a, b, c = ff.breakdata.keys()
+        fa, fb, fc = ff.breakdata.values()
         self.assertEqual(a,-2)
         self.assertEqual(b, 0)
         self.assertEqual(c, 1)
