@@ -99,7 +99,7 @@ class Domain(object):
 
     def __str__(self):
         out = "Domain("
-        for s in self.Intervals:
+        for s in self.intervals:
             out += "\n    " + str(s)
         out += "\n)"
         return out
@@ -108,13 +108,13 @@ class Domain(object):
         return self.__str__()
 
 
-def sortindex(Intervals):
-    """Return an index determining the ordering of the Intervals.
-    The methods ensures that the Intervals: (1) do not overlap, and
+def sortindex(intervals):
+    """Return an index determining the ordering of the intervals.
+    The methods ensures that the intervals: (1) do not overlap, and
     (2) represent a complete partition of the broader domain"""
 
     # sort by the left endpoint Interval values
-    subintervals = array([x.values for x in Intervals])
+    subintervals = array([x.values for x in intervals])
     leftbreakpts = array([s[0] for s in subintervals])
     idx = leftbreakpts.argsort()
 
