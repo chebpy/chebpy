@@ -3,5 +3,5 @@
 checks.py
 .dropbox
 .gitignore~
-*.savedforlater
+/dump
 

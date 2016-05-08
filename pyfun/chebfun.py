@@ -101,7 +101,7 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
-    def __mul__(self):
+    def __mul__(self, other):
         raise NotImplementedError
 
     def __neg__(self):
@@ -142,7 +142,8 @@ class Chebfun(object):
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
-        out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, self.size())
+        out = "<chebfun-{},{},{}>\n".format(
+            rowcol, self.funs.size, sum([f.size() for f in self]))
         return out
 
     def __sub__(self):
@@ -152,7 +153,7 @@ class Chebfun(object):
     #  utilities
     # -----------
     def breakpoints(self):
-        return sort(self.breakdata.keys())
+        return array(self.breakdata.keys())
 
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
@@ -233,7 +234,7 @@ class Chebfun(object):
         return ax
 
 
-# metac-onstructor
+# meta-constructor
 def chebfun(f, domain=DefaultPrefs.domain, n=None):
     if hasattr(f, "__call__"):
         f = f
