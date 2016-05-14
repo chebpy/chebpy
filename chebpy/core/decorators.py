@@ -28,7 +28,7 @@ def self_empty(resultif=None):
     def decorator(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
-            if self.isempty():
+            if self.isempty:
                 if resultif is not None:
                     return resultif
                 else:

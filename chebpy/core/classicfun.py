@@ -77,31 +77,62 @@ class Classicfun(Fun):
         """Initialise a Classicfun from its two defining properties: a
         Interval object and a Onefun object"""
         self.onefun = onefun
-        self.interval = interval
+        self._interval = interval
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         out = "{0}([{2}, {3}], {1})".format(
-            self.__class__.__name__, self.size(), *self.endpoints())
+            self.__class__.__name__, self.size, *self.endpoints)
         return out
+
+    # ------------
+    #  properties
+    # ------------
+    @property
+    def coeffs(self):
+        """Return the coeffs property of the underlying onefun"""
+        return self.onefun.coeffs
+
+    @property
+    def endpoints(self):
+        """Return a 2-array of endpoints taken from the interval"""
+        return self.interval.values
+
+    @property
+    def endvalues(self):
+        """Return a 2-array of endpointvalues taken from the interval"""
+        return self.__call__(self.endpoints)
+
+    @property
+    def interval(self):
+        """Return the Interval object associated with the Classicfun"""
+        return self._interval
+
+    @property
+    def isconst(self):
+        """Return the isconst property of the underlying onefun"""
+        return self.onefun.isconst
+
+    @property
+    def isempty(self):
+        """Return the isempty property of the underlying onefun"""
+        return self.onefun.isempty
+
+    @property
+    def size(self):
+        """Return the size property of the underlying onefun"""
+        return self.onefun.size
+
+    @property
+    def vscale(self):
+        """Return the vscale property of the underlying onefun"""
+        return self.onefun.vscale
 
     # -----------
     #  utilities
     # -----------
-    def endpoints(self):
-        """Return a 2-array of endpointvalues taken from the interval"""
-        return self.interval.values
-
-    def endvalues(self):
-        """Return a 2-array of endpointvalues taken from the interval"""
-        return self(self.endpoints())
-
-    def interval(self):
-        """Return the Interval object associated with the Classicfun"""
-        return self.interval
-
     def restrict(self, subinterval):
         """Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length
@@ -109,7 +140,7 @@ class Classicfun(Fun):
         if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
         cls = self.__class__
-        return cls.initfun_fixedlen(self, subinterval, self.size())
+        return cls.initfun_fixedlen(self, subinterval, self.size)
 
     # -------------
     #  rootfinding
@@ -122,24 +153,24 @@ class Classicfun(Fun):
     #  calculus
     # ----------
     def cumsum(self):
-        a, b = self.endpoints()
+        a, b = self.endpoints
         onefun = .5*(b-a) * self.onefun.cumsum()
         return self.__class__(onefun, self.interval)
 
     def diff(self):
-        a, b = self.endpoints()
+        a, b = self.endpoints
         onefun = 2./(b-a) * self.onefun.diff()
         return self.__class__(onefun, self.interval)
 
     def sum(self):
-        a, b = self.endpoints()
+        a, b = self.endpoints
         return .5*(b-a) * self.onefun.sum()
 
     # ----------
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        a, b = self.endpoints()
+        a, b = self.endpoints
         ax = ax if ax else gca()
         xx = linspace(a, b, 2001)
         yy = self(xx)
@@ -152,12 +183,7 @@ class Classicfun(Fun):
 # ----------------------------------------------------------------
 
 methods_onefun_other = (
-    "size",
     "values",
-    "coeffs",
-    "isempty",
-    "isconst",
-    "vscale",
     "plotcoeffs",
 )
 
@@ -214,12 +240,12 @@ def addBinaryOp(methodname):
         cls = self.__class__
         if isinstance(f, cls):
             # TODO: as in ChebTech, is a decorator apporach here better?
-            if f.isempty():
+            if f.isempty:
                 return f.copy()
             g = f.onefun
             # raise Exception if intervals are not consistent
             if self.interval != f.interval:
-                raise IntervalMismatch(self.interval(), f.interval())
+                raise IntervalMismatch(self.interval, f.interval)
         else:
             # let the lower level classes raise any other exceptions
             g = f

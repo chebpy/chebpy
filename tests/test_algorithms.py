@@ -148,10 +148,10 @@ class CoeffMult(TestCase):
         fn, gn = self.fn, self.gn
         hn = fn + gn - 1
         h  = lambda x: self.f(x) * self.g(x)
-        fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs()
-        gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs()
+        fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs
+        gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
         hc = coeffmult(fc, gc)
-        HC = Chebtech2.initfun(h, hn).coeffs()
+        HC = Chebtech2.initfun(h, hn).coeffs
         self.assertLessEqual( infnorm(hc-HC), 2e1*eps)
 
 

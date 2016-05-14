@@ -145,31 +145,31 @@ class ClassUsage(TestCase):
     # tests for emptiness of Chebtech2 objects
     def test_isempty_True(self):
         f = Chebtech2(array([]))
-        self.assertTrue(f.isempty())
-        self.assertFalse(not f.isempty())
+        self.assertTrue(f.isempty)
+        self.assertFalse(not f.isempty)
 
     def test_isempty_False(self):
         f = Chebtech2(array([1.]))
-        self.assertFalse(f.isempty())
-        self.assertTrue(not f.isempty())
+        self.assertFalse(f.isempty)
+        self.assertTrue(not f.isempty)
 
     # tests for constantness of Chebtech2 objects
     def test_isconst_True(self):
         f = Chebtech2(array([1.]))
-        self.assertTrue(f.isconst())
-        self.assertFalse(not f.isconst())
+        self.assertTrue(f.isconst)
+        self.assertFalse(not f.isconst)
 
     def test_isconst_False(self):
         f = Chebtech2(array([]))
-        self.assertFalse(f.isconst())
-        self.assertTrue(not f.isconst())
+        self.assertFalse(f.isconst)
+        self.assertTrue(not f.isconst)
 
     # check the size() method is working properly
     def test_size(self):
         cfs = rand(10)
-        self.assertEquals(Chebtech2(array([])).size(), 0)
-        self.assertEquals(Chebtech2(array([1.])).size(), 1)
-        self.assertEquals(Chebtech2(cfs).size(), cfs.size)
+        self.assertEquals(Chebtech2(array([])).size, 0)
+        self.assertEquals(Chebtech2(array([1.])).size, 1)
+        self.assertEquals(Chebtech2(cfs).size, cfs.size)
 
     # test the different permutations of self(xx, ..)
     def test_call(self):
@@ -193,12 +193,12 @@ class ClassUsage(TestCase):
         self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
 
     def test_prolong(self):
-        for k in [0, 1, 20, self.ff.size(), 200]:
-            self.assertEquals(self.ff.prolong(k).size(), k)
+        for k in [0, 1, 20, self.ff.size, 200]:
+            self.assertEquals(self.ff.prolong(k).size, k)
             
     def test_vscale_empty(self):
         gg = Chebtech2(array([]))
-        self.assertEquals(gg.vscale(), 0.)
+        self.assertEquals(gg.vscale, 0.)
 
     def test_copy(self):
         ff = self.ff
@@ -206,20 +206,20 @@ class ClassUsage(TestCase):
         self.assertEquals(ff, ff)
         self.assertEquals(gg, gg)
         self.assertNotEquals(ff, gg)
-        self.assertEquals( infnorm(ff.coeffs() - gg.coeffs()), 0)
+        self.assertEquals( infnorm(ff.coeffs - gg.coeffs), 0)
 
     def test_simplify(self):
         gg = self.ff.simplify()
         # check that simplify is calling standard_chop underneath
-        self.assertEqual(gg.size(), standard_chop(self.ff.coeffs()))
-        self.assertEqual(infnorm(self.ff.coeffs()[:gg.size()]-gg.coeffs()), 0)
+        self.assertEqual(gg.size, standard_chop(self.ff.coeffs))
+        self.assertEqual(infnorm(self.ff.coeffs[:gg.size]-gg.coeffs), 0)
         # check we are returned a copy of self's coeffcients by changing
         # one entry of gg
-        fcfs = self.ff.coeffs()
-        gcfs = gg.coeffs()
-        self.assertEqual((fcfs[:gg.size()]-gcfs).sum(),0)
-        gg.coeffs()[0] = 1
-        self.assertNotEqual((fcfs[:gg.size()]-gcfs).sum(),0)
+        fcfs = self.ff.coeffs
+        gcfs = gg.coeffs
+        self.assertEqual((fcfs[:gg.size]-gcfs).sum(),0)
+        gg.coeffs[0] = 1
+        self.assertNotEqual((fcfs[:gg.size]-gcfs).sum(),0)
 
 # --------------------------------------
 #          vscale estimates
@@ -239,7 +239,7 @@ vscales = [
 def definiteIntegralTester(fun, n, vscale):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     def tester(self):
-        absdiff = abs(ff.vscale()-vscale)
+        absdiff = abs(ff.vscale-vscale)
         self.assertLessEqual(absdiff, .1*vscale)
     return tester
 
@@ -279,10 +279,10 @@ class Calculus(TestCase):
         self.assertEqual(self.emptyfun.sum(), 0)
 
     def test_cumsum_empty(self):
-        self.assertTrue(self.emptyfun.cumsum().isempty())
+        self.assertTrue(self.emptyfun.cumsum().isempty)
 
     def test_diff_empty(self):
-        self.assertTrue(self.emptyfun.diff().isempty())
+        self.assertTrue(self.emptyfun.diff().isempty)
 
 # --------------------------------------
 #           definite integrals
@@ -332,10 +332,10 @@ indef_integrals = [
 def indefiniteIntegralTester(fun, dfn, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(dfn, n+1)
-    coeffs = gg.coeffs()
+    coeffs = gg.coeffs
     coeffs[0] = coeffs[0] - dfn(array([-1]))
     def tester(self):
-        absdiff = infnorm(ff.cumsum().coeffs() - coeffs)
+        absdiff = infnorm(ff.cumsum().coeffs - coeffs)
         self.assertLessEqual(absdiff, tol)
     return tester
 
@@ -365,7 +365,7 @@ def derivativeTester(fun, der, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(der, max(n-1,1))
     def tester(self):
-        absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
+        absdiff = infnorm(ff.diff().coeffs - gg.coeffs)
         self.assertLessEqual(absdiff, tol)
     return tester
 
@@ -382,32 +382,32 @@ class Construction(TestCase):
         coeffs = rand(10)
         f = Chebtech2(coeffs)
         self.assertIsInstance(f, Chebtech2)
-        self.assertLess(infnorm(f.coeffs()-coeffs), eps)
+        self.assertLess(infnorm(f.coeffs-coeffs), eps)
 
     def test_const_construction(self):
         ff = Chebtech2.initconst(1.)
-        self.assertEquals(ff.size(), 1)
-        self.assertTrue(ff.isconst())
-        self.assertFalse(ff.isempty())
+        self.assertEquals(ff.size, 1)
+        self.assertTrue(ff.isconst)
+        self.assertFalse(ff.isempty)
         self.assertRaises(ValueError, Chebtech2.initconst, [1.])
 
     def test_empty_construction(self):
         ff = Chebtech2.initempty()
-        self.assertEquals(ff.size(), 0)
-        self.assertFalse(ff.isconst())
-        self.assertTrue(ff.isempty())
+        self.assertEquals(ff.size, 0)
+        self.assertFalse(ff.isconst)
+        self.assertTrue(ff.isempty)
         self.assertRaises(TypeError, Chebtech2.initempty, [1.])
 
 def adaptiveTester(fun, funlen):
     ff = Chebtech2.initfun_adaptive(fun)
     def tester(self):
-        self.assertEquals(ff.size(), funlen)
+        self.assertEquals(ff.size, funlen)
     return tester
 
 def fixedlenTester(fun, n):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     def tester(self):
-        self.assertEquals(ff.size(), n)
+        self.assertEquals(ff.size, n)
     return tester
 
 for (fun, funlen) in testfunctions:
@@ -436,8 +436,8 @@ class Algebra(TestCase):
     def test__add__radd__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun+chebtech).isempty())
-            self.assertTrue((chebtech+self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun+chebtech).isempty)
+            self.assertTrue((chebtech+self.emptyfun).isempty)
 
     # check the output of (constant + Chebtech)
     #                 and (Chebtech + constant)
@@ -458,8 +458,8 @@ class Algebra(TestCase):
     def test__sub__rsub__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun-chebtech).isempty())
-            self.assertTrue((chebtech-self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun-chebtech).isempty)
+            self.assertTrue((chebtech-self.emptyfun).isempty)
 
     # check the output of constant - Chebtech
     #                 and Chebtech - constant
@@ -481,8 +481,8 @@ class Algebra(TestCase):
     def test__mul__rmul__empty(self):
         for (fun, funlen) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun*chebtech).isempty())
-            self.assertTrue((chebtech*self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun*chebtech).isempty)
+            self.assertTrue((chebtech*self.emptyfun).isempty)
 
     # check the output of constant * Chebtech
     #                 and Chebtech * constant
@@ -501,11 +501,11 @@ class Algebra(TestCase):
 
     # check    +(empty Chebtech) = (empty Chebtech)
     def test__pos__empty(self):
-        self.assertTrue( (+self.emptyfun).isempty() )
+        self.assertTrue( (+self.emptyfun).isempty )
 
     # check -(empty Chebtech) = (empty Chebtech)
     def test__neg__empty(self):
-        self.assertTrue( (-self.emptyfun).isempty() )
+        self.assertTrue( (-self.emptyfun).isempty )
 
 
 # add tests for the binary operators

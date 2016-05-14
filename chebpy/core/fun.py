@@ -7,6 +7,7 @@ from __future__ import division
 
 from abc import ABCMeta
 from abc import abstractmethod
+from abc import abstractproperty
 
 from chebpy.core.decorators import abstractclassmethod
 
@@ -84,31 +85,42 @@ class Fun(object):
     def __sub__(self):
         pass
 
+    # ------------
+    #  properties
+    # ------------
+    @abstractproperty
+    def coeffs(self):
+        pass
+
+    @abstractproperty
+    def endpoints(self):
+        pass
+
+    @abstractproperty
+    def interval(self):
+        pass
+
+    @abstractproperty
+    def isconst(self):
+        pass
+
+    @abstractproperty
+    def isempty(self):
+        pass
+
+    @abstractproperty
+    def size(self):
+        pass
+
+    @abstractproperty
+    def vscale(self):
+        pass
+
     # -----------
     #  utilities
     # -----------
     @abstractmethod
-    def coeffs(self):
-        pass
-
-    @abstractmethod
     def copy(self):
-        pass
-
-    @abstractmethod
-    def endpoints(self):
-        pass
-
-    @abstractmethod
-    def interval(self):
-        pass
-
-    @abstractmethod
-    def isconst(self):
-        pass
-
-    @abstractmethod
-    def isempty(self):
         pass
 
     @abstractmethod
@@ -120,15 +132,7 @@ class Fun(object):
         pass
 
     @abstractmethod
-    def size(self):
-        pass
-
-    @abstractmethod
     def values(self):
-        pass
-
-    @abstractmethod
-    def vscale(self):
         pass
 
     # -------------

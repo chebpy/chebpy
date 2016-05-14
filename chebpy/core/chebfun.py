@@ -83,7 +83,7 @@ class Chebfun(object):
             out[idx] = fun(x[idx])
 
         # evaluate the breakpoint data for x at a breakpoint
-        breakpoints = self.breakpoints()
+        breakpoints = self.breakpoints
         for breakpoint in breakpoints:
             out[x==breakpoint] = self.breakdata[breakpoint]
 
@@ -124,14 +124,14 @@ class Chebfun(object):
         tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
         rowdta = ""
         for fun in self:
-            endpts = fun.endpoints()
+            endpts = fun.endpoints
             xl, xr = endpts
             fl, fr = fun(endpts)
-            row = tmplat.format(xl, xr, fun.size(), fl, fr)
+            row = tmplat.format(xl, xr, fun.size, fl, fr)
             rowdta += row
-        btmrow = "vertical scale = {:3.2g}".format(self.vscale())
+        btmrow = "vertical scale = {:3.2g}".format(self.vscale)
         btmxtr = "" if numpcs == 1 else \
-            "    total length = {}".format(sum([f.size() for f in self]))
+            "    total length = {}".format(sum([f.size for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
     def __rmul__(self):
@@ -149,30 +149,37 @@ class Chebfun(object):
     def __sub__(self):
         raise NotImplementedError
 
-    # -----------
-    #  utilities
-    # -----------
+    # ------------
+    #  properties
+    # ------------
+    @property
     def breakpoints(self):
         return array(self.breakdata.keys())
 
-    def copy(self):
-        return self.__class__([fun.copy() for fun in self])
-
+    @property
     @self_empty(array([]))
     def endpoints(self):
-        breakpoints = self.breakpoints()
-        return array([breakpoints[0], breakpoints[-1]])
+        return self.breakpoints[[0,-1]]
 
+    @property
     @self_empty(0)
     def hscale(self):
-        return abs(self.endpoints()).max()
+        return abs(self.endpoints).max()
 
+    @property
     def isempty(self):
         return self.funs.size == 0
 
+    @property
     @self_empty(0)
     def vscale(self):
-        return max([fun.vscale() for fun in self])
+        return max([fun.vscale for fun in self])
+
+    # -----------
+    #  utilities
+    # -----------
+    def copy(self):
+        return self.__class__([fun.copy() for fun in self])
 
     # -------------
     #  rootfinding
@@ -181,7 +188,7 @@ class Chebfun(object):
     def roots(self):
         allrts = []
         prvrts = array([])
-        htol = 1e2 * self.hscale() * DefaultPrefs.eps
+        htol = 1e2 * self.hscale * DefaultPrefs.eps
         for fun in self:
             rts = fun.roots()
             # ignore first root if equal to the last root of previous fun
@@ -204,7 +211,7 @@ class Chebfun(object):
             if prevfun:
                 # enforce continuity by adding the function value
                 # at the right endpoint of the previous fun
-                _, fb = prevfun.endvalues()
+                _, fb = prevfun.endvalues
                 integral = integral + fb
             newfuns.append(integral)
             prevfun = integral
@@ -222,7 +229,7 @@ class Chebfun(object):
     # ----------
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
-        a, b = self.endpoints()
+        a, b = self.endpoints
         xx = linspace(a, b, 2001)
         ax.plot(xx, self(xx), *args, **kwargs)
         return ax

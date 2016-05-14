@@ -8,6 +8,7 @@ from __future__ import division
 
 from abc import ABCMeta
 from abc import abstractmethod
+from abc import abstractproperty
 
 from chebpy.core.decorators import abstractclassmethod
 
@@ -92,22 +93,33 @@ class Onefun(object):
         pass
 
     # ---------------
-    #   utilities
+    #   properties
     # ---------------
-    @abstractmethod
+    @abstractproperty
     def coeffs(self):
         pass
 
-    @abstractmethod
-    def copy(self):
-        pass
-
-    @abstractmethod
+    @abstractproperty
     def isconst(self):
         pass
 
-    @abstractmethod
+    @abstractproperty
     def isempty(self):
+        pass
+
+    @abstractproperty
+    def size(self):
+        pass
+
+    @abstractproperty
+    def vscale(self):
+        pass
+
+    # ---------------
+    #   utilities
+    # ---------------
+    @abstractmethod
+    def copy(self):
         pass
 
     @abstractmethod
@@ -119,15 +131,7 @@ class Onefun(object):
         pass
 
     @abstractmethod
-    def size(self):
-        pass
-
-    @abstractmethod
     def values(self):
-        pass
-
-    @abstractmethod
-    def vscale(self):
         pass
 
     # --------------

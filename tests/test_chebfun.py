@@ -149,8 +149,8 @@ class Construction(TestCase):
         g1 = Chebfun.initfun_fixedlen(self.f, [-2,-1,0], [None,None])
         g2 = Chebfun.initfun_fixedlen(self.f, [-2,-1,0], [None,40])
         for fun1, fun2 in zip(g1,g0):
-            self.assertEqual(sum(fun1.coeffs()-fun2.coeffs()), 0)
-        self.assertEqual(sum(g2.funs[0].coeffs()-g0.funs[0].coeffs()), 0)
+            self.assertEqual(sum(fun1.coeffs-fun2.coeffs), 0)
+        self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
 
 
 class ClassUsage(TestCase):
@@ -161,48 +161,48 @@ class ClassUsage(TestCase):
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
     def test_isempty(self):
-        self.assertTrue(self.f0.isempty())
-        self.assertFalse(self.f1.isempty())
+        self.assertTrue(self.f0.isempty)
+        self.assertFalse(self.f1.isempty)
 
     def test_vscale(self):
-        self.assertEqual(self.f0.vscale(), 0)
-        self.assertEqual(self.f1.vscale(), 1)
-        self.assertEqual(self.f2.vscale(), 4)
+        self.assertEqual(self.f0.vscale, 0)
+        self.assertEqual(self.f1.vscale, 1)
+        self.assertEqual(self.f2.vscale, 4)
 
     def test_hscale(self):
-        self.assertEqual(self.f0.hscale(), 0)
-        self.assertEqual(self.f1.hscale(), 1)
-        self.assertEqual(self.f2.hscale(), 2)
+        self.assertEqual(self.f0.hscale, 0)
+        self.assertEqual(self.f1.hscale, 1)
+        self.assertEqual(self.f2.hscale, 2)
 
     def test_copy(self):
         f0_copy = self.f0.copy()
         f1_copy = self.f1.copy()
         f2_copy = self.f2.copy()
-        self.assertTrue(f0_copy.isempty())
+        self.assertTrue(f0_copy.isempty)
         self.assertEquals(f1_copy.funs.size, 1)
         for k in range(self.f1.funs.size):
             fun = self.f1.funs[k]
             funcopy = f1_copy.funs[k]
             self.assertNotEqual(fun, funcopy)
-            self.assertEquals(sum(fun.coeffs()-funcopy.coeffs()), 0)
+            self.assertEquals(sum(fun.coeffs-funcopy.coeffs), 0)
         for k in range(self.f2.funs.size):
             fun = self.f2.funs[k]
             funcopy = f2_copy.funs[k]
             self.assertNotEqual(fun, funcopy)
-            self.assertEquals(sum(fun.coeffs()-funcopy.coeffs()), 0)
+            self.assertEquals(sum(fun.coeffs-funcopy.coeffs), 0)
 
     def test_breakpoints(self):
-        self.assertEqual(self.f0.breakpoints().size, 0)
-        self.assertTrue(equal(self.f1.breakpoints(),[-1,1]).all())
-        self.assertTrue(equal(self.f2.breakpoints(),[-1,0,1,2]).all())
+        self.assertEqual(self.f0.breakpoints.size, 0)
+        self.assertTrue(equal(self.f1.breakpoints,[-1,1]).all())
+        self.assertTrue(equal(self.f2.breakpoints,[-1,0,1,2]).all())
 
     def test_endpoints(self):
-        self.assertIsInstance(self.f0.endpoints(), ndarray)
-        self.assertIsInstance(self.f1.endpoints(), ndarray)
-        self.assertIsInstance(self.f2.endpoints(), ndarray)
-        self.assertEqual(self.f0.endpoints().size, 0)
-        self.assertTrue(equal(self.f1.endpoints(),[-1,1]).all())
-        self.assertTrue(equal(self.f2.endpoints(),[-1,2]).all())
+        self.assertIsInstance(self.f0.endpoints, ndarray)
+        self.assertIsInstance(self.f1.endpoints, ndarray)
+        self.assertIsInstance(self.f2.endpoints, ndarray)
+        self.assertEqual(self.f0.endpoints.size, 0)
+        self.assertTrue(equal(self.f1.endpoints,[-1,1]).all())
+        self.assertTrue(equal(self.f2.endpoints,[-1,2]).all())
 
     def test__iter__(self):
         for f in [self.f0, self.f1, self.f2]:
@@ -244,8 +244,8 @@ class Evaluation(TestCase):
 
     def test__call__breakpoints(self):
         # check we get the values at the breakpoints back
-        x1 = self.f1.breakpoints()
-        x2 = self.f2.breakpoints()
+        x1 = self.f1.breakpoints
+        x2 = self.f2.breakpoints
         self.assertTrue(equal(self.f1(x1), [1,1]).all())
         self.assertTrue(equal(self.f2(x2), [1,0,1,4]).all())
 
@@ -293,14 +293,14 @@ class Calculus(TestCase):
     def test_diff(self):
         xx = linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
-            a, b = f.endpoints()
+            a, b = f.endpoints
             x = xx[(xx>a)&(xx<b)]
             self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 1e3*eps)
 
     def test_cumsum(self):
         xx = linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
-            a, b = f.endpoints()
+            a, b = f.endpoints
             x = xx[(xx>a)&(xx<b)]
             fa = self.If(a)
             self.assertLessEqual(infnorm(f.cumsum()(x)-self.If(x)+fa), 3*eps)
@@ -312,12 +312,12 @@ class Calculus(TestCase):
     def test_cumsum_empty(self):
         If = Chebfun.initempty().cumsum()
         self.assertIsInstance(If, Chebfun)
-        self.assertTrue(If.isempty())
+        self.assertTrue(If.isempty)
 
     def test_diff_empty(self):
         df = Chebfun.initempty().diff()
         self.assertIsInstance(df, Chebfun)
-        self.assertTrue(df.isempty())
+        self.assertTrue(df.isempty)
 
 
 class Roots(TestCase):
@@ -341,7 +341,7 @@ class Roots(TestCase):
     def test_breakpoint_roots_1(self):
         rts = self.f2.roots()
         self.assertEqual(rts.size, 5)
-        self.assertLessEqual(infnorm(rts-self.f2.breakpoints()), eps)
+        self.assertLessEqual(infnorm(rts-self.f2.breakpoints), eps)
 
     # check we don't get repeated roots at breakpoints
     def test_breakpoint_roots_2(self):

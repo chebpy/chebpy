@@ -62,21 +62,21 @@ class ClassUsage(TestCase):
 
     # tests for emptiness of Bndfun objects
     def test_isempty_True(self):
-        self.assertTrue(self.emptyfun.isempty())
-        self.assertFalse(not self.emptyfun.isempty())
+        self.assertTrue(self.emptyfun.isempty)
+        self.assertFalse(not self.emptyfun.isempty)
 
     def test_isempty_False(self):
-        self.assertFalse(self.constfun.isempty())
-        self.assertTrue(not self.constfun.isempty())
+        self.assertFalse(self.constfun.isempty)
+        self.assertTrue(not self.constfun.isempty)
 
     # tests for constantness of Bndfun objects
     def test_isconst_True(self):
-        self.assertTrue(self.constfun.isconst())
-        self.assertFalse(not self.constfun.isconst())
+        self.assertTrue(self.constfun.isconst)
+        self.assertFalse(not self.constfun.isconst)
 
     def test_isconst_False(self):
-        self.assertFalse(self.emptyfun.isconst())
-        self.assertTrue(not self.emptyfun.isconst())
+        self.assertFalse(self.emptyfun.isconst)
+        self.assertTrue(not self.emptyfun.isconst)
 
     # check the size() method is working properly
     def test_size(self):
@@ -85,18 +85,18 @@ class ClassUsage(TestCase):
         b0 = Bndfun(Chebtech2(array([])), subdomain)
         b1 = Bndfun(Chebtech2(array([1.])), subdomain)
         b2 = Bndfun(Chebtech2(cfs), subdomain)
-        self.assertEquals(b0.size(), 0)
-        self.assertEquals(b1.size(), 1)
-        self.assertEquals(b2.size(), cfs.size)
+        self.assertEquals(b0.size, 0)
+        self.assertEquals(b1.size, 1)
+        self.assertEquals(b2.size, cfs.size)
 
     def test_endpoints(self):
-        a, b = self.ff.endpoints()
+        a, b = self.ff.endpoints
         self.assertEqual(a, -2)
         self.assertEqual(b, 3)
 
     def test_endvalues(self):
-        a, b = self.ff.endpoints()
-        fa, fb = self.ff.endvalues()
+        a, b = self.ff.endpoints
+        fa, fb = self.ff.endvalues
         self.assertLessEqual(abs(fa-self.f(a)), 2e1*eps)
         self.assertLessEqual(abs(fb-self.f(b)), 2e1*eps)
 
@@ -122,7 +122,7 @@ class ClassUsage(TestCase):
         self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
 
     def test_vscale_empty(self):
-        self.assertEquals(self.emptyfun.vscale(), 0.)
+        self.assertEquals(self.emptyfun.vscale, 0.)
 
     def test_copy(self):
         ff = self.ff
@@ -130,7 +130,7 @@ class ClassUsage(TestCase):
         self.assertEquals(ff, ff)
         self.assertEquals(gg, gg)
         self.assertNotEquals(ff, gg)
-        self.assertEquals(infnorm(ff.coeffs()-gg.coeffs()), 0)
+        self.assertEquals(infnorm(ff.coeffs-gg.coeffs), 0)
 
     # check that the restricted fun matches self on the subinterval
     def test_restrict(self):
@@ -144,8 +144,8 @@ class ClassUsage(TestCase):
         interval = Interval(-2,1)
         ff = Bndfun.initfun_fixedlen(self.f, interval, 1000)
         gg = ff.simplify()
-        self.assertEqual(gg.size(), standard_chop(ff.onefun.coeffs()))
-        self.assertEqual(infnorm(ff.coeffs()[:gg.size()]-gg.coeffs()), 0)
+        self.assertEqual(gg.size, standard_chop(ff.onefun.coeffs))
+        self.assertEqual(infnorm(ff.coeffs[:gg.size]-gg.coeffs), 0)
         self.assertEqual(ff.interval, gg.interval)
 # --------------------------------------
 #          vscale estimates
@@ -166,7 +166,7 @@ def definiteIntegralTester(fun, interval, vscale):
     subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     def tester(self):
-        absdiff = abs(ff.vscale()-vscale)
+        absdiff = abs(ff.vscale-vscale)
         self.assertLessEqual(absdiff, .1*vscale)
     return tester
 
@@ -209,10 +209,10 @@ class Calculus(TestCase):
         self.assertEqual(self.emptyfun.sum(), 0)
 
     def test_cumsum_empty(self):
-        self.assertTrue(self.emptyfun.cumsum().isempty())
+        self.assertTrue(self.emptyfun.cumsum().isempty)
 
     def test_diff_empty(self):
-        self.assertTrue(self.emptyfun.diff().isempty())
+        self.assertTrue(self.emptyfun.diff().isempty)
 
 # --------------------------------------
 #           definite integrals
@@ -263,11 +263,11 @@ indef_integrals = [
 def indefiniteIntegralTester(fun, ifn, interval, tol):
     subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
-    gg = Bndfun.initfun_fixedlen(ifn, subdomain, ff.size()+1)
-    coeffs = gg.coeffs()
+    gg = Bndfun.initfun_fixedlen(ifn, subdomain, ff.size+1)
+    coeffs = gg.coeffs
     coeffs[0] = coeffs[0] - ifn(array([interval[0]]))
     def tester(self):
-        absdiff = infnorm(ff.cumsum().coeffs() - coeffs)
+        absdiff = infnorm(ff.cumsum().coeffs - coeffs)
         self.assertLessEqual(absdiff, tol)
     return tester
 
@@ -296,9 +296,9 @@ derivatives = [
 def derivativeTester(fun, ifn, interval, tol):
     subdomain = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subdomain)
-    gg = Bndfun.initfun_fixedlen(ifn, subdomain, max(ff.size()-1,1))
+    gg = Bndfun.initfun_fixedlen(ifn, subdomain, max(ff.size-1,1))
     def tester(self):
-        absdiff = infnorm(ff.diff().coeffs() - gg.coeffs())
+        absdiff = infnorm(ff.diff().coeffs - gg.coeffs)
         self.assertLessEqual(absdiff, tol)
     return tester
 
@@ -317,34 +317,34 @@ class Construction(TestCase):
         onefun = Chebtech2(coeffs)
         f = Bndfun(onefun, subdomain)
         self.assertIsInstance(f, Bndfun)
-        self.assertLess(infnorm(f.coeffs()-coeffs), eps)
+        self.assertLess(infnorm(f.coeffs-coeffs), eps)
 
     def test_const_construction(self):
         subdomain = Interval()
         ff = Bndfun.initconst(1., subdomain)
-        self.assertEquals(ff.size(), 1)
-        self.assertTrue(ff.isconst())
-        self.assertFalse(ff.isempty())
+        self.assertEquals(ff.size, 1)
+        self.assertTrue(ff.isconst)
+        self.assertFalse(ff.isempty)
         self.assertRaises(ValueError, Bndfun.initconst, [1.], subdomain)
 
     def test_empty_construction(self):
         ff = Bndfun.initempty()
-        self.assertEquals(ff.size(), 0)
-        self.assertFalse(ff.isconst())
-        self.assertTrue(ff.isempty())
+        self.assertEquals(ff.size, 0)
+        self.assertFalse(ff.isconst)
+        self.assertTrue(ff.isempty)
         self.assertRaises(TypeError, Bndfun.initempty, [1.])
 
 
 def adaptiveTester(fun, subdomain, funlen):
     ff = Bndfun.initfun_adaptive(fun, subdomain)
     def tester(self):
-        self.assertEquals(ff.size(), funlen)
+        self.assertEquals(ff.size, funlen)
     return tester
 
 def fixedlenTester(fun, subdomain, n):
     ff = Bndfun.initfun_fixedlen(fun, subdomain, n)
     def tester(self):
-        self.assertEquals(ff.size(), n)
+        self.assertEquals(ff.size, n)
     return tester
 
 funs = []
@@ -389,8 +389,8 @@ class Algebra(TestCase):
         subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
-            self.assertTrue((self.emptyfun+chebtech).isempty())
-            self.assertTrue((chebtech+self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun+chebtech).isempty)
+            self.assertTrue((chebtech+self.emptyfun).isempty)
 
     # check the output of (constant + Bndfun)
     #                 and (Bndfun + constant)
@@ -413,8 +413,8 @@ class Algebra(TestCase):
         subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
-            self.assertTrue((self.emptyfun-chebtech).isempty())
-            self.assertTrue((chebtech-self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun-chebtech).isempty)
+            self.assertTrue((chebtech-self.emptyfun).isempty)
 
     # check the output of constant - Bndfun
     #                 and Bndfun - constant
@@ -438,8 +438,8 @@ class Algebra(TestCase):
         subdomain = Interval(-2,3)
         for (fun, funlen) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
-            self.assertTrue((self.emptyfun*chebtech).isempty())
-            self.assertTrue((chebtech*self.emptyfun).isempty())
+            self.assertTrue((self.emptyfun*chebtech).isempty)
+            self.assertTrue((chebtech*self.emptyfun).isempty)
 
     # check the output of constant * Bndfun
     #                 and Bndfun * constant
@@ -459,11 +459,11 @@ class Algebra(TestCase):
 
     # check    +(empty Bndfun) = (empty Bndfun)
     def test__pos__empty(self):
-        self.assertTrue( (+self.emptyfun).isempty() )
+        self.assertTrue( (+self.emptyfun).isempty )
 
     # check -(empty Bndfun) = (empty Bndfun)
     def test__neg__empty(self):
-        self.assertTrue( (-self.emptyfun).isempty() )
+        self.assertTrue( (-self.emptyfun).isempty )
 
 
 binops = (

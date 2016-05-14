@@ -91,7 +91,7 @@ class Chebtech(Smoothfun):
             raise ValueError(how)
 
     def __call__clenshaw(self, x):
-        return clenshaw(x, self._coeffs)
+        return clenshaw(x, self.coeffs)
         
     def __call__bary(self, x):
         fk = self.values()
@@ -100,22 +100,56 @@ class Chebtech(Smoothfun):
         return bary(x, fk, xk, vk)
 
     def __str__(self):
-        out = "<{0}{{{1}}}>".format(self.__class__.__name__, self.size())
+        out = "<{0}{{{1}}}>".format(self.__class__.__name__, self.size)
         return out
 
     def __repr__(self):
         return self.__str__()
 
-    # ---------------------------------
-    #     "public" utility methods
-    # ---------------------------------
+    # ------------
+    #  properties
+    # ------------
+    @property
+    def coeffs(self):
+        """Chebyshev expansion coefficients in the T_k basis"""
+        return self._coeffs
+
+    @property
+    def size(self):
+        """Return the size of the object"""
+        return self.coeffs.size
+
+    @property
+    def isempty(self):
+        """Return True if the Chebtech is empty"""
+        return self.size == 0
+
+    @property
+    def isconst(self):
+        """Return True if the Chebtech represents a constant"""
+        return self.size == 1
+
+    @property
+    @self_empty(0.)
+    def vscale(self):
+        """Estimate the vertical scale of a Chebtech"""
+        if self.isconst:
+            values = self.coeffs
+        else:
+            values = self.values()
+        vscale = abs(values).max()
+        return vscale
+
+    # -----------
+    #  utilities
+    # -----------
     def prolong(self, n):
         """Return a Chebtech of length n, obtained either by truncating
         if n < self.size or zero-padding if n > self.size. In all cases a
         deep copy is returned.
         """
-        m = self.size()
-        ak = self.coeffs()
+        m = self.size
+        ak = self.coeffs
         cls = self.__class__
         if n - m < 0:
             out = cls(ak[:n].copy())
@@ -127,70 +161,44 @@ class Chebtech(Smoothfun):
 
     def copy(self):
         """Return a deep copy of the Chebtech"""
-        return self.__class__(self.coeffs().copy())
-
-    def coeffs(self):
-        """Chebyshev expansion coefficients in the T_k basis"""
-        return self._coeffs
+        return self.__class__(self.coeffs.copy())
 
     def values(self):
         """Function values at Chebyshev points"""
-        return coeffs2vals2(self._coeffs)
-
-    def size(self):
-        """Return the size of the object"""
-        return self.coeffs().size
-
-    def isempty(self):
-        """Return True if the Chebtech is empty"""
-        return self.size() == 0
-
-    def isconst(self):
-        """Return True if the Chebtech represents a constant"""
-        return self.size() == 1
+        return coeffs2vals2(self.coeffs)
 
     def simplify(self):
         """Call standard_chop on the coefficients of self, returning a
         Chebtech comprised of a copy of the truncated coefficients."""
-        cfs = self.coeffs()
+        cfs = self.coeffs
         npts = standard_chop(cfs)
         return self.__class__(cfs[:npts].copy())
 
-    @self_empty(resultif=0.)
-    def vscale(self):
-        """Estimate the vertical scale of a Chebtech"""
-        if self.isconst():
-            values = self.coeffs()
-        else:
-            values = self.values()
-        vscale = abs(values).max()
-        return vscale
-
-    # ---------------------------------
-    #        Chebtech algebra
-    # ---------------------------------
+    # ---------
+    #  algebra
+    # ---------
     @self_empty()
     def __add__(self, f):
         cls = self.__class__
         if isscalar(f):
-            cfs = self.coeffs().copy()
+            cfs = self.coeffs.copy()
             cfs[0] += f
             return cls(cfs)
         else:
             # TODO: is a more general decorator approach better here?
             # TODO: for constant Chebtech, convert to constant and call __add__ again 
-            if f.isempty():
+            if f.isempty:
                 return f.copy()
             g = self
-            n, m = g.size(), f.size()
+            n, m = g.size, f.size
             if n < m:
                 g = g.prolong(m)
             elif m < n:
                 f = f.prolong(n)
-            cfs = f.coeffs() + g.coeffs()
+            cfs = f.coeffs + g.coeffs
 
             # check for zero output (merge this into simplify?)
-            tol = .2 * eps * max([f.vscale(), g.vscale()])
+            tol = .2 * eps * max([f.vscale, g.vscale])
             if all( abs(cfs)<tol ):
                 return cls.initconst(0.)
             else:
@@ -203,7 +211,7 @@ class Chebtech(Smoothfun):
         return self.copy()
 
     def __neg__(self):
-        coeffs = -self.coeffs()
+        coeffs = -self.coeffs
         return self.__class__(coeffs)
 
     __radd__ = __add__
@@ -215,43 +223,43 @@ class Chebtech(Smoothfun):
     def __mul__(self, g):
         cls = self.__class__
         if isscalar(g):
-            cfs = self.coeffs().copy()
+            cfs = self.coeffs.copy()
             cfs *= g
             return cls(cfs)
         else:
             # TODO: review with reference to __add__
-            if g.isempty():
+            if g.isempty:
                 return g.copy()
             f = self
-            n = f.size() + g.size() - 1
+            n = f.size + g.size - 1
             f = f.prolong(n)
             g = g.prolong(n)
-            cfs = coeffmult(f.coeffs(), g.coeffs())
+            cfs = coeffmult(f.coeffs, g.coeffs)
             out = cls(cfs).simplify()
             return out
 
     __rmul__ = __mul__
 
-    # ---------------------------------
-    #           rootfinding
-    # ---------------------------------
+    # -------
+    #  roots
+    # -------
     def roots(self):
         """Compute the roots of the Chebtech on [-1,1] using the
         coefficients in the associated Chebyshev series approximation"""
-        rts = rootsunit(self.coeffs())
+        rts = rootsunit(self.coeffs)
         rts = newtonroots(self, rts)
         return rts
 
-    # ---------------------------------
-    #            calculus
-    # ---------------------------------
+    # ----------
+    #  calculus
+    # ----------
     @self_empty(resultif=0.)
     def sum(self):
         """Definite integral of a Chebtech on the interval [-1,1]"""
-        if self.isconst():
+        if self.isconst:
             out = 2.*self(0.)
         else:
-            ak = self.coeffs().copy()
+            ak = self.coeffs.copy()
             ak[1::2] = 0
             kk = arange(2, ak.size)
             ii = append([2,0], 2/(1-kk**2))
@@ -263,8 +271,8 @@ class Chebtech(Smoothfun):
         """Return a Chebtech object representing the indefinite integral
         of a Chebtech on the interval [-1,1]. The constant term is chosen
         such that F(-1) = 0."""
-        n = self.size()
-        ak = append(self.coeffs(), [0, 0])
+        n = self.size
+        ak = append(self.coeffs, [0, 0])
         bk = zeros(n+1)
         rk = arange(2,n+1)
         bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
@@ -279,11 +287,11 @@ class Chebtech(Smoothfun):
     def diff(self):
         """Return a Chebtech object representing the derivative of a
         Chebtech on the interval [-1,1]."""
-        if self.isconst():
+        if self.isconst:
             out = self.__class__(array([0.]))
         else:
-            n = self.size()
-            ak = self.coeffs()
+            n = self.size
+            ak = self.coeffs
             zk = zeros(n-1)
             wk = 2 * arange(1, n)
             vk = wk * ak[1:]
@@ -293,9 +301,9 @@ class Chebtech(Smoothfun):
             out = self.__class__(zk)
         return out
 
-    # ---------------------------------
-    #            plotting
-    # ---------------------------------
+    # ----------
+    #  plotting
+    # ----------
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
         xx = linspace(-1, 1, 2001)
@@ -305,7 +313,7 @@ class Chebtech(Smoothfun):
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
-        abscoeffs = abs(self._coeffs)
+        abscoeffs = abs(self.coeffs)
         ax.semilogy(abscoeffs, ".", *args, **kwargs)
         ax.set_ylabel("coefficient magnitude")
         ax.set_xlabel("polynomial degree")
