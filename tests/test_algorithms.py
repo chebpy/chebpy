@@ -14,12 +14,12 @@ from numpy import cos
 from numpy.random import rand
 from numpy.random import seed
 
-from pyfun.settings import DefaultPrefs
-from pyfun.chebtech import Chebtech2
+from chebpy.settings import DefaultPrefs
+from chebpy.chebtech import Chebtech2
 
-from pyfun.algorithms import bary
-from pyfun.algorithms import clenshaw
-from pyfun.algorithms import coeffmult
+from chebpy.algorithms import bary
+from chebpy.algorithms import clenshaw
+from chebpy.algorithms import coeffmult
 
 from utilities import testfunctions
 from utilities import scaled_tol

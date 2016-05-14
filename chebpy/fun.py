@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Here we define the functionality that Onefun descendent classes are
-required to implement.
+Fun Class
 """
 
 from __future__ import division
@@ -9,9 +8,10 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
-from pyfun.decorators import abstractclassmethod
+from chebpy.decorators import abstractclassmethod
 
-class Onefun(object):
+class Fun(object):
+
     __metaclass__ = ABCMeta
 
     # --------------------------
@@ -26,10 +26,6 @@ class Onefun(object):
         pass
 
     @abstractclassmethod
-    def initfun(cls):
-        pass
-
-    @abstractclassmethod
     def initfun_adaptive(cls):
         pass
 
@@ -41,26 +37,15 @@ class Onefun(object):
     #  "private" methods
     # -------------------
     @abstractmethod
+    def __add__(self):
+        pass
+
+    @abstractmethod
     def __call__(self):
         pass
 
     @abstractmethod
     def __init__(self):
-        pass
-
-    @abstractmethod
-    def __repr__(self):
-        pass
-
-    @abstractmethod
-    def __str__(self):
-        pass
-
-    # ----------------
-    #    algebra
-    # ----------------
-    @abstractmethod
-    def __add__(self):
         pass
 
     @abstractmethod
@@ -80,6 +65,10 @@ class Onefun(object):
         pass
 
     @abstractmethod
+    def __repr__(self):
+        pass
+
+    @abstractmethod
     def __rmul__(self):
         pass
 
@@ -88,18 +77,30 @@ class Onefun(object):
         pass
 
     @abstractmethod
+    def __str__(self):
+        pass
+
+    @abstractmethod
     def __sub__(self):
         pass
 
-    # ---------------
-    #   utilities
-    # ---------------
+    # -----------
+    #  utilities
+    # -----------
     @abstractmethod
     def coeffs(self):
         pass
 
     @abstractmethod
     def copy(self):
+        pass
+
+    @abstractmethod
+    def endpoints(self):
+        pass
+
+    @abstractmethod
+    def interval(self):
         pass
 
     @abstractmethod
@@ -111,7 +112,7 @@ class Onefun(object):
         pass
 
     @abstractmethod
-    def prolong(self):
+    def restrict(self):
         pass
 
     @abstractmethod
@@ -130,20 +131,16 @@ class Onefun(object):
     def vscale(self):
         pass
 
-    # --------------
+    # -------------
     #  rootfinding
-    # --------------
+    # -------------
     @abstractmethod
     def roots(self):
         pass
 
-    # -------------
-    #   calculus
-    # -------------
-    @abstractmethod
-    def sum(self):
-        pass
-
+    # ----------
+    #  calculus
+    # ----------
     @abstractmethod
     def cumsum(self):
         pass
@@ -152,9 +149,13 @@ class Onefun(object):
     def diff(self):
         pass
 
-    # -------------
-    #   plotting
-    # -------------
+    @abstractmethod
+    def sum(self):
+        pass
+
+    # ----------
+    #  plotting
+    # ----------
     @abstractmethod
     def plot(self):
         pass

@@ -13,15 +13,15 @@ from numpy import concatenate
 
 from matplotlib.pyplot import gca
 
-from pyfun.bndfun import Bndfun
-from pyfun.settings import DefaultPrefs
-from pyfun.utilities import Interval
-from pyfun.utilities import check_funs
-from pyfun.utilities import compute_breakdata
-from pyfun.decorators import self_empty
-from pyfun.decorators import float_argument
-from pyfun.exceptions import BadDomainArgument
-from pyfun.exceptions import BadFunLengthArgument
+from chebpy.bndfun import Bndfun
+from chebpy.settings import DefaultPrefs
+from chebpy.utilities import Interval
+from chebpy.utilities import check_funs
+from chebpy.utilities import compute_breakdata
+from chebpy.decorators import self_empty
+from chebpy.decorators import float_argument
+from chebpy.exceptions import BadDomainArgument
+from chebpy.exceptions import BadFunLengthArgument
 
 
 class Chebfun(object):

@@ -27,9 +27,9 @@ from numpy.random import seed
 
 from matplotlib.pyplot import subplots
 
-from pyfun.settings import DefaultPrefs
-from pyfun.chebtech import Chebtech2
-from pyfun.algorithms import standard_chop
+from chebpy.settings import DefaultPrefs
+from chebpy.chebtech import Chebtech2
+from chebpy.algorithms import standard_chop
 
 from utilities import testfunctions
 from utilities import infnorm

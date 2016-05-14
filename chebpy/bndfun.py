@@ -5,7 +5,7 @@ Smootth function defined on Bounded intervals [a,b]
 
 from __future__ import division
 
-from pyfun.classicfun import Classicfun
+from chebpy.classicfun import Classicfun
 
 class Bndfun(Classicfun):
     """Class to approximate functions on bounded intervals [a,b]"""
