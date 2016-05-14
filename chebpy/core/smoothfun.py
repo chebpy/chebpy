@@ -7,7 +7,7 @@ from __future__ import division
 
 from abc import ABCMeta
 
-from chebpy.onefun import Onefun
+from chebpy.core.onefun import Onefun
 
 class Smoothfun(Onefun):
     __metaclass__ = ABCMeta

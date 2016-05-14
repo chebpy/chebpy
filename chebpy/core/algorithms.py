@@ -28,12 +28,12 @@ from numpy import sort
 from numpy.linalg import norm
 from numpy.linalg import eigvals
 
-from chebpy.ffts import fft
-from chebpy.ffts import ifft
+from chebpy.core.ffts import fft
+from chebpy.core.ffts import ifft
 
-from chebpy.utilities import Interval
-from chebpy.settings import DefaultPrefs
-from chebpy.decorators import preandpostprocess
+from chebpy.core.utilities import Interval
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.decorators import preandpostprocess
 
 # local helpers
 def find(x):

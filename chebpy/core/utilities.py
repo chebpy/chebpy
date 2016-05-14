@@ -8,9 +8,9 @@ from numpy import append
 from numpy import array
 from numpy import logical_and
 
-from chebpy.exceptions import IntervalGap
-from chebpy.exceptions import IntervalOverlap
-from chebpy.exceptions import IntervalValues
+from chebpy.core.exceptions import IntervalGap
+from chebpy.core.exceptions import IntervalOverlap
+from chebpy.core.exceptions import IntervalValues
 
 class Interval(object):
     """

@@ -23,14 +23,14 @@ from numpy import isfinite
 
 from matplotlib.pyplot import subplots
 
-from chebpy.bndfun import Bndfun
-from chebpy.settings import DefaultPrefs
-from chebpy.utilities import Interval
-from chebpy.chebfun import Chebfun
-from chebpy.exceptions import IntervalGap
-from chebpy.exceptions import IntervalOverlap
-from chebpy.exceptions import BadDomainArgument
-from chebpy.exceptions import BadFunLengthArgument
+from chebpy.core.bndfun import Bndfun
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.utilities import Interval
+from chebpy.core.chebfun import Chebfun
+from chebpy.core.exceptions import IntervalGap
+from chebpy.core.exceptions import IntervalOverlap
+from chebpy.core.exceptions import BadDomainArgument
+from chebpy.core.exceptions import BadFunLengthArgument
 
 #from utilities import testfunctions
 from utilities import infnorm

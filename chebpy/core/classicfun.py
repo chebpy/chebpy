@@ -11,14 +11,14 @@ from numpy import linspace
 
 from matplotlib.pyplot import gca
 
-from chebpy.fun import Fun
-from chebpy.chebtech import Chebtech2
-from chebpy.utilities import Interval
+from chebpy.core.fun import Fun
+from chebpy.core.chebtech import Chebtech2
+from chebpy.core.utilities import Interval
 
-from chebpy.settings import DefaultPrefs
-from chebpy.decorators import self_empty
-from chebpy.exceptions import IntervalMismatch
-from chebpy.exceptions import NotSubinterval
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.decorators import self_empty
+from chebpy.core.exceptions import IntervalMismatch
+from chebpy.core.exceptions import NotSubinterval
 
 Techs = {
     "Chebtech2": Chebtech2,

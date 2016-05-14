@@ -16,20 +16,20 @@ from numpy import max
 
 from matplotlib.pyplot import gca
 
-from chebpy.smoothfun import Smoothfun
-from chebpy.settings import DefaultPrefs
-from chebpy.decorators import self_empty
-from chebpy.algorithms import bary
-from chebpy.algorithms import clenshaw
-from chebpy.algorithms import adaptive
-from chebpy.algorithms import coeffmult
-from chebpy.algorithms import vals2coeffs2
-from chebpy.algorithms import coeffs2vals2
-from chebpy.algorithms import chebpts2
-from chebpy.algorithms import barywts2
-from chebpy.algorithms import rootsunit
-from chebpy.algorithms import newtonroots
-from chebpy.algorithms import standard_chop
+from chebpy.core.smoothfun import Smoothfun
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.decorators import self_empty
+from chebpy.core.algorithms import bary
+from chebpy.core.algorithms import clenshaw
+from chebpy.core.algorithms import adaptive
+from chebpy.core.algorithms import coeffmult
+from chebpy.core.algorithms import vals2coeffs2
+from chebpy.core.algorithms import coeffs2vals2
+from chebpy.core.algorithms import chebpts2
+from chebpy.core.algorithms import barywts2
+from chebpy.core.algorithms import rootsunit
+from chebpy.core.algorithms import newtonroots
+from chebpy.core.algorithms import standard_chop
 
 # machine epsilon
 eps = DefaultPrefs.eps

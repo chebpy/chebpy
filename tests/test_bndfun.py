@@ -24,12 +24,12 @@ from numpy.random import seed
 
 from matplotlib.pyplot import subplots
 
-from chebpy.settings import DefaultPrefs
-from chebpy.chebtech import Chebtech2
-from chebpy.algorithms import standard_chop
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.chebtech import Chebtech2
+from chebpy.core.algorithms import standard_chop
 
-from chebpy.bndfun import Bndfun
-from chebpy.utilities import Interval
+from chebpy.core.bndfun import Bndfun
+from chebpy.core.utilities import Interval
 
 from utilities import testfunctions
 from utilities import infnorm

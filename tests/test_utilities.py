@@ -12,14 +12,14 @@ from numpy import exp
 from numpy.random import rand
 from numpy.random import seed
 
-from chebpy.settings import DefaultPrefs
-from chebpy.bndfun import Bndfun
-from chebpy.utilities import Interval
-from chebpy.utilities import compute_breakdata
-from chebpy.utilities import check_funs
-from chebpy.exceptions import IntervalGap
-from chebpy.exceptions import IntervalOverlap
-from chebpy.exceptions import IntervalValues
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.bndfun import Bndfun
+from chebpy.core.utilities import Interval
+from chebpy.core.utilities import compute_breakdata
+from chebpy.core.utilities import check_funs
+from chebpy.core.exceptions import IntervalGap
+from chebpy.core.exceptions import IntervalOverlap
+from chebpy.core.exceptions import IntervalValues
 
 from utilities import infnorm
 
@@ -91,7 +91,7 @@ class TestInterval(TestCase):
 
 
 class CheckFuns(TestCase):
-    """Tests for the chebpy.utilities check_funs method"""
+    """Tests for the chebpy.core.utilities check_funs method"""
 
     def setUp(self):
         f = lambda x: exp(x)
@@ -127,7 +127,7 @@ class CheckFuns(TestCase):
         self.assertRaises(IntervalGap, check_funs, self.funs_c)
         self.assertRaises(IntervalGap, check_funs, self.funs_d)
 
-# tests for the chebpy.utilities compute_breakdata function
+# tests for the chebpy.core.utilities compute_breakdata function
 class ComputeBreakdata(TestCase):
 
     def setUp(self):
