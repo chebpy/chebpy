@@ -1,7 +1,4 @@
 *.pyc
-*.py~
-checks.py
-.dropbox
-.gitignore~
-/dump
-
+*~
+*.todo
+*.ini
