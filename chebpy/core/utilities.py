@@ -67,9 +67,9 @@ class Interval(object):
 
 def _sortindex(intervals):
     """Helper function to return an index determining the ordering of the
-    suppled array of interval objects. We also check that the intervals
-    (1) do not overlap, and (2) represent a complete partition of the
-    broader approximation domain"""
+    supplied array of interval objects. We check that the intervals (1) do not
+    overlap, and (2) represent a complete partition of the broader
+    approximation domain"""
 
     # sort by the left endpoint Interval values
     subintervals = array([x.values for x in intervals])
@@ -87,25 +87,26 @@ def _sortindex(intervals):
 
     return idx
 
-# TODO: move elsewhere (currently being tested in test_chebfun)
+
 def check_funs(funs):
-    """Return an array of sorted funs and a corresponding Domain
-    object"""
+    """Return an array of sorted funs.  As the name suggests, this method
+    checks that the funs provided do not overlap or have gaps (the actual
+    checks are performed in _sortindex)"""
     funs = array(funs)
     if funs.size == 0:
         sortedfuns = array([])
-        return sortedfuns
     else:
-        intervals = array([fun.interval for fun in funs])
+        intervals = (fun.interval for fun in funs)
         idx = _sortindex(intervals)
-        sortedfuns = array(funs[idx])
-        return sortedfuns
+        sortedfuns = funs[idx]
+    return sortedfuns
 
-# TODO: move elsewhere (currently being tested in test_chebfun)
+
 def compute_breakdata(funs):
     """Define function values at the interior breakpoints by averaging the
-    left and right limits. This method is called after verify() so we are
-    guaranteed to have a fully partitioned and nonoverlapping domain."""
+    left and right limits. This method is called after check_funs() and
+    thus at the point of calling we are guaranteed to have a fully partitioned
+    and nonoverlapping domain."""
     if funs.size == 0:
         return OrderedDict()
     else:
