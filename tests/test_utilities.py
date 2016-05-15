@@ -7,19 +7,25 @@ from __future__ import division
 from unittest import TestCase
 
 from numpy import array
-from numpy import linspace
+from numpy import cos
 from numpy import exp
+from numpy import linspace
 from numpy.random import rand
 from numpy.random import seed
 
-from chebpy.core.settings import DefaultPrefs
 from chebpy.core.bndfun import Bndfun
+from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Domain
 from chebpy.core.utilities import compute_breakdata
 from chebpy.core.utilities import check_funs
 from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
+from chebpy.core.exceptions import InvalidDomain
+from chebpy.core.exceptions import InconsistentSupport
+
+from chebpy import chebfun
 
 from utilities import infnorm
 
@@ -90,6 +96,85 @@ class TestInterval(TestCase):
         self.assertEquals(interval.isinterior(x4).sum(), 0)
 
 
+# tests for usage of the Domain class
+class TestDomain(TestCase):
+
+    def test__init__(self):
+        Domain([-2,1])
+        Domain([-2,0,1])
+        Domain(array([-2,1]))
+        Domain(array([-2,0,1]))
+        Domain(linspace(-10,10,51))
+
+    def test__init__disallow(self):
+        self.assertRaises(InvalidDomain, Domain, [1])
+        self.assertRaises(InvalidDomain, Domain, [1, -1])
+        self.assertRaises(InvalidDomain, Domain, [-1, 0, 0])
+        self.assertRaises(InvalidDomain, Domain, ["a", "b"])
+
+    def test__iter__(self):
+        dom_a = Domain([-2,1])
+        dom_b = Domain([-2,0,1])
+        dom_c = Domain([-1,0,1,2])
+        res_a = [(-2,1)]
+        res_b = [(-2,0), (0,1)]
+        res_c = [(-1,0), (0,1), (1,2)]
+        self.assertTrue(all([x==y for x,y in zip(dom_a, res_a)]))
+        self.assertTrue(all([x==y for x,y in zip(dom_b, res_b)]))
+        self.assertTrue(all([x==y for x,y in zip(dom_c, res_c)]))
+
+    def test__eq__(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-2,0,1,3,5])
+        d3 = Domain([-1,1])
+        self.assertTrue(d1==d2)
+        self.assertFalse(d1==d3)
+
+    def test__ne__(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-2,0,1,3,5])
+        d3 = Domain([-1,1])
+        self.assertFalse(d1!=d2)
+        self.assertTrue(d1!=d3)
+
+    def test_from_chebfun(self):
+        ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
+        Domain.from_chebfun(ff)
+
+    def test_support(self):
+        dom_a = Domain([-2,1])
+        dom_b = Domain([-2,0,1])
+        dom_c = Domain(linspace(-10,10,51))
+        self.assertTrue(all(dom_a.support==[-2,1]))
+        self.assertTrue(all(dom_b.support==[-2,1]))
+        self.assertTrue(all(dom_c.support==[-10,10]))
+
+    def test_size(self):
+        dom_a = Domain([-2,1])
+        dom_b = Domain([-2,0,1])
+        dom_c = Domain(linspace(-10,10,51))
+        self.assertEqual(dom_a.size, 1)
+        self.assertEqual(dom_b.size, 2)
+        self.assertEqual(dom_c.size, 50)
+
+    def test_union(self):
+        dom_a = Domain([-2,0,2])
+        dom_b = Domain([-2,-1,1,2])
+        self.assertNotEqual(dom_a.union(dom_b), dom_a)
+        self.assertNotEqual(dom_a.union(dom_b), dom_b)
+        self.assertEqual(dom_a.union(dom_b), Domain([-2,-1,0,1,2]))
+
+    def test_union_convert_type(self):
+        dom_a = Domain([-2,0,2])
+        dom_r = Domain([-2,-1,0,1,2])
+        self.assertEqual(dom_a.union([-2,-1,0,1,2]), dom_r)
+
+    def test_union_raises(self):
+        dom_a = Domain([-2,0])
+        dom_b = Domain([-2,3])
+        self.assertRaises(InconsistentSupport, dom_a.union, dom_b)
+
+
 class CheckFuns(TestCase):
     """Tests for the chebpy.core.utilities check_funs method"""
 
@@ -126,6 +211,7 @@ class CheckFuns(TestCase):
     def test_verify_gap(self):
         self.assertRaises(IntervalGap, check_funs, self.funs_c)
         self.assertRaises(IntervalGap, check_funs, self.funs_d)
+
 
 # tests for the chebpy.core.utilities compute_breakdata function
 class ComputeBreakdata(TestCase):

@@ -75,20 +75,32 @@ class Domain(object):
     as hard attributes of Chebfun"""
 
     def __init__(self, breakpoints):
+        breakpoints = array(breakpoints)
         try:
+            if breakpoints.size < 2:
+                raise InvalidDomain
             if any(diff(breakpoints)<=0):
                 raise InvalidDomain
         except:
             # raised if, for example, we don't have an array of numbers
             raise InvalidDomain
-        self.breakpoints = array(breakpoints)
+        self.breakpoints = breakpoints
+
+    def __iter__(self):
+        """Iterate across adajacent pairs of breakpoints"""
+        # TODO: is there more pythonic way of doing this?
+        return zip(self.breakpoints[:-1], self.breakpoints[1:]).__iter__()
 
     @classmethod
     def from_chebfun(cls, chebfun):
+        """Initialise a Domain object from a Chebfun"""
         return cls(chebfun.breakpoints)
 
-#    def size(self):
-#        return self.breakpoints.size
+    @property
+    def size(self):
+        """The size of a Domain object is the number of subintervals,
+        equivalent to the number of breakpoints minus one"""
+        return self.breakpoints.size - 1
 
     @property
     def support(self):
@@ -99,7 +111,7 @@ class Domain(object):
     def union(self, other):
         """Return an array denoting the union of self and other. We check
         that the support of each object is the same before proceeding."""
-        # cast other to Domain object if it not already
+        # attempt to cast other to Domain object if it is not one already
         if not isinstance(other, self.__class__):
             other = self.__class__(other)
         if any(self.support!=other.support):
@@ -108,20 +120,15 @@ class Domain(object):
         new_breakpoints = unique(all_breakpoints)
         return self.__class__(new_breakpoints)
 
-    def __iter__(self):
-        """Iterate across adajacent pairs of breakpoints"""
-        # TODO: is there more pythonic way of doing this?
-        return zip(self.breakpoints[:-1], self.breakpoints[1:]).__iter__()
+    def __eq__(self, other):
+        if self.size != other.size:
+            return False
+        else:
+            subintervals = zip(self.breakpoints, other.breakpoints)
+            return all([x==y for x,y in subintervals])
 
-#    def __eq__(self, other):
-#        if self.size() != other.size():
-#            return False
-#        else:
-#            subdomains = zip(self.breakpoints, other.breakpoints)
-#            return all([x==y for x,y in subdomains])
-#
-#    def __ne__(self, other):
-#        return not self==other
+    def __ne__(self, other):
+        return not self==other
 
     def __str__(self):
         return self.__class__.__name__.lower()

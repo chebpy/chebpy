@@ -35,7 +35,8 @@ class InvalidDomain(Exception):
     def __init__(self, message=None):
         if message is None:
             message = "Domain objects must be initialised from a unique "\
-            "sequence of monotonically increasing floats"
+            "sequence of monotonically increasing floats, with length at "\
+            "least 2"
         super(self.__class__, self).__init__(message)
 
 # chebpy.core.utilities.Domain
