@@ -6,11 +6,15 @@ from collections import OrderedDict
 
 from numpy import append
 from numpy import array
+from numpy import diff
 from numpy import logical_and
+from numpy import unique
 
 from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
+from chebpy.core.exceptions import InvalidDomain
+from chebpy.core.exceptions import InconsistentSupport
 
 class Interval(object):
     """
@@ -63,6 +67,69 @@ class Interval(object):
     def isinterior(self, x):
         a, b = self.values
         return logical_and(a<x, x<b)
+
+
+class Domain(object):
+    """Convenience class to implement Chebfun domain logic. Instances are
+    intended to be created on-the-fly rather than being precomputed and stored
+    as hard attributes of Chebfun"""
+
+    def __init__(self, breakpoints):
+        try:
+            if any(diff(breakpoints)<=0):
+                raise InvalidDomain
+        except:
+            # raised if, for example, we don't have an array of numbers
+            raise InvalidDomain
+        self.breakpoints = array(breakpoints)
+
+    @classmethod
+    def from_chebfun(cls, chebfun):
+        return cls(chebfun.breakpoints)
+
+#    def size(self):
+#        return self.breakpoints.size
+
+    @property
+    def support(self):
+        """The support of a Domain object is an computed as an array
+        containing its first and last breakpoints"""
+        return self.breakpoints[[0,-1]]
+
+    def union(self, other):
+        """Return an array denoting the union of self and other. We check
+        that the support of each object is the same before proceeding."""
+        # cast other to Domain object if it not already
+        if not isinstance(other, self.__class__):
+            other = self.__class__(other)
+        if any(self.support!=other.support):
+            raise InconsistentSupport
+        all_breakpoints = append(self.breakpoints, other.breakpoints)
+        new_breakpoints = unique(all_breakpoints)
+        return self.__class__(new_breakpoints)
+
+    def __iter__(self):
+        """Iterate across adajacent pairs of breakpoints"""
+        # TODO: is there more pythonic way of doing this?
+        return zip(self.breakpoints[:-1], self.breakpoints[1:]).__iter__()
+
+#    def __eq__(self, other):
+#        if self.size() != other.size():
+#            return False
+#        else:
+#            subdomains = zip(self.breakpoints, other.breakpoints)
+#            return all([x==y for x,y in subdomains])
+#
+#    def __ne__(self, other):
+#        return not self==other
+
+    def __str__(self):
+        return self.__class__.__name__.lower()
+
+    def __repr__(self):
+        out = self.breakpoints.__repr__()
+        return out.replace("array", self.__class__.__name__.lower())
+
 
 
 def _sortindex(intervals):

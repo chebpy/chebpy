@@ -30,6 +30,21 @@ class IntervalValues(Exception):
             "be strictly increasing"
         super(self.__class__, self).__init__(message)
 
+# chebpy.core.utilities.Domain
+class InvalidDomain(Exception):
+    def __init__(self, message=None):
+        if message is None:
+            message = "Domain objects must be initialised from a unique "\
+            "sequence of monotonically increasing floats"
+        super(self.__class__, self).__init__(message)
+
+# chebpy.core.utilities.Domain
+class InconsistentSupport(Exception):
+    def __init__(self, message=None):
+        if message is None:
+            message = "Domain object endpoints are required to match"
+        super(self.__class__, self).__init__(message)
+
 class BadDomainArgument(Exception):
     def __init__(self, message=None):
         if message is None:
