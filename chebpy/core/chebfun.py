@@ -2,20 +2,20 @@
 
 from numpy import array
 from numpy import append
-from numpy import sum
+from numpy import concatenate
+from numpy import full
+from numpy import linspace
 from numpy import max
 from numpy import nan
-from numpy import full
-from numpy import sort
 from numpy import ones
-from numpy import linspace
-from numpy import concatenate
+from numpy import sum
 
 from matplotlib.pyplot import gca
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Domain
 from chebpy.core.utilities import check_funs
 from chebpy.core.utilities import compute_breakdata
 from chebpy.core.decorators import self_empty
@@ -157,6 +157,11 @@ class Chebfun(object):
         return array(self.breakdata.keys())
 
     @property
+    def domain(self):
+        """Construct and return a Domain object corresponding to self"""
+        return Domain.from_chebfun(self)
+
+    @property
     @self_empty(array([]))
     def endpoints(self):
         return self.breakpoints[[0,-1]]
@@ -240,3 +245,24 @@ class Chebfun(object):
             fun.plotcoeffs(ax=ax)
         return ax
 
+    def _break(self, targetdomain):
+        """Resamples self to the supplied Domain object, targetdomain. It is
+        assumed that targetdomain must contain at least the breakpoints of
+        self, and this should be enforced by the methods which call this
+        function (performing those checks here would lead to duplication
+        when calling binary operators). The method is thus nominally denoted as
+        private."""
+        newfuns = []
+        intvl_gen = targetdomain.__iter__()
+        intvl = Interval(*intvl_gen.next())
+
+        # loop over the funs in self, incrementing the intvl_gen generator so
+        # long as intvl remains contained within fun.interval
+        for fun in self:
+            while intvl in fun.interval:
+                newfuns.append(fun.restrict(intvl))
+                try:
+                    intvl = Interval(*intvl_gen.next())
+                except StopIteration:
+                    break
+        return self.__class__(newfuns)
