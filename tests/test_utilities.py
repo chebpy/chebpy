@@ -153,9 +153,9 @@ class TestDomain(TestCase):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
         dom_c = Domain(linspace(-10,10,51))
-        self.assertEqual(dom_a.size, 1)
-        self.assertEqual(dom_b.size, 2)
-        self.assertEqual(dom_c.size, 50)
+        self.assertEqual(dom_a.size, 2)
+        self.assertEqual(dom_b.size, 3)
+        self.assertEqual(dom_c.size, 51)
 
     def test_union(self):
         dom_a = Domain([-2,0,2])

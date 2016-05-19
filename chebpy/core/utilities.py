@@ -100,7 +100,7 @@ class Domain(object):
     def size(self):
         """The size of a Domain object is the number of subintervals,
         equivalent to the number of breakpoints minus one"""
-        return self.breakpoints.size - 1
+        return self.breakpoints.size
 
     @property
     def support(self):
