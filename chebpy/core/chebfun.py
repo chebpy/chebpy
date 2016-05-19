@@ -157,6 +157,7 @@ class Chebfun(object):
         return array(self.breakdata.keys())
 
     @property
+    @self_empty(array([]))
     def domain(self):
         """Construct and return a Domain object corresponding to self"""
         return Domain.from_chebfun(self)

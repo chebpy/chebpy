@@ -25,6 +25,7 @@ from matplotlib.pyplot import subplots
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
+from chebpy.core.utilities import Domain
 from chebpy.core.utilities import Interval
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.exceptions import IntervalGap
@@ -203,6 +204,16 @@ class ClassUsage(TestCase):
         self.assertEqual(self.f0.endpoints.size, 0)
         self.assertTrue(equal(self.f1.endpoints,[-1,1]).all())
         self.assertTrue(equal(self.f2.endpoints,[-1,2]).all())
+
+    def test_domain(self):
+        d1 = Domain([-1,1])
+        d2 = Domain([-1,0,1,2])
+        self.assertIsInstance(self.f0.domain, ndarray)
+        self.assertIsInstance(self.f1.domain, Domain)
+        self.assertIsInstance(self.f2.domain, Domain)
+        self.assertEqual(self.f0.domain.size, 0)
+        self.assertEqual(self.f1.domain, d1)
+        self.assertEqual(self.f2.domain, d2)
 
     def test__iter__(self):
         for f in [self.f0, self.f1, self.f2]:
