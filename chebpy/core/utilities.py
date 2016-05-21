@@ -127,11 +127,10 @@ class Domain(object):
         return in1d(self.breakpoints, other.breakpoints)
 
     def __eq__(self, other):
-        if self.size != other.size:
-            return False
-        else:
-            subintervals = zip(self.breakpoints, other.breakpoints)
-            return all([x==y for x,y in subintervals])
+        """Test for equality of two Domain objects"""
+        # Two Domain objects are equal if they have the same breakpoints.
+        return self.breakpoints_in(other).all() \
+            and other.breakpoints_in(self).all()
 
     def __ne__(self, other):
         return not self==other
