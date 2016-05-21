@@ -40,10 +40,11 @@ class InvalidDomain(Exception):
         super(self.__class__, self).__init__(message)
 
 # chebpy.core.utilities.Domain
-class InconsistentSupport(Exception):
+class SupportMismatch(Exception):
     def __init__(self, message=None):
         if message is None:
-            message = "Domain object endpoints are required to match"
+            message = "Both objects are required to be supported "
+            "on the same interval"
         super(self.__class__, self).__init__(message)
 
 class BadDomainArgument(Exception):

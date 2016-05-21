@@ -24,7 +24,7 @@ from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
-from chebpy.core.exceptions import InconsistentSupport
+from chebpy.core.exceptions import SupportMismatch
 
 from chebpy import chebfun
 
@@ -197,7 +197,7 @@ class TestDomain(TestCase):
     def test_union_raises(self):
         dom_a = Domain([-2,0])
         dom_b = Domain([-2,3])
-        self.assertRaises(InconsistentSupport, dom_a.union, dom_b)
+        self.assertRaises(SupportMismatch, dom_a.union, dom_b)
 
 
 class CheckFuns(TestCase):

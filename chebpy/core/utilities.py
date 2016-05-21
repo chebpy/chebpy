@@ -15,7 +15,7 @@ from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
-from chebpy.core.exceptions import InconsistentSupport
+from chebpy.core.exceptions import SupportMismatch
 
 class Interval(object):
     """
@@ -116,7 +116,7 @@ class Domain(object):
         if not isinstance(other, self.__class__):
             other = self.__class__(other)
         if any(self.support!=other.support):
-            raise InconsistentSupport
+            raise SupportMismatch
         all_breakpoints = append(self.breakpoints, other.breakpoints)
         new_breakpoints = unique(all_breakpoints)
         return self.__class__(new_breakpoints)
