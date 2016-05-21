@@ -7,6 +7,7 @@ from collections import OrderedDict
 from numpy import append
 from numpy import array
 from numpy import diff
+from numpy import in1d
 from numpy import logical_and
 from numpy import unique
 
@@ -119,6 +120,11 @@ class Domain(object):
         all_breakpoints = append(self.breakpoints, other.breakpoints)
         new_breakpoints = unique(all_breakpoints)
         return self.__class__(new_breakpoints)
+
+    def breakpoints_in(self, other):
+        """Return a Boolean array of size self.breakpoints where True indicates
+        that the breakpoint is in other.breakpoints"""
+        return in1d(self.breakpoints, other.breakpoints)
 
     def __eq__(self, other):
         if self.size != other.size:

@@ -10,6 +10,7 @@ from numpy import array
 from numpy import cos
 from numpy import exp
 from numpy import linspace
+from numpy import ndarray
 from numpy.random import rand
 from numpy.random import seed
 
@@ -140,6 +141,30 @@ class TestDomain(TestCase):
     def test_from_chebfun(self):
         ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
         Domain.from_chebfun(ff)
+
+    def test_breakpoints_in(self):
+        d1 = Domain([-1,0,1])
+        d2 = Domain([-2,0.5,1,3])
+
+        result1 = d1.breakpoints_in(d2)
+        self.assertIsInstance(result1, ndarray)
+        self.assertTrue(result1.size, 3)
+        self.assertFalse(result1[0])
+        self.assertFalse(result1[1])
+        self.assertTrue(result1[2])
+
+        result2 = d2.breakpoints_in(d1)
+        self.assertIsInstance(result2, ndarray)
+        self.assertTrue(result2.size, 4)
+        self.assertFalse(result2[0])
+        self.assertFalse(result2[1])
+        self.assertTrue(result2[2])
+        self.assertFalse(result2[3])
+
+        self.assertTrue(d1.breakpoints_in(d1).all())
+        self.assertTrue(d2.breakpoints_in(d2).all())
+        self.assertFalse(d1.breakpoints_in(Domain([-5,5])).any())
+        self.assertFalse(d2.breakpoints_in(Domain([-5,5])).any())
 
     def test_support(self):
         dom_a = Domain([-2,1])
