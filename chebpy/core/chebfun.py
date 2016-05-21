@@ -164,13 +164,15 @@ class Chebfun(object):
 
     @property
     @self_empty(array([]))
-    def endpoints(self):
+    def support(self):
+        """The support of a Chebfun is an array containing its first and last
+        breakpoint"""
         return self.breakpoints[[0,-1]]
 
     @property
     @self_empty(0)
     def hscale(self):
-        return abs(self.endpoints).max()
+        return abs(self.support).max()
 
     @property
     def isempty(self):
@@ -235,7 +237,7 @@ class Chebfun(object):
     # ----------
     def plot(self, ax=None, *args, **kwargs):
         ax = ax if ax else gca()
-        a, b = self.endpoints
+        a, b = self.support
         xx = linspace(a, b, 2001)
         ax.plot(xx, self(xx), *args, **kwargs)
         return ax

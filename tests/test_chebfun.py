@@ -199,12 +199,12 @@ class ClassUsage(TestCase):
         self.assertTrue(equal(self.f2.breakpoints,[-1,0,1,2]).all())
 
     def test_endpoints(self):
-        self.assertIsInstance(self.f0.endpoints, ndarray)
-        self.assertIsInstance(self.f1.endpoints, ndarray)
-        self.assertIsInstance(self.f2.endpoints, ndarray)
-        self.assertEqual(self.f0.endpoints.size, 0)
-        self.assertTrue(equal(self.f1.endpoints,[-1,1]).all())
-        self.assertTrue(equal(self.f2.endpoints,[-1,2]).all())
+        self.assertIsInstance(self.f0.support, ndarray)
+        self.assertIsInstance(self.f1.support, ndarray)
+        self.assertIsInstance(self.f2.support, ndarray)
+        self.assertEqual(self.f0.support.size, 0)
+        self.assertTrue(equal(self.f1.support,[-1,1]).all())
+        self.assertTrue(equal(self.f2.support,[-1,2]).all())
 
     def test_domain(self):
         d1 = Domain([-1,1])
@@ -305,14 +305,14 @@ class Calculus(TestCase):
     def test_diff(self):
         xx = linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
-            a, b = f.endpoints
+            a, b = f.support
             x = xx[(xx>a)&(xx<b)]
             self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 1e3*eps)
 
     def test_cumsum(self):
         xx = linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
-            a, b = f.endpoints
+            a, b = f.support
             x = xx[(xx>a)&(xx<b)]
             fa = self.If(a)
             self.assertLessEqual(infnorm(f.cumsum()(x)-self.If(x)+fa), 3*eps)
