@@ -24,6 +24,7 @@ from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
 
+
 class Chebfun(object):
 
     # --------------------------
@@ -64,9 +65,9 @@ class Chebfun(object):
             funs = append(funs, fun)
         return cls(funs)
 
-    # -------------------
-    #  "private" methods
-    # -------------------
+    # --------------------
+    #  operator overloads
+    # --------------------
     def __add__(self):
         raise NotImplementedError
 
@@ -148,6 +149,33 @@ class Chebfun(object):
 
     def __sub__(self):
         raise NotImplementedError
+
+    # -------------------
+    #  "private" methods
+    # -------------------
+    def __break(self, targetdomain):
+        """Resamples self to the supplied Domain object, targetdomain. All of
+        the breakpoints of self are required to be breakpoints of targetdomain.
+        This is best achieved by using Domain.union(other) method prior to
+        calling."""
+
+        if not self.domain.breakpoints_in(targetdomain).all():
+            raise DomainBreakpoints
+
+        newfuns = []
+        intvl_gen = targetdomain.__iter__()
+        intvl = Interval(*intvl_gen.next())
+
+        # loop over the funs in self, incrementing the intvl_gen generator so
+        # long as intvl remains contained within fun.interval
+        for fun in self:
+            while intvl in fun.interval:
+                newfuns.append(fun.restrict(intvl))
+                try:
+                    intvl = Interval(*intvl_gen.next())
+                except StopIteration:
+                    break
+        return self.__class__(newfuns)
 
     # ------------
     #  properties
@@ -247,27 +275,3 @@ class Chebfun(object):
         for fun in self:
             fun.plotcoeffs(ax=ax)
         return ax
-
-    def __break(self, targetdomain):
-        """Resamples self to the supplied Domain object, targetdomain. All of
-        the breakpoints of self are required to be breakpoints of targetdomain.
-        This is best achieved by using Domain.union(other) method prior to
-        calling."""
-
-        if not self.domain.breakpoints_in(targetdomain).all():
-            raise DomainBreakpoints
-
-        newfuns = []
-        intvl_gen = targetdomain.__iter__()
-        intvl = Interval(*intvl_gen.next())
-
-        # loop over the funs in self, incrementing the intvl_gen generator so
-        # long as intvl remains contained within fun.interval
-        for fun in self:
-            while intvl in fun.interval:
-                newfuns.append(fun.restrict(intvl))
-                try:
-                    intvl = Interval(*intvl_gen.next())
-                except StopIteration:
-                    break
-        return self.__class__(newfuns)
