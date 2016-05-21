@@ -60,3 +60,9 @@ class BadFunLengthArgument(Exception):
                 "numeric value, or an iterable thereof containing one "\
                 "fewer elements than the size of the domain"
         super(self.__class__, self).__init__(message)
+
+class DomainBreakpoints(Exception):
+    def __init__(self, message=None):
+        if message is None:
+            message = "This operation requires the breakpoints to intersect"
+        super(self.__class__, self).__init__(message)

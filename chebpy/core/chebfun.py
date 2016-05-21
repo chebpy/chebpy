@@ -22,7 +22,7 @@ from chebpy.core.decorators import self_empty
 from chebpy.core.decorators import float_argument
 from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
-
+from chebpy.core.exceptions import DomainBreakpoints
 
 class Chebfun(object):
 
@@ -247,12 +247,13 @@ class Chebfun(object):
         return ax
 
     def __break(self, targetdomain):
-        """Resamples self to the supplied Domain object, targetdomain. It is
-        assumed that targetdomain contains at least the breakpoints of self;
-        this should be enforced by the methods which call this function
-        (since performing those checks here would, for example, lead to
-        duplication when called for evaluating binary operators). The method is
-        thus nominally denoted as private."""
+        """Resamples self to the supplied Domain object, targetdomain. All of
+        the breakpoints of self are required to be breakpoints of targetdomain.
+        This is best achieved by using Domain.union(other) method prior to
+        calling."""
+
+        if not self.domain.breakpoints_in(targetdomain).all():
+            raise DomainBreakpoints
 
         newfuns = []
         intvl_gen = targetdomain.__iter__()
