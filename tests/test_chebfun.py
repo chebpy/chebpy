@@ -155,26 +155,57 @@ class Construction(TestCase):
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
 
 
-class ClassUsage(TestCase):
+class Properties(TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
         self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
+    def test_breakpoints(self):
+        self.assertEqual(self.f0.breakpoints.size, 0)
+        self.assertTrue(equal(self.f1.breakpoints,[-1,1]).all())
+        self.assertTrue(equal(self.f2.breakpoints,[-1,0,1,2]).all())
+
+    def test_domain(self):
+        d1 = Domain([-1,1])
+        d2 = Domain([-1,0,1,2])
+        self.assertIsInstance(self.f0.domain, ndarray)
+        self.assertIsInstance(self.f1.domain, Domain)
+        self.assertIsInstance(self.f2.domain, Domain)
+        self.assertEqual(self.f0.domain.size, 0)
+        self.assertEqual(self.f1.domain, d1)
+        self.assertEqual(self.f2.domain, d2)
+
+    def test_hscale(self):
+        self.assertEqual(self.f0.hscale, 0)
+        self.assertEqual(self.f1.hscale, 1)
+        self.assertEqual(self.f2.hscale, 2)
+
     def test_isempty(self):
         self.assertTrue(self.f0.isempty)
         self.assertFalse(self.f1.isempty)
+
+    def test_support(self):
+        self.assertIsInstance(self.f0.support, ndarray)
+        self.assertIsInstance(self.f1.support, ndarray)
+        self.assertIsInstance(self.f2.support, ndarray)
+        self.assertEqual(self.f0.support.size, 0)
+        self.assertTrue(equal(self.f1.support,[-1,1]).all())
+        self.assertTrue(equal(self.f2.support,[-1,2]).all())
 
     def test_vscale(self):
         self.assertEqual(self.f0.vscale, 0)
         self.assertEqual(self.f1.vscale, 1)
         self.assertEqual(self.f2.vscale, 4)
 
-    def test_hscale(self):
-        self.assertEqual(self.f0.hscale, 0)
-        self.assertEqual(self.f1.hscale, 1)
-        self.assertEqual(self.f2.hscale, 2)
+
+class ClassUsage(TestCase):
+
+    def setUp(self):
+        self.f0 = Chebfun.initempty()
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
     def test_copy(self):
         f0_copy = self.f0.copy()
@@ -192,29 +223,6 @@ class ClassUsage(TestCase):
             funcopy = f2_copy.funs[k]
             self.assertNotEqual(fun, funcopy)
             self.assertEquals(sum(fun.coeffs-funcopy.coeffs), 0)
-
-    def test_breakpoints(self):
-        self.assertEqual(self.f0.breakpoints.size, 0)
-        self.assertTrue(equal(self.f1.breakpoints,[-1,1]).all())
-        self.assertTrue(equal(self.f2.breakpoints,[-1,0,1,2]).all())
-
-    def test_endpoints(self):
-        self.assertIsInstance(self.f0.support, ndarray)
-        self.assertIsInstance(self.f1.support, ndarray)
-        self.assertIsInstance(self.f2.support, ndarray)
-        self.assertEqual(self.f0.support.size, 0)
-        self.assertTrue(equal(self.f1.support,[-1,1]).all())
-        self.assertTrue(equal(self.f2.support,[-1,2]).all())
-
-    def test_domain(self):
-        d1 = Domain([-1,1])
-        d2 = Domain([-1,0,1,2])
-        self.assertIsInstance(self.f0.domain, ndarray)
-        self.assertIsInstance(self.f1.domain, Domain)
-        self.assertIsInstance(self.f2.domain, Domain)
-        self.assertEqual(self.f0.domain.size, 0)
-        self.assertEqual(self.f1.domain, d1)
-        self.assertEqual(self.f2.domain, d2)
 
     def test__iter__(self):
         for f in [self.f0, self.f1, self.f2]:
