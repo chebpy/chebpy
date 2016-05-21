@@ -380,6 +380,49 @@ class Plotting(TestCase):
             fig, ax = subplots()
             fun.plotcoeffs(ax=ax)
 
+
+class PrivateMethods(TestCase):
+
+    def setUp(self):
+        f = lambda x: sin(x-.1)
+        self.f1 = Chebfun.initfun_adaptive(f, [-2,0,3])
+        self.f2 = Chebfun.initfun_adaptive(f, linspace(-2,3,5))
+
+    # in the test_break_x methods, we check that (1) the newly computed domain
+    # is what it should be, and (2) the new chebfun still provides an accurate
+    # approximation
+    def test__break_1(self):
+        altdom = Domain([-2,-1,1,2,3])
+        newdom = self.f1.domain.union(altdom)
+        f1_new = self.f1._Chebfun__break(newdom)
+        self.assertEqual(f1_new.domain, newdom)
+        self.assertNotEqual(f1_new.domain, altdom)
+        self.assertNotEqual(f1_new.domain, self.f1.domain)
+        xx = linspace(-2,3,1000)
+        error = infnorm(self.f1(xx)-f1_new(xx))
+        self.assertLessEqual(error, 3*eps)
+
+    def test__break_2(self):
+        altdom = Domain([-2,3])
+        newdom = self.f1.domain.union(altdom)
+        f1_new = self.f1._Chebfun__break(newdom)
+        self.assertEqual(f1_new.domain, newdom)
+        self.assertNotEqual(f1_new.domain, altdom)
+        xx = linspace(-2,3,1000)
+        error = infnorm(self.f1(xx)-f1_new(xx))
+        self.assertLessEqual(error, 3*eps)
+
+    def test__break_3(self):
+        altdom = Domain(linspace(-2,3,1000))
+        newdom = self.f2.domain.union(altdom)
+        f2_new = self.f2._Chebfun__break(newdom)
+        self.assertEqual(f2_new.domain, newdom)
+        self.assertNotEqual(f2_new.domain, altdom)
+        self.assertNotEqual(f2_new.domain, self.f2.domain)
+        xx = linspace(-2,3,1000)
+        error = infnorm(self.f2(xx)-f2_new(xx))
+        self.assertLessEqual(error, 3*eps)
+
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
 # ------------------------------------------------------------------------

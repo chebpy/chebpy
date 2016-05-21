@@ -246,13 +246,14 @@ class Chebfun(object):
             fun.plotcoeffs(ax=ax)
         return ax
 
-    def _break(self, targetdomain):
+    def __break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. It is
-        assumed that targetdomain must contain at least the breakpoints of
-        self, and this should be enforced by the methods which call this
-        function (performing those checks here would lead to duplication
-        when calling binary operators). The method is thus nominally denoted as
-        private."""
+        assumed that targetdomain contains at least the breakpoints of self;
+        this should be enforced by the methods which call this function
+        (since performing those checks here would, for example, lead to
+        duplication when called for evaluating binary operators). The method is
+        thus nominally denoted as private."""
+
         newfuns = []
         intvl_gen = targetdomain.__iter__()
         intvl = Interval(*intvl_gen.next())
