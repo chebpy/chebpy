@@ -2,6 +2,8 @@
 
 from itertools import izip
 
+from operator import __add__
+
 from numpy import array
 from numpy import append
 from numpy import concatenate
@@ -72,19 +74,7 @@ class Chebfun(object):
     #  operator overloads
     # --------------------
     def __add__(self, other):
-        if isscalar(other):
-            chbfn1 = self
-            chbfn2 = other*ones(self.funs.size)
-        else:
-            newdom = self.domain.union(other.domain)
-            chbfn1 = self.__break(newdom)
-            chbfn2 = other.__break(newdom)
-        newfuns = []
-        for fun1, fun2 in izip(chbfn1, chbfn2):
-            newfun = fun1 + fun2
-            newfun = newfun.simplify()
-            newfuns.append(newfun)
-        return self.__class__(newfuns)
+        return self.__apply_binop(other, __add__)
 
     @self_empty(array([]))
     @float_argument
@@ -168,6 +158,34 @@ class Chebfun(object):
     # -------------------
     #  "private" methods
     # -------------------
+    @self_empty()
+    def __apply_binop(self, other, binop):
+        """Funnel method used in the implementation of Chebfun binary
+        operators. The high-level idea is to first break each chebfun into a
+        series of pieces corresponding to the union of the domains of each
+        before applying the supplied binary operator and simplifying. In the
+        case of the second argument being a scalar we don't need to do the
+        simplify step, since at the Tech-level these operations are are defined
+        such that there is no change in the number of coefficients.
+        """
+        if isscalar(other):
+            chbfn1 = self
+            chbfn2 = other*ones(self.funs.size)
+            simplify = False
+        else:
+            newdom = self.domain.union(other.domain)
+            chbfn1 = self.__break(newdom)
+            chbfn2 = other.__break(newdom)
+            simplify = True
+        newfuns = []
+        for fun1, fun2 in izip(chbfn1, chbfn2):
+            newfun = binop(fun1, fun2)
+            if simplify:
+                newfun = newfun.simplify()
+            newfuns.append(newfun)
+        return self.__class__(newfuns)
+
+
     def __break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. All of
         the breakpoints of self are required to be breakpoints of targetdomain.
