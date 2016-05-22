@@ -228,8 +228,7 @@ class Chebfun(object):
     @property
     @self_empty(array([]))
     def support(self):
-        """The support of a Chebfun is an array containing its first and last
-        breakpoint"""
+        """Return an array containing the first and last breakpoints"""
         return self.breakpoints[[0,-1]]
 
     @property
