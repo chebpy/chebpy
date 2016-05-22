@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from itertools import izip
+
 from numpy import array
 from numpy import append
 from numpy import concatenate
 from numpy import full
+from numpy import isscalar
 from numpy import linspace
 from numpy import max
 from numpy import nan
@@ -68,8 +71,20 @@ class Chebfun(object):
     # --------------------
     #  operator overloads
     # --------------------
-    def __add__(self):
-        raise NotImplementedError
+    def __add__(self, other):
+        if isscalar(other):
+            chbfn1 = self
+            chbfn2 = other*ones(self.funs.size)
+        else:
+            newdom = self.domain.union(other.domain)
+            chbfn1 = self.__break(newdom)
+            chbfn2 = other.__break(newdom)
+        newfuns = []
+        for fun1, fun2 in izip(chbfn1, chbfn2):
+            newfun = fun1 + fun2
+            newfun = newfun.simplify()
+            newfuns.append(newfun)
+        return self.__class__(newfuns)
 
     @self_empty(array([]))
     @float_argument
