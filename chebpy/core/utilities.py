@@ -104,9 +104,9 @@ class Domain(object):
 
     @property
     def support(self):
-        """The support of a Domain object is an computed as an array
-        containing its first and last breakpoints"""
-        return self.breakpoints[(0,-1)]
+        """The support of a Domain object is an array containing its first and
+        last breakpoints"""
+        return self.breakpoints[[0,-1]]
 
     def union(self, other):
         """Return an array denoting the union of self and other. We check
