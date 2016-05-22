@@ -168,6 +168,8 @@ class Chebfun(object):
         simplify step, since at the Tech-level these operations are are defined
         such that there is no change in the number of coefficients.
         """
+        if other.isempty:
+            return other
         if isscalar(other):
             chbfn1 = self
             chbfn2 = other*ones(self.funs.size)
