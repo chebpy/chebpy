@@ -476,7 +476,7 @@ binops = (
 def binaryOpTester(f, g, subdomain, binop):
     ff = Bndfun.initfun_adaptive(f, subdomain)
     gg = Bndfun.initfun_adaptive(g, subdomain)
-    FG = Bndfun.initfun_adaptive(lambda x: binop(f(x),g(x)), subdomain)
+    FG = lambda x: binop(f(x),g(x))
     fg = binop(ff, gg)
     def tester(self):
         xx = subdomain(self.yy)
@@ -504,11 +504,11 @@ unaryops = (
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, subdomain):
     ff = Bndfun.initfun_adaptive(f, subdomain)
-    gg = Bndfun.initfun_adaptive(lambda x: unaryop(f(x)), subdomain)
+    gg = lambda x: unaryop(f(x))
     GG = unaryop(ff)
     def tester(self):
         xx = subdomain(self.yy)
-        self.assertLessEqual( infnorm(gg(xx)-GG(xx)), 2e2*eps)
+        self.assertLessEqual( infnorm(gg(xx)-GG(xx)), 4e1*eps)
     return tester
 
 for unaryop in unaryops:

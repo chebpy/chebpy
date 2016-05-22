@@ -510,13 +510,12 @@ class Algebra(TestCase):
 
 # add tests for the binary operators
 def binaryOpTester(f, g, binop, nf, ng):
-    nbinop = nf + ng
     ff = Chebtech2.initfun_fixedlen(f, nf)
     gg = Chebtech2.initfun_fixedlen(g, ng)
-    FG = Chebtech2.initfun_fixedlen(lambda x: binop(f(x),g(x)), nbinop)
+    FG = lambda x: binop(f(x),g(x)) 
     fg = binop(ff, gg)
     def tester(self):
-        self.assertLessEqual( infnorm(fg(self.xx)-FG(self.xx)), 2e2*eps)
+        self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), 5e1*eps)
     return tester
 
 # note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
@@ -539,10 +538,10 @@ for binop in binops:
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
     ff = Chebtech2.initfun_fixedlen(f, nf)
-    gg = Chebtech2.initfun_fixedlen(lambda x: unaryop(f(x)), 20*nf)
+    gg = lambda x: unaryop(f(x))
     GG = unaryop(ff)
     def tester(self):
-        self.assertLessEqual( infnorm(gg(self.xx)-GG(self.xx)), 4e2*eps)
+        self.assertLessEqual(infnorm(gg(self.xx)-GG(self.xx)), 4e1*eps)
     return tester
 
 unaryops = (
