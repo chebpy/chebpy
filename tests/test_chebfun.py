@@ -4,6 +4,8 @@ Unit-tests for pyfun/chebtech.py
 """
 from __future__ import division
 
+from operator import __add__
+from itertools import combinations
 from unittest import TestCase
 from unittest import skip
 
@@ -12,6 +14,7 @@ from numpy import array
 from numpy import arange
 from numpy import exp
 from numpy import sin
+from numpy import log
 from numpy import cos
 from numpy import sum
 from numpy import abs
@@ -229,6 +232,64 @@ class ClassUsage(TestCase):
             a1 = [x for x in f]
             a2 = [x for x in f.funs]
             self.assertTrue(equal(a1,a2).all())
+
+
+class Algebra(TestCase):
+    pass
+
+# fun, periodic break conditions
+testfuns = [
+    (lambda x: sin(5*x-1), "sin(5*x-1)"),
+    (lambda x: cos(2*pi*x), "cos(2*pi*x)"),
+    (lambda x: log(x+10), "log(x+10)"),
+]
+
+chebfun_testfunctions = []
+for (f, name) in testfuns:
+    f.__name__ = name
+    chebfun_testfunctions.append(f)
+
+# domain, test_tolerance
+chebfun_testdomains = [
+    ([-1,1], 8e0*eps),
+    ([-2,1], 2e1*eps),
+    ([-1,2], 2e1*eps),
+    ([-5,9], 6e1*eps),
+]
+
+
+# add tests for the binary operators
+def binaryOpTester(f, g, binop, dom, tol):
+    a, b = dom
+    xx = linspace(a,b,1001)
+    n, m = 3, 8
+    ff = Chebfun.initfun_adaptive(f, linspace(a,b,n+1))
+    gg = Chebfun.initfun_adaptive(g, linspace(a,b,m+1))
+    FG = lambda x: binop(f(x),g(x))
+    fg = binop(ff, gg)
+    def tester(self):
+        self.assertEqual(ff.funs.size, n)
+        self.assertEqual(gg.funs.size, m)
+        self.assertEqual(fg.funs.size, n+m-1)
+        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), tol)
+    return tester
+
+
+binops = (
+    __add__,
+#    __sub__,
+#    __mul__,
+    )
+
+for binop in binops:
+    for f, g in combinations(chebfun_testfunctions, 2):
+        for dom, tol in chebfun_testdomains:
+            _testfun_ = binaryOpTester(f, g, binop, dom, tol)
+            _testfun_.__name__ = \
+                "test{}{}_{}_[{:.0f},..,{:.0f}]".format(
+                    binop.__name__, f.__name__,  g.__name__, dom[0], dom[1])
+            setattr(Algebra, _testfun_.__name__, _testfun_)
+
 
 class Evaluation(TestCase):
 
