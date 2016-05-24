@@ -250,6 +250,16 @@ class Algebra(TestCase):
     def test__neg__empty(self):
         self.assertTrue((-self.emptyfun).isempty)
 
+    # check (empty Chebfun) + (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) + (empty Chebfun) = (empty Chebfun)
+    def test__add__radd__empty(self):
+        for f in chebfun_testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                self.assertTrue((self.emptyfun+ff).isempty)
+                self.assertTrue((ff+self.emptyfun).isempty)
+
 # fun, periodic break conditions
 testfuns = [
     (lambda x: sin(5*x-1), "sin(5*x-1)"),
