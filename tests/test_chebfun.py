@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Unit-tests for pyfun/chebtech.py
+Unit-tests for pyfun/core/chebfun.py
 """
 from __future__ import division
 
@@ -238,7 +238,17 @@ class ClassUsage(TestCase):
 
 
 class Algebra(TestCase):
-    pass
+
+    def setUp(self):
+        self.emptyfun = Chebfun.initempty()
+
+    # check  +(empty Chebfun) = (empty Chebfun)
+    def test__pos__empty(self):
+        self.assertTrue((+self.emptyfun).isempty)
+
+    # check -(empty Chebfun) = (empty Chebfun)
+    def test__neg__empty(self):
+        self.assertTrue((-self.emptyfun).isempty)
 
 # fun, periodic break conditions
 testfuns = [
