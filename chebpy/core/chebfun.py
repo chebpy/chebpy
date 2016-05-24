@@ -116,8 +116,7 @@ class Chebfun(object):
     def __pos__(self):
         return self.__class__([+fun for fun in self])
 
-    def __radd__(self):
-        raise NotImplementedError
+    __radd__ = __add__
 
     @self_empty("chebfun<empty>")
     def __repr__(self):
@@ -168,8 +167,11 @@ class Chebfun(object):
         simplify step, since at the Tech-level these operations are are defined
         such that there is no change in the number of coefficients.
         """
-        if other.isempty:
-            return other
+        try:
+            if other.isempty:
+                return other
+        except:
+            pass
         if isscalar(other):
             chbfn1 = self
             chbfn2 = other*ones(self.funs.size)
