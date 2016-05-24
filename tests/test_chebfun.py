@@ -30,10 +30,10 @@ from numpy import isfinite
 from matplotlib.pyplot import subplots
 
 from chebpy.core.bndfun import Bndfun
+from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Domain
 from chebpy.core.utilities import Interval
-from chebpy.core.chebfun import Chebfun
 from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import BadDomainArgument
@@ -259,6 +259,22 @@ class Algebra(TestCase):
                 ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
                 self.assertTrue((self.emptyfun+ff).isempty)
                 self.assertTrue((ff+self.emptyfun).isempty)
+
+    # check the output of (constant + Chebfun)
+    #                 and (Chebfun + constant)
+    def test__add__radd__constant(self):
+        for f in chebfun_testfunctions:
+            for c in (-1, 1, 10, -1e5):
+                for dom, _ in chebfun_testdomains:
+                    a,b = dom
+                    xx = linspace(a,b,1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    g = lambda x: c + f(x)
+                    gg1 = c + ff
+                    gg2 = ff + c
+                    tol = 5e1 * eps * abs(c)
+                    self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
+                    self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
 # fun, periodic break conditions
 testfuns = [
