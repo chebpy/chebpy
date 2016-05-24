@@ -5,6 +5,9 @@ Unit-tests for pyfun/chebtech.py
 from __future__ import division
 
 from operator import __add__
+from operator import __pos__
+from operator import __neg__
+
 from itertools import combinations
 from unittest import TestCase
 from unittest import skip
@@ -290,6 +293,32 @@ for binop in binops:
                     binop.__name__, f.__name__,  g.__name__, dom[0], dom[1])
             setattr(Algebra, _testfun_.__name__, _testfun_)
 
+
+# add tests for the unary operators
+def unaryOpTester(f, unaryop, dom, tol):
+    a, b = dom
+    xx = linspace(a,b,1001)
+    ff = Chebfun.initfun_adaptive(f, linspace(a,b,9))
+    GG = lambda x: unaryop(f(x))
+    gg = unaryop(ff)
+    def tester(self):
+        self.assertEqual(ff.funs.size, ff.funs.size)
+        self.assertLessEqual(infnorm(gg(xx)-GG(xx)), tol)
+    return tester
+
+unaryops = (
+    __pos__,
+    __neg__,
+    )
+
+for unaryop in unaryops:
+    for f in chebfun_testfunctions:
+        for dom, tol in chebfun_testdomains:
+            _testfun_ = unaryOpTester(f, unaryop, dom, tol)
+            _testfun_.__name__ = \
+                "test{}{}_[{:.0f},..,{:.0f}]".format(
+                    unaryop.__name__, f.__name__, dom[0], dom[1])
+            setattr(Algebra, _testfun_.__name__, _testfun_)
 
 class Evaluation(TestCase):
 
