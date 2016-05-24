@@ -111,10 +111,10 @@ class Chebfun(object):
         raise NotImplementedError
 
     def __neg__(self):
-        raise NotImplementedError
+        return self.__class__([-fun for fun in self])
 
     def __pos__(self):
-        raise NotImplementedError
+        return self.__class__([+fun for fun in self])
 
     def __radd__(self):
         raise NotImplementedError
