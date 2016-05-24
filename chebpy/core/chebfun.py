@@ -149,7 +149,7 @@ class Chebfun(object):
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
         out = "<chebfun-{},{},{}>\n".format(
-            rowcol, self.funs.size, sum([f.size() for f in self]))
+            rowcol, self.funs.size, sum([f.size for f in self]))
         return out
 
     def __sub__(self):
