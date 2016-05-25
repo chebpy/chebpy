@@ -5,12 +5,12 @@ Unit-tests for pyfun/core/chebfun.py
 from __future__ import division
 
 from operator import __add__
-from operator import __pos__
 from operator import __neg__
+from operator import __pos__
+from operator import __sub__
 
 from itertools import combinations
 from unittest import TestCase
-from unittest import skip
 
 from numpy import ndarray
 from numpy import array
@@ -40,10 +40,7 @@ from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
 
-#from utilities import testfunctions
 from utilities import infnorm
-#from utilities import scaled_tol
-#from utilities import infNormLessThanTol
 
 eps = DefaultPrefs.eps
 
@@ -276,6 +273,32 @@ class Algebra(TestCase):
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
+    # check (empty Chebfun) + (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) + (empty Chebfun) = (empty Chebfun)
+    def test__sub__rsub__empty(self):
+        for f in chebfun_testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                self.assertTrue((self.emptyfun-ff).isempty)
+                self.assertTrue((ff-self.emptyfun).isempty)
+
+    # check the output of (constant + Chebfun)
+    #                 and (Chebfun + constant)
+    def test__sub__rsub__constant(self):
+        for f in chebfun_testfunctions:
+            for c in (-1, 1, 10, -1e5):
+                for dom, _ in chebfun_testdomains:
+                    a,b = dom
+                    xx = linspace(a,b,1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    g = lambda x: c - f(x)
+                    gg1 = c - ff
+                    gg2 = ff - c
+                    tol = 5e1 * eps * abs(c)
+                    self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
+                    self.assertLessEqual(infnorm(-g(xx)-gg2(xx)), tol)
+
 # fun, periodic break conditions
 testfuns = [
     (lambda x: sin(5*x-1), "sin(5*x-1)"),
@@ -293,7 +316,7 @@ chebfun_testdomains = [
     ([-1,1], 8e0*eps),
     ([-2,1], 2e1*eps),
     ([-1,2], 2e1*eps),
-    ([-5,9], 6e1*eps),
+    ([-5,9], 7e1*eps),
 ]
 
 
@@ -316,7 +339,7 @@ def binaryOpTester(f, g, binop, dom, tol):
 
 binops = (
     __add__,
-#    __sub__,
+    __sub__,
 #    __mul__,
     )
 
