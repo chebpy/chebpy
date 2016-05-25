@@ -5,6 +5,7 @@ Unit-tests for pyfun/core/chebfun.py
 from __future__ import division
 
 from operator import __add__
+from operator import __mul__
 from operator import __neg__
 from operator import __pos__
 from operator import __sub__
@@ -273,8 +274,8 @@ class Algebra(TestCase):
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
-    # check (empty Chebfun) + (Chebfun) = (empty Chebfun)
-    #   and (Chebfun) + (empty Chebfun) = (empty Chebfun)
+    # check (empty Chebfun) - (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) - (empty Chebfun) = (empty Chebfun)
     def test__sub__rsub__empty(self):
         for f in chebfun_testfunctions:
             for dom, _ in chebfun_testdomains:
@@ -283,8 +284,8 @@ class Algebra(TestCase):
                 self.assertTrue((self.emptyfun-ff).isempty)
                 self.assertTrue((ff-self.emptyfun).isempty)
 
-    # check the output of (constant + Chebfun)
-    #                 and (Chebfun + constant)
+    # check the output of (constant - Chebfun)
+    #                 and (Chebfun - constant)
     def test__sub__rsub__constant(self):
         for f in chebfun_testfunctions:
             for c in (-1, 1, 10, -1e5):
@@ -298,6 +299,32 @@ class Algebra(TestCase):
                     tol = 5e1 * eps * abs(c)
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(-g(xx)-gg2(xx)), tol)
+
+    # check (empty Chebfun) - (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) - (empty Chebfun) = (empty Chebfun)
+    def test__mul__rmul__empty(self):
+        for f in chebfun_testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                self.assertTrue((self.emptyfun*ff).isempty)
+                self.assertTrue((ff*self.emptyfun).isempty)
+
+    # check the output of (constant - Chebfun)
+    #                 and (Chebfun - constant)
+    def test__mul__rmul__constant(self):
+        for f in chebfun_testfunctions:
+            for c in (-1, 1, 10, -1e5):
+                for dom, _ in chebfun_testdomains:
+                    a,b = dom
+                    xx = linspace(a,b,1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    g = lambda x: c * f(x)
+                    gg1 = c * ff
+                    gg2 = ff * c
+                    tol = 5e1 * eps * abs(c)
+                    self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
+                    self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
 # fun, periodic break conditions
 testfuns = [
@@ -313,10 +340,10 @@ for (f, name) in testfuns:
 
 # domain, test_tolerance
 chebfun_testdomains = [
-    ([-1,1], 8e0*eps),
+    ([-1,1], 2e1*eps),
     ([-2,1], 2e1*eps),
     ([-1,2], 2e1*eps),
-    ([-5,9], 7e1*eps),
+    ([-5,9], 2e2*eps),
 ]
 
 
@@ -340,7 +367,7 @@ def binaryOpTester(f, g, binop, dom, tol):
 binops = (
     __add__,
     __sub__,
-#    __mul__,
+    __mul__,
     )
 
 for binop in binops:
