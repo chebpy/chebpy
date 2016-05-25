@@ -3,6 +3,7 @@
 from itertools import izip
 
 from operator import __add__
+from operator import __sub__
 
 from numpy import array
 from numpy import append
@@ -152,7 +153,7 @@ class Chebfun(object):
         return out
 
     def __sub__(self, f):
-        return self + (-f)
+        return self.__apply_binop(f, __sub__)
 
     # -------------------
     #  "private" methods
@@ -174,7 +175,7 @@ class Chebfun(object):
             pass
         if isscalar(f):
             chbfn1 = self
-            chbfn2 = f*ones(self.funs.size)
+            chbfn2 = f * ones(self.funs.size)
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
