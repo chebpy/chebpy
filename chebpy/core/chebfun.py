@@ -73,8 +73,8 @@ class Chebfun(object):
     # --------------------
     #  operator overloads
     # --------------------
-    def __add__(self, other):
-        return self.__apply_binop(other, __add__)
+    def __add__(self, f):
+        return self.__apply_binop(f, __add__)
 
     @self_empty(array([]))
     @float_argument
@@ -107,7 +107,7 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
-    def __mul__(self, other):
+    def __mul__(self, f):
         raise NotImplementedError
 
     def __neg__(self):
@@ -142,8 +142,8 @@ class Chebfun(object):
     def __rmul__(self):
         raise NotImplementedError
 
-    def __rsub__(self):
-        raise NotImplementedError
+    def __rsub__(self, f):
+        return -(self-f)
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
@@ -151,14 +151,14 @@ class Chebfun(object):
             rowcol, self.funs.size, sum([f.size for f in self]))
         return out
 
-    def __sub__(self):
-        raise NotImplementedError
+    def __sub__(self, f):
+        return self + (-f)
 
     # -------------------
     #  "private" methods
     # -------------------
     @self_empty()
-    def __apply_binop(self, other, binop):
+    def __apply_binop(self, f, op):
         """Funnel method used in the implementation of Chebfun binary
         operators. The high-level idea is to first break each chebfun into a
         series of pieces corresponding to the union of the domains of each
@@ -168,22 +168,22 @@ class Chebfun(object):
         such that there is no change in the number of coefficients.
         """
         try:
-            if other.isempty:
-                return other
+            if f.isempty:
+                return f
         except:
             pass
-        if isscalar(other):
+        if isscalar(f):
             chbfn1 = self
-            chbfn2 = other*ones(self.funs.size)
+            chbfn2 = f*ones(self.funs.size)
             simplify = False
         else:
-            newdom = self.domain.union(other.domain)
+            newdom = self.domain.union(f.domain)
             chbfn1 = self.__break(newdom)
-            chbfn2 = other.__break(newdom)
+            chbfn2 = f.__break(newdom)
             simplify = True
         newfuns = []
         for fun1, fun2 in izip(chbfn1, chbfn2):
-            newfun = binop(fun1, fun2)
+            newfun = op(fun1, fun2)
             if simplify:
                 newfun = newfun.simplify()
             newfuns.append(newfun)
@@ -193,7 +193,7 @@ class Chebfun(object):
     def __break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. All of
         the breakpoints of self are required to be breakpoints of targetdomain.
-        This is best achieved by using Domain.union(other) method prior to
+        This is best achieved by using Domain.union(f) method prior to
         calling."""
 
         if not self.domain.breakpoints_in(targetdomain).all():
