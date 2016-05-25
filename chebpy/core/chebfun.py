@@ -3,6 +3,7 @@
 from itertools import izip
 
 from operator import __add__
+from operator import __mul__
 from operator import __sub__
 
 from numpy import array
@@ -109,7 +110,7 @@ class Chebfun(object):
         return self.funs.__iter__()
 
     def __mul__(self, f):
-        raise NotImplementedError
+        return self.__apply_binop(f, __mul__)
 
     def __neg__(self):
         return self.__class__([-fun for fun in self])
@@ -140,8 +141,7 @@ class Chebfun(object):
             "    total length = {}".format(sum([f.size for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
-    def __rmul__(self):
-        raise NotImplementedError
+    __rmul__ = __mul__
 
     def __rsub__(self, f):
         return -(self-f)
