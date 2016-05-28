@@ -5,14 +5,14 @@ from __future__ import division
 from abc import ABCMeta
 from abc import abstractmethod
 
-from numpy import array
-from numpy import ones
 from numpy import arange
+from numpy import array
 from numpy import append
-from numpy import linspace
-from numpy import zeros
 from numpy import isscalar
+from numpy import linspace
 from numpy import max
+from numpy import ones
+from numpy import zeros
 
 from matplotlib.pyplot import gca
 
@@ -33,6 +33,7 @@ from chebpy.core.algorithms import standard_chop
 
 # machine epsilon
 eps = DefaultPrefs.eps
+
 
 class Chebtech(Smoothfun):
     """Abstract base class serving as the template for Chebtech1 and 
@@ -199,25 +200,26 @@ class Chebtech(Smoothfun):
 
             # check for zero output (merge this into simplify?)
             tol = .2 * eps * max([f.vscale, g.vscale])
-            if all( abs(cfs)<tol ):
+            if all(abs(cfs)<tol):
                 return cls.initconst(0.)
             else:
                 return cls(cfs)
 
-    def __sub__(self, f):
-        return self + (-f)
+    @self_empty()
+    def __div__(self, f):
+        cls = self.__class__
+        if isscalar(f):
+            cfs = self.coeffs.copy()
+            cfs *= 1./f
+            return cls(cfs)
+        else:
+            # TODO: review with reference to __add__
+            if f.isempty:
+                return f.copy()
+            divfun = lambda x: self(x) / f(x)
+            return cls.initfun_adaptive(divfun)
 
-    def __pos__(self):
-        return self.copy()
-
-    def __neg__(self):
-        coeffs = -self.coeffs
-        return self.__class__(coeffs)
-
-    __radd__ = __add__
-
-    def __rsub__(self, f):
-        return -(self-f)
+    __truediv__ = __div__
 
     @self_empty()
     def __mul__(self, g):
@@ -238,7 +240,28 @@ class Chebtech(Smoothfun):
             out = cls(cfs).simplify()
             return out
 
+    def __neg__(self):
+        coeffs = -self.coeffs
+        return self.__class__(coeffs)
+
+    def __pos__(self):
+        return self.copy()
+
+    def __rdiv__(self, f):
+        constfun = lambda x: .0*x + f
+        quotient = lambda x: constfun(x) / self(x)
+        return self.__class__.initfun_adaptive(quotient)
+
+    __radd__ = __add__
+
+    def __rsub__(self, f):
+        return -(self-f)
+
+    __rtruediv__ = __rdiv__
     __rmul__ = __mul__
+
+    def __sub__(self, f):
+        return self + (-f)
 
     # -------
     #  roots
