@@ -4,32 +4,32 @@ Unit-tests for pyfun/chebtech.py
 """
 from __future__ import division
 
-from itertools import combinations
 from unittest import TestCase
+from itertools import combinations
 
 from operator import __add__
-from operator import __sub__
-from operator import __pos__
-from operator import __neg__
+from operator import __div__
 from operator import __mul__
+from operator import __neg__
+from operator import __pos__
+from operator import __sub__
 
-from numpy import linspace
 from numpy import array
-from numpy import sin
 from numpy import cos
 from numpy import exp
+from numpy import linspace
 from numpy import pi
+from numpy import sin
 from numpy.random import rand
 from numpy.random import seed
 
 from matplotlib.pyplot import subplots
 
-from chebpy.core.settings import DefaultPrefs
-from chebpy.core.chebtech import Chebtech2
-from chebpy.core.algorithms import standard_chop
-
 from chebpy.core.bndfun import Bndfun
+from chebpy.core.chebtech import Chebtech2
+from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
+from chebpy.core.algorithms import standard_chop
 
 from utilities import testfunctions
 from utilities import infnorm
@@ -39,14 +39,12 @@ eps = DefaultPrefs.eps
 seed(0)
 
 
-# NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class
-# (although it is not abstract) we will test the interface in the way
-# Chebfun will interact with it, which means working explcitly with
-# Interval objects.
+# NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class (although it
+# is not abstract) we will test the interface in the way Chebfun will interact
+# with it, which means working explcitly with Interval objects. Furthermore,
+# since we have already tested the adaptive constructor in the Chebtech-level
+# tests, we just use the adaptive constructor in these tests.
 
-# Furthermore, since we have already tested the adaptive constructor
-# in the Chebtech-level tests, we just use the adaptive constructor in
-# these tests.
 
 class ClassUsage(TestCase):
     """Unit-tests for miscelaneous Bndfun class usage"""
@@ -404,8 +402,8 @@ class Algebra(TestCase):
                 f1 = const + boundedfun
                 f2 = boundedfun + const
                 tol = 3e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-f1(xx)), tol )
-                self.assertLessEqual( infnorm(f(xx)-f2(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-f1(xx)), tol)
+                self.assertLessEqual(infnorm(f(xx)-f2(xx)), tol)
 
     # check (empty Bndfun) - (Bndfun) = (empty Bndfun)
     #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
@@ -429,8 +427,8 @@ class Algebra(TestCase):
                 ff = const - boundedfun
                 gg = boundedfun - const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
-                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
 
     # check (empty Bndfun) * (Bndfun) = (empty Bndfun)
     #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
@@ -454,8 +452,8 @@ class Algebra(TestCase):
                 ff = const * boundedfun
                 gg = boundedfun * const
                 tol = 4e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
-                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
 
     # check    +(empty Bndfun) = (empty Bndfun)
     def test__pos__empty(self):
@@ -468,8 +466,9 @@ class Algebra(TestCase):
 
 binops = (
     __add__,
-    __sub__,
+    __div__,
     __mul__,
+    __sub__,
     )
 
 # add tests for the binary operators
@@ -479,22 +478,32 @@ def binaryOpTester(f, g, subdomain, binop):
     FG = lambda x: binop(f(x),g(x))
     fg = binop(ff, gg)
     def tester(self):
+        vscl = max([ff.vscale, gg.vscale])
+        lscl = max([ff.size, gg.size])
         xx = subdomain(self.yy)
-        self.assertLessEqual( infnorm(fg(xx)-FG(xx)), 2e2*eps)
+        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), 2*vscl*lscl*eps)
     return tester
 
 # Note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
 # test will not in fact test the __radd__ functionality of the class.
-# These test will need to be added manually.
+# These tests will need to be added manually.
+
+subdomains = (Interval(-.5,.9), )
 
 for binop in binops:
     # add the generic binary operator tests
-    for (f, _, _), (g, _, _) in combinations(testfunctions, 2):
-        subdomain = Interval(-.5,.9)
-        _testfun_ = binaryOpTester(f, g, subdomain, binop)
-        _testfun_.__name__ = \
-            "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
-        setattr(Algebra, _testfun_.__name__, _testfun_)
+    for (f, _, _), (g, _, denomRoots) in combinations(testfunctions, 2):
+        for subdomain in subdomains:
+            if binop is __div__ and denomRoots:
+                # skip __div__ test if denominator has roots on the real line
+                pass
+            else:
+                _testfun_ = binaryOpTester(f, g, subdomain, binop)
+                a, b = subdomain.values
+                _testfun_.__name__ = \
+                    "test{}{}_{}_[{:.1f},{:.1f}]".format(
+                        binop.__name__, f.__name__,  g.__name__, a, b)
+                setattr(Algebra, _testfun_.__name__, _testfun_)
 
 unaryops = (
     __pos__,
@@ -508,7 +517,7 @@ def unaryOpTester(unaryop, f, subdomain):
     GG = unaryop(ff)
     def tester(self):
         xx = subdomain(self.yy)
-        self.assertLessEqual( infnorm(gg(xx)-GG(xx)), 4e1*eps)
+        self.assertLessEqual(infnorm(gg(xx)-GG(xx)), 4e1*eps)
     return tester
 
 for unaryop in unaryops:
@@ -537,7 +546,7 @@ def rootsTester(f, interval, roots, tol):
     ff = Bndfun.initfun_adaptive(f, subdomain)
     rts = ff.roots()
     def tester(self):
-        self.assertLessEqual( infnorm(rts-roots), tol)
+        self.assertLessEqual(infnorm(rts-roots), tol)
     return tester
 
 rootstestfuns = (
