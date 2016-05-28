@@ -452,8 +452,8 @@ class Algebra(TestCase):
                 f1 = const + techfun
                 f2 = techfun + const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-f1(xx)), tol )
-                self.assertLessEqual( infnorm(f(xx)-f2(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-f1(xx)), tol)
+                self.assertLessEqual(infnorm(f(xx)-f2(xx)), tol)
 
     # check (empty Chebtech) - (Chebtech) = (empty Chebtech)
     #   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
@@ -475,8 +475,8 @@ class Algebra(TestCase):
                 ff = const - techfun
                 gg = techfun - const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
-                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
 
     # check (empty Chebtech) * (Chebtech) = (empty Chebtech)
     #   and (Chebtech) * (empty Chebtech) = (empty Chebtech)
@@ -498,8 +498,39 @@ class Algebra(TestCase):
                 ff = const * techfun
                 gg = techfun * const
                 tol = 5e1 * eps * abs(const)
-                self.assertLessEqual( infnorm(f(xx)-ff(xx)), tol )
-                self.assertLessEqual( infnorm(g(xx)-gg(xx)), tol )
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
+
+    # check (empty Chebtech) / (Chebtech) = (empty Chebtech)
+    #   and (Chebtech) / (empty Chebtech) = (empty Chebtech)
+    def test__div__rdiv__empty(self):
+        for (fun, funlen, _) in testfunctions:
+            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+            self.assertTrue(__div__(self.emptyfun,chebtech).isempty)
+            self.assertTrue(__div__(chebtech,self.emptyfun).isempty)
+            # __truediv__
+            self.assertTrue((self.emptyfun/chebtech).isempty)
+            self.assertTrue((chebtech/self.emptyfun).isempty)
+
+    # check the output of constant / Chebtech
+    #                 and Chebtech / constant
+    # this tests __div__, __rdiv__, __truediv__, __rtruediv__, since
+    # from __future__ import division is executed at the top of the file
+    # TODO: find a way to test __div__ and  __truediv__ genuinely separately
+    def test__div__rdiv__constant(self):
+        xx = self.xx
+        for (fun, funlen, hasRoots) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                tol = eps*abs(const)
+                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+                g = lambda x: fun(x) / const
+                gg = techfun / const
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), 2*gg.size*tol)
+                # don't do the following test for functions with roots
+                if not hasRoots:
+                    f = lambda x: const / fun(x)
+                    ff = const / techfun
+                    self.assertLessEqual(infnorm(f(xx)-ff(xx)), 3*ff.size*tol)
 
     # check    +(empty Chebtech) = (empty Chebtech)
     def test__pos__empty(self):
@@ -538,7 +569,7 @@ binops = (
 for binop in binops:
     # add generic binary operator tests
     for (f, nf, _), (g, ng, denomRoots) in combinations(testfunctions, 2):
-        if binop is __div__ and denomRoots is True:
+        if binop is __div__ and denomRoots:
             # skip __div__ test if the denominator has roots
             pass
         else:
