@@ -227,11 +227,15 @@ for methodname in methods_onefun_zeroargs:
 
 methods_onefun_binary= (
     "__add__",
-    "__sub__",
+    "__div__",
     "__mul__",
     "__radd__",
-    "__rsub__",
+    "__rdiv__",
     "__rmul__",
+    "__rsub__",
+    "__rtruediv__",
+    "__sub__",
+    "__truediv__",
 )
 
 def addBinaryOp(methodname):
