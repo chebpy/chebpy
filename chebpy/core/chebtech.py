@@ -209,8 +209,7 @@ class Chebtech(Smoothfun):
     def __div__(self, f):
         cls = self.__class__
         if isscalar(f):
-            cfs = self.coeffs.copy()
-            cfs *= 1./f
+            cfs = 1./f * self.coeffs
             return cls(cfs)
         else:
             # TODO: review with reference to __add__
@@ -225,8 +224,7 @@ class Chebtech(Smoothfun):
     def __mul__(self, g):
         cls = self.__class__
         if isscalar(g):
-            cfs = self.coeffs.copy()
-            cfs *= g
+            cfs = g * self.coeffs
             return cls(cfs)
         else:
             # TODO: review with reference to __add__
