@@ -550,7 +550,7 @@ def binaryOpTester(f, g, binop, nf, ng):
     def tester(self):
         vscl = max([ff.vscale, gg.vscale])
         lscl = max([ff.size, gg.size])
-        self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), vscl*lscl*eps)
+        self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), 2*vscl*lscl*eps)
         if binop is __mul__:
             # check simplify is not being called in __mul__
             self.assertEqual(fg.size, ff.size+gg.size-1)
