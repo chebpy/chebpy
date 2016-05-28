@@ -398,9 +398,9 @@ class Algebra(TestCase):
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
-                boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
-                f1 = const + boundedfun
-                f2 = boundedfun + const
+                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                f1 = const + bndfun
+                f2 = bndfun + const
                 tol = 3e1 * eps * abs(const)
                 self.assertLessEqual(infnorm(f(xx)-f1(xx)), tol)
                 self.assertLessEqual(infnorm(f(xx)-f2(xx)), tol)
@@ -421,11 +421,11 @@ class Algebra(TestCase):
         xx = subdomain(self.yy)
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
                 f = lambda x: const - fun(x)
                 g = lambda x: fun(x) - const
-                ff = const - boundedfun
-                gg = boundedfun - const
+                ff = const - bndfun
+                gg = bndfun - const
                 tol = 5e1 * eps * abs(const)
                 self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
                 self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
@@ -441,19 +441,50 @@ class Algebra(TestCase):
 
     # check the output of constant * Bndfun
     #                 and Bndfun * constant
-    def test__rmul__constant(self):
+    def test__mul__rmul__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
                 f = lambda x: const * fun(x)
                 g = lambda x: fun(x) * const
-                ff = const * boundedfun
-                gg = boundedfun * const
+                ff = const * bndfun
+                gg = bndfun * const
                 tol = 4e1 * eps * abs(const)
                 self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
                 self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
+
+    # check (empty Bndfun) / (Bndfun) = (empty Bndfun)
+    #   and (Bndfun) / (empty Bndfun) = (empty Bndfun)
+    def test__div__rdiv__empty(self):
+        subdomain = Interval(-2,3)
+        for (fun, funlen, _) in testfunctions:
+            bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+            self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
+            self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
+            # __truediv__
+            self.assertTrue((self.emptyfun/bndfun).isempty)
+            self.assertTrue((bndfun/self.emptyfun).isempty)
+
+    # check the output of constant / Bndfun
+    #                 and Bndfun / constant
+    def test__div__rdiv__constant(self):
+        subdomain = Interval(-.5,.9)
+        xx = subdomain(self.yy)
+        for (fun, funlen, hasRoots) in testfunctions:
+            for const in (-1, 1, 10, -1e5):
+                hscl = abs(subdomain.values).max()
+                tol = hscl * eps * abs(const)
+                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                g = lambda x: fun(x) / const
+                gg = bndfun / const
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), 3*gg.size*tol)
+                # don't do the following test for functions with roots
+                if not hasRoots:
+                    f = lambda x: const / fun(x)
+                    ff = const / bndfun
+                    self.assertLessEqual(infnorm(f(xx)-ff(xx)), 2*ff.size*tol)
 
     # check    +(empty Bndfun) = (empty Bndfun)
     def test__pos__empty(self):
