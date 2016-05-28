@@ -488,7 +488,7 @@ class Algebra(TestCase):
 
     # check the output of constant * Chebtech
     #                 and Chebtech * constant
-    def test__rmul__constant(self):
+    def test__mul__rmul__constant(self):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
