@@ -2,16 +2,18 @@
 """
 Unit-tests for pyfun/core/chebtech.py
 """
+
 from __future__ import division
 
-from itertools import combinations
-from unittest import TestCase
-
 from operator import __add__
-from operator import __sub__
-from operator import __pos__
-from operator import __neg__
+from operator import __div__
 from operator import __mul__
+from operator import __neg__
+from operator import __pos__
+from operator import __sub__
+
+from unittest import TestCase
+from itertools import combinations
 
 from numpy import all
 from numpy import arange
@@ -410,7 +412,7 @@ def fixedlenTester(fun, n):
         self.assertEquals(ff.size, n)
     return tester
 
-for (fun, funlen) in testfunctions:
+for (fun, funlen, _) in testfunctions:
 
     # add the adaptive tests
     _testfun_ = adaptiveTester(fun, funlen)
@@ -434,7 +436,7 @@ class Algebra(TestCase):
     # check (empty Chebtech) + (Chebtech) = (empty Chebtech)
     #   and (Chebtech) + (empty Chebtech) = (empty Chebtech)
     def test__add__radd__empty(self):
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun+chebtech).isempty)
             self.assertTrue((chebtech+self.emptyfun).isempty)
@@ -443,7 +445,7 @@ class Algebra(TestCase):
     #                 and (Chebtech + constant)
     def test__add__radd__constant(self):
         xx = self.xx
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
@@ -456,7 +458,7 @@ class Algebra(TestCase):
     # check (empty Chebtech) - (Chebtech) = (empty Chebtech)
     #   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
     def test__sub__rsub__empty(self):
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun-chebtech).isempty)
             self.assertTrue((chebtech-self.emptyfun).isempty)
@@ -465,7 +467,7 @@ class Algebra(TestCase):
     #                 and Chebtech - constant
     def test__sub__rsub__constant(self):
         xx = self.xx
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
                 f = lambda x: const - fun(x)
@@ -479,7 +481,7 @@ class Algebra(TestCase):
     # check (empty Chebtech) * (Chebtech) = (empty Chebtech)
     #   and (Chebtech) * (empty Chebtech) = (empty Chebtech)
     def test__mul__rmul__empty(self):
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun*chebtech).isempty)
             self.assertTrue((chebtech*self.emptyfun).isempty)
@@ -488,7 +490,7 @@ class Algebra(TestCase):
     #                 and Chebtech * constant
     def test__rmul__constant(self):
         xx = self.xx
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
                 f = lambda x: const * fun(x)
@@ -501,11 +503,11 @@ class Algebra(TestCase):
 
     # check    +(empty Chebtech) = (empty Chebtech)
     def test__pos__empty(self):
-        self.assertTrue( (+self.emptyfun).isempty )
+        self.assertTrue((+self.emptyfun).isempty)
 
     # check -(empty Chebtech) = (empty Chebtech)
     def test__neg__empty(self):
-        self.assertTrue( (-self.emptyfun).isempty )
+        self.assertTrue((-self.emptyfun).isempty)
 
 
 # add tests for the binary operators
@@ -515,7 +517,9 @@ def binaryOpTester(f, g, binop, nf, ng):
     FG = lambda x: binop(f(x),g(x)) 
     fg = binop(ff, gg)
     def tester(self):
-        self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), 5e1*eps)
+        vscl = max([ff.vscale, gg.vscale])
+        lscl = max([ff.size, gg.size])
+        self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), vscl*lscl*eps)
         if binop is __mul__:
             # check simplify is not being called in __mul__
             self.assertEqual(fg.size, ff.size+gg.size-1)
@@ -526,17 +530,22 @@ def binaryOpTester(f, g, binop, nf, ng):
 # test need to be added manually to the class.
 binops = (
     __add__,
-    __sub__,
+    __div__,
     __mul__,
+    __sub__,
     )
 
 for binop in binops:
-    # add the generic binary operator tests
-    for (f, nf), (g, ng) in combinations(testfunctions, 2):
-        _testfun_ = binaryOpTester(f, g, binop, nf, ng)
-        _testfun_.__name__ = \
-            "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
-        setattr(Algebra, _testfun_.__name__, _testfun_)
+    # add generic binary operator tests
+    for (f, nf, _), (g, ng, denomRoots) in combinations(testfunctions, 2):
+        if binop is __div__ and denomRoots is True:
+            # skip __div__ test if the denominator has roots
+            pass
+        else:
+            _testfun_ = binaryOpTester(f, g, binop, nf, ng)
+            _testfun_.__name__ = \
+                "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
+            setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
@@ -552,7 +561,7 @@ unaryops = (
     __neg__,
     )
 for unaryop in unaryops:
-    for (f, nf) in testfunctions:
+    for (f, nf, _) in testfunctions:
         _testfun_ = unaryOpTester(unaryop, f, nf)
         _testfun_.__name__ = \
             "test{}{}".format(unaryop.__name__, f.__name__)
@@ -575,7 +584,7 @@ def rootsTester(f, roots, tol):
     ff = Chebtech2.initfun_adaptive(f)
     rts = ff.roots()
     def tester(self):
-        self.assertLessEqual( infnorm(rts-roots), tol)
+        self.assertLessEqual(infnorm(rts-roots), tol)
     return tester
 
 rootstestfuns = (
@@ -587,6 +596,7 @@ rootstestfuns = (
     (lambda x: sin(100*pi*x), linspace(-1,1,201),                    1*eps),
     (lambda x: sin(5*pi/2*x), array([-.8, -.4, 0, .4, .8]),          1*eps)
     )
+
 for k, args in enumerate(rootstestfuns):
     _testfun_ = rootsTester(*args)
     _testfun_.__name__ = "test_roots_{}".format(k)

@@ -126,7 +126,7 @@ def evalTester(method, fun, evalpts, chebpts):
     return infNormLessThanTol(a, b, tol)
 
 for method in methods:
-    for (fun, _) in testfunctions:
+    for (fun, _, _) in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 testfun = evalTester(method, fun, xx, chebpts)

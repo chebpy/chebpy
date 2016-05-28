@@ -31,18 +31,23 @@ def infNormLessThanTol(a, b, tol):
 # test functions
 testfunctions = []
 fun_details = [
-    # (function, name for the test printouts, Matlab chebfun adaptive degree on [-1,1])
-    (lambda x: x**3 + x**2 + x + 1, "poly3(x)",  4),
-    (lambda x: exp(x),              "exp(x)",   15),
-    (lambda x: sin(x),              "sin(x)",   14),
-    (lambda x: cos(20*x),           "cos(20x)", 51),
-    (lambda x: 0.*x+1.,             "constfun",  1),
-    (lambda x: 0.*x,                "zerofun",   1),
+    # (
+    #  function,
+    #  name for the test printouts,
+    #  Matlab chebfun adaptive degree on [-1,1],
+    #  Any roots in [-1,1]?
+    # )
+    (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)",    4, False),
+    (lambda x: exp(x),                "exp(x)",     15, False),
+    (lambda x: sin(x+1.2),            "sin(x+1.2)", 15, False),
+    (lambda x: cos(20*x),             "cos(20x)",   51, True),
+    (lambda x: 0.*x+1.,               "constfun",    1, False),
+    (lambda x: 0.*x,                  "zerofun",     1, True),
 ]
-for k, item in enumerate(fun_details):
-    fun = item[0]
-    fun.__name__ = item[1]
-    testfunctions.append((fun, item[2]))
+for k, items in enumerate(fun_details):
+    fun = items[0]
+    fun.__name__ = items[1]
+    testfunctions.append((fun, items[2], items[3]))
 
 # TODO: check these lengths against Chebfun
 # TODO: more examples

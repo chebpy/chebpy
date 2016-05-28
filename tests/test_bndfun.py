@@ -387,7 +387,7 @@ class Algebra(TestCase):
     #   and (Bndfun) + (empty Bndfun) = (empty Bndfun)
     def test__add__radd__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun+chebtech).isempty)
             self.assertTrue((chebtech+self.emptyfun).isempty)
@@ -397,7 +397,7 @@ class Algebra(TestCase):
     def test__add__radd__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
                 boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
@@ -411,7 +411,7 @@ class Algebra(TestCase):
     #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
     def test__sub__rsub__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun-chebtech).isempty)
             self.assertTrue((chebtech-self.emptyfun).isempty)
@@ -421,7 +421,7 @@ class Algebra(TestCase):
     def test__sub__rsub__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
                 f = lambda x: const - fun(x)
@@ -436,7 +436,7 @@ class Algebra(TestCase):
     #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
     def test__mul__rmul__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
             self.assertTrue((self.emptyfun*chebtech).isempty)
             self.assertTrue((chebtech*self.emptyfun).isempty)
@@ -446,7 +446,7 @@ class Algebra(TestCase):
     def test__rmul__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen) in testfunctions:
+        for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 boundedfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
                 f = lambda x: const * fun(x)
@@ -489,7 +489,7 @@ def binaryOpTester(f, g, subdomain, binop):
 
 for binop in binops:
     # add the generic binary operator tests
-    for (f, _), (g, _) in combinations(testfunctions, 2):
+    for (f, _, _), (g, _, _) in combinations(testfunctions, 2):
         subdomain = Interval(-.5,.9)
         _testfun_ = binaryOpTester(f, g, subdomain, binop)
         _testfun_.__name__ = \
@@ -512,7 +512,7 @@ def unaryOpTester(unaryop, f, subdomain):
     return tester
 
 for unaryop in unaryops:
-    for (f, _) in testfunctions:
+    for (f, _, _) in testfunctions:
         subdomain = Interval(-.5,.9)
         _testfun_ = unaryOpTester(unaryop, f, subdomain)
         _testfun_.__name__ = \
