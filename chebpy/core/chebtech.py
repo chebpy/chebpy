@@ -198,7 +198,7 @@ class Chebtech(Smoothfun):
                 f = f.prolong(n)
             cfs = f.coeffs + g.coeffs
 
-            # check for zero output (merge this into simplify?)
+            # check for zero output
             tol = .2 * eps * max([f.vscale, g.vscale])
             if all(abs(cfs)<tol):
                 return cls.initconst(0.)
@@ -237,7 +237,7 @@ class Chebtech(Smoothfun):
             f = f.prolong(n)
             g = g.prolong(n)
             cfs = coeffmult(f.coeffs, g.coeffs)
-            out = cls(cfs).simplify()
+            out = cls(cfs)
             return out
 
     def __neg__(self):

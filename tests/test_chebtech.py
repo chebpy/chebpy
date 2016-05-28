@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Unit-tests for pyfun/chebtech.py
+Unit-tests for pyfun/core/chebtech.py
 """
 from __future__ import division
 
@@ -13,15 +13,15 @@ from operator import __pos__
 from operator import __neg__
 from operator import __mul__
 
+from numpy import all
 from numpy import arange
 from numpy import array
-from numpy import sin
 from numpy import cos
-from numpy import exp
-from numpy import pi
-from numpy import all
 from numpy import diff
+from numpy import exp
 from numpy import linspace
+from numpy import pi
+from numpy import sin
 from numpy.random import rand
 from numpy.random import seed
 
@@ -516,6 +516,9 @@ def binaryOpTester(f, g, binop, nf, ng):
     fg = binop(ff, gg)
     def tester(self):
         self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), 5e1*eps)
+        if binop is __mul__:
+            # check simplify is not being called in __mul__
+            self.assertEqual(fg.size, ff.size+gg.size-1)
     return tester
 
 # note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
