@@ -246,6 +246,8 @@ class Chebtech(Smoothfun):
         return self.copy()
 
     def __rdiv__(self, f):
+        # Executed when __div__(f, self) fails, which is to say whenever f
+        # is not a Chebtech. We proceeed on the assumption f is a scalar.
         constfun = lambda x: .0*x + f
         quotient = lambda x: constfun(x) / self(x)
         return self.__class__.initfun_adaptive(quotient)
