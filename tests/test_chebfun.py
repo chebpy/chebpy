@@ -10,15 +10,15 @@ from operator import __neg__
 from operator import __pos__
 from operator import __sub__
 
-from itertools import combinations
 from unittest import TestCase
+from itertools import combinations
 
 from numpy import ndarray
 from numpy import array
 from numpy import arange
+from numpy import append
 from numpy import exp
 from numpy import sin
-from numpy import log
 from numpy import cos
 from numpy import sum
 from numpy import abs
@@ -42,6 +42,7 @@ from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
 
 from utilities import infnorm
+from utilities import testfunctions
 
 eps = DefaultPrefs.eps
 
@@ -251,7 +252,7 @@ class Algebra(TestCase):
     # check (empty Chebfun) + (Chebfun) = (empty Chebfun)
     #   and (Chebfun) + (empty Chebfun) = (empty Chebfun)
     def test__add__radd__empty(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
@@ -261,7 +262,7 @@ class Algebra(TestCase):
     # check the output of (constant + Chebfun)
     #                 and (Chebfun + constant)
     def test__add__radd__constant(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
@@ -270,14 +271,17 @@ class Algebra(TestCase):
                     g = lambda x: c + f(x)
                     gg1 = c + ff
                     gg2 = ff + c
-                    tol = 5e1 * eps * abs(c)
+                    vscl = ff.vscale
+                    hscl = ff.hscale
+                    lscl = max([fun.size for fun in ff])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
     # check (empty Chebfun) - (Chebfun) = (empty Chebfun)
     #   and (Chebfun) - (empty Chebfun) = (empty Chebfun)
     def test__sub__rsub__empty(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
@@ -287,7 +291,7 @@ class Algebra(TestCase):
     # check the output of (constant - Chebfun)
     #                 and (Chebfun - constant)
     def test__sub__rsub__constant(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
@@ -296,24 +300,27 @@ class Algebra(TestCase):
                     g = lambda x: c - f(x)
                     gg1 = c - ff
                     gg2 = ff - c
-                    tol = 5e1 * eps * abs(c)
+                    vscl = ff.vscale
+                    hscl = ff.hscale
+                    lscl = max([fun.size for fun in ff])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(-g(xx)-gg2(xx)), tol)
 
-    # check (empty Chebfun) - (Chebfun) = (empty Chebfun)
-    #   and (Chebfun) - (empty Chebfun) = (empty Chebfun)
+    # check (empty Chebfun) * (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) * (empty Chebfun) = (empty Chebfun)
     def test__mul__rmul__empty(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
                 self.assertTrue((self.emptyfun*ff).isempty)
                 self.assertTrue((ff*self.emptyfun).isempty)
 
-    # check the output of (constant - Chebfun)
-    #                 and (Chebfun - constant)
+    # check the output of (constant * Chebfun)
+    #                 and (Chebfun * constant)
     def test__mul__rmul__constant(self):
-        for f in chebfun_testfunctions:
+        for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
@@ -322,28 +329,31 @@ class Algebra(TestCase):
                     g = lambda x: c * f(x)
                     gg1 = c * ff
                     gg2 = ff * c
-                    tol = 5e1 * eps * abs(c)
+                    vscl = ff.vscale
+                    hscl = ff.hscale
+                    lscl = max([fun.size for fun in ff])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
-# fun, periodic break conditions
-testfuns = [
-    (lambda x: sin(5*x-1), "sin(5*x-1)"),
-    (lambda x: cos(2*pi*x), "cos(2*pi*x)"),
-    (lambda x: log(x+10), "log(x+10)"),
-]
-
-chebfun_testfunctions = []
-for (f, name) in testfuns:
-    f.__name__ = name
-    chebfun_testfunctions.append(f)
+## function, printed name
+#testfuns = [
+#    (lambda x: .15 + .1*sin(5*x-1), "sin(5*x-1)"),
+#    (lambda x: .5 + .4*cos(2*pi*x), "cos(2*pi*x)"),
+#    (lambda x: log(x+10), "log(x+10)"),
+#]
+#
+#chebfun_testfunctions = []
+#for (f, name) in testfuns:
+#    f.__name__ = name
+#    chebfun_testfunctions.append(f)
 
 # domain, test_tolerance
 chebfun_testdomains = [
-    ([-1,1], 2e1*eps),
-    ([-2,1], 2e1*eps),
-    ([-1,2], 2e1*eps),
-    ([-5,9], 2e2*eps),
+    ([-1,1], 2*eps),
+    ([-2,1], eps),
+    ([-1,2], eps),
+    ([-5,9], 35*eps),
 ]
 
 
@@ -354,13 +364,16 @@ def binaryOpTester(f, g, binop, dom, tol):
     n, m = 3, 8
     ff = Chebfun.initfun_adaptive(f, linspace(a,b,n+1))
     gg = Chebfun.initfun_adaptive(g, linspace(a,b,m+1))
-    FG = lambda x: binop(f(x),g(x))
+    FG = lambda x: binop(f(x), g(x))
     fg = binop(ff, gg)
     def tester(self):
+        vscl = max([ff.vscale, gg.vscale])
+        hscl = max([ff.hscale, gg.hscale])
+        lscl = max([fun.size for fun in append(ff.funs, gg.funs)])
         self.assertEqual(ff.funs.size, n)
         self.assertEqual(gg.funs.size, m)
         self.assertEqual(fg.funs.size, n+m-1)
-        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), tol)
+        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), vscl*hscl*lscl*tol)
     return tester
 
 
@@ -371,7 +384,7 @@ binops = (
     )
 
 for binop in binops:
-    for f, g in combinations(chebfun_testfunctions, 2):
+    for (f, _, _), (g, _, _) in combinations(testfunctions, 2):
         for dom, tol in chebfun_testdomains:
             _testfun_ = binaryOpTester(f, g, binop, dom, tol)
             _testfun_.__name__ = \
@@ -388,8 +401,11 @@ def unaryOpTester(f, unaryop, dom, tol):
     GG = lambda x: unaryop(f(x))
     gg = unaryop(ff)
     def tester(self):
-        self.assertEqual(ff.funs.size, ff.funs.size)
-        self.assertLessEqual(infnorm(gg(xx)-GG(xx)), tol)
+        vscl = ff.vscale
+        hscl = ff.hscale
+        lscl = max([fun.size for fun in ff])
+        self.assertEqual(ff.funs.size, gg.funs.size)
+        self.assertLessEqual(infnorm(gg(xx)-GG(xx)), vscl*hscl*lscl*tol)
     return tester
 
 unaryops = (
@@ -398,7 +414,7 @@ unaryops = (
     )
 
 for unaryop in unaryops:
-    for f in chebfun_testfunctions:
+    for (f, _, _) in testfunctions:
         for dom, tol in chebfun_testdomains:
             _testfun_ = unaryOpTester(f, unaryop, dom, tol)
             _testfun_.__name__ = \
@@ -614,37 +630,6 @@ class PrivateMethods(TestCase):
         self.assertRaises(DomainBreakpoints, self.f1._Chebfun__break, dom1)
         self.assertRaises(DomainBreakpoints, self.f2._Chebfun__break, dom2)
 
-# ------------------------------------------------------------------------
-# Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
-# ------------------------------------------------------------------------
-#def vals2coeffs2valsTester(n):
-#    def asserter(self):
-#        values = rand(n)
-#        coeffs = _vals2coeffs(values)
-#        _values_ = _coeffs2vals(coeffs)
-#        self.assertLessEqual( infnorm(values-_values_), scaled_tol(n) )
-#    return asserter
-#
-#def coeffs2vals2coeffsTester(n):
-#    def asserter(self):
-#        coeffs = rand(n)
-#        values = _coeffs2vals(coeffs)
-#        _coeffs_ = _vals2coeffs(values)
-#        self.assertLessEqual( infnorm(coeffs-_coeffs_), scaled_tol(n) )
-#    return asserter
-#
-#for k, n in enumerate(2**arange(2,18,2)+1):
-#
-#    # vals2coeffs2vals
-#    _testfun_ = vals2coeffs2valsTester(n)
-#    _testfun_.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
-#    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
-#
-#    # coeffs2vals2coeffs
-#    _testfun_ = coeffs2vals2coeffsTester(n)
-#    _testfun_.__name__ = "test_coeffs2vals2coeffs_{:02}".format(k)
-#    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
-# ------------------------------------------------------------------------
 
 # reset the testsfun variable so it doesn't get picked up by nose
 _testfun_ = None
