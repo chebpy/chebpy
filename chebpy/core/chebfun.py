@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 from itertools import izip
 
 from operator import __add__
+from operator import __div__
 from operator import __mul__
 from operator import __sub__
 
@@ -109,6 +112,9 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
+    def __div__(self, f):
+        return self.__apply_binop(f, __div__)
+
     def __mul__(self, f):
         return self.__apply_binop(f, __mul__)
 
@@ -119,6 +125,17 @@ class Chebfun(object):
         return self.__class__([+fun for fun in self])
 
     __radd__ = __add__
+
+    def __rdiv__(self, c):
+        # Executed when __div__(f, self) fails, which is to say whenever c
+        # is not a Chebfun. We proceeed on the assumption f is a scalar.
+        constfun = lambda x: .0*x + c
+        newfuns = []
+        for fun in self:
+            quotnt = lambda x: constfun(x) / fun(x)
+            newfun = fun.initfun_adaptive(quotnt, fun.interval)
+            newfuns.append(newfun)
+        return self.__class__(newfuns)
 
     @self_empty("chebfun<empty>")
     def __repr__(self):
@@ -142,6 +159,7 @@ class Chebfun(object):
         return header + toprow + rowdta + btmrow + btmxtr
 
     __rmul__ = __mul__
+    __rtruediv__ = __rdiv__
 
     def __rsub__(self, f):
         return -(self-f)
@@ -154,6 +172,8 @@ class Chebfun(object):
 
     def __sub__(self, f):
         return self.__apply_binop(f, __sub__)
+
+    __truediv__ = __div__
 
     # -------------------
     #  "private" methods
