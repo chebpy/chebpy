@@ -385,8 +385,8 @@ class Algebra(TestCase):
     #   and (Bndfun) + (empty Bndfun) = (empty Bndfun)
     def test__add__radd__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen, _) in testfunctions:
-            chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+        for (fun, _, _) in testfunctions:
+            chebtech = Bndfun.initfun_adaptive(fun, subdomain)
             self.assertTrue((self.emptyfun+chebtech).isempty)
             self.assertTrue((chebtech+self.emptyfun).isempty)
 
@@ -395,10 +395,10 @@ class Algebra(TestCase):
     def test__add__radd__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen, _) in testfunctions:
+        for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 f = lambda x: const + fun(x)
-                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_adaptive(fun, subdomain)
                 f1 = const + bndfun
                 f2 = bndfun + const
                 tol = 3e1 * eps * abs(const)
@@ -409,8 +409,8 @@ class Algebra(TestCase):
     #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
     def test__sub__rsub__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen, _) in testfunctions:
-            chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+        for (fun, _, _) in testfunctions:
+            chebtech = Bndfun.initfun_adaptive(fun, subdomain)
             self.assertTrue((self.emptyfun-chebtech).isempty)
             self.assertTrue((chebtech-self.emptyfun).isempty)
 
@@ -419,9 +419,9 @@ class Algebra(TestCase):
     def test__sub__rsub__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen, _) in testfunctions:
+        for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_adaptive(fun, subdomain)
                 f = lambda x: const - fun(x)
                 g = lambda x: fun(x) - const
                 ff = const - bndfun
@@ -434,8 +434,8 @@ class Algebra(TestCase):
     #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
     def test__mul__rmul__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen, _) in testfunctions:
-            chebtech = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+        for (fun, _, _) in testfunctions:
+            chebtech = Bndfun.initfun_adaptive(fun, subdomain)
             self.assertTrue((self.emptyfun*chebtech).isempty)
             self.assertTrue((chebtech*self.emptyfun).isempty)
 
@@ -444,9 +444,9 @@ class Algebra(TestCase):
     def test__mul__rmul__constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
-        for (fun, funlen, _) in testfunctions:
+        for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_adaptive(fun, subdomain)
                 f = lambda x: const * fun(x)
                 g = lambda x: fun(x) * const
                 ff = const * bndfun
@@ -459,8 +459,8 @@ class Algebra(TestCase):
     #   and (Bndfun) / (empty Bndfun) = (empty Bndfun)
     def test__div__rdiv__empty(self):
         subdomain = Interval(-2,3)
-        for (fun, funlen, _) in testfunctions:
-            bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+        for (fun, _, _) in testfunctions:
+            bndfun = Bndfun.initfun_adaptive(fun, subdomain)
             self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
             self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
             # __truediv__
@@ -476,7 +476,7 @@ class Algebra(TestCase):
             for const in (-1, 1, 10, -1e5):
                 hscl = abs(subdomain.values).max()
                 tol = hscl * eps * abs(const)
-                bndfun = Bndfun.initfun_fixedlen(fun, subdomain, funlen)
+                bndfun = Bndfun.initfun_adaptive(fun, subdomain)
                 g = lambda x: fun(x) / const
                 gg = bndfun / const
                 self.assertLessEqual(infnorm(g(xx)-gg(xx)), 3*gg.size*tol)
