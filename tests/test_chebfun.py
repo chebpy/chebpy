@@ -5,6 +5,7 @@ Unit-tests for pyfun/core/chebfun.py
 from __future__ import division
 
 from operator import __add__
+from operator import __div__
 from operator import __mul__
 from operator import __neg__
 from operator import __pos__
@@ -336,17 +337,6 @@ class Algebra(TestCase):
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
 
-## function, printed name
-#testfuns = [
-#    (lambda x: .15 + .1*sin(5*x-1), "sin(5*x-1)"),
-#    (lambda x: .5 + .4*cos(2*pi*x), "cos(2*pi*x)"),
-#    (lambda x: log(x+10), "log(x+10)"),
-#]
-#
-#chebfun_testfunctions = []
-#for (f, name) in testfuns:
-#    f.__name__ = name
-#    chebfun_testfunctions.append(f)
 
 # domain, test_tolerance
 chebfun_testdomains = [
@@ -355,7 +345,6 @@ chebfun_testdomains = [
     ([-1,2], eps),
     ([-5,9], 35*eps),
 ]
-
 
 # add tests for the binary operators
 def binaryOpTester(f, g, binop, dom, tol):
@@ -376,21 +365,26 @@ def binaryOpTester(f, g, binop, dom, tol):
         self.assertLessEqual(infnorm(fg(xx)-FG(xx)), vscl*hscl*lscl*tol)
     return tester
 
-
 binops = (
     __add__,
-    __sub__,
+    __div__,
     __mul__,
+    __sub__,
     )
 
 for binop in binops:
-    for (f, _, _), (g, _, _) in combinations(testfunctions, 2):
+    for (f, _, _), (g, _, denomHasRoots) in combinations(testfunctions, 2):
         for dom, tol in chebfun_testdomains:
-            _testfun_ = binaryOpTester(f, g, binop, dom, tol)
-            _testfun_.__name__ = \
-                "test{}{}_{}_[{:.0f},..,{:.0f}]".format(
-                    binop.__name__, f.__name__,  g.__name__, dom[0], dom[1])
-            setattr(Algebra, _testfun_.__name__, _testfun_)
+            if binop is __div__ and denomHasRoots:
+                # skip __div__ test if denominator has roots on the real line
+                pass
+            else:
+                _testfun_ = binaryOpTester(f, g, binop, dom, 2*tol)
+                a, b = dom
+                _testfun_.__name__ = \
+                    "test{}{}_{}_[{:.0f},..,{:.0f}]".format(
+                        binop.__name__, f.__name__,  g.__name__, a, b)
+                setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
 # add tests for the unary operators
@@ -499,7 +493,7 @@ class Calculus(TestCase):
     def test_sum(self):
         self.assertLessEqual(abs(self.f1.sum()-0.372895407327895),2*eps)
         self.assertLessEqual(abs(self.f2.sum()-0.382270459230604),2*eps)
-        self.assertLessEqual(abs(self.f3.sum()--0.008223712363936),2*eps)
+        self.assertLessEqual(abs(self.f3.sum()-(-0.008223712363936)),2*eps)
         self.assertLessEqual(abs(self.f4.sum()-0.372895407327895),2*eps)
 
     def test_diff(self):
