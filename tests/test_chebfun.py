@@ -256,7 +256,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
                 self.assertTrue((self.emptyfun+ff).isempty)
                 self.assertTrue((ff+self.emptyfun).isempty)
 
@@ -266,9 +266,9 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
-                    a,b = dom
-                    xx = linspace(a,b,1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    a, b = dom
+                    xx = linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
                     g = lambda x: c + f(x)
                     gg1 = c + ff
                     gg2 = ff + c
@@ -285,7 +285,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
                 self.assertTrue((self.emptyfun-ff).isempty)
                 self.assertTrue((ff-self.emptyfun).isempty)
 
@@ -295,9 +295,9 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
-                    a,b = dom
-                    xx = linspace(a,b,1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    a, b = dom
+                    xx = linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
                     g = lambda x: c - f(x)
                     gg1 = c - ff
                     gg2 = ff - c
@@ -314,7 +314,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
                 self.assertTrue((self.emptyfun*ff).isempty)
                 self.assertTrue((ff*self.emptyfun).isempty)
 
@@ -325,8 +325,8 @@ class Algebra(TestCase):
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
-                    xx = linspace(a,b,1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a,b,11))
+                    xx = linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
                     g = lambda x: c * f(x)
                     gg1 = c * ff
                     gg2 = ff * c
@@ -336,6 +336,42 @@ class Algebra(TestCase):
                     tol = 2*abs(c)*vscl*hscl*lscl*eps
                     self.assertLessEqual(infnorm(g(xx)-gg1(xx)), tol)
                     self.assertLessEqual(infnorm(g(xx)-gg2(xx)), tol)
+
+    # check (empty Chebfun) / (Chebfun) = (empty Chebfun)
+    #   and (Chebfun) / (empty Chebfun) = (empty Chebfun)
+    def test__div__rdiv__empty(self):
+        for (f, _, _) in testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
+                self.assertTrue((self.emptyfun/ff).isempty)
+                self.assertTrue((ff/self.emptyfun).isempty)
+
+    # check the output of (constant / Chebfun)
+    #                 and (Chebfun / constant)
+    def test__div__rdiv__constant(self):
+        for (f, _, hasRoots) in testfunctions:
+            for c in (-1, 1, 10, -1e5):
+                for dom, _ in chebfun_testdomains:
+                    a,b = dom
+                    xx = linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
+                    g = lambda x: f(x) / c
+                    gg = ff / c
+                    vscl = gg.vscale
+                    hscl = gg.hscale
+                    lscl = max([fun.size for fun in gg])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
+                    self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
+                    # don't do the following test for functions with roots
+                    if not hasRoots:
+                        h = lambda x: c / f(x)
+                        hh = c / ff
+                        vscl = hh.vscale
+                        hscl = hh.hscale
+                        lscl = max([fun.size for fun in hh])
+                        tol = 2*abs(c)*vscl*hscl*lscl*eps
+                        self.assertLessEqual(infnorm(h(xx)-hh(xx)), tol)
 
 
 # domain, test_tolerance
