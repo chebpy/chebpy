@@ -626,7 +626,7 @@ for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params.iteritems():
     interval = Interval(*intvl)
     _testfun_ = ufuncTester(ufunc, f, interval, tol)
     _testfun_.__name__ = \
-        "test_{}_{}_[{:.1f},{:.1f}]".format(
+        "test_ufunc_{}_{}_[{:.1f},{:.1f}]".format(
         ufunc.__name__, f.__name__, *intvl)
     setattr(Algebra, _testfun_.__name__, _testfun_)
 

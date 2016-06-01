@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-tests for pyfun/core/chebfun.py
-"""
+
+"""Unit-tests for pyfun/core/chebfun.py"""
+
 from __future__ import division
 
 from operator import __add__
@@ -13,14 +13,32 @@ from operator import __sub__
 
 from unittest import TestCase
 from itertools import combinations
+from collections import OrderedDict
 
+from numpy import arccos
+from numpy import arccosh
+from numpy import arcsin
+from numpy import arcsinh
+from numpy import arctan
+from numpy import arctanh
+from numpy import cos
+from numpy import cosh
+from numpy import exp
+from numpy import exp2
+from numpy import expm1
+from numpy import sin
+from numpy import sinh
+from numpy import tan
+from numpy import tanh
+from numpy import log
+from numpy import log2
+from numpy import log10
+from numpy import log1p
+from numpy import sqrt
 from numpy import ndarray
 from numpy import array
 from numpy import arange
 from numpy import append
-from numpy import exp
-from numpy import sin
-from numpy import cos
 from numpy import sum
 from numpy import abs
 from numpy import pi
@@ -28,6 +46,7 @@ from numpy import linspace
 from numpy import equal
 from numpy import isscalar
 from numpy import isfinite
+from numpy.random import rand
 
 from matplotlib.pyplot import subplots
 
@@ -241,6 +260,7 @@ class Algebra(TestCase):
 
     def setUp(self):
         self.emptyfun = Chebfun.initempty()
+        self.yy = -1 + 2*rand(1000)
 
     # check  +(empty Chebfun) = (empty Chebfun)
     def test__pos__empty(self):
@@ -451,6 +471,60 @@ for unaryop in unaryops:
                 "test{}{}_[{:.0f},..,{:.0f}]".format(
                     unaryop.__name__, f.__name__, dom[0], dom[1])
             setattr(Algebra, _testfun_.__name__, _testfun_)
+
+
+# TODO: Add more test cases, including empty cases
+# add ufunc tests:
+#     (ufunc, [([fun1, interval1], tol1), ([fun2, interval2], tol2), ... ])
+
+uf1 = lambda x: x
+uf1.__name__ = "x"
+
+ufunc_test_params = OrderedDict(
+    [
+        (arccos,  [([uf1, (-.8,.8)],  eps), ]),
+        (arccosh, [([uf1, (2,3)    ], eps), ]),
+        (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
+        (arcsinh, [([uf1, (2,3)    ], eps), ]),
+        (arctan,  [([uf1, (-.8,.8)],  eps), ]),
+        (arctanh, [([uf1, (-.8,.8)],  eps), ]),
+        (cos,     [([uf1, (-3,3)   ], eps), ]),
+        (cosh,    [([uf1, (-3,3)   ], eps), ]),
+        (exp,     [([uf1, (-3,3)   ], eps), ]),
+        (exp2,    [([uf1, (-3,3)   ], eps), ]),
+        (expm1,   [([uf1, (-3,3)   ], eps), ]),
+        (log,     [([uf1, (2,3)    ], eps), ]),
+        (log2,    [([uf1, (2,3)    ], eps), ]),
+        (log10,   [([uf1, (2,3)    ], eps), ]),
+        (log1p,   [([uf1, (-.8,.8)],  eps), ]),
+        (sinh,    [([uf1, (-3,3)   ], eps), ]),
+        (sin,     [([uf1, (-3,3)   ], eps), ]),
+        (tan,     [([uf1, (-.8,.8)],  eps), ]),
+        (tanh,    [([uf1, (-3,3)   ], eps), ]),
+        (sqrt,    [([uf1, (2,3)    ], eps), ]),
+    ]
+)
+
+def ufuncTester(ufunc, f, interval, tol):
+    a,b = interval.values
+    ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+    gg = lambda x: ufunc(f(x))
+    GG = ufunc(ff)
+    def tester(self):
+        xx = interval(self.yy)
+        vscl = GG.vscale
+        lscl = sum([fun.size for fun in GG])
+        self.assertLessEqual(infnorm(gg(xx)-GG(xx)), vscl*lscl*tol)
+    return tester
+
+for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params.iteritems():
+    interval = Interval(*intvl)
+    _testfun_ = ufuncTester(ufunc, f, interval, tol)
+    _testfun_.__name__ = \
+        "test_ufunc_{}_{}_[{:.1f},..,{:.1f}]".format(
+        ufunc.__name__, f.__name__, *intvl)
+    setattr(Algebra, _testfun_.__name__, _testfun_)
+
 
 class Evaluation(TestCase):
 
