@@ -9,6 +9,27 @@ from operator import __div__
 from operator import __mul__
 from operator import __sub__
 
+from numpy import arccos
+from numpy import arccosh
+from numpy import arcsin
+from numpy import arcsinh
+from numpy import arctan
+from numpy import arctanh
+from numpy import cos
+from numpy import cosh
+from numpy import exp
+from numpy import exp2
+from numpy import expm1
+from numpy import sin
+from numpy import sinh
+from numpy import tan
+from numpy import tanh
+from numpy import log
+from numpy import log2
+from numpy import log10
+from numpy import log1p
+from numpy import sqrt
+
 from numpy import array
 from numpy import append
 from numpy import concatenate
@@ -332,3 +353,22 @@ class Chebfun(object):
         for fun in self:
             fun.plotcoeffs(ax=ax)
         return ax
+
+# -----------------------
+#  numpy unary functions
+# -----------------------
+def addUfunc(op):
+    def method(self):
+        return self.__class__([op(fun) for fun in self])
+    name = op.__name__
+    method.__name__ = name
+    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    setattr(Chebfun, name, method)
+
+ufuncs = (
+    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
+    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
+)
+
+for op in ufuncs:
+    addUfunc(op)
