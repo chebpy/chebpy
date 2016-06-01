@@ -7,6 +7,26 @@ from __future__ import division
 
 from abc import ABCMeta
 
+from numpy import arccos
+from numpy import arccosh
+from numpy import arcsin
+from numpy import arcsinh
+from numpy import arctan
+from numpy import arctanh
+from numpy import cos
+from numpy import cosh
+from numpy import exp
+from numpy import exp2
+from numpy import expm1
+from numpy import sin
+from numpy import sinh
+from numpy import tan
+from numpy import tanh
+from numpy import log
+from numpy import log2
+from numpy import log10
+from numpy import log1p
+from numpy import sqrt
 from numpy import linspace
 
 from matplotlib.pyplot import gca
@@ -19,6 +39,7 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import self_empty
 from chebpy.core.exceptions import IntervalMismatch
 from chebpy.core.exceptions import NotSubinterval
+
 
 Techs = {
     "Chebtech2": Chebtech2,
@@ -261,3 +282,26 @@ def addBinaryOp(methodname):
 
 for methodname in methods_onefun_binary:
     addBinaryOp(methodname)
+
+
+# -----------------------
+#  numpy unary functions
+# -----------------------
+
+def addUfunc(op):
+    def method(self):
+        cls = self.__class__
+        fun = lambda x: op(self(x))
+        return cls.initfun_adaptive(fun, self.interval)
+    name = op.__name__
+    method.__name__ = name
+    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    setattr(Classicfun, name, method)
+
+ufuncs = (
+    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
+    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
+)
+
+for op in ufuncs:
+    addUfunc(op)
