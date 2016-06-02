@@ -66,6 +66,18 @@ class Chebfun(object):
         return cls(array([]))
 
     @classmethod
+    def initconst(cls, c, domain):
+        domain = array(domain)
+        if domain.size < 2:
+            raise BadDomainArgument
+        funs = array([])
+        for interval in zip(domain[:-1], domain[1:]):
+            interval = Interval(*interval)
+            fun = Bndfun.initconst(c, interval)
+            funs = append(funs, fun)
+        return cls(funs)
+
+    @classmethod
     def initfun_adaptive(cls, f, domain):
         domain = array(domain)
         if domain.size < 2:
