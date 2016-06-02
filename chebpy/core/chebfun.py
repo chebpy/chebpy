@@ -281,6 +281,12 @@ class Chebfun(object):
         return abs(self.support).max()
 
     @property
+    @self_empty(False)
+    def isconst(self):
+        c = self.funs[0].coeffs[0]
+        return all(fun.isconst and fun.coeffs[0]==c for fun in self)
+
+    @property
     def isempty(self):
         return self.funs.size == 0
 
@@ -295,9 +301,6 @@ class Chebfun(object):
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
-    # -------------
-    #  rootfinding
-    # -------------
     @self_empty(array([]))
     def roots(self):
         allrts = []
