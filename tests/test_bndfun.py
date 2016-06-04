@@ -579,6 +579,11 @@ for unaryop in unaryops:
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
+class Ufuncs(TestCase):
+    """Unit-tests for Bndfun numpy ufunc overloads"""
+    def setUp(self):
+        self.yy = -1 + 2 * rand(1000)
+
 # TODO: Add more test cases
 # add ufunc tests:
 #     (ufunc, [([fun1, interval1], tol1), ([fun2, interval2], tol2), ... ])
@@ -626,9 +631,9 @@ for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params.iteritems():
     interval = Interval(*intvl)
     _testfun_ = ufuncTester(ufunc, f, interval, tol)
     _testfun_.__name__ = \
-        "test_ufunc_{}_{}_[{:.1f},{:.1f}]".format(
+        "test_{}_{}_[{:.1f},{:.1f}]".format(
         ufunc.__name__, f.__name__, *intvl)
-    setattr(Algebra, _testfun_.__name__, _testfun_)
+    setattr(Ufuncs, _testfun_.__name__, _testfun_)
 
 
 class Roots(TestCase):
