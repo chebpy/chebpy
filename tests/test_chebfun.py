@@ -98,6 +98,16 @@ class Construction(TestCase):
         emptyfun = Chebfun.initempty()
         self.assertEqual(emptyfun.funs.size, 0)
 
+    def test__initconst(self):
+        self.assertTrue(Chebfun.initconst(1, [-1,1]).isconst)
+        self.assertTrue(Chebfun.initconst(-10, linspace(-1,1,11)).isconst)
+        self.assertTrue(Chebfun.initconst(3, [-2,0,1]).isconst)
+        self.assertTrue(Chebfun.initconst(3.14, linspace(-100,-90,11)).isconst)
+        self.assertFalse(Chebfun([self.fun0]).isconst)
+        self.assertFalse(Chebfun([self.fun1]).isconst)
+        self.assertFalse(Chebfun([self.fun2]).isconst)
+        self.assertFalse(Chebfun([self.fun0, self.fun1]).isconst)
+
     def test_initfun_adaptive_continuous_domain(self):
         ff = Chebfun.initfun_adaptive(self.f, [-2,-1])
         self.assertEqual(ff.funs.size, 1)
