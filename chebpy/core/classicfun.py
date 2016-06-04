@@ -289,6 +289,7 @@ for methodname in methods_onefun_binary:
 # -----------------------
 
 def addUfunc(op):
+    @self_empty()
     def method(self):
         cls = self.__class__
         fun = lambda x: op(self(x))

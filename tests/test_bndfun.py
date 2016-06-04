@@ -583,6 +583,24 @@ class Ufuncs(TestCase):
     """Unit-tests for Bndfun numpy ufunc overloads"""
     def setUp(self):
         self.yy = -1 + 2 * rand(1000)
+        self.emptyfun = Bndfun.initempty()
+
+
+ufuncs = (
+    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
+    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
+)
+
+# empty-case tests
+def ufuncEmptyCaseTester(ufunc):
+    def tester(self):
+        self.assertTrue(ufunc(self.emptyfun).isempty)
+    return tester
+
+for ufunc in ufuncs:
+    _testfun_ = ufuncEmptyCaseTester(ufunc)
+    _testfun_.__name__ = "test_emptycase_{}".format(ufunc.__name__)
+    setattr(Ufuncs, _testfun_.__name__, _testfun_)
 
 # TODO: Add more test cases
 # add ufunc tests:
