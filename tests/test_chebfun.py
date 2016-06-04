@@ -94,7 +94,7 @@ class Construction(TestCase):
         self.assertRaises(IntervalGap, Chebfun, self.funs_c)
         self.assertRaises(IntervalGap, Chebfun, self.funs_d)
 
-    def test__init__empty(self):
+    def test__initempty(self):
         emptyfun = Chebfun.initempty()
         self.assertEqual(emptyfun.funs.size, 0)
 
@@ -210,6 +210,16 @@ class Properties(TestCase):
     def test_isempty(self):
         self.assertTrue(self.f0.isempty)
         self.assertFalse(self.f1.isempty)
+        self.assertFalse(self.f2.isempty)
+
+    def test_isconst(self):
+        self.assertFalse(self.f0.isconst)
+        self.assertFalse(self.f1.isconst)
+        self.assertFalse(self.f2.isconst)
+        c1 = Chebfun.initfun_fixedlen(lambda x: 0*x+3, [-2,-1,0,1,2,3], 1)
+        c2 = Chebfun.initfun_fixedlen(lambda x: 0*x-1, [-2,3], 1)
+        self.assertTrue(c1.isconst)
+        self.assertTrue(c2.isconst)
 
     def test_support(self):
         self.assertIsInstance(self.f0.support, ndarray)
