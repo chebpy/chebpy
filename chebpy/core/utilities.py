@@ -83,19 +83,25 @@ class Domain(object):
             if any(diff(breakpoints)<=0):
                 raise InvalidDomain
         except:
-            # raised if, for example, we don't have an array of numbers
+            # raised if, for example, an array of numeric types is not provided
             raise InvalidDomain
         self.breakpoints = breakpoints
 
     def __iter__(self):
-        """Iterate across adajacent pairs of breakpoints"""
-        # TODO: is there more pythonic way of doing this?
-        return zip(self.breakpoints[:-1], self.breakpoints[1:]).__iter__()
+        """Iterate over breakpoints"""
+        return self.breakpoints.__iter__()
 
     @classmethod
     def from_chebfun(cls, chebfun):
         """Initialise a Domain object from a Chebfun"""
         return cls(chebfun.breakpoints)
+
+    @property
+    def intervals(self):
+        """Generator to iterate across adajacent pairs of breakpoints,
+        yielding an interval object."""
+        for a,b in zip(self.breakpoints[:-1], self.breakpoints[1:]):
+            yield Interval(a,b)
 
     @property
     def size(self):

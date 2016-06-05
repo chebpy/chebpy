@@ -117,12 +117,26 @@ class TestDomain(TestCase):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
         dom_c = Domain([-1,0,1,2])
-        res_a = [(-2,1)]
-        res_b = [(-2,0), (0,1)]
-        res_c = [(-1,0), (0,1), (1,2)]
+        res_a = (-2, 1)
+        res_b = (-2, 0, 1)
+        res_c = (-1, 0, 1, 2)
         self.assertTrue(all([x==y for x,y in zip(dom_a, res_a)]))
         self.assertTrue(all([x==y for x,y in zip(dom_b, res_b)]))
         self.assertTrue(all([x==y for x,y in zip(dom_c, res_c)]))
+
+    def test_intervals(self):
+        dom_a = Domain([-2,1])
+        dom_b = Domain([-2,0,1])
+        dom_c = Domain([-1,0,1,2])
+        res_a = [(-2,1)]
+        res_b = [(-2,0), (0,1)]
+        res_c = [(-1,0), (0,1), (1,2)]
+        self.assertTrue(all([itvl==Interval(a,b)
+            for itvl, (a,b) in zip(dom_a.intervals, res_a)]))
+        self.assertTrue(all([itvl==Interval(a,b)
+            for itvl, (a,b) in zip(dom_b.intervals, res_b)]))
+        self.assertTrue(all([itvl==Interval(a,b)
+            for itvl, (a,b) in zip(dom_c.intervals, res_c)]))
 
     def test__eq__(self):
         d1 = Domain([-2,0,1,3,5])
