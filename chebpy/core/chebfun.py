@@ -247,23 +247,23 @@ class Chebfun(object):
     def __break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. All of
         the breakpoints of self are required to be breakpoints of targetdomain.
-        This is best achieved by using Domain.union(f) method prior to
-        calling."""
+        This can be achieved using Domain.union(f) prior to call."""
 
         if not self.domain.breakpoints_in(targetdomain).all():
             raise DomainBreakpoints
 
         newfuns = []
-        intvl_gen = targetdomain.__iter__()
-        intvl = Interval(*intvl_gen.next())
+        subitvls = targetdomain.intervals
+        interval = subitvls.next()
 
-        # loop over the funs in self, incrementing the intvl_gen generator so
-        # long as intvl remains contained within fun.interval
+        # loop over the funs in self, incrementing subitvls
+        # so long as interval remains contained within fun.interval
         for fun in self:
-            while intvl in fun.interval:
-                newfuns.append(fun.restrict(intvl))
+            while interval in fun.interval:
+                newfun = fun.restrict(interval)
+                newfuns.append(newfun)
                 try:
-                    intvl = Interval(*intvl_gen.next())
+                    interval = subitvls.next()
                 except StopIteration:
                     break
         return self.__class__(newfuns)
@@ -295,6 +295,7 @@ class Chebfun(object):
     @property
     @self_empty(False)
     def isconst(self):
+        # TODO: find an absract way of referencing funs[0].coeffs[0]
         c = self.funs[0].coeffs[0]
         return all(fun.isconst and fun.coeffs[0]==c for fun in self)
 
@@ -373,6 +374,7 @@ class Chebfun(object):
 #  numpy unary functions
 # -----------------------
 def addUfunc(op):
+    @self_empty()
     def method(self):
         return self.__class__([op(fun) for fun in self])
     name = op.__name__
