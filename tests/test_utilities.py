@@ -25,6 +25,7 @@ from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
+from chebpy.core.exceptions import NotSubdomain
 
 from chebpy import chebfun
 
@@ -210,6 +211,23 @@ class TestDomain(TestCase):
         self.assertEqual(dom_a.size, 2)
         self.assertEqual(dom_b.size, 3)
         self.assertEqual(dom_c.size, 51)
+
+    def test_restrict(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        dom_c = Domain(linspace(-2,1,16))
+        self.assertEqual(dom_a.restrict(dom_b), Domain([-1.5,-1,-.5,0,.5]))
+        self.assertEqual(dom_a.restrict(dom_c), dom_c)
+        self.assertEqual(dom_a.restrict(dom_a), dom_a)
+        self.assertEqual(dom_b.restrict(dom_b), dom_b)
+        self.assertEqual(dom_c.restrict(dom_c), dom_c)
+
+    def test_restrict_raises(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        dom_c = Domain(linspace(-2,1,16))
+        self.assertRaises(NotSubdomain, dom_b.restrict, dom_a)
+        self.assertRaises(NotSubdomain, dom_b.restrict, dom_c)
 
     def test_merge(self):
         dom_a = Domain([-2,-1,0,1])

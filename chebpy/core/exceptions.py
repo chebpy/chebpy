@@ -38,6 +38,13 @@ class InvalidDomain(Exception):
             "collection of at least two monotonically increasing scalars"
         super(self.__class__, self).__init__(message)
 
+class NotSubdomain(Exception):
+    def __init__(self, message=None):
+        if message is None:
+            message = "The support of the target Domain object is required to "\
+            "define a subinterval of the support of the original"
+        super(self.__class__, self).__init__(message)
+
 # chebpy.core.utilities.Domain
 class SupportMismatch(Exception):
     def __init__(self, message=None):

@@ -16,6 +16,7 @@ from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
+from chebpy.core.exceptions import NotSubdomain
 
 class Interval(object):
     """
@@ -129,11 +130,21 @@ class Domain(object):
         return self.merge(other)
 
     def merge(self, other):
-        """Merge two domain objects (without checking whether they have
+        """Merge two domain objects (without checking first whether they have
         the same support)."""
         all_breakpoints = append(self.breakpoints, other.breakpoints)
         new_breakpoints = unique(all_breakpoints)
         return self.__class__(new_breakpoints) 
+
+    def restrict(self, other):
+        """Truncate self to the support of other, retaining any interior
+        breakpoints."""
+        if other not in self:
+            raise NotSubdomain
+        dom = self.merge(other)
+        a,b = other.support
+        bps = dom.breakpoints
+        return self.__class__(bps[(a<=bps)&(bps<=b)])
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size self.breakpoints where True indicates
