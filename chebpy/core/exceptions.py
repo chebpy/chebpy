@@ -35,7 +35,7 @@ class InvalidDomain(Exception):
     def __init__(self, message=None):
         if message is None:
             message = "Domain objects must be initialised from an iterable "\
-            "collection of at least two monotonically increasing floats"
+            "collection of at least two monotonically increasing scalars"
         super(self.__class__, self).__init__(message)
 
 # chebpy.core.utilities.Domain

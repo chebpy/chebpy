@@ -196,6 +196,12 @@ class TestDomain(TestCase):
         self.assertEqual(dom_b.size, 3)
         self.assertEqual(dom_c.size, 51)
 
+    def test_merge(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        self.assertEqual(dom_a.merge(dom_b), Domain([-2,-1.5,-1,-.5,0,.5,1]))
+        self.assertEqual(dom_b.merge(dom_a), Domain([-2,-1.5,-1,-.5,0,.5,1]))
+
     def test_union(self):
         dom_a = Domain([-2,0,2])
         dom_b = Domain([-2,-1,1,2])
@@ -203,15 +209,11 @@ class TestDomain(TestCase):
         self.assertNotEqual(dom_a.union(dom_b), dom_b)
         self.assertEqual(dom_a.union(dom_b), Domain([-2,-1,0,1,2]))
 
-    def test_union_convert_type(self):
-        dom_a = Domain([-2,0,2])
-        dom_r = Domain([-2,-1,0,1,2])
-        self.assertEqual(dom_a.union([-2,-1,0,1,2]), dom_r)
-
     def test_union_raises(self):
         dom_a = Domain([-2,0])
         dom_b = Domain([-2,3])
         self.assertRaises(SupportMismatch, dom_a.union, dom_b)
+        self.assertRaises(SupportMismatch, dom_b.union, dom_a)
 
 
 class CheckFuns(TestCase):

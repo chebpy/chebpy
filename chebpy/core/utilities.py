@@ -115,16 +115,19 @@ class Domain(object):
         return self.breakpoints[[0,-1]]
 
     def union(self, other):
-        """Return an array denoting the union of self and other. We check
-        that the support of each object is the same before proceeding."""
-        # attempt to cast other to Domain object if it is not one already
-        if not isinstance(other, self.__class__):
-            other = self.__class__(other)
+        """Return a Domain object representing the union of self and another
+        Domain object. We first check that the support of each object
+        matches."""
         if any(self.support!=other.support):
             raise SupportMismatch
+        return self.merge(other)
+
+    def merge(self, other):
+        """Merge two domain objects (without checking whether they have
+        the same support)."""
         all_breakpoints = append(self.breakpoints, other.breakpoints)
         new_breakpoints = unique(all_breakpoints)
-        return self.__class__(new_breakpoints)
+        return self.__class__(new_breakpoints) 
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size self.breakpoints where True indicates
