@@ -52,7 +52,7 @@ class Interval(object):
         return self.formap(y)
 
     def __contains__(self, other):
-        """Check that another Interval object is a subinterval of self"""
+        """Test whether another Interval object is a 'subdomain' of self"""
         a,b = self.values
         x,y = other.values
         return (a<=x) & (y<=b)
@@ -90,6 +90,12 @@ class Domain(object):
     def __iter__(self):
         """Iterate over breakpoints"""
         return self.breakpoints.__iter__()
+
+    def __contains__(self, other):
+        """Test whether another Domain object is a 'subdomain' of self"""
+        a,b = self.support
+        x,y = other.support
+        return (a<=x) & (y<=b)
 
     @classmethod
     def from_chebfun(cls, chebfun):

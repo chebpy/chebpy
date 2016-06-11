@@ -138,6 +138,21 @@ class TestDomain(TestCase):
         self.assertTrue(all([itvl==Interval(a,b)
             for itvl, (a,b) in zip(dom_c.intervals, res_c)]))
 
+    def test__contains__(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-1,2])
+        d3 = Domain(linspace(-10,10,1000))
+        d4 = Domain([-1,0,1,2])
+        self.assertTrue(d2 in d1)
+        self.assertTrue(d1 in d3)
+        self.assertTrue(d2 in d3)
+        self.assertTrue(d2 in d3)
+        self.assertTrue(d2 in d4)
+        self.assertTrue(d4 in d2)
+        self.assertFalse(d1 in d2)
+        self.assertFalse(d3 in d1)
+        self.assertFalse(d3 in d2)
+
     def test__eq__(self):
         d1 = Domain([-2,0,1,3,5])
         d2 = Domain([-2,0,1,3,5])
