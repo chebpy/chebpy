@@ -158,8 +158,12 @@ class TestDomain(TestCase):
         d1 = Domain([-2,0,1,3,5])
         d2 = Domain([-2,0,1,3,5])
         d3 = Domain([-1,1])
-        self.assertTrue(d1==d2)
-        self.assertFalse(d1==d3)
+        self.assertEqual(d1,d2)
+        self.assertNotEqual(d1,d3)
+        # tests for close breakpoints
+        d4 = Domain([-2,0,1,3,5])
+        d5 = Domain([-2+10*eps,0-20*eps,1+10*eps,3+20*eps,5-20*eps])
+        self.assertEqual(d4,d5)
 
     def test__ne__(self):
         d1 = Domain([-2,0,1,3,5])
@@ -221,6 +225,9 @@ class TestDomain(TestCase):
         self.assertEqual(dom_a.restrict(dom_a), dom_a)
         self.assertEqual(dom_b.restrict(dom_b), dom_b)
         self.assertEqual(dom_c.restrict(dom_c), dom_c)
+        # tests to check if catch breakpoints that are different by eps
+        dom_d = Domain(linspace(-.4,.4,2))
+        self.assertEqual(dom_c.restrict(dom_d), Domain([-.4,-.2,0,.2,.4]))
 
     def test_restrict_raises(self):
         dom_a = Domain([-2,-1,0,1])
@@ -232,7 +239,6 @@ class TestDomain(TestCase):
     def test_merge(self):
         dom_a = Domain([-2,-1,0,1])
         dom_b = Domain([-1.5,-.5,0.5])
-        self.assertEqual(dom_a.merge(dom_b), Domain([-2,-1.5,-1,-.5,0,.5,1]))
         self.assertEqual(dom_b.merge(dom_a), Domain([-2,-1.5,-1,-.5,0,.5,1]))
 
     def test_union(self):
