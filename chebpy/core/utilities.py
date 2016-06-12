@@ -141,7 +141,9 @@ class Domain(object):
         """Return a Domain object representing the union of self and another
         Domain object. We first check that the support of each object
         matches."""
-        if any(self.support!=other.support):
+        dspt = abs(self.support-other.support)
+        htol = maximum(HTOL, HTOL*abs(self.support))
+        if any(dspt>htol):
             raise SupportMismatch
         return self.merge(other)
 

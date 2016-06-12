@@ -16,6 +16,7 @@ from numpy.random import seed
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
+from chebpy.core.utilities import HTOL
 from chebpy.core.utilities import Interval
 from chebpy.core.utilities import Domain
 from chebpy.core.utilities import compute_breakdata
@@ -155,7 +156,7 @@ class TestDomain(TestCase):
         self.assertFalse(d3 in d2)
 
     def test__contains__close(self):
-        tol = 4*eps
+        tol = 4/5*HTOL
         d1 = Domain([-1,2])
         d2 = Domain([-1-tol,2+2*tol])
         d3 = Domain([-1-2*tol,2+4*tol])
@@ -171,7 +172,7 @@ class TestDomain(TestCase):
         self.assertNotEqual(d1,d3)
 
     def test__eq__close(self):
-        tol = 4*eps
+        tol = 4/5*HTOL
         d4 = Domain([-2,0,1,3,5])
         d5 = Domain([-2*(1+tol),0-tol,1+tol,3*(1+tol),5*(1-tol)])
         d6 = Domain([-2*(1+2*tol),0-2*tol,1+2*tol,3*(1+2*tol),5*(1-2*tol)])
@@ -239,6 +240,7 @@ class TestDomain(TestCase):
         self.assertEqual(dom_b.restrict(dom_b), dom_b)
         self.assertEqual(dom_c.restrict(dom_c), dom_c)
         # tests to check if catch breakpoints that are different by eps
+        # (linspace introduces these effects)
         dom_d = Domain(linspace(-.4,.4,2))
         self.assertEqual(dom_c.restrict(dom_d), Domain([-.4,-.2,0,.2,.4]))
 
@@ -260,6 +262,14 @@ class TestDomain(TestCase):
         self.assertNotEqual(dom_a.union(dom_b), dom_a)
         self.assertNotEqual(dom_a.union(dom_b), dom_b)
         self.assertEqual(dom_a.union(dom_b), Domain([-2,-1,0,1,2]))
+        self.assertEqual(dom_b.union(dom_a), Domain([-2,-1,0,1,2]))
+
+    def test_union_close(self):
+        tol = 4/5*HTOL
+        dom_a = Domain([-2,0,2])
+        dom_c = Domain([-2-2*tol,-1+tol,1+tol,2+2*tol])
+        self.assertEqual(dom_a.union(dom_c), Domain([-2,-1,0,1,2]))
+        self.assertEqual(dom_c.union(dom_a), Domain([-2,-1,0,1,2]))
 
     def test_union_raises(self):
         dom_a = Domain([-2,0])
