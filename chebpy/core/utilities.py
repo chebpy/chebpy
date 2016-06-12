@@ -7,15 +7,22 @@ from collections import OrderedDict
 from numpy import append
 from numpy import array
 from numpy import diff
-from numpy import in1d
+from numpy import empty
 from numpy import logical_and
+from numpy import maximum
+from numpy import sort
 from numpy import unique
 
+from chebpy.core.settings import DefaultPrefs
 from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
+from chebpy.core.exceptions import NotSubdomain
+
+HTOL = 5 * DefaultPrefs.eps
+
 
 class Interval(object):
     """
@@ -37,7 +44,7 @@ class Interval(object):
     def __init__(self, a=-1, b=1):
         if a >= b:
             raise IntervalValues
-        self.values = array([a, b])
+        self.values = array([a,b], dtype=float)
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
         self.drvmap = lambda y: 0.*y + .5*(b-a)
@@ -52,7 +59,7 @@ class Interval(object):
         return self.formap(y)
 
     def __contains__(self, other):
-        """Check that another Interval object is a subinterval of self"""
+        """Test whether another Interval object is a 'subdomain' of self"""
         a,b = self.values
         x,y = other.values
         return (a<=x) & (y<=b)
@@ -70,26 +77,42 @@ class Interval(object):
         return logical_and(a<x, x<b)
 
 
+def _merge_duplicates(arr, tols):
+    """Remove duplicate entries from an input array to within array tolerance
+    tols, working from left to right."""
+    # TODO: pathological cases may make this break since this method works by
+    # using consecutive differences. Might be better to take an average
+    # (median?), rather than the left-hand value.
+    idx = append(abs(diff(arr))>tols[:-1], True)
+    return arr[idx]
+
 class Domain(object):
     """Convenience class to implement Chebfun domain logic. Instances are
     intended to be created on-the-fly rather than being precomputed and stored
     as hard attributes of Chebfun"""
 
     def __init__(self, breakpoints):
-        breakpoints = array(breakpoints)
         try:
-            if breakpoints.size < 2:
-                raise InvalidDomain
-            if any(diff(breakpoints)<=0):
-                raise InvalidDomain
+            breakpoints = array(breakpoints, dtype=float)
         except:
-            # raised if, for example, an array of numeric types is not provided
+            raise InvalidDomain
+        if breakpoints.size < 2:
+            raise InvalidDomain
+        if any(diff(breakpoints)<=0):
             raise InvalidDomain
         self.breakpoints = breakpoints
 
     def __iter__(self):
         """Iterate over breakpoints"""
         return self.breakpoints.__iter__()
+
+    def __contains__(self, other):
+        """Test whether another Domain object is a 'subdomain' of self"""
+        a,b = self.support
+        x,y = other.support
+        bounds = array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        return (lbnd<=x) & (y<=rbnd)
 
     @classmethod
     def from_chebfun(cls, chebfun):
@@ -115,27 +138,61 @@ class Domain(object):
         return self.breakpoints[[0,-1]]
 
     def union(self, other):
-        """Return an array denoting the union of self and other. We check
-        that the support of each object is the same before proceeding."""
-        # attempt to cast other to Domain object if it is not one already
-        if not isinstance(other, self.__class__):
-            other = self.__class__(other)
-        if any(self.support!=other.support):
+        """Return a Domain object representing the union of self and another
+        Domain object. We first check that the support of each object
+        matches."""
+        dspt = abs(self.support-other.support)
+        htol = maximum(HTOL, HTOL*abs(self.support))
+        if any(dspt>htol):
             raise SupportMismatch
-        all_breakpoints = append(self.breakpoints, other.breakpoints)
-        new_breakpoints = unique(all_breakpoints)
-        return self.__class__(new_breakpoints)
+        return self.merge(other)
+
+    def merge(self, other):
+        """Merge two domain objects (without checking first whether they have
+        the same support)."""
+        all_bpts = append(self.breakpoints, other.breakpoints)
+        new_bpts = unique(all_bpts)
+        mergetol = maximum(HTOL, HTOL*abs(new_bpts))
+        mgd_bpts = _merge_duplicates(new_bpts, mergetol)
+        return self.__class__(mgd_bpts)
+
+    def restrict(self, other):
+        """Truncate self to the support of other, retaining any interior
+        breakpoints."""
+        if other not in self:
+            raise NotSubdomain
+        dom = self.merge(other)
+        a,b = other.support
+        bounds = array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        pts = dom.breakpoints
+        new = pts[(lbnd<=pts)&(pts<=rbnd)]
+        return self.__class__(new)
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size self.breakpoints where True indicates
-        that the breakpoint is in other.breakpoints"""
-        return in1d(self.breakpoints, other.breakpoints)
+        that the breakpoint is in other.breakpoints to within the specified
+        tolerance"""
+        out = empty(self.breakpoints.size, dtype=bool)
+        window = array([1-HTOL, 1+HTOL])
+        # TODO: is there way to vectorise this?
+        for idx, bpt in enumerate(self.breakpoints):
+            lbnd, rbnd = sort(bpt*window)
+            lbnd = -HTOL if abs(lbnd) < HTOL else lbnd
+            rbnd = +HTOL if abs(rbnd) < HTOL else rbnd            
+            isin = (lbnd<=other.breakpoints) & (other.breakpoints<=rbnd)
+            out[idx] = any(isin)
+        return out
 
     def __eq__(self, other):
-        """Test for equality of two Domain objects"""
-        # Two Domain objects are equal if they have the same breakpoints.
-        return self.breakpoints_in(other).all() \
-            and other.breakpoints_in(self).all()
+        """Test for pointwise equality (within a tolerance) of two Domain
+        objects"""
+        if self.size != other.size:
+            return False
+        else:
+            dbpt = abs(self.breakpoints-other.breakpoints)
+            htol = maximum(HTOL, HTOL*abs(self.breakpoints))
+            return all(dbpt<=htol)
 
     def __ne__(self, other):
         return not self==other

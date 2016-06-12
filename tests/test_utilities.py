@@ -16,6 +16,7 @@ from numpy.random import seed
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
+from chebpy.core.utilities import HTOL
 from chebpy.core.utilities import Interval
 from chebpy.core.utilities import Domain
 from chebpy.core.utilities import compute_breakdata
@@ -25,6 +26,7 @@ from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
+from chebpy.core.exceptions import NotSubdomain
 
 from chebpy import chebfun
 
@@ -138,12 +140,44 @@ class TestDomain(TestCase):
         self.assertTrue(all([itvl==Interval(a,b)
             for itvl, (a,b) in zip(dom_c.intervals, res_c)]))
 
+    def test__contains__(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-1,2])
+        d3 = Domain(linspace(-10,10,1000))
+        d4 = Domain([-1,0,1,2])
+        self.assertTrue(d2 in d1)
+        self.assertTrue(d1 in d3)
+        self.assertTrue(d2 in d3)
+        self.assertTrue(d2 in d3)
+        self.assertTrue(d2 in d4)
+        self.assertTrue(d4 in d2)
+        self.assertFalse(d1 in d2)
+        self.assertFalse(d3 in d1)
+        self.assertFalse(d3 in d2)
+
+    def test__contains__close(self):
+        tol = .8*HTOL
+        d1 = Domain([-1,2])
+        d2 = Domain([-1-tol,2+2*tol])
+        d3 = Domain([-1-2*tol,2+4*tol])
+        self.assertTrue(d1 in d2)
+        self.assertTrue(d2 in d1)
+        self.assertFalse(d3 in d1)
+
     def test__eq__(self):
         d1 = Domain([-2,0,1,3,5])
         d2 = Domain([-2,0,1,3,5])
         d3 = Domain([-1,1])
-        self.assertTrue(d1==d2)
-        self.assertFalse(d1==d3)
+        self.assertEqual(d1,d2)
+        self.assertNotEqual(d1,d3)
+
+    def test__eq__close(self):
+        tol = .8*HTOL
+        d4 = Domain([-2,0,1,3,5])
+        d5 = Domain([-2*(1+tol),0-tol,1+tol,3*(1+tol),5*(1-tol)])
+        d6 = Domain([-2*(1+2*tol),0-2*tol,1+2*tol,3*(1+2*tol),5*(1-2*tol)])
+        self.assertEqual(d4,d5)
+        self.assertNotEqual(d4,d6)
 
     def test__ne__(self):
         d1 = Domain([-2,0,1,3,5])
@@ -180,6 +214,15 @@ class TestDomain(TestCase):
         self.assertFalse(d1.breakpoints_in(Domain([-5,5])).any())
         self.assertFalse(d2.breakpoints_in(Domain([-5,5])).any())
 
+    def test_breakpoints_in_close(self):
+        tol = .8*HTOL
+        d1 = Domain([-1, 0, 1])
+        d2 = Domain([-2, 0-tol, 1+tol, 3])
+        result = d1.breakpoints_in(d2)
+        self.assertFalse(result[0])
+        self.assertTrue(result[1])
+        self.assertTrue(result[2])
+
     def test_support(self):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
@@ -196,22 +239,52 @@ class TestDomain(TestCase):
         self.assertEqual(dom_b.size, 3)
         self.assertEqual(dom_c.size, 51)
 
+    def test_restrict(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        dom_c = Domain(linspace(-2,1,16))
+        self.assertEqual(dom_a.restrict(dom_b), Domain([-1.5,-1,-.5,0,.5]))
+        self.assertEqual(dom_a.restrict(dom_c), dom_c)
+        self.assertEqual(dom_a.restrict(dom_a), dom_a)
+        self.assertEqual(dom_b.restrict(dom_b), dom_b)
+        self.assertEqual(dom_c.restrict(dom_c), dom_c)
+        # tests to check if catch breakpoints that are different by eps
+        # (linspace introduces these effects)
+        dom_d = Domain(linspace(-.4,.4,2))
+        self.assertEqual(dom_c.restrict(dom_d), Domain([-.4,-.2,0,.2,.4]))
+
+    def test_restrict_raises(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        dom_c = Domain(linspace(-2,1,16))
+        self.assertRaises(NotSubdomain, dom_b.restrict, dom_a)
+        self.assertRaises(NotSubdomain, dom_b.restrict, dom_c)
+
+    def test_merge(self):
+        dom_a = Domain([-2,-1,0,1])
+        dom_b = Domain([-1.5,-.5,0.5])
+        self.assertEqual(dom_b.merge(dom_a), Domain([-2,-1.5,-1,-.5,0,.5,1]))
+
     def test_union(self):
         dom_a = Domain([-2,0,2])
         dom_b = Domain([-2,-1,1,2])
         self.assertNotEqual(dom_a.union(dom_b), dom_a)
         self.assertNotEqual(dom_a.union(dom_b), dom_b)
         self.assertEqual(dom_a.union(dom_b), Domain([-2,-1,0,1,2]))
+        self.assertEqual(dom_b.union(dom_a), Domain([-2,-1,0,1,2]))
 
-    def test_union_convert_type(self):
+    def test_union_close(self):
+        tol = .8*HTOL
         dom_a = Domain([-2,0,2])
-        dom_r = Domain([-2,-1,0,1,2])
-        self.assertEqual(dom_a.union([-2,-1,0,1,2]), dom_r)
+        dom_c = Domain([-2-2*tol,-1+tol,1+tol,2+2*tol])
+        self.assertEqual(dom_a.union(dom_c), Domain([-2,-1,0,1,2]))
+        self.assertEqual(dom_c.union(dom_a), Domain([-2,-1,0,1,2]))
 
     def test_union_raises(self):
         dom_a = Domain([-2,0])
         dom_b = Domain([-2,3])
         self.assertRaises(SupportMismatch, dom_a.union, dom_b)
+        self.assertRaises(SupportMismatch, dom_b.union, dom_a)
 
 
 class CheckFuns(TestCase):
