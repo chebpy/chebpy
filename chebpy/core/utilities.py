@@ -7,9 +7,10 @@ from collections import OrderedDict
 from numpy import append
 from numpy import array
 from numpy import diff
-from numpy import in1d
+from numpy import empty
 from numpy import logical_and
 from numpy import maximum
+from numpy import sort
 from numpy import unique
 
 from chebpy.core.settings import DefaultPrefs
@@ -19,7 +20,6 @@ from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
 from chebpy.core.exceptions import NotSubdomain
-
 
 HTOL = 5 * DefaultPrefs.eps
 
@@ -171,8 +171,18 @@ class Domain(object):
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size self.breakpoints where True indicates
-        that the breakpoint is in other.breakpoints"""
-        return in1d(self.breakpoints, other.breakpoints)
+        that the breakpoint is in other.breakpoints to within the specified
+        tolerance"""
+        out = empty(self.breakpoints.size, dtype=bool)
+        window = array([1-HTOL, 1+HTOL])
+        # TODO: is there way to vectorise this?
+        for idx, bpt in enumerate(self.breakpoints):
+            lbnd, rbnd = sort(bpt*window)
+            lbnd = -HTOL if abs(lbnd) < HTOL else lbnd
+            rbnd = +HTOL if abs(rbnd) < HTOL else rbnd            
+            isin = (lbnd<=other.breakpoints) & (other.breakpoints<=rbnd)
+            out[idx] = any(isin)
+        return out
 
     def __eq__(self, other):
         """Test for pointwise equality (within a tolerance) of two Domain

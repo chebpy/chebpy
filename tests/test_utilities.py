@@ -156,7 +156,7 @@ class TestDomain(TestCase):
         self.assertFalse(d3 in d2)
 
     def test__contains__close(self):
-        tol = 4/5*HTOL
+        tol = .8*HTOL
         d1 = Domain([-1,2])
         d2 = Domain([-1-tol,2+2*tol])
         d3 = Domain([-1-2*tol,2+4*tol])
@@ -172,7 +172,7 @@ class TestDomain(TestCase):
         self.assertNotEqual(d1,d3)
 
     def test__eq__close(self):
-        tol = 4/5*HTOL
+        tol = .8*HTOL
         d4 = Domain([-2,0,1,3,5])
         d5 = Domain([-2*(1+tol),0-tol,1+tol,3*(1+tol),5*(1-tol)])
         d6 = Domain([-2*(1+2*tol),0-2*tol,1+2*tol,3*(1+2*tol),5*(1-2*tol)])
@@ -213,6 +213,15 @@ class TestDomain(TestCase):
         self.assertTrue(d2.breakpoints_in(d2).all())
         self.assertFalse(d1.breakpoints_in(Domain([-5,5])).any())
         self.assertFalse(d2.breakpoints_in(Domain([-5,5])).any())
+
+    def test_breakpoints_in_close(self):
+        tol = .8*HTOL
+        d1 = Domain([-1, 0, 1])
+        d2 = Domain([-2, 0-tol, 1+tol, 3])
+        result = d1.breakpoints_in(d2)
+        self.assertFalse(result[0])
+        self.assertTrue(result[1])
+        self.assertTrue(result[2])
 
     def test_support(self):
         dom_a = Domain([-2,1])
@@ -265,7 +274,7 @@ class TestDomain(TestCase):
         self.assertEqual(dom_b.union(dom_a), Domain([-2,-1,0,1,2]))
 
     def test_union_close(self):
-        tol = 4/5*HTOL
+        tol = .8*HTOL
         dom_a = Domain([-2,0,2])
         dom_c = Domain([-2-2*tol,-1+tol,1+tol,2+2*tol])
         self.assertEqual(dom_a.union(dom_c), Domain([-2,-1,0,1,2]))
