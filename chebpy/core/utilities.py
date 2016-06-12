@@ -8,10 +8,9 @@ from numpy import append
 from numpy import array
 from numpy import diff
 from numpy import in1d
-from numpy import inf
 from numpy import logical_and
+from numpy import maximum
 from numpy import unique
-from numpy.linalg import norm
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.exceptions import IntervalGap
@@ -20,6 +19,10 @@ from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
 from chebpy.core.exceptions import NotSubdomain
+
+
+HTOL = 5 * DefaultPrefs.eps
+
 
 class Interval(object):
     """
@@ -74,13 +77,13 @@ class Interval(object):
         return logical_and(a<x, x<b)
 
 
-def _merge_duplicates(arr, tol):
-    """Remove duplicate entries from an input array to within tolerance tol,
-    working from left to right."""
+def _merge_duplicates(arr, tols):
+    """Remove duplicate entries from an input array to within array tolerance
+    tols, working from left to right."""
     # TODO: pathological cases may make this break since this method works by
-    # using consecutive differences. Might be better to take an average, rather
-    # than the left-hand value.
-    idx = append(abs(diff(arr))>tol, True)
+    # using consecutive differences. Might be better to take an average
+    # (median?), rather than the left-hand value.
+    idx = append(abs(diff(arr))>tols[:-1], True)
     return arr[idx]
 
 class Domain(object):
@@ -122,12 +125,6 @@ class Domain(object):
             yield Interval(a,b)
 
     @property
-    def htol(self):
-        """Return horzontal tolerance of self, used to determine whether or not
-        to merge close-together breakpoints"""
-        return 5e0 * abs(self.support).max() * DefaultPrefs.eps
-
-    @property
     def size(self):
         """The size of a Domain object is the number of breakpoints"""
         return self.breakpoints.size
@@ -151,7 +148,7 @@ class Domain(object):
         the same support)."""
         all_bpts = append(self.breakpoints, other.breakpoints)
         new_bpts = unique(all_bpts)
-        mergetol = abs(new_bpts).max() * DefaultPrefs.eps
+        mergetol = maximum(HTOL, HTOL*abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
@@ -162,9 +159,10 @@ class Domain(object):
             raise NotSubdomain
         dom = self.merge(other)
         a,b = other.support
-        bpt = dom.breakpoints
-        tol = other.htol
-        new = bpt[(a-tol<=bpt)&(bpt<=b+tol)]
+        bounds = array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        pts = dom.breakpoints
+        new = pts[(lbnd<=pts)&(pts<=rbnd)]
         return self.__class__(new)
 
     def breakpoints_in(self, other):
@@ -178,8 +176,9 @@ class Domain(object):
         if self.size != other.size:
             return False
         else:
-            htol = max(self.htol, other.htol)
-            return norm(self.breakpoints-other.breakpoints, inf) < htol
+            dbpt = abs(self.breakpoints-other.breakpoints)
+            htol = maximum(HTOL, HTOL*abs(self.breakpoints))
+            return all(dbpt<=htol)
 
     def __ne__(self, other):
         return not self==other

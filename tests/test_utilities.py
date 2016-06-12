@@ -160,10 +160,14 @@ class TestDomain(TestCase):
         d3 = Domain([-1,1])
         self.assertEqual(d1,d2)
         self.assertNotEqual(d1,d3)
-        # tests for close breakpoints
+
+    def test__eq__close(self):
+        tol = 4*eps
         d4 = Domain([-2,0,1,3,5])
-        d5 = Domain([-2+10*eps,0-20*eps,1+10*eps,3+20*eps,5-20*eps])
+        d5 = Domain([-2*(1+tol),0-tol,1+tol,3*(1+tol),5*(1-tol)])
+        d6 = Domain([-2*(1+2*tol),0-2*tol,1+2*tol,3*(1+2*tol),5*(1-2*tol)])
         self.assertEqual(d4,d5)
+        self.assertNotEqual(d4,d6)
 
     def test__ne__(self):
         d1 = Domain([-2,0,1,3,5])
