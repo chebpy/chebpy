@@ -110,7 +110,9 @@ class Domain(object):
         """Test whether another Domain object is a 'subdomain' of self"""
         a,b = self.support
         x,y = other.support
-        return (a<=x) & (y<=b)
+        bounds = array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        return (lbnd<=x) & (y<=rbnd)
 
     @classmethod
     def from_chebfun(cls, chebfun):

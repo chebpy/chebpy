@@ -154,6 +154,15 @@ class TestDomain(TestCase):
         self.assertFalse(d3 in d1)
         self.assertFalse(d3 in d2)
 
+    def test__contains__close(self):
+        tol = 4*eps
+        d1 = Domain([-1,2])
+        d2 = Domain([-1-tol,2+2*tol])
+        d3 = Domain([-1-2*tol,2+4*tol])
+        self.assertTrue(d1 in d2)
+        self.assertTrue(d2 in d1)
+        self.assertFalse(d3 in d1)
+
     def test__eq__(self):
         d1 = Domain([-2,0,1,3,5])
         d2 = Domain([-2,0,1,3,5])
