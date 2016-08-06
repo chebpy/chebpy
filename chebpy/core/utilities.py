@@ -50,7 +50,11 @@ class Interval(object):
         self.drvmap = lambda y: 0.*y + .5*(b-a)
         
     def __eq__(self, other):
-        return (self.values==other.values).all()
+        """Test for equality (within a tolerance) of the numbers defining an
+        Interval object"""
+        dbpt = abs(self.values-other.values)
+        htol = maximum(HTOL, HTOL*abs(self.values))
+        return all(dbpt<=htol)
 
     def __ne__(self, other):
         return not self==other
