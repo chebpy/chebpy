@@ -137,6 +137,7 @@ for k, n in enumerate(2**arange(2,18,2)):
     setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 # ------------------------------------------------------------------------
 
+
 class ClassUsage(TestCase):
     """Unit-tests for miscelaneous Chebtech2 class usage"""
 
@@ -379,6 +380,14 @@ for k, (fun, der, n, tol) in enumerate(derivatives):
 
 class Construction(TestCase):
     """Unit-tests for construction of Chebtech2 objects"""
+
+    #TODO: expand to all the constructor variants
+    def test_initvalues(self):
+        for n in range(10):
+            vals = rand(n)
+            fun = Chebtech2.initvalues(vals)
+            cfs = Chebtech2._vals2coeffs(vals)
+            self.assertItemsEqual(fun.coeffs, cfs)
 
     def test_coeff_construction(self):
         coeffs = rand(10)

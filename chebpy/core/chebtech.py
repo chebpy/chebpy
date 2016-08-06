@@ -84,6 +84,11 @@ class Chebtech(Smoothfun):
         coeffs = adaptive(cls, fun)
         return cls(coeffs)
 
+    @classmethod
+    def initvalues(cls, values):
+        """Initialise a Chebtech from an array of values at Chebyshev points"""
+        return cls(cls._vals2coeffs(values))
+
     def __init__(self, coeffs):
         self._coeffs = coeffs
 
