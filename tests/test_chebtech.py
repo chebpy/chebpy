@@ -389,6 +389,11 @@ class Construction(TestCase):
             cfs = Chebtech2._vals2coeffs(vals)
             self.assertItemsEqual(fun.coeffs, cfs)
 
+    def test_initidentity(self):
+        x = Chebtech2.initidentity()
+        s = -1 + 2*rand(10000)
+        self.assertEqual(infnorm(s-x(s)), 0.)
+
     def test_coeff_construction(self):
         coeffs = rand(10)
         f = Chebtech2(coeffs)

@@ -60,6 +60,11 @@ class Chebtech(Smoothfun):
         return cls(array([]))
 
     @classmethod
+    def initidentity(cls):
+        """Chebtech representation of f(x) = x on [-1,1]"""
+        return cls(array([0,1]))
+
+    @classmethod
     def initfun(cls, fun, n=None):
         """Convenience constructor to automatically select the adaptive or
         fixedlen constructor from the input arguments passed."""
