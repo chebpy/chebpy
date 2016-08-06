@@ -61,6 +61,8 @@ class Chebtech(Smoothfun):
 
     @classmethod
     def initfun(cls, fun, n=None):
+        """Convenience constructor to automatically select the adaptive or
+        fixedlen constructor from the input arguments passed."""
         if n is None:
             return cls.initfun_adaptive(fun)
         else:
@@ -68,6 +70,8 @@ class Chebtech(Smoothfun):
 
     @classmethod
     def initfun_fixedlen(cls, fun, n):
+        """Initialise a Chebtech from the callable fun using n degrees of
+        freedom."""
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = vals2coeffs2(values)
@@ -75,6 +79,8 @@ class Chebtech(Smoothfun):
 
     @classmethod
     def initfun_adaptive(cls, fun):
+        """Initialise a Chebtech from the callable fun utilising the adaptive
+        constructor to determine the number of degrees of freedom parameter."""
         coeffs = adaptive(cls, fun)
         return cls(coeffs)
 
