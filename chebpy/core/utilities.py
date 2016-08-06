@@ -59,10 +59,13 @@ class Interval(object):
         return self.formap(y)
 
     def __contains__(self, other):
-        """Test whether another Interval object is a 'subdomain' of self"""
+        """Test whether another Interval object is a 'subinterval' of self, to
+        within a tolerance"""
         a,b = self.values
         x,y = other.values
-        return (a<=x) & (y<=b)
+        bounds = array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        return (lbnd<=x) & (y<=rbnd)
 
     def __str__(self):
         cls = self.__class__

@@ -80,6 +80,15 @@ class TestInterval(TestCase):
         self.assertTrue(self.i1 not in self.i3)
         self.assertTrue(self.i1 not in self.i4)
 
+    def test__contains__close(self):
+        tol = .8*HTOL
+        d1 = Interval(-1,2)
+        d2 = Interval(-1-tol,2+2*tol)
+        d3 = Interval(-1-2*tol,2+4*tol)
+        self.assertTrue(d1 in d2)
+        self.assertTrue(d2 in d1)
+        self.assertFalse(d3 in d1)
+
     def test_maps(self):
         yy = -1 + 2 * rand(1000)
         interval = Interval(-2,3)
