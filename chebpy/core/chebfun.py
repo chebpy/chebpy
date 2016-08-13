@@ -56,6 +56,20 @@ from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
 
 
+def _generate_funs(domain, bndfun_constructor, arglist):
+    """Method used by several of the Chebfun classmethod constructors to
+    generate a collection of funs."""
+    domain = array(domain)
+    if domain.size < 2:
+        raise BadDomainArgument
+    funs = array([])
+    for interval in zip(domain[:-1], domain[1:]):
+        interval = Interval(*interval)
+        args = arglist + [interval]
+        fun = bndfun_constructor(*args)
+        funs = append(funs, fun)
+    return funs
+
 class Chebfun(object):
 
     # --------------------------
@@ -67,39 +81,25 @@ class Chebfun(object):
 
     @classmethod
     def initconst(cls, c, domain):
-        domain = array(domain)
-        if domain.size < 2:
-            raise BadDomainArgument
-        funs = array([])
-        for interval in zip(domain[:-1], domain[1:]):
-            interval = Interval(*interval)
-            fun = Bndfun.initconst(c, interval)
-            funs = append(funs, fun)
+        funs = _generate_funs(domain, Bndfun.initconst, [c])
         return cls(funs)
 
     @classmethod
     def initfun_adaptive(cls, f, domain):
-        domain = array(domain)
-        if domain.size < 2:
-            raise BadDomainArgument
-        funs = array([])
-        for interval in zip(domain[:-1], domain[1:]):
-            interval = Interval(*interval)
-            fun = Bndfun.initfun_adaptive(f, interval)
-            funs = append(funs, fun)
+        funs = _generate_funs(domain, Bndfun.initfun_adaptive, [f])
         return cls(funs)
 
     @classmethod
     def initfun_fixedlen(cls, f, domain, n):
         domain = array(domain)
-        if domain.size < 2:
-            raise BadDomainArgument
         nn = array(n)
         if nn.size == 1:
             nn = nn * ones(domain.size-1)
         elif nn.size > 1:
             if nn.size != domain.size - 1:
                 raise BadFunLengthArgument
+        if domain.size < 2:
+            raise BadDomainArgument
         funs = array([])
         intervals = zip(domain[:-1], domain[1:])
         for interval, length in zip(intervals, nn):
@@ -307,6 +307,13 @@ class Chebfun(object):
     @self_empty(0)
     def vscale(self):
         return max([fun.vscale for fun in self])
+
+    @property
+    @self_empty()
+    def x(self):
+        """Return a Chebfun representing the identity function on the support
+        of self"""
+        raise NotImplementedError
 
     # -----------
     #  utilities
