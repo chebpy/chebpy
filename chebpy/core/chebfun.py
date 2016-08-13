@@ -80,17 +80,22 @@ class Chebfun(object):
         return cls(array([]))
 
     @classmethod
-    def initconst(cls, c, domain):
+    def initconst(cls, c, domain=DefaultPrefs.domain):
         funs = _generate_funs(domain, Bndfun.initconst, [c])
         return cls(funs)
 
     @classmethod
-    def initfun_adaptive(cls, f, domain):
+    def initidentity(cls, domain=DefaultPrefs.domain):
+        funs = _generate_funs(domain, Bndfun.initidentity, [])
+        return cls(funs)
+
+    @classmethod
+    def initfun_adaptive(cls, f, domain=DefaultPrefs.domain):
         funs = _generate_funs(domain, Bndfun.initfun_adaptive, [f])
         return cls(funs)
 
     @classmethod
-    def initfun_fixedlen(cls, f, domain, n):
+    def initfun_fixedlen(cls, f, n, domain=DefaultPrefs.domain):
         domain = array(domain)
         nn = array(n)
         if nn.size == 1:

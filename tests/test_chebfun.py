@@ -137,7 +137,7 @@ class Construction(TestCase):
         self.assertRaises(BadDomainArgument, initfun, self.f, domain=None)
 
     def test_initfun_fixedlen_continuous_domain(self):
-        ff = Chebfun.initfun_fixedlen(self.f, [-2,-1], 20)
+        ff = Chebfun.initfun_fixedlen(self.f, 20, [-2,-1])
         self.assertEqual(ff.funs.size, 1)
         a, b = ff.breakdata.keys()
         fa, fb, = ff.breakdata.values()
@@ -147,7 +147,7 @@ class Construction(TestCase):
         self.assertLessEqual(abs(fb-self.f(-1)), eps)
 
     def test_initfun_fixedlen_piecewise_domain_0(self):
-        ff = Chebfun.initfun_fixedlen(self.f, [-2,0,1], 30)
+        ff = Chebfun.initfun_fixedlen(self.f, 30, [-2,0,1])
         self.assertEqual(ff.funs.size, 2)
         a, b, c = ff.breakdata.keys()
         fa, fb, fc = ff.breakdata.values()
@@ -159,7 +159,7 @@ class Construction(TestCase):
         self.assertLessEqual(abs(fc-self.f( 1)), 3*eps)
 
     def test_initfun_fixedlen_piecewise_domain_1(self):
-        ff = Chebfun.initfun_fixedlen(self.f, [-2,0,1], [30,20])
+        ff = Chebfun.initfun_fixedlen(self.f, [30,20], [-2,0,1])
         self.assertEqual(ff.funs.size, 2)
         a, b, c = ff.breakdata.keys()
         fa, fb, fc = ff.breakdata.values()
@@ -172,19 +172,19 @@ class Construction(TestCase):
 
     def test_initfun_fixedlen_raises(self):
         initfun = Chebfun.initfun_fixedlen
-        self.assertRaises(BadDomainArgument, initfun, self.f, [-2], 10)
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[-2], n=10)
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=None, n=10)
-        self.assertRaises(BadFunLengthArgument, initfun, self.f, [-1,1], [30,40])
-        self.assertRaises(TypeError, initfun, self.f, [-1,1], None)
+        self.assertRaises(BadDomainArgument, initfun, self.f, 10, [-2])
+        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[-2])
+        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=None)
+        self.assertRaises(BadFunLengthArgument, initfun, self.f, [30,40], [-1,1])
+        self.assertRaises(TypeError, initfun, self.f, None, [-1,1])
 
     def test_initfun_fixedlen_succeeds(self):
-        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [-2,-1,0], []).isempty)
+        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [], [-2,-1,0]).isempty)
         # check that providing a vector with None elements calls the
         # Tech adaptive constructor
         g0 = Chebfun.initfun_adaptive(self.f, [-2,-1,0])
-        g1 = Chebfun.initfun_fixedlen(self.f, [-2,-1,0], [None,None])
-        g2 = Chebfun.initfun_fixedlen(self.f, [-2,-1,0], [None,40])
+        g1 = Chebfun.initfun_fixedlen(self.f, [None,None], [-2,-1,0])
+        g2 = Chebfun.initfun_fixedlen(self.f, [None,40], [-2,-1,0])
         for fun1, fun2 in zip(g1,g0):
             self.assertEqual(sum(fun1.coeffs-fun2.coeffs), 0)
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
@@ -226,8 +226,8 @@ class Properties(TestCase):
         self.assertFalse(self.f0.isconst)
         self.assertFalse(self.f1.isconst)
         self.assertFalse(self.f2.isconst)
-        c1 = Chebfun.initfun_fixedlen(lambda x: 0*x+3, [-2,-1,0,1,2,3], 1)
-        c2 = Chebfun.initfun_fixedlen(lambda x: 0*x-1, [-2,3], 1)
+        c1 = Chebfun.initfun_fixedlen(lambda x: 0*x+3, 1, [-2,-1,0,1,2,3])
+        c2 = Chebfun.initfun_fixedlen(lambda x: 0*x-1, 1, [-2,3])
         self.assertTrue(c1.isconst)
         self.assertTrue(c2.isconst)
 
