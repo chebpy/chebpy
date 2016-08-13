@@ -94,11 +94,11 @@ class Construction(TestCase):
         self.assertRaises(IntervalGap, Chebfun, self.funs_c)
         self.assertRaises(IntervalGap, Chebfun, self.funs_d)
 
-    def test__initempty(self):
+    def test_initempty(self):
         emptyfun = Chebfun.initempty()
         self.assertEqual(emptyfun.funs.size, 0)
 
-    def test__initconst(self):
+    def test_initconst(self):
         self.assertTrue(Chebfun.initconst(1, [-1,1]).isconst)
         self.assertTrue(Chebfun.initconst(-10, linspace(-1,1,11)).isconst)
         self.assertTrue(Chebfun.initconst(3, [-2,0,1]).isconst)
@@ -107,6 +107,27 @@ class Construction(TestCase):
         self.assertFalse(Chebfun([self.fun1]).isconst)
         self.assertFalse(Chebfun([self.fun2]).isconst)
         self.assertFalse(Chebfun([self.fun0, self.fun1]).isconst)
+
+    def test_initidentity(self):
+        _doms = (
+            linspace(-1,1,2),
+            linspace(-1,1,11),
+            linspace(-10,17,351),
+            linspace(-9.3,-3.2,22),  
+            linspace(2.5,144.3,2112),
+        )
+        for _dom in _doms:
+            ff = Chebfun.initidentity(_dom)
+            a, b = ff.support
+            xx = linspace(a, b, 1001)
+            tol = eps * ff.hscale
+            self.assertLessEqual(infnorm(ff(xx)-xx), tol)
+        # test the default case
+        ff = Chebfun.initidentity()
+        a, b = ff.support
+        xx = linspace(a, b, 1001)
+        tol = eps * ff.hscale
+        self.assertLessEqual(infnorm(ff(xx)-xx), tol)     
 
     def test_initfun_adaptive_continuous_domain(self):
         ff = Chebfun.initfun_adaptive(self.f, [-2,-1])
