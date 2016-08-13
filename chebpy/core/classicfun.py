@@ -67,8 +67,14 @@ class Classicfun(Fun):
 
     @classmethod
     def initconst(cls, c, interval):
-        """ """
+        """Classicfun representation of a constant on the supplied interval"""
         onefun = Tech.initconst(c)
+        return cls(onefun, interval)
+
+    @classmethod
+    def initidentity(cls, interval):
+        """Classicfun representation of f(x) = x on the supplied interval"""
+        onefun = Tech.initvalues(interval.values)
         return cls(onefun, interval)
 
     @classmethod

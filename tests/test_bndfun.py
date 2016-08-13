@@ -351,6 +351,14 @@ class Construction(TestCase):
         self.assertTrue(ff.isempty)
         self.assertRaises(TypeError, Bndfun.initempty, [1.])
 
+    def test_identity_construction(self):
+        for (a,b) in [(-1,1), (-10,-2), (-2.3, 1.24), (20,2000)]:
+            itvl = Interval(a,b)
+            ff = Bndfun.initidentity(itvl)
+            self.assertEquals(ff.size, 2)
+            xx = linspace(a,b,1001)
+            tol = eps * abs(itvl.values).max()
+            self.assertLessEqual(infnorm(ff(xx)-xx), tol)
 
 def adaptiveTester(fun, subdomain, funlen):
     ff = Bndfun.initfun_adaptive(fun, subdomain)

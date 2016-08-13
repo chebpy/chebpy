@@ -27,6 +27,10 @@ class Onefun(object):
         pass
 
     @abstractclassmethod
+    def initidentity(cls):
+        pass
+
+    @abstractclassmethod
     def initfun(cls):
         pass
 
@@ -36,6 +40,10 @@ class Onefun(object):
 
     @abstractclassmethod
     def initfun_fixedlen(cls):
+        pass
+
+    @abstractclassmethod
+    def initvalues(cls):
         pass
 
     # -------------------
