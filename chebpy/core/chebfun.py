@@ -316,9 +316,8 @@ class Chebfun(object):
     @property
     @self_empty()
     def x(self):
-        """Return a Chebfun representing the identity function on the support
-        of self"""
-        raise NotImplementedError
+        """Return a Chebfun representing the identity the support of self"""
+        return self.__class__.initidentity(self.support)
 
     # -----------
     #  utilities

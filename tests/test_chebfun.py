@@ -296,6 +296,19 @@ class ClassUsage(TestCase):
             a2 = [x for x in f.funs]
             self.assertTrue(equal(a1,a2).all())
 
+    def test_x_property(self):
+        _doms = (
+            linspace(-1,1,2),
+            linspace(-1,1,11),
+            linspace(-9.3,-3.2,22),
+        )
+        for _dom in _doms:
+            f = Chebfun.initfun_fixedlen(sin, 1000, _dom)
+            x = f.x
+            a, b = x.support
+            pts = linspace(a, b, 1001)
+            tol = eps * f.hscale
+            self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
 class Algebra(TestCase):
 

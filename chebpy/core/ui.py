@@ -19,9 +19,12 @@ def chebfun(f=None, domain=None, n=None):
     if hasattr(f, "__call__"):
         return _initfun(f, domain, n)
 
-     # chebfun('x', ... )
+    # chebfun('x', ... )
     if isinstance(f, str) and len(f) is 1 and f.isalpha():
-        return _initfun(lambda x: x, domain, n)
+        if n:
+            return _initfun(lambda x: x, domain, n)
+        else:
+            return Chebfun.initidentity(domain)
 
     try:
         # chebfun(3.14, ... ), chebfun('3.14', ... )
