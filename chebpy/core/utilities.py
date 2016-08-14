@@ -10,6 +10,7 @@ from numpy import diff
 from numpy import empty
 from numpy import logical_and
 from numpy import maximum
+from numpy import ndarray
 from numpy import sort
 from numpy import unique
 
@@ -20,6 +21,7 @@ from chebpy.core.exceptions import IntervalValues
 from chebpy.core.exceptions import InvalidDomain
 from chebpy.core.exceptions import SupportMismatch
 from chebpy.core.exceptions import NotSubdomain
+from chebpy.core.exceptions import BadDomainArgument
 
 HTOL = 5 * DefaultPrefs.eps
 
@@ -157,7 +159,8 @@ class Domain(object):
     def merge(self, other):
         """Merge two domain objects (without checking first whether they have
         the same support)."""
-        all_bpts = append(self.breakpoints, other.breakpoints)
+        otherpts = other if isinstance(other, ndarray) else other.breakpoints
+        all_bpts = append(self.breakpoints, otherpts)
         new_bpts = unique(all_bpts)
         mergetol = maximum(HTOL, HTOL*abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
@@ -270,3 +273,18 @@ def compute_breakdata(funs):
         xout = append(append(xl, x), xr)
         yout = append(append(yl, y), yr)
         return OrderedDict(zip(xout, yout))
+
+
+def generate_funs(domain, bndfun_constructor, arglist):
+    """Method used by several of the Chebfun classmethod constructors to
+    generate a collection of funs."""
+    domain = array(domain)
+    if domain.size < 2:
+        raise BadDomainArgument
+    funs = array([])
+    for interval in zip(domain[:-1], domain[1:]):
+        interval = Interval(*interval)
+        args = arglist + [interval]
+        fun = bndfun_constructor(*args)
+        funs = append(funs, fun)
+    return funs

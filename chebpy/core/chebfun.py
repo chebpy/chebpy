@@ -36,6 +36,7 @@ from numpy import concatenate
 from numpy import full
 from numpy import isscalar
 from numpy import linspace
+from numpy import mean
 from numpy import max
 from numpy import nan
 from numpy import ones
@@ -48,27 +49,15 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
 from chebpy.core.utilities import Domain
 from chebpy.core.utilities import check_funs
+from chebpy.core.utilities import generate_funs
 from chebpy.core.utilities import compute_breakdata
 from chebpy.core.decorators import self_empty
 from chebpy.core.decorators import float_argument
+from chebpy.core.decorators import cast_arg_to_chebfun
 from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
 
-
-def _generate_funs(domain, bndfun_constructor, arglist):
-    """Method used by several of the Chebfun classmethod constructors to
-    generate a collection of funs."""
-    domain = array(domain)
-    if domain.size < 2:
-        raise BadDomainArgument
-    funs = array([])
-    for interval in zip(domain[:-1], domain[1:]):
-        interval = Interval(*interval)
-        args = arglist + [interval]
-        fun = bndfun_constructor(*args)
-        funs = append(funs, fun)
-    return funs
 
 class Chebfun(object):
 
@@ -81,17 +70,17 @@ class Chebfun(object):
 
     @classmethod
     def initconst(cls, c, domain=DefaultPrefs.domain):
-        funs = _generate_funs(domain, Bndfun.initconst, [c])
+        funs = generate_funs(domain, Bndfun.initconst, [c])
         return cls(funs)
 
     @classmethod
     def initidentity(cls, domain=DefaultPrefs.domain):
-        funs = _generate_funs(domain, Bndfun.initidentity, [])
+        funs = generate_funs(domain, Bndfun.initidentity, [])
         return cls(funs)
 
     @classmethod
     def initfun_adaptive(cls, f, domain=DefaultPrefs.domain):
-        funs = _generate_funs(domain, Bndfun.initfun_adaptive, [f])
+        funs = generate_funs(domain, Bndfun.initfun_adaptive, [f])
         return cls(funs)
 
     @classmethod
@@ -117,7 +106,7 @@ class Chebfun(object):
     #  operator overloads
     # --------------------
     def __add__(self, f):
-        return self.__apply_binop(f, __add__)
+        return self._apply_binop(f, __add__)
 
     @self_empty(array([]))
     @float_argument
@@ -151,10 +140,10 @@ class Chebfun(object):
         return self.funs.__iter__()
 
     def __div__(self, f):
-        return self.__apply_binop(f, __div__)
+        return self._apply_binop(f, __div__)
 
     def __mul__(self, f):
-        return self.__apply_binop(f, __mul__)
+        return self._apply_binop(f, __mul__)
 
     def __neg__(self):
         return self.__class__([-fun for fun in self])
@@ -209,7 +198,7 @@ class Chebfun(object):
         return out
 
     def __sub__(self, f):
-        return self.__apply_binop(f, __sub__)
+        return self._apply_binop(f, __sub__)
 
     __truediv__ = __div__
 
@@ -217,7 +206,7 @@ class Chebfun(object):
     #  "private" methods
     # -------------------
     @self_empty()
-    def __apply_binop(self, f, op):
+    def _apply_binop(self, f, op):
         """Funnel method used in the implementation of Chebfun binary
         operators. The high-level idea is to first break each chebfun into a
         series of pieces corresponding to the union of the domains of each
@@ -237,8 +226,8 @@ class Chebfun(object):
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
-            chbfn1 = self.__break(newdom)
-            chbfn2 = f.__break(newdom)
+            chbfn1 = self._break(newdom)
+            chbfn2 = f._break(newdom)
             simplify = True
         newfuns = []
         for fun1, fun2 in izip(chbfn1, chbfn2):
@@ -249,7 +238,7 @@ class Chebfun(object):
         return self.__class__(newfuns)
 
 
-    def __break(self, targetdomain):
+    def _break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. All of
         the breakpoints of self are required to be breakpoints of targetdomain.
         This can be achieved using Domain.union(f) prior to call."""
@@ -300,7 +289,7 @@ class Chebfun(object):
     @property
     @self_empty(False)
     def isconst(self):
-        # TODO: find an absract way of referencing funs[0].coeffs[0]
+        # TODO: find an abstract way of referencing funs[0].coeffs[0]
         c = self.funs[0].coeffs[0]
         return all(fun.isconst and fun.coeffs[0]==c for fun in self)
 
@@ -380,6 +369,24 @@ class Chebfun(object):
         for fun in self:
             fun.plotcoeffs(ax=ax)
         return ax
+
+    # ----------
+    #  utilities
+    # ----------
+    @self_empty()
+    @cast_arg_to_chebfun
+    def maximum(self, other):
+        diffnc = self - other
+        joined = self.domain.union(other.domain)
+        newdom = joined.merge(diffnc.roots())
+        funsA = self._break(newdom).funs
+        funsB = other._break(newdom).funs
+        x0 = mean(newdom.breakpoints[:2])
+        if self(x0) > other(x0):
+            funsA[1::2] = funsB[1::2]
+        else:
+            funsA[0::2] = funsB[0::2]
+        return self.__class__(funsA)
 
 # -----------------------
 #  numpy unary functions

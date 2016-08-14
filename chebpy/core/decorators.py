@@ -90,3 +90,16 @@ def float_argument(f):
         out = f(self, *args, **kwargs)
         return out[0] if isscalar(x) else out
     return thewrapper
+
+# attempt to cast the first argument to chebfun if is not so already. The only
+# castable type at this point is a numeric type
+def cast_arg_to_chebfun(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        other = args[0]
+        if not isinstance(other, self.__class__):
+            fun = self.initconst(args[0], self.support)
+            args = list(args)
+            args[0] = fun
+        return f(self, *args, **kwargs)
+    return wrapper

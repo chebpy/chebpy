@@ -776,7 +776,7 @@ class PrivateMethods(TestCase):
     def test__break_1(self):
         altdom = Domain([-2,-1,1,2,3])
         newdom = self.f1.domain.union(altdom)
-        f1_new = self.f1._Chebfun__break(newdom)
+        f1_new = self.f1._break(newdom)
         self.assertEqual(f1_new.domain, newdom)
         self.assertNotEqual(f1_new.domain, altdom)
         self.assertNotEqual(f1_new.domain, self.f1.domain)
@@ -787,7 +787,7 @@ class PrivateMethods(TestCase):
     def test__break_2(self):
         altdom = Domain([-2,3])
         newdom = self.f1.domain.union(altdom)
-        f1_new = self.f1._Chebfun__break(newdom)
+        f1_new = self.f1._break(newdom)
         self.assertEqual(f1_new.domain, newdom)
         self.assertNotEqual(f1_new.domain, altdom)
         xx = linspace(-2,3,1000)
@@ -797,7 +797,7 @@ class PrivateMethods(TestCase):
     def test__break_3(self):
         altdom = Domain(linspace(-2,3,1000))
         newdom = self.f2.domain.union(altdom)
-        f2_new = self.f2._Chebfun__break(newdom)
+        f2_new = self.f2._break(newdom)
         self.assertEqual(f2_new.domain, newdom)
         self.assertNotEqual(f2_new.domain, altdom)
         self.assertNotEqual(f2_new.domain, self.f2.domain)
@@ -808,8 +808,8 @@ class PrivateMethods(TestCase):
     def test__break_raises(self):
         dom1 = Domain([-1,1])
         dom2 = Domain(self.f2.domain.breakpoints[:-1])
-        self.assertRaises(DomainBreakpoints, self.f1._Chebfun__break, dom1)
-        self.assertRaises(DomainBreakpoints, self.f2._Chebfun__break, dom2)
+        self.assertRaises(DomainBreakpoints, self.f1._break, dom1)
+        self.assertRaises(DomainBreakpoints, self.f2._break, dom2)
 
 
 # reset the testsfun variable so it doesn't get picked up by nose
