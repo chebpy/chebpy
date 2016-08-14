@@ -386,7 +386,8 @@ class Chebfun(object):
             funsA[1::2] = funsB[1::2]
         else:
             funsA[0::2] = funsB[0::2]
-        return self.__class__(funsA)
+        funs = [x.simplify() for x in funsA]
+        return self.__class__(funs)
 
 # -----------------------
 #  numpy unary functions
