@@ -43,6 +43,8 @@ from numpy import sum
 from numpy import abs
 from numpy import pi
 from numpy import linspace
+from numpy import maximum
+from numpy import minimum
 from numpy import equal
 from numpy import isscalar
 from numpy import isfinite
@@ -60,6 +62,8 @@ from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.exceptions import DomainBreakpoints
+
+from chebpy import chebfun
 
 from utilities import infnorm
 from utilities import testfunctions
@@ -811,6 +815,44 @@ class PrivateMethods(TestCase):
         self.assertRaises(DomainBreakpoints, self.f1._break, dom1)
         self.assertRaises(DomainBreakpoints, self.f2._break, dom2)
 
+
+class DomainBreakingOps(TestCase):
+    pass
+
+# domain, test_tolerance
+domainBreakOp_args = [
+    (lambda x: x, 0, [-1,1], eps),
+    (sin, cos, [-1,1], eps),
+#    ([-2,1], eps),
+#    ([-1,2], eps),
+#    ([-5,9], 35*eps),
+]
+
+# add tests for maximu, minimum
+def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
+    a, b = dom
+    xx = linspace(a,b,1001)
+    ff = chebfun(f, dom)
+    gg = chebfun(g, dom)
+    # convert constant g to to callable
+    if isinstance(g, (int, float)):
+        ffgg = domainBreakOp(f(xx), g)
+    else:
+        ffgg = domainBreakOp(f(xx), g(xx))
+    fg = getattr(ff, domainBreakOp.__name__)(gg)
+    def tester(self):
+        vscl = max([ff.vscale, gg.vscale])
+        hscl = max([ff.hscale, gg.hscale])
+        lscl = max([fun.size for fun in append(ff.funs, gg.funs)])
+        self.assertLessEqual(infnorm(fg(xx)-ffgg), vscl*hscl*lscl*tol)
+    return tester
+
+for domainBreakOp in (maximum, ):
+    for n, args in enumerate(domainBreakOp_args):
+        ff, gg, dom, tol = args
+        _testfun_ = domainBreakOpTester(domainBreakOp, ff, gg, dom, tol)
+        _testfun_.__name__ = "test_{}_{}".format(domainBreakOp.__name__, n)
+        setattr(DomainBreakingOps, _testfun_.__name__, _testfun_)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 _testfun_ = None
