@@ -692,7 +692,7 @@ class Calculus(TestCase):
         for f in [self.f1, self.f2, self.f3, self.f4]:
             a, b = f.support
             x = xx[(xx>a)&(xx<b)]
-            self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 1e3*eps)
+            self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 2e3*eps)
 
     def test_cumsum(self):
         xx = linspace(-5,5,10000)
