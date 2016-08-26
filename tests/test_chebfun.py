@@ -61,7 +61,6 @@ from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
-from chebpy.core.exceptions import DomainBreakpoints
 
 from chebpy import chebfun
 
@@ -808,13 +807,6 @@ class PrivateMethods(TestCase):
         xx = linspace(-2,3,1000)
         error = infnorm(self.f2(xx)-f2_new(xx))
         self.assertLessEqual(error, 3*eps)
-
-    def test__break_raises(self):
-        dom1 = Domain([-1,1])
-        dom2 = Domain(self.f2.domain.breakpoints[:-1])
-        self.assertRaises(DomainBreakpoints, self.f1._break, dom1)
-        self.assertRaises(DomainBreakpoints, self.f2._break, dom2)
-
 
 class DomainBreakingOps(TestCase):
     pass

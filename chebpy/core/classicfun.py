@@ -166,8 +166,10 @@ class Classicfun(Fun):
         construction using same number of degrees of freedom as self."""
         if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
-        cls = self.__class__
-        return cls.initfun_fixedlen(self, subinterval, self.size)
+        if self.interval == subinterval:
+            return self
+        else:
+            return type(self).initfun_fixedlen(self, subinterval, self.size)
 
     # -------------
     #  rootfinding

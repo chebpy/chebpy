@@ -56,7 +56,6 @@ from chebpy.core.decorators import float_argument
 from chebpy.core.decorators import cast_arg_to_chebfun
 from chebpy.core.exceptions import BadDomainArgument
 from chebpy.core.exceptions import BadFunLengthArgument
-from chebpy.core.exceptions import DomainBreakpoints
 
 
 class Chebfun(object):
@@ -239,25 +238,18 @@ class Chebfun(object):
 
 
     def _break(self, targetdomain):
-        """Resamples self to the supplied Domain object, targetdomain. All of
-        the breakpoints of self are required to be breakpoints of targetdomain.
-        This can be achieved using Domain.union(f) prior to call."""
-
-        if not self.domain.breakpoints_in(targetdomain).all():
-            raise DomainBreakpoints
-
+        """Resamples self to the supplied Domain object, targetdomain. This
+        method is intended as private since one will typically need to have
+        called either Domain.union(f), or Domain.merge(f) prior to call."""
         newfuns = []
-        subitvls = targetdomain.intervals
-        interval = subitvls.next()
-
-        # loop over the funs in self, incrementing subitvls
-        # so long as interval remains contained within fun.interval
+        subintervals = targetdomain.intervals
+        interval = subintervals.next()
         for fun in self:
             while interval in fun.interval:
                 newfun = fun.restrict(interval)
                 newfuns.append(newfun)
                 try:
-                    interval = subitvls.next()
+                    interval = subintervals.next()
                 except StopIteration:
                     break
         return self.__class__(newfuns)
@@ -313,6 +305,11 @@ class Chebfun(object):
     # -----------
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
+
+    def restrict(self, subinterval):
+        """Restrict a chebfun to a subinterval"""
+        newdom = self.domain.restrict(Domain(subinterval))
+        return self._break(newdom)
 
     @self_empty(array([]))
     def roots(self):
