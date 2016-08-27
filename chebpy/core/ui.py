@@ -2,7 +2,9 @@
 
 """User-interface functions"""
 
+from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
+from chebpy.core.utilities import Domain
 from chebpy.core.settings import DefaultPrefs
 
 
@@ -32,9 +34,20 @@ def chebfun(f=None, domain=None, n=None):
     except:
         raise ValueError(f)
 
-
 def _initfun(f, domain, n):
     if n is None:
         return Chebfun.initfun_adaptive(f, domain)
     else:
         return Chebfun.initfun_fixedlen(f, domain, n)
+
+def piecewise_constant(domain=[-1,0,1], values=[0,1]):
+    """Initlialise a piecewise constant Chebfun"""
+    funs = []
+    intervals = [x for x in Domain(domain).intervals]
+    for interval, value in zip(intervals, values):
+        funs.append(Bndfun.initconst(value, interval))
+    return Chebfun(funs)
+
+def heaviside(domain=[-1,0,1]):
+    """Heaviside step-function"""
+    return piecewise_constant(domain)
