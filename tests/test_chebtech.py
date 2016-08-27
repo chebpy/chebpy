@@ -296,7 +296,7 @@ def_integrals = [
     (lambda x: sin(4*pi*x),        40,                    .0,  1e1*eps),
     (lambda x: cos(x),             15,     1.682941969615793,    2*eps),
     (lambda x: cos(4*pi*x),        39,                    .0,    2*eps),
-    (lambda x: exp(cos(4*pi*x)),  182,     2.532131755504016,    2*eps),
+    (lambda x: exp(cos(4*pi*x)),  182,     2.532131755504016,    4*eps),
     (lambda x: cos(3244*x),      3389, 5.879599674161602e-04,  5e2*eps),
     (lambda x: exp(x),             15,        exp(1)-exp(-1),    2*eps),
     (lambda x: 1e10*exp(x),        15, 1e10*(exp(1)-exp(-1)), 2e10*eps),
