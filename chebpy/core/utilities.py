@@ -261,7 +261,7 @@ def compute_breakdata(funs):
     if funs.size == 0:
         return OrderedDict()
     else:
-        points = array([fun.endpoints for fun in funs])
+        points = array([fun.support for fun in funs])
         values = array([fun.endvalues for fun in funs])
         points = points.flatten()
         values = values.flatten()

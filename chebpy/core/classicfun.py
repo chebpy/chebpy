@@ -111,7 +111,7 @@ class Classicfun(Fun):
 
     def __str__(self):
         out = "{0}([{2}, {3}], {1})".format(
-            self.__class__.__name__, self.size, *self.endpoints)
+            self.__class__.__name__, self.size, *self.support)
         return out
 
     # ------------
@@ -123,14 +123,9 @@ class Classicfun(Fun):
         return self.onefun.coeffs
 
     @property
-    def endpoints(self):
-        """Return a 2-array of endpoints taken from the interval"""
-        return self.interval.values
-
-    @property
     def endvalues(self):
         """Return a 2-array of endpointvalues taken from the interval"""
-        return self.__call__(self.endpoints)
+        return self.__call__(self.support)
 
     @property
     def interval(self):
@@ -151,6 +146,11 @@ class Classicfun(Fun):
     def size(self):
         """Return the size property of the underlying onefun"""
         return self.onefun.size
+
+    @property
+    def support(self):
+        """Return a 2-array of endpoints taken from the interval"""
+        return self.interval.values
 
     @property
     def vscale(self):
@@ -182,24 +182,24 @@ class Classicfun(Fun):
     #  calculus
     # ----------
     def cumsum(self):
-        a, b = self.endpoints
+        a, b = self.support
         onefun = .5*(b-a) * self.onefun.cumsum()
         return self.__class__(onefun, self.interval)
 
     def diff(self):
-        a, b = self.endpoints
+        a, b = self.support
         onefun = 2./(b-a) * self.onefun.diff()
         return self.__class__(onefun, self.interval)
 
     def sum(self):
-        a, b = self.endpoints
+        a, b = self.support
         return .5*(b-a) * self.onefun.sum()
 
     # ----------
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        a, b = self.endpoints
+        a, b = self.support
         ax = ax if ax else gca()
         xx = linspace(a, b, 2001)
         yy = self(xx)

@@ -106,13 +106,13 @@ class ClassUsage(TestCase):
         self.assertEquals(b1.size, 1)
         self.assertEquals(b2.size, cfs.size)
 
-    def test_endpoints(self):
-        a, b = self.ff.endpoints
+    def test_support(self):
+        a, b = self.ff.support
         self.assertEqual(a, -2)
         self.assertEqual(b, 3)
 
     def test_endvalues(self):
-        a, b = self.ff.endpoints
+        a, b = self.ff.support
         fa, fb = self.ff.endvalues
         self.assertLessEqual(abs(fa-self.f(a)), 2e1*eps)
         self.assertLessEqual(abs(fb-self.f(b)), 2e1*eps)

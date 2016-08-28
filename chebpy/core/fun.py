@@ -93,10 +93,6 @@ class Fun(object):
         pass
 
     @abstractproperty
-    def endpoints(self):
-        pass
-
-    @abstractproperty
     def interval(self):
         pass
 
@@ -110,6 +106,10 @@ class Fun(object):
 
     @abstractproperty
     def size(self):
+        pass
+
+    @abstractproperty
+    def support(self):
         pass
 
     @abstractproperty
