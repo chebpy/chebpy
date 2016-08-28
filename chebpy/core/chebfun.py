@@ -174,7 +174,7 @@ class Chebfun(object):
         tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
         rowdta = ""
         for fun in self:
-            endpts = fun.endpoints
+            endpts = fun.support
             xl, xr = endpts
             fl, fr = fun(endpts)
             row = tmplat.format(xl, xr, fun.size, fl, fr)
