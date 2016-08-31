@@ -256,7 +256,7 @@ class Chebfun(object):
     # ------------
     @property
     def breakpoints(self):
-        return array(self.breakdata.keys())
+        return array([x for x in self.breakdata.keys()])
 
     @property
     @self_empty(array([]))
