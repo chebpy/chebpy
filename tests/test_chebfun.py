@@ -5,7 +5,7 @@
 from __future__ import division
 
 from operator import __add__
-from operator import __div__
+from operator import truediv
 from operator import __mul__
 from operator import __neg__
 from operator import __pos__
@@ -480,7 +480,7 @@ def binaryOpTester(f, g, binop, dom, tol):
 
 binops = (
     __add__,
-    __div__,
+    truediv,
     __mul__,
     __sub__,
     )
@@ -488,8 +488,8 @@ binops = (
 for binop in binops:
     for (f, _, _), (g, _, denomHasRoots) in combinations(testfunctions, 2):
         for dom, tol in chebfun_testdomains:
-            if binop is __div__ and denomHasRoots:
-                # skip __div__ test if denominator has roots on the real line
+            if binop is truediv and denomHasRoots:
+                # skip truediv test if denominator has roots on the real line
                 pass
             else:
                 _testfun_ = binaryOpTester(f, g, binop, dom, 2*tol)

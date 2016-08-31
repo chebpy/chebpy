@@ -1,6 +1,7 @@
 *.py[cod]
 *.todo
 *.ini
+*~
 
 # C extensions
 *.so

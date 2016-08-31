@@ -2,10 +2,8 @@
 
 from __future__ import division
 
-from itertools import izip
-
 from operator import __add__
-from operator import __div__
+from operator import truediv
 from operator import __mul__
 from operator import __sub__
 
@@ -138,9 +136,6 @@ class Chebfun(object):
     def __iter__(self):
         return self.funs.__iter__()
 
-    def __div__(self, f):
-        return self._apply_binop(f, __div__)
-
     def __mul__(self, f):
         return self._apply_binop(f, __mul__)
 
@@ -152,8 +147,8 @@ class Chebfun(object):
 
     __radd__ = __add__
 
-    def __rdiv__(self, c):
-        # Executed when __div__(f, self) fails, which is to say whenever c
+    def __rtruediv__(self, c):
+        # Executed when truediv(f, self) fails, which is to say whenever c
         # is not a Chebfun. We proceeed on the assumption f is a scalar.
         constfun = lambda x: .0*x + c
         newfuns = []
@@ -185,10 +180,12 @@ class Chebfun(object):
         return header + toprow + rowdta + btmrow + btmxtr
 
     __rmul__ = __mul__
-    __rtruediv__ = __rdiv__
 
     def __rsub__(self, f):
         return -(self-f)
+
+    def __truediv__(self, f):
+        return self._apply_binop(f, truediv)
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
@@ -199,7 +196,7 @@ class Chebfun(object):
     def __sub__(self, f):
         return self._apply_binop(f, __sub__)
 
-    __truediv__ = __div__
+#    __truediv__ = __div__
 
     # -------------------
     #  "private" methods
@@ -229,7 +226,7 @@ class Chebfun(object):
             chbfn2 = f._break(newdom)
             simplify = True
         newfuns = []
-        for fun1, fun2 in izip(chbfn1, chbfn2):
+        for fun1, fun2 in zip(chbfn1, chbfn2):
             newfun = op(fun1, fun2)
             if simplify:
                 newfun = newfun.simplify()
