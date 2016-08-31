@@ -64,8 +64,8 @@ from chebpy.core.exceptions import BadFunLengthArgument
 
 from chebpy import chebfun
 
-from utilities import infnorm
-from utilities import testfunctions
+from tests.utilities import infnorm
+from tests.utilities import testfunctions
 
 eps = DefaultPrefs.eps
 

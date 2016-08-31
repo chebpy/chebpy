@@ -30,7 +30,7 @@ from chebpy.core.exceptions import NotSubdomain
 
 from chebpy import chebfun
 
-from utilities import infnorm
+from tests.utilities import infnorm
 
 seed(0)
 

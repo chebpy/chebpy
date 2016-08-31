@@ -33,10 +33,10 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
 
-from utilities import testfunctions
-from utilities import infnorm
-from utilities import scaled_tol
-from utilities import infNormLessThanTol
+from tests.utilities import testfunctions
+from tests.utilities import infnorm
+from tests.utilities import scaled_tol
+from tests.utilities import infNormLessThanTol
 
 eps = DefaultPrefs.eps
 

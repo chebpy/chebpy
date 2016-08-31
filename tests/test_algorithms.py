@@ -21,10 +21,10 @@ from chebpy.core.algorithms import bary
 from chebpy.core.algorithms import clenshaw
 from chebpy.core.algorithms import coeffmult
 
-from utilities import testfunctions
-from utilities import scaled_tol
-from utilities import infNormLessThanTol
-from utilities import infnorm
+from tests.utilities import testfunctions
+from tests.utilities import scaled_tol
+from tests.utilities import infNormLessThanTol
+from tests.utilities import infnorm
 
 seed(0)
 

@@ -50,8 +50,8 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 
-from utilities import testfunctions
-from utilities import infnorm
+from tests.utilities import testfunctions
+from tests.utilities import infnorm
 
 eps = DefaultPrefs.eps
 
