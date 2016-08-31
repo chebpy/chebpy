@@ -8,9 +8,6 @@ python:
 addons:
   apt:
     packages:
-    - libopenblas-dev
-    - liblapack-dev
-    - libatlas-dev
     - libfftw3-dev
 script:
     - nosetests
