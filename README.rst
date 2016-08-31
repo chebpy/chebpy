@@ -1,16 +1,16 @@
 ================================================
-chebpy - A provisional Python implementation of Chebfun
+ChebPy - A Python implementation of Chebfun
 ================================================
 
 
-.. image:: https://travis-ci.org/chebfun/chebfun.svg?branch=master
-    :target: https://travis-ci.org/chebfun/chebfun
+.. image:: https://travis-ci.org/chebpy/chebpy.svg?branch=master
+    :target: https://travis-ci.org/chebpy/chebpy
 
 
 Installation
 ------------
 
-To install chebpy, you should first install the `fftw` library::
+To install ChebPy, you should first install the `fftw` library::
 
     # On Linux
     $ sudo apt-get install libfftw3-dev
@@ -21,4 +21,3 @@ To install chebpy, you should first install the `fftw` library::
 And then proceed to install chebpy with::
 
     $ python setup.py install
-
