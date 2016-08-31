@@ -128,7 +128,7 @@ def bary(xx, fk, xk, vk):
     # either iterate over the evaluation points, or ...
     if xx.size < 4*xk.size:
         out = zeros(xx.size)
-        for i in xrange(xx.size):
+        for i in range(xx.size):
             tt = vk / (xx[i] - xk)
             out[i] = dot(tt, fk) / tt.sum()
 
@@ -136,7 +136,7 @@ def bary(xx, fk, xk, vk):
     else:
         numer = zeros(xx.size)
         denom = zeros(xx.size)
-        for j in xrange(xk.size):
+        for j in range(xk.size):
             temp = vk[j] / (xx - xk[j])
             numer = numer + temp * fk[j]
             denom = denom + temp
@@ -228,7 +228,7 @@ def adaptive(cls, fun, maxpow2=16):
     """Adaptive constructor: cycle over powers of two, calling
     standard_chop each time, the output of which determines whether or not
     we are happy."""
-    for k in xrange(4, maxpow2+1):
+    for k in range(4, maxpow2+1):
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
