@@ -383,11 +383,17 @@ class Construction(TestCase):
 
     #TODO: expand to all the constructor variants
     def test_initvalues(self):
-        for n in range(10):
+        # test n = 0 case separately
+        vals = rand(0)
+        fun = Chebtech2.initvalues(vals)
+        cfs = Chebtech2._vals2coeffs(vals)
+        self.assertTrue(fun.coeffs.size==cfs.size==0)
+        # now test the other cases
+        for n in range(1,10):
             vals = rand(n)
             fun = Chebtech2.initvalues(vals)
             cfs = Chebtech2._vals2coeffs(vals)
-            self.assertItemsEqual(fun.coeffs, cfs)
+            self.assertEqual(infnorm(fun.coeffs-cfs), 0.)
 
     def test_initidentity(self):
         x = Chebtech2.initidentity()
