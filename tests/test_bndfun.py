@@ -9,7 +9,7 @@ from itertools import combinations
 from collections import OrderedDict
 
 from operator import __add__
-from operator import __div__
+from operator import truediv
 from operator import __mul__
 from operator import __neg__
 from operator import __pos__
@@ -484,19 +484,19 @@ class Algebra(TestCase):
 
     # check (empty Bndfun) / (Bndfun) = (empty Bndfun)
     #   and (Bndfun) / (empty Bndfun) = (empty Bndfun)
-    def test__div__rdiv__empty(self):
+    def test_truediv_empty(self):
         subdomain = Interval(-2,3)
         for (fun, _, _) in testfunctions:
             bndfun = Bndfun.initfun_adaptive(fun, subdomain)
-            self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
-            self.assertTrue(__div__(self.emptyfun, bndfun).isempty)
+            self.assertTrue(truediv(self.emptyfun, bndfun).isempty)
+            self.assertTrue(truediv(self.emptyfun, bndfun).isempty)
             # __truediv__
             self.assertTrue((self.emptyfun/bndfun).isempty)
             self.assertTrue((bndfun/self.emptyfun).isempty)
 
     # check the output of constant / Bndfun
     #                 and Bndfun / constant
-    def test__div__rdiv__constant(self):
+    def test_truediv_constant(self):
         subdomain = Interval(-.5,.9)
         xx = subdomain(self.yy)
         for (fun, funlen, hasRoots) in testfunctions:
@@ -524,7 +524,7 @@ class Algebra(TestCase):
 
 binops = (
     __add__,
-    __div__,
+    truediv,
     __mul__,
     __sub__,
     )
@@ -552,8 +552,8 @@ for binop in binops:
     # add the generic binary operator tests
     for (f, _, _), (g, _, denomRoots) in combinations(testfunctions, 2):
         for subdomain in subdomains:
-            if binop is __div__ and denomRoots:
-                # skip __div__ test if denominator has roots on the real line
+            if binop is truediv and denomRoots:
+                # skip truediv test if denominator has roots on the real line
                 pass
             else:
                 _testfun_ = binaryOpTester(f, g, subdomain, binop)
@@ -617,30 +617,28 @@ for ufunc in ufuncs:
 uf1 = lambda x: x
 uf1.__name__ = "x"
 
-ufunc_test_params = OrderedDict(
-    [
-        (arccos,  [([uf1, (-.8,.8)],  eps), ]),
-        (arccosh, [([uf1, (2,3)    ], eps), ]),
-        (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
-        (arcsinh, [([uf1, (2,3)    ], eps), ]),
-        (arctan,  [([uf1, (-.8,.8)],  eps), ]),
-        (arctanh, [([uf1, (-.8,.8)],  eps), ]),
-        (cos,     [([uf1, (-3,3)   ], eps), ]),
-        (cosh,    [([uf1, (-3,3)   ], eps), ]),
-        (exp,     [([uf1, (-3,3)   ], eps), ]),
-        (exp2,    [([uf1, (-3,3)   ], eps), ]),
-        (expm1,   [([uf1, (-3,3)   ], eps), ]),
-        (log,     [([uf1, (2,3)    ], eps), ]),
-        (log2,    [([uf1, (2,3)    ], eps), ]),
-        (log10,   [([uf1, (2,3)    ], eps), ]),
-        (log1p,   [([uf1, (-.8,.8)],  eps), ]),
-        (sinh,    [([uf1, (-3,3)   ], eps), ]),
-        (sin,     [([uf1, (-3,3)   ], eps), ]),
-        (tan,     [([uf1, (-.8,.8)],  eps), ]),
-        (tanh,    [([uf1, (-3,3)   ], eps), ]),
-        (sqrt,    [([uf1, (2,3)    ], eps), ]),
-    ]
-)
+ufunc_test_params = [
+    (arccos,  [([uf1, (-.8,.8)],  eps), ]),
+    (arccosh, [([uf1, (2,3)    ], eps), ]),
+    (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
+    (arcsinh, [([uf1, (2,3)    ], eps), ]),
+    (arctan,  [([uf1, (-.8,.8)],  eps), ]),
+    (arctanh, [([uf1, (-.8,.8)],  eps), ]),
+    (cos,     [([uf1, (-3,3)   ], eps), ]),
+    (cosh,    [([uf1, (-3,3)   ], eps), ]),
+    (exp,     [([uf1, (-3,3)   ], eps), ]),
+    (exp2,    [([uf1, (-3,3)   ], eps), ]),
+    (expm1,   [([uf1, (-3,3)   ], eps), ]),
+    (log,     [([uf1, (2,3)    ], eps), ]),
+    (log2,    [([uf1, (2,3)    ], eps), ]),
+    (log10,   [([uf1, (2,3)    ], eps), ]),
+    (log1p,   [([uf1, (-.8,.8)],  eps), ]),
+    (sinh,    [([uf1, (-3,3)   ], eps), ]),
+    (sin,     [([uf1, (-3,3)   ], eps), ]),
+    (tan,     [([uf1, (-.8,.8)],  eps), ]),
+    (tanh,    [([uf1, (-3,3)   ], eps), ]),
+    (sqrt,    [([uf1, (2,3)    ], eps), ]),
+]
 
 def ufuncTester(ufunc, f, interval, tol):
     ff = Bndfun.initfun_adaptive(f, interval)
@@ -653,7 +651,7 @@ def ufuncTester(ufunc, f, interval, tol):
         self.assertLessEqual(infnorm(gg(xx)-GG(xx)), vscl*lscl*tol)
     return tester
 
-for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params.iteritems():
+for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params:
     interval = Interval(*intvl)
     _testfun_ = ufuncTester(ufunc, f, interval, tol)
     _testfun_.__name__ = \

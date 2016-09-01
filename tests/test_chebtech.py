@@ -6,7 +6,7 @@ Unit-tests for pyfun/core/chebtech.py
 from __future__ import division
 
 from operator import __add__
-from operator import __div__
+from operator import truediv
 from operator import __mul__
 from operator import __neg__
 from operator import __pos__
@@ -517,21 +517,21 @@ class Algebra(TestCase):
 
     # check (empty Chebtech) / (Chebtech) = (empty Chebtech)
     #   and (Chebtech) / (empty Chebtech) = (empty Chebtech)
-    def test__div__rdiv__empty(self):
+    def test_truediv_empty(self):
         for (fun, funlen, _) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue(__div__(self.emptyfun,chebtech).isempty)
-            self.assertTrue(__div__(chebtech,self.emptyfun).isempty)
+            self.assertTrue(truediv(self.emptyfun,chebtech).isempty)
+            self.assertTrue(truediv(chebtech,self.emptyfun).isempty)
             # __truediv__
             self.assertTrue((self.emptyfun/chebtech).isempty)
             self.assertTrue((chebtech/self.emptyfun).isempty)
 
     # check the output of constant / Chebtech
     #                 and Chebtech / constant
-    # this tests __div__, __rdiv__, __truediv__, __rtruediv__, since
+    # this tests truediv, __rdiv__, __truediv__, __rtruediv__, since
     # from __future__ import division is executed at the top of the file
-    # TODO: find a way to test __div__ and  __truediv__ genuinely separately
-    def test__div__rdiv__constant(self):
+    # TODO: find a way to test truediv and  __truediv__ genuinely separately
+    def test_truediv_constant(self):
         xx = self.xx
         for (fun, funlen, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
@@ -575,7 +575,7 @@ def binaryOpTester(f, g, binop, nf, ng):
 # test need to be added manually to the class.
 binops = (
     __add__,
-    __div__,
+    truediv,
     __mul__,
     __sub__,
     )
@@ -583,8 +583,8 @@ binops = (
 for binop in binops:
     # add generic binary operator tests
     for (f, nf, _), (g, ng, denomRoots) in combinations(testfunctions, 2):
-        if binop is __div__ and denomRoots:
-            # skip __div__ test if the denominator has roots
+        if binop is truediv and denomRoots:
+            # skip truediv test if the denominator has roots
             pass
         else:
             _testfun_ = binaryOpTester(f, g, binop, nf, ng)

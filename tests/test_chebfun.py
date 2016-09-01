@@ -416,7 +416,7 @@ class Algebra(TestCase):
 
     # check (empty Chebfun) / (Chebfun) = (empty Chebfun)
     #   and (Chebfun) / (empty Chebfun) = (empty Chebfun)
-    def test__div__rdiv__empty(self):
+    def test_truediv_empty(self):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
@@ -426,7 +426,7 @@ class Algebra(TestCase):
 
     # check the output of (constant / Chebfun)
     #                 and (Chebfun / constant)
-    def test__div__rdiv__constant(self):
+    def test_truediv_constant(self):
         for (f, _, hasRoots) in testfunctions:
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
