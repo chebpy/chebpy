@@ -6,7 +6,6 @@ from __future__ import division
 
 from unittest import TestCase
 from itertools import combinations
-from collections import OrderedDict
 
 from operator import __add__
 from operator import truediv
@@ -428,7 +427,7 @@ class Algebra(TestCase):
                 bndfun = Bndfun.initfun_adaptive(fun, subdomain)
                 f1 = const + bndfun
                 f2 = bndfun + const
-                tol = 3e1 * eps * abs(const)
+                tol = 4e1 * eps * abs(const)
                 self.assertLessEqual(infnorm(f(xx)-f1(xx)), tol)
                 self.assertLessEqual(infnorm(f(xx)-f2(xx)), tol)
 
