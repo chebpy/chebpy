@@ -240,13 +240,13 @@ class Chebfun(object):
         called either Domain.union(f), or Domain.merge(f) prior to call."""
         newfuns = []
         subintervals = targetdomain.intervals
-        interval = subintervals.next()
+        interval = next(subintervals) # next(..) for Python2/3 compatibility
         for fun in self:
             while interval in fun.interval:
                 newfun = fun.restrict(interval)
                 newfuns.append(newfun)
                 try:
-                    interval = subintervals.next()
+                    interval = next(subintervals)
                 except StopIteration:
                     break
         return self.__class__(newfuns)

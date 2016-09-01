@@ -560,8 +560,7 @@ for ufunc in ufuncs:
 uf1 = lambda x: x
 uf1.__name__ = "x"
 
-ufunc_test_params = OrderedDict(
-    [
+ufunc_test_params = [
         (arccos,  [([uf1, (-.8,.8)],  eps), ]),
         (arccosh, [([uf1, (2,3)    ], eps), ]),
         (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
@@ -582,8 +581,8 @@ ufunc_test_params = OrderedDict(
         (tan,     [([uf1, (-.8,.8)],  eps), ]),
         (tanh,    [([uf1, (-3,3)   ], eps), ]),
         (sqrt,    [([uf1, (2,3)    ], eps), ]),
-    ]
-)
+]
+
 
 def ufuncTester(ufunc, f, interval, tol):
     a,b = interval.values
@@ -597,7 +596,7 @@ def ufuncTester(ufunc, f, interval, tol):
         self.assertLessEqual(infnorm(gg(xx)-GG(xx)), vscl*lscl*tol)
     return tester
 
-for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params.iteritems():
+for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params:
     interval = Interval(*intvl)
     _testfun_ = ufuncTester(ufunc, f, interval, tol)
     _testfun_.__name__ = \
