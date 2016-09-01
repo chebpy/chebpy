@@ -13,6 +13,7 @@ from numpy import exp
 from numpy import cos
 from numpy.random import rand
 from numpy.random import seed
+from numpy import seterr
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
@@ -25,6 +26,10 @@ from tests.utilities import testfunctions
 from tests.utilities import scaled_tol
 from tests.utilities import infNormLessThanTol
 from tests.utilities import infnorm
+
+# turn off 'divide' and 'invalid' Runtimewarnings: these are invoked in the
+# barycentric formula and the warned-of behaviour is actually required
+seterr(divide='ignore', invalid='ignore')
 
 seed(0)
 
