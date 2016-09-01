@@ -352,19 +352,20 @@ class ComputeBreakdata(TestCase):
 
     def test_compute_breakdata_empty(self):
         breaks = compute_breakdata(array([]))
-        self.assertTrue(array(breaks.items()).size==0)
+        # list(...) for Python 2/3 compatibility
+        self.assertTrue(array(list(breaks.items())).size==0)
 
     def test_compute_breakdata_1(self):
         funs = array([self.fun0])
         breaks = compute_breakdata(funs)
-        x, y = breaks.keys(), breaks.values()
+        x, y = list(breaks.keys()), list(breaks.values())
         self.assertLessEqual(infnorm(x-array([-1,0])), eps)
         self.assertLessEqual(infnorm(y-array([exp(-1),exp(0)])), 2*eps)
 
     def test_compute_breakdata_2(self):
         funs = array([self.fun0, self.fun1])
         breaks = compute_breakdata(funs)
-        x, y = breaks.keys(), breaks.values()
+        x, y = list(breaks.keys()), list(breaks.values())
         self.assertLessEqual(infnorm(x-array([-1,0,1])), eps)
         self.assertLessEqual(infnorm(y-array([exp(-1),exp(0),exp(1)])), 2*eps)
 
