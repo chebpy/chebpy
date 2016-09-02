@@ -6,8 +6,8 @@ ChebPy - A Python implementation of Chebfun
     :target: https://travis-ci.org/chebpy/chebpy
 .. image:: https://travis-ci.org/chebpy/chebpy.svg?branch=master
     :target: https://travis-ci.org/chebpy/chebpy
-.. image:: https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=github-master
-    :target: https://coveralls.io/github/chebpy/chebpy?branch=github-master
+.. image:: https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master
+    :target: https://coveralls.io/github/chebpy/chebpy?branch=master
 
 
 Installation
