@@ -1,4 +1,4 @@
-Copyright (c) 2013-2015: Mark Richardson and other contributors:
+Copyright (c) 2016: Mark Richardson and other contributors:
 
 https://github.com/chebpy/chebpy/graphs/contributors
 
