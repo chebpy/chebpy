@@ -1,8 +1,10 @@
 sudo: false
 before_install:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
+    - "export DISPLAY=:99.0"
+    - "sh -e /etc/init.d/xvfb start"
 language: python
+install:
+    - pip install coveralls
 python:
     - "2.7"
     - "3.3"
@@ -13,5 +15,7 @@ addons:
     packages:
     - libfftw3-dev
 script:
-    - nosetests
+    - nosetests -v --with-coverage --cover-package=chebpy
+after_success:
+    - coveralls
 

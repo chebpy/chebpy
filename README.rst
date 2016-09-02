@@ -3,8 +3,9 @@ ChebPy - A Python implementation of Chebfun
 ================================================
 
 
-.. image:: https://travis-ci.org/chebpy/chebpy.svg?branch=master
-    :target: https://travis-ci.org/chebpy/chebpy
+|version status|
+|travis status|
+|Coverage Status|
 
 
 Installation
