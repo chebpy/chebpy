@@ -4,6 +4,7 @@ before_install:
     - "sh -e /etc/init.d/xvfb start"
 language: python
 install:
+    - pip install requirements.txt
     - pip install coveralls
 python:
     - "2.7"
