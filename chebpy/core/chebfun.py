@@ -305,8 +305,8 @@ class Chebfun(object):
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
-    def restrict(self, subinterval):
-        """Restrict a chebfun to a subinterval"""
+    def _restrict(self, subinterval):
+        """Restrict a chebfun to a subinterval, without simplifying"""
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
