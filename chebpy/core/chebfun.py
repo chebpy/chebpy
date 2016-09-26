@@ -187,6 +187,8 @@ class Chebfun(object):
     def __truediv__(self, f):
         return self._apply_binop(f, truediv)
 
+    __div__ = __truediv__
+
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
         out = "<chebfun-{},{},{}>\n".format(

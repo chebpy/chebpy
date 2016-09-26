@@ -5,15 +5,25 @@
 from __future__ import division
 
 from operator import __add__
-from operator import truediv
 from operator import __mul__
 from operator import __neg__
 from operator import __pos__
 from operator import __sub__
+from operator import truediv
+
+binops = [__add__, __mul__, __sub__, truediv]
+
+try:
+    # for Python 2 we need to test div separately
+    from operator import __div__
+    binops.append(__div__)
+    div_binops = (__div__, truediv)
+except ImportError:
+    # Python 3
+    div_binops = (truediv,)
 
 from unittest import TestCase
 from itertools import combinations
-from collections import OrderedDict
 
 from numpy import arccos
 from numpy import arccosh
@@ -478,25 +488,25 @@ def binaryOpTester(f, g, binop, dom, tol):
         self.assertLessEqual(infnorm(fg(xx)-FG(xx)), vscl*hscl*lscl*tol)
     return tester
 
-binops = (
-    __add__,
-    truediv,
-    __mul__,
-    __sub__,
-    )
 
 for binop in binops:
     for (f, _, _), (g, _, denomHasRoots) in combinations(testfunctions, 2):
         for dom, tol in chebfun_testdomains:
-            if binop is truediv and denomHasRoots:
+            if binop in div_binops and denomHasRoots:
                 # skip truediv test if denominator has roots on the real line
                 pass
             else:
                 _testfun_ = binaryOpTester(f, g, binop, dom, 2*tol)
                 a, b = dom
+                binopname = binop.__name__
+                # case of truediv: add leading and trailing underscores
+                if binopname[0] != '_':
+                    binopname = '_' + binopname
+                if binopname[-1] != '_':
+                    binopname = binopname + '_'
                 _testfun_.__name__ = \
                     "test{}{}_{}_[{:.0f},..,{:.0f}]".format(
-                        binop.__name__, f.__name__,  g.__name__, a, b)
+                        binopname, f.__name__,  g.__name__, a, b)
                 setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
