@@ -38,7 +38,7 @@ def _initfun(f, domain, n):
     if n is None:
         return Chebfun.initfun_adaptive(f, domain)
     else:
-        return Chebfun.initfun_fixedlen(f, domain, n)
+        return Chebfun.initfun_fixedlen(f, n, domain)
 
 def piecewise_constant(domain=[-1,0,1], values=[0,1]):
     """Initlialise a piecewise constant Chebfun"""
