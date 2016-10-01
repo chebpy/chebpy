@@ -323,6 +323,33 @@ class ClassUsage(TestCase):
             tol = eps * f.hscale
             self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
+    def test_restrict_(self):
+        # test a variety of domains with breaks
+        doms = [(-4,4), (-4,0,4), (-2,-1, 0.3, 1, 2.5)]
+        for dom in doms:
+            ff = Chebfun.initfun_fixedlen(cos, 25, domain=dom)
+            # define some arbitrary subdomains
+            yy = linspace(dom[0], dom[-1], 11)
+            subdoms = [yy, yy[2:7], yy[::2]]
+            for subdom in subdoms:
+                xx = linspace(subdom[0], subdom[-1], 1001)
+                gg = ff._restrict(subdom)
+                vscl = ff.vscale
+                hscl = ff.hscale
+                lscl = max([fun.size for fun in ff])
+                tol = vscl*hscl*lscl*eps
+                # sample the restricted function and comapre with original
+                self.assertLessEqual(infnorm(ff(xx)-gg(xx)), tol)
+                # check there are at least as many funs as subdom elements
+                self.assertGreaterEqual(len(gg.funs), len(subdom)-1)
+                for fun in gg:
+                    # chec each fun has length 25
+                    self.assertEqual(fun.size, 25)
+
+    def test_restrict__empty(self):
+        self.assertTrue(self.f0._restrict([-1,1]).isempty)
+
+
 class Algebra(TestCase):
 
     def setUp(self):

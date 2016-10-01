@@ -198,8 +198,6 @@ class Chebfun(object):
     def __sub__(self, f):
         return self._apply_binop(f, __sub__)
 
-#    __truediv__ = __div__
-
     # -------------------
     #  "private" methods
     # -------------------
@@ -305,6 +303,7 @@ class Chebfun(object):
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
+    @self_empty()
     def _restrict(self, subinterval):
         """Restrict a chebfun to a subinterval, without simplifying"""
         newdom = self.domain.restrict(Domain(subinterval))
