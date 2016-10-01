@@ -309,6 +309,10 @@ class Chebfun(object):
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
+    @self_empty()
+    def simplify(self):
+        return self.__class__([fun.simplify() for fun in self])
+
     @self_empty(array([]))
     def roots(self):
         allrts = []
