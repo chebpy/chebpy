@@ -349,6 +349,19 @@ class ClassUsage(TestCase):
     def test_restrict__empty(self):
         self.assertTrue(self.f0._restrict([-1,1]).isempty)
 
+    def test_simplify(self):
+        f = cos
+        dom = linspace(-2,1.5,13)
+        g = chebfun(f, dom, 70).simplify()
+        h = chebfun(f, dom)
+        self.assertEquals(g.funs.size, h.funs.size)
+        for n, fun in enumerate(g):
+            # we allow one degree of freedom difference either way
+            self.assertLessEqual(abs(fun.coeffs.size-h.funs[0].size), 1)
+
+    def test_simplify_empty(self):
+        self.assertTrue(self.f0.simplify().isempty)
+
 
 class Algebra(TestCase):
 
