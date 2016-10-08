@@ -350,18 +350,32 @@ class ClassUsage(TestCase):
         self.assertTrue(self.f0._restrict([-1,1]).isempty)
 
     def test_simplify(self):
-        f = cos
         dom = linspace(-2,1.5,13)
-        g = chebfun(f, dom, 70).simplify()
-        h = chebfun(f, dom)
-        self.assertEquals(g.funs.size, h.funs.size)
-        for n, fun in enumerate(g):
-            # we allow one degree of freedom difference either way
-            self.assertLessEqual(abs(fun.coeffs.size-h.funs[n].size), 1)
+        f = chebfun(cos, dom, 70).simplify()
+        g = chebfun(cos, dom)
+        self.assertEquals(f.domain, g.domain)
+        for n, fun in enumerate(f):
+            # we allow one degree of freedom difference
+            # TODO: check this
+            self.assertLessEqual(fun.size-g.funs[n].size, 1)
 
     def test_simplify_empty(self):
         self.assertTrue(self.f0.simplify().isempty)
 
+    def test_restrict(self):
+        dom1 = Domain(linspace(-2,1.5,13))
+        dom2 = Domain(linspace(-1.7,0.93,17))
+        dom3 = dom1.merge(dom2).restrict(dom2)
+        f = chebfun(cos, dom1.breakpoints).restrict(dom2.breakpoints)
+        g = chebfun(cos, dom3.breakpoints)
+        self.assertEquals(f.domain, g.domain)
+        for n, fun in enumerate(f):
+            # we allow two degrees of freedom difference either way
+            # TODO: once standard chop is fixed, may be able to reduce 4 to 0
+            self.assertLessEqual(fun.size-g.funs[n].size, 4)
+
+    def test_restrict_empty(self):
+        self.assertTrue(self.f0.restrict([-1,1]).isempty)
 
 class Algebra(TestCase):
 

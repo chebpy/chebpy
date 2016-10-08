@@ -310,7 +310,12 @@ class Chebfun(object):
 
     @self_empty()
     def simplify(self):
+        """Simplify each fun in the chebfun"""
         return self.__class__([fun.simplify() for fun in self])
+
+    def restrict(self, subinterval):
+        """Restrict a chebfun to a subinterval"""
+        return self._restrict(subinterval).simplify()
 
     @self_empty(array([]))
     def roots(self):
