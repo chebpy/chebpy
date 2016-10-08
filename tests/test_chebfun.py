@@ -357,7 +357,7 @@ class ClassUsage(TestCase):
         self.assertEquals(g.funs.size, h.funs.size)
         for n, fun in enumerate(g):
             # we allow one degree of freedom difference either way
-            self.assertLessEqual(abs(fun.coeffs.size-h.funs[0].size), 1)
+            self.assertLessEqual(abs(fun.coeffs.size-h.funs[n].size), 1)
 
     def test_simplify_empty(self):
         self.assertTrue(self.f0.simplify().isempty)
