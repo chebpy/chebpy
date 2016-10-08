@@ -145,8 +145,6 @@ class Chebfun(object):
     def __pos__(self):
         return self.__class__([+fun for fun in self])
 
-    __radd__ = __add__
-
     def __rtruediv__(self, c):
         # Executed when truediv(f, self) fails, which is to say whenever c
         # is not a Chebfun. We proceeed on the assumption f is a scalar.
@@ -179,15 +177,16 @@ class Chebfun(object):
             "    total length = {}".format(sum([f.size for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
-    __rmul__ = __mul__
-
     def __rsub__(self, f):
         return -(self-f)
 
     def __truediv__(self, f):
         return self._apply_binop(f, truediv)
 
+    __rmul__ = __mul__
     __div__ = __truediv__
+    __rdiv__ = __rtruediv__
+    __radd__ = __add__
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
