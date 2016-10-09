@@ -140,10 +140,10 @@ class Chebfun(object):
         return self._apply_binop(f, __mul__)
 
     def __neg__(self):
-        return self.__class__([-fun for fun in self])
+        return self.__class__(-self.funs)
 
     def __pos__(self):
-        return self.__class__([+fun for fun in self])
+        return self
 
     def __rtruediv__(self, c):
         # Executed when truediv(f, self) fails, which is to say whenever c
