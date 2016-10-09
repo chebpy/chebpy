@@ -6,6 +6,7 @@ from __future__ import division
 
 from unittest import TestCase
 
+from numpy import asarray
 from numpy import array
 from numpy import cos
 from numpy import exp
@@ -48,7 +49,7 @@ class TestInterval(TestCase):
 
     def test_init(self):
         Interval(-1,1)
-        self.assertTrue((Interval().values==array([-1,1])).all())
+        self.assertTrue((asarray(Interval())==array([-1,1])).all())
 
     def test_init_disallow(self):
         self.assertRaises(IntervalValues, Interval, 2, 0)

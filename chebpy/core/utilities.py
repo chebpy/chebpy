@@ -28,7 +28,7 @@ from chebpy.core.exceptions import BadDomainArgument
 HTOL = 5 * DefaultPrefs.eps
 
 
-class Interval(object):
+class Interval(ndarray):
     """
     Utility class to implement Interval logic. The purpose of this class
     is to both enforce certain properties of domain components such as
@@ -45,19 +45,21 @@ class Interval(object):
 
     Currently only implemented for finite a and b.
     """
-    def __init__(self, a=-1, b=1):
+
+    def __new__(cls, a=-1., b=1.):
         if a >= b:
             raise IntervalValues
-        self.values = array([a,b], dtype=float)
+        self = asarray((a,b), dtype=float).view(cls)
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
         self.drvmap = lambda y: 0.*y + .5*(b-a)
-        
+        return self
+
     def __eq__(self, other):
         """Test for equality (within a tolerance) of the numbers defining an
         Interval object"""
-        dbpt = abs(self.values-other.values)
-        htol = maximum(HTOL, HTOL*abs(self.values))
+        dbpt = abs(self-other)
+        htol = maximum(HTOL, HTOL*abs(self))
         return all(dbpt<=htol)
 
     def __ne__(self, other):
@@ -69,22 +71,13 @@ class Interval(object):
     def __contains__(self, other):
         """Test whether another Interval object is a 'subinterval' of self, to
         within a tolerance"""
-        a,b = self.values
-        x,y = other.values
+        (a,b), (x,y) = self, other
         bounds = array([1-HTOL, 1+HTOL])
         lbnd, rbnd = min(a*bounds), max(b*bounds)
         return (lbnd<=x) & (y<=rbnd)
 
-    def __str__(self):
-        cls = self.__class__
-        out = "{}({:4.2g},{:4.2g})".format(cls.__name__, *self.values)
-        return out
-
-    def __repr__(self):
-        return self.__str__()
-
     def isinterior(self, x):
-        a, b = self.values
+        a,b = self
         return logical_and(a<x, x<b)
 
 
@@ -179,7 +172,6 @@ class Domain(ndarray):
             out[idx] = any(isin)
         return out
 
-    # TODO: modify this to give behaviour consistent with numpy's ==
     def __eq__(self, other):
         """Test for pointwise equality (within a tolerance) of two Domain
         objects"""
@@ -201,7 +193,7 @@ def _sortindex(intervals):
     approximation domain"""
 
     # sort by the left endpoint Interval values
-    subintervals = array([x.values for x in intervals])
+    subintervals = array([x for x in intervals])
     leftbreakpts = array([s[0] for s in subintervals])
     idx = leftbreakpts.argsort()
 

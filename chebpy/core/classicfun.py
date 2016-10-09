@@ -7,6 +7,7 @@ from __future__ import division
 
 from abc import ABCMeta
 
+from numpy import asarray
 from numpy import arccos
 from numpy import arccosh
 from numpy import arcsin
@@ -74,7 +75,7 @@ class Classicfun(Fun):
     @classmethod
     def initidentity(cls, interval):
         """Classicfun representation of f(x) = x on the supplied interval"""
-        onefun = Tech.initvalues(interval.values)
+        onefun = Tech.initvalues(asarray(interval))
         return cls(onefun, interval)
 
     @classmethod
@@ -150,7 +151,7 @@ class Classicfun(Fun):
     @property
     def support(self):
         """Return a 2-array of endpoints taken from the interval"""
-        return self.interval.values
+        return asarray(self.interval)
 
     @property
     def vscale(self):

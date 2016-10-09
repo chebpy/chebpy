@@ -649,7 +649,7 @@ ufunc_test_params = [
 
 
 def ufuncTester(ufunc, f, interval, tol):
-    a,b = interval.values
+    a,b = interval
     ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
     gg = lambda x: ufunc(f(x))
     GG = ufunc(ff)
