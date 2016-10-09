@@ -56,11 +56,8 @@ class Interval(ndarray):
         return self
 
     def __eq__(self, other):
-        """Test for equality (within a tolerance) of the numbers defining an
-        Interval object"""
-        dbpt = abs(self-other)
-        htol = maximum(HTOL, HTOL*abs(self))
-        return all(dbpt<=htol)
+        (a,b), (x,y) = self, other
+        return (a==x) & (y==b)
 
     def __ne__(self, other):
         return not self==other
@@ -69,12 +66,8 @@ class Interval(ndarray):
         return self.formap(y)
 
     def __contains__(self, other):
-        """Test whether another Interval object is a 'subinterval' of self, to
-        within a tolerance"""
         (a,b), (x,y) = self, other
-        bounds = array([1-HTOL, 1+HTOL])
-        lbnd, rbnd = min(a*bounds), max(b*bounds)
-        return (lbnd<=x) & (y<=rbnd)
+        return (a<=x) & (y<=b)
 
     def isinterior(self, x):
         a,b = self

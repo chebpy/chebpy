@@ -62,14 +62,6 @@ class TestInterval(TestCase):
         self.assertFalse(self.i3==self.i1)
         self.assertFalse(self.i2==self.i3)
 
-    def test__eq__close(self):
-        tol = .8*HTOL
-        i4 = Interval(-2,5)
-        i5 = Interval(-2*(1+tol),5*(1-tol))
-        i6 = Interval(-2*(1+2*tol),5*(1-2*tol))
-        self.assertEqual(i4,i5)
-        self.assertNotEqual(i4,i6)
-
     def test__ne__(self):
         self.assertFalse(Interval()!=Interval())
         self.assertFalse(self.i1!=self.i2)
@@ -89,14 +81,25 @@ class TestInterval(TestCase):
         self.assertTrue(self.i1 not in self.i3)
         self.assertTrue(self.i1 not in self.i4)
 
-    def test__contains__close(self):
-        tol = .8*HTOL
-        i1 = Interval(-1,2)
-        i2 = Interval(-1-tol,2+2*tol)
-        i3 = Interval(-1-2*tol,2+4*tol)
-        self.assertTrue(i1 in i2)
-        self.assertTrue(i2 in i1)
-        self.assertFalse(i3 in i1)
+# Interval objects used to have tolerance-sensitive defintions of __eq__ and
+# __contains__, though these were removed in the commit following
+# 9eaf1c5e0674dab1a676d04a02ceda329beec2ea.
+#    def test__eq__close(self):
+#        tol = .8*HTOL
+#        i4 = Interval(-2,5)
+#        i5 = Interval(-2*(1+tol),5*(1-tol))
+#        i6 = Interval(-2*(1+2*tol),5*(1-2*tol))
+#        self.assertEqual(i4,i5)
+#        self.assertNotEqual(i4,i6)
+
+#    def test__contains__close(self):
+#        tol = .8*HTOL
+#        i1 = Interval(-1,2)
+#        i2 = Interval(-1-tol,2+2*tol)
+#        i3 = Interval(-1-2*tol,2+4*tol)
+#        self.assertTrue(i1 in i2)
+#        self.assertTrue(i2 in i1)
+#        self.assertFalse(i3 in i1)
 
     def test_maps(self):
         yy = -1 + 2 * rand(1000)
