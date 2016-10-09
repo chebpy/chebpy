@@ -366,8 +366,8 @@ class ClassUsage(TestCase):
         dom1 = Domain(linspace(-2,1.5,13))
         dom2 = Domain(linspace(-1.7,0.93,17))
         dom3 = dom1.merge(dom2).restrict(dom2)
-        f = chebfun(cos, dom1.breakpoints).restrict(dom2.breakpoints)
-        g = chebfun(cos, dom3.breakpoints)
+        f = chebfun(cos, dom1).restrict(dom2)
+        g = chebfun(cos, dom3)
         self.assertEquals(f.domain, g.domain)
         for n, fun in enumerate(f):
             # we allow two degrees of freedom difference either way

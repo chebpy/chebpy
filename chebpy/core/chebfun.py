@@ -384,7 +384,7 @@ class Chebfun(object):
         newdom = joined.merge(diffnc.roots())
         funsA = self._break(newdom).funs
         funsB = other._break(newdom).funs
-        x0 = mean(newdom.breakpoints[:2])
+        x0 = mean(newdom[:2])
         if self(x0) > other(x0):
             funsA[1::2] = funsB[1::2]
         else:

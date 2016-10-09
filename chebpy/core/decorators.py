@@ -103,3 +103,16 @@ def cast_arg_to_chebfun(f):
             args[0] = fun
         return f(self, *args, **kwargs)
     return wrapper
+
+def cast_other(f):
+    """Generic wrapper to be applied to binary operator type class methods and
+    whose purpose is to cast the second positional argument to the type self"""
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        cls   = self.__class__
+        other = args[0]
+        if not isinstance(other, cls):
+            args = list(args)
+            args[0] = cls(other)
+        return f(self, *args, **kwargs)
+    return wrapper

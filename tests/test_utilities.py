@@ -130,7 +130,7 @@ class TestDomain(TestCase):
         self.assertRaises(InvalidDomain, Domain, [1])
         self.assertRaises(InvalidDomain, Domain, [1, -1])
         self.assertRaises(InvalidDomain, Domain, [-1, 0, 0])
-        self.assertRaises(InvalidDomain, Domain, ["a", "b"])
+        self.assertRaises(ValueError, Domain, ["a", "b"])
 
     def test__iter__(self):
         dom_a = Domain([-2,1])
@@ -244,9 +244,9 @@ class TestDomain(TestCase):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
         dom_c = Domain(linspace(-10,10,51))
-        self.assertTrue(all(dom_a.support==[-2,1]))
-        self.assertTrue(all(dom_b.support==[-2,1]))
-        self.assertTrue(all(dom_c.support==[-10,10]))
+        self.assertTrue(all(dom_a.support.view(ndarray)==[-2,1]))
+        self.assertTrue(all(dom_b.support.view(ndarray)==[-2,1]))
+        self.assertTrue(all(dom_c.support.view(ndarray)==[-10,10]))
 
     def test_size(self):
         dom_a = Domain([-2,1])

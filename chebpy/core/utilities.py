@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from numpy import append
 from numpy import array
+from numpy import asarray
 from numpy import diff
 from numpy import empty
 from numpy import logical_and
@@ -15,6 +16,7 @@ from numpy import sort
 from numpy import unique
 
 from chebpy.core.settings import DefaultPrefs
+from chebpy.core.decorators import cast_other
 from chebpy.core.exceptions import IntervalGap
 from chebpy.core.exceptions import IntervalOverlap
 from chebpy.core.exceptions import IntervalValues
@@ -95,28 +97,19 @@ def _merge_duplicates(arr, tols):
     idx = append(abs(diff(arr))>tols[:-1], True)
     return arr[idx]
 
-class Domain(object):
-    """Convenience class to implement Chebfun domain logic. Instances are
-    intended to be created on-the-fly rather than being precomputed and stored
-    as hard attributes of Chebfun"""
 
-    def __init__(self, breakpoints):
-        try:
-            breakpoints = array(breakpoints, dtype=float)
-        except:
-            raise InvalidDomain
-        if breakpoints.size < 2:
-            raise InvalidDomain
-        if any(diff(breakpoints)<=0):
-            raise InvalidDomain
-        self.breakpoints = breakpoints
+class Domain(ndarray):
+    """Numpy ndarray, with additional Chebfun-specific domain logic"""
 
-    def __iter__(self):
-        """Iterate over breakpoints"""
-        return self.breakpoints.__iter__()
+    def __new__(cls, breakpoints):
+        bpts = asarray(breakpoints, dtype=float)
+        if bpts.size < 2 or any(diff(bpts)<=0):
+            raise InvalidDomain
+        return bpts.view(cls)
 
     def __contains__(self, other):
-        """Test whether another Domain object is a 'subdomain' of self"""
+        """Checks whether one domain object is a subodomain of another (to
+        within a tolerance)"""
         a,b = self.support
         x,y = other.support
         bounds = array([1-HTOL, 1+HTOL])
@@ -130,26 +123,20 @@ class Domain(object):
 
     @property
     def intervals(self):
-        """Generator to iterate across adajacent pairs of breakpoints,
-        yielding an interval object."""
-        for a,b in zip(self.breakpoints[:-1], self.breakpoints[1:]):
+        """Iterate across adajacent pairs of breakpoints, yielding an interval
+        object."""
+        for a,b in zip(self[:-1], self[1:]):
             yield Interval(a,b)
 
     @property
-    def size(self):
-        """The size of a Domain object is the number of breakpoints"""
-        return self.breakpoints.size
-
-    @property
     def support(self):
-        """The support of a Domain object is an array containing its first and
-        last breakpoints"""
-        return self.breakpoints[[0,-1]]
+        """First and last breakpoints"""
+        return self[[0,-1]]
 
+    @cast_other
     def union(self, other):
-        """Return a Domain object representing the union of self and another
-        Domain object. We first check that the support of each object
-        matches."""
+        """Union of two domain objects with an initial check that the support
+        of each object matches"""
         dspt = abs(self.support-other.support)
         htol = maximum(HTOL, HTOL*abs(self.support))
         if any(dspt>htol):
@@ -157,63 +144,54 @@ class Domain(object):
         return self.merge(other)
 
     def merge(self, other):
-        """Merge two domain objects (without checking first whether they have
-        the same support)."""
-        otherpts = other if isinstance(other, ndarray) else other.breakpoints
-        all_bpts = append(self.breakpoints, otherpts)
+        """Merge two domain objects without checking first whether they have
+        the same support"""
+        all_bpts = append(self, other)
         new_bpts = unique(all_bpts)
         mergetol = maximum(HTOL, HTOL*abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
+    @cast_other
     def restrict(self, other):
         """Truncate self to the support of other, retaining any interior
-        breakpoints."""
+        breakpoints"""
         if other not in self:
             raise NotSubdomain
         dom = self.merge(other)
         a,b = other.support
         bounds = array([1-HTOL, 1+HTOL])
         lbnd, rbnd = min(a*bounds), max(b*bounds)
-        pts = dom.breakpoints
-        new = pts[(lbnd<=pts)&(pts<=rbnd)]
+        new = dom[(lbnd<=dom)&(dom<=rbnd)]
         return self.__class__(new)
 
     def breakpoints_in(self, other):
-        """Return a Boolean array of size self.breakpoints where True indicates
-        that the breakpoint is in other.breakpoints to within the specified
-        tolerance"""
-        out = empty(self.breakpoints.size, dtype=bool)
+        """Return a Boolean array of size equal to self where True indicates
+        that the breakpoint is in other to within the specified tolerance"""
+        out = empty(self.size, dtype=bool)
         window = array([1-HTOL, 1+HTOL])
         # TODO: is there way to vectorise this?
-        for idx, bpt in enumerate(self.breakpoints):
+        for idx, bpt in enumerate(self):
             lbnd, rbnd = sort(bpt*window)
             lbnd = -HTOL if abs(lbnd) < HTOL else lbnd
             rbnd = +HTOL if abs(rbnd) < HTOL else rbnd            
-            isin = (lbnd<=other.breakpoints) & (other.breakpoints<=rbnd)
+            isin = (lbnd<=other) & (other<=rbnd)
             out[idx] = any(isin)
         return out
 
+    # TODO: modify this to give behaviour consistent with numpy's ==
     def __eq__(self, other):
         """Test for pointwise equality (within a tolerance) of two Domain
         objects"""
         if self.size != other.size:
             return False
         else:
-            dbpt = abs(self.breakpoints-other.breakpoints)
-            htol = maximum(HTOL, HTOL*abs(self.breakpoints))
+            dbpt = abs(self-other)
+            htol = maximum(HTOL, HTOL*abs(self))
             return all(dbpt<=htol)
 
     def __ne__(self, other):
         return not self==other
-
-    def __str__(self):
-        return self.__class__.__name__.lower()
-
-    def __repr__(self):
-        out = self.breakpoints.__repr__()
-        return out.replace("array", self.__class__.__name__.lower())
-
 
 
 def _sortindex(intervals):
