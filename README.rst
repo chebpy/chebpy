@@ -29,8 +29,7 @@ For convenience we'll import everything from
     from chebpy import chebfun
 
 The function ``chebfun`` behaves in much the same way as its Matlab
-counterpart. So, for example, as good a way as any to start would be
-to type:
+counterpart. As good a way as any to begin is to type:
 
 .. code:: python
 
@@ -49,11 +48,11 @@ to type:
 
 
 
-What's happened here is that we've done here is create a numerical
+What's happened here is that we've instantiated a numerical
 representation of the identity function on the interval ``[0,10]`` and
-assigned this to the computer variable with name ``x``. This
+assigned this to a computer variable called ``x``. This
 representation has length 2, meaning that it consists of two degrees of
-freedom, just as you would expect of a linear function.
+freedom (as you would expect of a linear function).
 
 Arbitrary functions of the variable ``x`` can now be defined. For instance,
 here is a function ``f`` that oscillates with two modal frequencies.
