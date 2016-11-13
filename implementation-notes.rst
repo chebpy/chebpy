@@ -9,7 +9,7 @@ fit together (diagram courtesy of the Chebfun team, via
 https://github.com/chebfun/chebfun/wiki/Class-diagram):
 
 
-.. image:: images/implementation-notes-chebfun-v5-class-diagram.png
+.. image:: images/implementation-notes-chebfun-v5-class-diag.png
 
 
 At this stage, only a relatively small subset of Matlab Chebfun has been
