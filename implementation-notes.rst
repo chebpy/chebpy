@@ -14,25 +14,25 @@ https://github.com/chebfun/chebfun/wiki/Class-diagram):
 
 At this stage, only a relatively small subset of Matlab Chebfun has been
 implemented in Chebpy. In the class diagram above, this consists of all
-the classes traced by the path going up from from "Chebtech2" (green box
-in the bottom right), to "Chebfun" (blue box near the top-left). More
+the classes traced by the path going up from from ``Chebtech2`` (green box
+in the bottom right), to ``Chebfun`` (blue box near the top-left). More
 explicitly, the following classes currently exist in Chebpy:
 
--  Chebfun (core/chebfun.py)
--  Fun (core/fun.py)
--  Classicfun (core/classicfun.py)
--  Bndfun (core/bndfun.py)
--  Onefun (core/onefun.py)
--  Smoothfun (core/smoothfun.py)
--  Chebtech (core/chebtech.py)
--  Chebtech2 (core/chebtech.py)
+-  ``Chebfun`` (core/chebfun.py)
+-  ``Fun`` (core/fun.py)
+-  ``Classicfun`` (core/classicfun.py)
+-  ``Bndfun`` (core/bndfun.py)
+-  ``Onefun`` (core/onefun.py)
+-  ``Smoothfun`` (core/smoothfun.py)
+-  ``Chebtech`` (core/chebtech.py)
+-  ``Chebtech2`` (core/chebtech.py)
 
 Chebpy additionally provides the following classes which do not appear
 in their present form in Matlab Chebfun:
 
--  Interval (core/utilities.py)
--  Domain (core/utilities.py)
--  DefaultPrefs (core/settings.py)
+-  ``Interval`` (core/utilities.py)
+-  ``Domain`` (core/utilities.py)
+-  ``DefaultPrefs`` (core/settings.py)
 
 The general rule is that each Chebpy class lives in its own python file.
 
@@ -68,7 +68,7 @@ interval:
 
 
 
-This variable is an object of class Chebfun:
+This variable is an object of class ``Chebfun``:
 
 .. code:: python
 
@@ -86,10 +86,10 @@ This variable is an object of class Chebfun:
 Fun (yellow)
 ~~~~~~~~~~~~
 
-Conceptually, Chebfun objects are defined as a collection (numpy array)
-of Fun objects. One can access these via the ``.funs``
+Conceptually, ``Chebfun`` objects are defined as a collection (numpy
+array) of Fun objects. One can access these via the ``.funs``
 attribute, and in this example, since our function is globally smooth,
-our Chebfun is composed of single Fun:
+our chebfun is composed of single Fun:
 
 .. code:: python
 
@@ -109,8 +109,9 @@ but rather objects further down the inheritance tree. Specifically, we
 see objects of type ``BndFun``, denoting a function defined on
 a bounded interval.
 
-Here's a more interesting function, this time composed of two Funs
-created by inducing a discontinuity via use of the maximum operator:
+Here's a more interesting function, this time composed of two ``Fun``
+objects and created by inducing a discontinuity via use of the
+maximum operator:
 
 .. code:: python
 
@@ -144,8 +145,8 @@ created by inducing a discontinuity via use of the maximum operator:
 
 
 
-The core Chebfun class constructor accepts iterable collections of Fun
-objects, and the above chebfun can be recreated as follows:
+The core ``Chebfun`` class constructor accepts iterable collections of
+``Fun`` objects, and the above chebfun can be recreated as follows:
 
 .. code:: python
 
@@ -165,7 +166,7 @@ objects, and the above chebfun can be recreated as follows:
 
 
 
-The Fun objects defining a Chebfun must provide a non-overlapping and
+The Fun objects defining a chebfun must provide a non-overlapping and
 complete partition of the global approximation interval. Chebpy-specific
 exceptions will be raised if the user/developer does not properly
 account for this.
@@ -250,14 +251,15 @@ So also does this:
 Onefun (green)
 ~~~~~~~~~~~~~~
 
-A Fun object is defined by the composition of Onefun object and an
-Interval object. Onefuns in Chebpy, as with Onefuns in Matlab Chebfun,
+A Fun object is defined by the composition of ``Onefun`` object and an
+Interval object. A ``Onefun`` object in Chebpy, as with Matlab Chebfun,
 define a set of core approximation behaviour on the unit interval
 [-1,1]. The computational mechanics of mapping these operations
 to arbitrary intervals [a,b] is managed, in part, by the a
 corresponding Interval object.
 
-To illustrate, let's take the first component Fun (Bndfun) from earlier:
+To illustrate, let's take the first component ``Fun`` from earlier
+(which was specifically a ``Bndfun``):
 
 .. code:: python
 
@@ -294,8 +296,8 @@ The Onefun and Interval object components are accessed as follows:
     [ -2.00000000e+00  -2.22044605e-16]
 
 
-Onefun is an abstract class, so what we actually see instantiated is an
-object of type Chebtech2. To see that the Onefun object is what is
+``Onefun`` is an abstract class, so what we actually see instantiated is an
+object of type Chebtech2. To see that the ``Onefun`` object is what is
 claims to be (a representation defined on the unit-interval), we can
 plot it (users will rarely do this in practice, but this can
 nevertheless be a useful feature for developers):
@@ -309,7 +311,7 @@ nevertheless be a useful feature for developers):
 .. image:: images/implementation-notes-diag-2.png
 
 
-So while the Onefun attribute determines approximation behaviour, the
+So while the ``Onefun`` attribute determines approximation behaviour, the
 interval attribute manages the mapping to and from the approximation
 interval to [-1,1]. So for instance, one can evaluate the
 interval object at some set of points in [-1,1] and obtain these
