@@ -11,15 +11,13 @@ ChebPy - A Python implementation of Chebfun
 .. image:: https://img.shields.io/badge/python-2.7,%203.3,%203.4,%203.5-blue.svg?
     :target: https://travis-ci.org/chebpy/chebpy
 
-Chebpy is a partial implementation of Chebfun_ in Python. A work in progress,
-Chebpy currently has the ability to handle piecewise-smooth functions on 
-arbtrary bounded intervals.
-.. _Chebfun: http://www.chebfun.org/
+|
 
-For installation details, see Install.rst_
-.. _Chebfun: INSTALL.rst
+Chebpy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
+For installation details, see `INSTALL.rst <INSTALL.rst>`_.
 
-Here is a quick demo.
+Here's a quick demo. For convenience we'll import everything from
+``numpy`` and ``matplotlib``.
 
 .. code:: python
 
@@ -27,8 +25,9 @@ Here is a quick demo.
     from matplotlib.pyplot import *
     from chebpy import chebfun
 
-A good way to start is by defining a chebfun representing the identity
-function.
+The function ``chebfun`` behaves in much the same way as its Matlab
+counterpart. So, for example, as good a way as any to start would be
+to type:
 
 .. code:: python
 
@@ -47,15 +46,14 @@ function.
 
 
 
-What we've done here is create a numerical representation of the
-identity function :math:`x \mapsto x` on the interval :math:`[0,10]` and
-assigned this to a computer variable with name :math:`\texttt{x}`. The
+What's happened here is that we've done here is create a numerical
+representation of the identity function on the interval ``[0,10]`` and
+assigned this to the computer variable with name ``x``. This
 representation has length 2, meaning that it consists of two degrees of
 freedom, just as you would expect of a linear function.
 
-Arbitrary functions of the variable x can now be defined. For instance,
-here is a function :math:`\texttt{f}` that oscillates with two modal
-frequencies.
+Arbitrary functions of the variable ``x`` can now be defined. For instance,
+here is a function ``f`` that oscillates with two modal frequencies.
 
 .. code:: python
 
@@ -74,9 +72,7 @@ frequencies.
 
 
 
-The zeros of f (set of point values :math:`x` for which
-:math:`f(x) = 0`) can be computed via the command
-:math:`\texttt{roots}`:
+The zeros of f can be computed via the command ``roots``:
 
 .. code:: python
 
@@ -97,9 +93,8 @@ The zeros of f (set of point values :math:`x` for which
 
 One can in general expect Chebpy computations to be accurate to machine
 precision, which is to say to approximately fifteen digits in
-double-precision floating-point arithmetic, or a relative accuracy of
-roughly :math:`10^{-15}`. We can verify this for the computed roots of
-:math:`\texttt{f}` by computing:
+double-precision floating-point arithmetic. We can verify this for the
+computed roots of ``f`` by computing:
 
 .. code:: python
 
@@ -144,11 +139,11 @@ is the derivative and indefinite integral of f:
 
 
 
-.. image:: images/output_13_0.png
+.. image:: images/output_13_1.png
 
 
 One can verify by elementary calculus that the exact value of the
-definite integral of :math:`\texttt{f}` is equal to:
+definite integral of ``f`` is equal to:
 
 .. code:: python
 
@@ -163,9 +158,8 @@ definite integral of :math:`\texttt{f}` is equal to:
 
 
 
-This matches the numerical integral, computed via the
-:math:`\texttt{sum}` command, to the previously stated level of
-precision:
+This matches the numerical integral, computed via the ``sum`` command,
+to the stated level of precision:
 
 .. code:: python
 
@@ -184,7 +178,7 @@ Chebfun is capable of handling point-discontinuities. Here's one way of
 seeing this in which we compute the pointwise maximum of two functions.
 The resulting function is 'piecewise-smooth', being defined as the
 concatenation of twelve individual smooth pieces. The breakpoints have
-been automatically determined by solving the correponding rootfinding
+been automatically determined by solving the corresponding root-finding
 problem.
 
 .. code:: python
@@ -216,8 +210,8 @@ problem.
 
 
 
-Here's a plot of the two functions :math:`\texttt{f}` and
-:math:`\texttt{g}`, and their pointwise maximum, :math:`\texttt{h}`:
+Here's a plot of the two functions ``f`` and ``g``, and their
+pointwise maximum, ``h``:
 
 .. code:: python
 
@@ -231,10 +225,9 @@ Here's a plot of the two functions :math:`\texttt{f}` and
 .. image:: images/output_21_0.png
 
 
-The piecewise function :math:`\texttt{h}` is just another numerical
-function representation, and the same set of operations can be applied
-as before. Here for instance is the exponential of :math:`\texttt{h}`
-and its integral:
+The piecewise function ``h`` is just another Chebfun representation,
+and the same set of operations can be applied as before. Here for
+instance is the exponential of ``h`` and its integral:
 
 .. code:: python
 
@@ -259,14 +252,13 @@ and its integral:
 
 
 Here's a further example, this time related to statistics. We consider
-the following chebfun representation of the standard
-:math:`\mathcal{N}(0,1)` Gaussian, defined on a sufficiently wide
-interval as to facilitate a machine-precision representation. On this
-occasion we utlilise a slightly different (but still perfectly valid)
-approach to construction whereby we supply the function handle --- in
-this case, a Python lambda, but more generally any object in posession
-of a \_\_call\_\_ attribute --- together with the interval of
-definition.
+the following Chebfun representation of the standardised Gaussian
+distribution. We use a sufficiently wide interval as to facilitate a
+machine-precision representation. On this occasion we utlilise a slightly
+different (but still perfectly valid) approach to construction whereby we
+supply the function handle -- in this case, a Python lambda, but more
+generally any object in possession of a ``__call__`` attribute --
+together with the interval of definition.
 
 .. code:: python
 
@@ -299,8 +291,7 @@ is the case for our numerical approximation:
 
 Suppose we wish to generate quantiles of the distribution. This can be
 achieved as follows. First we form the cumulative distribution function,
-computed as the indefinite integral (:math:`\texttt{cumsum}`) of the
-density:
+computed as the indefinite integral (``cumsum``) of the density:
 
 .. code:: python
 
@@ -313,8 +304,8 @@ density:
 .. image:: images/output_30_0.png
 
 
-Then it is simply a case of utilising the :math:`\texttt{roots}` command
-to determine the standarised score (sometimes known as "z-score")
+Then it is simply a case of utilising the ``roots`` command
+to determine the standardised score (sometimes known as "z-score")
 corresponding to the quantile of interest. For example:
 
 .. code:: python
@@ -343,8 +334,8 @@ corresponding to the quantile of interest. For example:
 
 
 Other distributional properties are also computable. Here's how we can
-compute the first four normalised and centralised moments (otherwise
-known as Mean, Variance, Skew, and Kurtosis):
+compute the first four normalised and centralised moments (Mean, Variance,
+Skew, Kurtosis):
 
 .. code:: python
 
