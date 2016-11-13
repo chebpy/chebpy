@@ -316,8 +316,7 @@ corresponding to the quantile of interest. For example:
     print 'quantile    z-score '
     print '--------------------'
     for quantile in arange(.1, .0, -.01):
-        print '  {:2.0f}%       {:+5.3f}'\
-            .format(1e2*quantile, (cdf-quantile).roots()[0])
+        print '  {:2.0f}%       {:+5.3f}'.format(1e2*quantile, (cdf-quantile).roots()[0])
 
 
 .. parsed-literal::

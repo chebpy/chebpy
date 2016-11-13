@@ -218,9 +218,6 @@ But on the other other hand, the following raises an exception:
 
 ::
 
-
-    ---------------------------------------------------------------------------
-
     /chebpy/chebpy/core/utilities.pyc in _sortindex(intervals)
         198         raise IntervalOverlap
         199     if (d>0).any():
@@ -240,16 +237,12 @@ So also does this:
 
 ::
 
-
-    ---------------------------------------------------------------------------
-
     /chebpy/chebpy/core/utilities.pyc in _sortindex(intervals)
         196     d = x[1::2] - x[::2]
         197     if (d<0).any():
     --> 198         raise IntervalOverlap
         199     if (d>0).any():
         200         raise IntervalGap
-
 
     IntervalOverlap: The supplied Interval objects overlap
 
