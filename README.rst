@@ -14,9 +14,12 @@ ChebPy - A Python implementation of Chebfun
 |
 
 Chebpy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
-For installation details, see `INSTALL.rst <INSTALL.rst>`_.
 
-Here's a quick demo. For convenience we'll import everything from
+----
+Demo
+----
+
+For convenience we'll import everything from
 ``numpy`` and ``matplotlib``.
 
 .. code:: python
@@ -124,7 +127,7 @@ The function and its roots can be plotted together as follows:
 
 
 
-.. image:: images/output_11_0.png
+.. image:: images/readme-diag-1.png
 
 
 Calculus operations are possible with Chebfun objects. Here for instance
@@ -139,7 +142,7 @@ is the derivative and indefinite integral of f:
 
 
 
-.. image:: images/output_13_1.png
+.. image:: images/readme-diag-2.png
 
 
 One can verify by elementary calculus that the exact value of the
@@ -222,7 +225,7 @@ pointwise maximum, ``h``:
 
 
 
-.. image:: images/output_21_0.png
+.. image:: images/readme-diag-3.png
 
 
 The piecewise function ``h`` is just another Chebfun representation,
@@ -235,7 +238,7 @@ instance is the exponential of ``h`` and its integral:
 
 
 
-.. image:: images/output_23_0.png
+.. image:: images/readme-diag-4.png
 
 
 .. code:: python
@@ -270,7 +273,7 @@ together with the interval of definition.
 
 
 
-.. image:: images/output_26_0.png
+.. image:: images/readme-diag-5.png
 
 
 The integral of any probability density function should be 1, and this
@@ -301,7 +304,7 @@ computed as the indefinite integral (``cumsum``) of the density:
 
 
 
-.. image:: images/output_30_0.png
+.. image:: images/readme-diag-6.png
 
 
 Then it is simply a case of utilising the ``roots`` command
@@ -356,4 +359,11 @@ Skew, Kurtosis):
     variance = +1.0000
         skew = -0.0000
     kurtosis = +3.0000
+
+---------------
+Further Details
+---------------
+
+- For installation details, see `INSTALL.rst <INSTALL.rst>`_.
+- For implementation notes, see `implementation-notes.rst <implementation-notes.rst>`_
 
