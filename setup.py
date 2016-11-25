@@ -12,7 +12,7 @@ setup(
     author_email='',
     url='https://github.com/chebpy/chebpy',
     # license='',
-    packages= ['chebpy'],
+    packages= ['chebpy', 'chebpy.core'],
     install_requires=[
         "numpy >= 1.11.0",
         "matplotlib < 2.0.0", # mpl > 2.0 only works on py3
