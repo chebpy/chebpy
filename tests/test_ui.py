@@ -2,17 +2,15 @@
 
 import unittest
 import numpy as np
-from chebpy import chebfun
+from chebpy import chebfun, pwc
 from chebpy.core.settings import DefaultPrefs
 
-# check we get default domain for no domain argument
+class Constructors(unittest.TestCase):
 
-class chebfun_ui(unittest.TestCase):
-
-    def test_null_args(self):
+    def test_chebfun_null_args(self):
         self.assertTrue(chebfun().isempty)
         
-    def test_callable(self):
+    def test_chebfun_callable(self):
         n = 100
         d = np.array([-2,0,1])
         f1 = chebfun(np.sin)
@@ -30,7 +28,7 @@ class chebfun_ui(unittest.TestCase):
         self.assertEqual(f3.funs[0].size, n)
         self.assertTrue(np.all([fun.size==n for fun in f4]))
 
-    def test_alphanum_char(self):
+    def test_chebfun_alphanum_char(self):
         n = 100
         d = np.array([-2,0,1])
         f1 = chebfun('x')
@@ -48,7 +46,7 @@ class chebfun_ui(unittest.TestCase):
         self.assertEqual(np.sum([fun.size for fun in f3]), n)
         self.assertTrue(np.all([fun.size==n for fun in f4]))
         
-    def test_float_arg(self):
+    def test_chebfun_float_arg(self):
         d = np.array([-2,0,1])
         f1 = chebfun(3.14)
         f2 = chebfun('3.14')
@@ -67,5 +65,14 @@ class chebfun_ui(unittest.TestCase):
         self.assertTrue(f3.isconst)
         self.assertTrue(f4.isconst)
 
-    def test_raises(self):
+    def test_chebfun_raises(self):
         self.assertRaises(ValueError, chebfun, 'asdfasdf')
+
+    def test_pwc(self):
+        dom = [-1,0,1]
+        vals = [0,1]
+        f = pwc(dom, vals)
+        self.assertEqual(f.funs.size, 2)
+        for fun, val in zip(f,vals):
+            self.assertTrue(fun.isconst)
+            self.assertEqual(fun.coeffs[0], val)

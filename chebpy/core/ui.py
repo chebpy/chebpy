@@ -34,14 +34,10 @@ def chebfun(f=None, domain=None, n=None):
     except:
         raise ValueError(f)
 
-def piecewise_constant(domain=[-1,0,1], values=[0,1]):
-    """Initialise a piecewise constant Chebfun"""
+def pwc(domain=[-1,0,1], values=[0,1]):
+    """Initialise a piecewise-constant Chebfun"""
     funs = []
     intervals = [x for x in Domain(domain).intervals]
     for interval, value in zip(intervals, values):
         funs.append(Bndfun.initconst(value, interval))
     return Chebfun(funs)
-
-def heaviside(domain=[-1,0,1]):
-    """Heaviside step-function"""
-    return piecewise_constant(domain)
