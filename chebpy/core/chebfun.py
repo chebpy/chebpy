@@ -31,8 +31,15 @@ class Chebfun(object):
 
     @classmethod
     def initidentity(cls, domain=DefaultPrefs.domain):
-        funs = generate_funs(domain, Bndfun.initidentity, [])
+        funs = generate_funs(domain, Bndfun.initidentity)
         return cls(funs)
+
+    @classmethod
+    def initfun(cls, f, domain=DefaultPrefs.domain, n=None):
+        if n:
+            return Chebfun.initfun_fixedlen(f, n, domain)
+        else:
+            return Chebfun.initfun_adaptive(f, domain)
 
     @classmethod
     def initfun_adaptive(cls, f, domain=DefaultPrefs.domain):

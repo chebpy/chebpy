@@ -225,7 +225,7 @@ def compute_breakdata(funs):
         return collections.OrderedDict(zip(xout, yout))
 
 
-def generate_funs(domain, bndfun_constructor, arglist):
+def generate_funs(domain, bndfun_constructor, arglist=[]):
     """Method used by several of the Chebfun classmethod constructors to
     generate a collection of funs."""
     domain = np.array(domain)
