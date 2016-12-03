@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""User-interface functions"""
+"""User-facing functions"""
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun

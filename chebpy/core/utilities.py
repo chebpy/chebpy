@@ -2,33 +2,20 @@
 
 from __future__ import division
 
-from collections import OrderedDict
-
-from numpy import append
-from numpy import array
-from numpy import asarray
-from numpy import diff
-from numpy import empty
-from numpy import logical_and
-from numpy import maximum
-from numpy import ndarray
-from numpy import sort
-from numpy import unique
+import collections
+import numpy as np
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import cast_other
-from chebpy.core.exceptions import IntervalGap
-from chebpy.core.exceptions import IntervalOverlap
-from chebpy.core.exceptions import IntervalValues
-from chebpy.core.exceptions import InvalidDomain
-from chebpy.core.exceptions import SupportMismatch
-from chebpy.core.exceptions import NotSubdomain
-from chebpy.core.exceptions import BadDomainArgument
+from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
+                                    IntervalValues, InvalidDomain,
+                                    SupportMismatch, NotSubdomain,
+                                    BadDomainArgument)
 
 HTOL = 5 * DefaultPrefs.eps
 
 
-class Interval(ndarray):
+class Interval(np.ndarray):
     """
     Utility class to implement Interval logic. The purpose of this class
     is to both enforce certain properties of domain components such as
@@ -49,7 +36,7 @@ class Interval(ndarray):
     def __new__(cls, a=-1., b=1.):
         if a >= b:
             raise IntervalValues
-        self = asarray((a,b), dtype=float).view(cls)
+        self = np.asarray((a,b), dtype=float).view(cls)
         self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
         self.drvmap = lambda y: 0.*y + .5*(b-a)
@@ -71,7 +58,7 @@ class Interval(ndarray):
 
     def isinterior(self, x):
         a,b = self
-        return logical_and(a<x, x<b)
+        return np.logical_and(a<x, x<b)
 
 
 def _merge_duplicates(arr, tols):
@@ -80,16 +67,16 @@ def _merge_duplicates(arr, tols):
     # TODO: pathological cases may make this break since this method works by
     # using consecutive differences. Might be better to take an average
     # (median?), rather than the left-hand value.
-    idx = append(abs(diff(arr))>tols[:-1], True)
+    idx = np.append(np.abs(np.diff(arr))>tols[:-1], True)
     return arr[idx]
 
 
-class Domain(ndarray):
+class Domain(np.ndarray):
     """Numpy ndarray, with additional Chebfun-specific domain logic"""
 
     def __new__(cls, breakpoints):
-        bpts = asarray(breakpoints, dtype=float)
-        if bpts.size < 2 or any(diff(bpts)<=0):
+        bpts = np.asarray(breakpoints, dtype=float)
+        if bpts.size < 2 or np.any(np.diff(bpts)<=0):
             raise InvalidDomain
         return bpts.view(cls)
 
@@ -98,8 +85,8 @@ class Domain(ndarray):
         within a tolerance)"""
         a,b = self.support
         x,y = other.support
-        bounds = array([1-HTOL, 1+HTOL])
-        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        bounds = np.array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         return (lbnd<=x) & (y<=rbnd)
 
     @classmethod
@@ -123,18 +110,18 @@ class Domain(ndarray):
     def union(self, other):
         """Union of two domain objects with an initial check that the support
         of each object matches"""
-        dspt = abs(self.support-other.support)
-        htol = maximum(HTOL, HTOL*abs(self.support))
-        if any(dspt>htol):
+        dspt = np.abs(self.support-other.support)
+        htol = np.maximum(HTOL, HTOL*np.abs(self.support))
+        if np.any(dspt>htol):
             raise SupportMismatch
         return self.merge(other)
 
     def merge(self, other):
         """Merge two domain objects without checking first whether they have
         the same support"""
-        all_bpts = append(self, other)
-        new_bpts = unique(all_bpts)
-        mergetol = maximum(HTOL, HTOL*abs(new_bpts))
+        all_bpts = np.append(self, other)
+        new_bpts = np.unique(all_bpts)
+        mergetol = np.maximum(HTOL, HTOL*np.abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
@@ -146,23 +133,23 @@ class Domain(ndarray):
             raise NotSubdomain
         dom = self.merge(other)
         a,b = other.support
-        bounds = array([1-HTOL, 1+HTOL])
-        lbnd, rbnd = min(a*bounds), max(b*bounds)
+        bounds = np.array([1-HTOL, 1+HTOL])
+        lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         new = dom[(lbnd<=dom)&(dom<=rbnd)]
         return self.__class__(new)
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size equal to self where True indicates
         that the breakpoint is in other to within the specified tolerance"""
-        out = empty(self.size, dtype=bool)
-        window = array([1-HTOL, 1+HTOL])
+        out = np.empty(self.size, dtype=bool)
+        window = np.array([1-HTOL, 1+HTOL])
         # TODO: is there way to vectorise this?
         for idx, bpt in enumerate(self):
-            lbnd, rbnd = sort(bpt*window)
-            lbnd = -HTOL if abs(lbnd) < HTOL else lbnd
-            rbnd = +HTOL if abs(rbnd) < HTOL else rbnd            
+            lbnd, rbnd = np.sort(bpt*window)
+            lbnd = -HTOL if np.abs(lbnd) < HTOL else lbnd
+            rbnd = +HTOL if np.abs(rbnd) < HTOL else rbnd
             isin = (lbnd<=other) & (other<=rbnd)
-            out[idx] = any(isin)
+            out[idx] = np.any(isin)
         return out
 
     def __eq__(self, other):
@@ -171,9 +158,9 @@ class Domain(ndarray):
         if self.size != other.size:
             return False
         else:
-            dbpt = abs(self-other)
-            htol = maximum(HTOL, HTOL*abs(self))
-            return all(dbpt<=htol)
+            dbpt = np.abs(self-other)
+            htol = np.maximum(HTOL, HTOL*np.abs(self))
+            return np.all(dbpt<=htol)
 
     def __ne__(self, other):
         return not self==other
@@ -186,8 +173,8 @@ def _sortindex(intervals):
     approximation domain"""
 
     # sort by the left endpoint Interval values
-    subintervals = array([x for x in intervals])
-    leftbreakpts = array([s[0] for s in subintervals])
+    subintervals = np.array([x for x in intervals])
+    leftbreakpts = np.array([s[0] for s in subintervals])
     idx = leftbreakpts.argsort()
 
     # check domain consistency
@@ -206,9 +193,9 @@ def check_funs(funs):
     """Return an array of sorted funs.  As the name suggests, this method
     checks that the funs provided do not overlap or have gaps (the actual
     checks are performed in _sortindex)"""
-    funs = array(funs)
+    funs = np.array(funs)
     if funs.size == 0:
-        sortedfuns = array([])
+        sortedfuns = np.array([])
     else:
         intervals = (fun.interval for fun in funs)
         idx = _sortindex(intervals)
@@ -222,10 +209,10 @@ def compute_breakdata(funs):
     thus at the point of calling we are guaranteed to have a fully partitioned
     and nonoverlapping domain."""
     if funs.size == 0:
-        return OrderedDict()
+        return collections.OrderedDict()
     else:
-        points = array([fun.support for fun in funs])
-        values = array([fun.endvalues for fun in funs])
+        points = np.array([fun.support for fun in funs])
+        values = np.array([fun.endvalues for fun in funs])
         points = points.flatten()
         values = values.flatten()
         xl, xr = points[0], points[-1]
@@ -233,21 +220,21 @@ def compute_breakdata(funs):
         xx, yy = points[1:-1], values[1:-1]
         x = .5 * (xx[::2] + xx[1::2])
         y = .5 * (yy[::2] + yy[1::2])
-        xout = append(append(xl, x), xr)
-        yout = append(append(yl, y), yr)
-        return OrderedDict(zip(xout, yout))
+        xout = np.append(np.append(xl, x), xr)
+        yout = np.append(np.append(yl, y), yr)
+        return collections.OrderedDict(zip(xout, yout))
 
 
 def generate_funs(domain, bndfun_constructor, arglist):
     """Method used by several of the Chebfun classmethod constructors to
     generate a collection of funs."""
-    domain = array(domain)
+    domain = np.array(domain)
     if domain.size < 2:
         raise BadDomainArgument
-    funs = array([])
+    funs = np.array([])
     for interval in zip(domain[:-1], domain[1:]):
         interval = Interval(*interval)
         args = arglist + [interval]
         fun = bndfun_constructor(*args)
-        funs = append(funs, fun)
+        funs = np.append(funs, fun)
     return funs

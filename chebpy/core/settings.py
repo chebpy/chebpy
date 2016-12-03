@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 28 15:21:22 2016
 
-@author: mark
-"""
-
-from numpy import array
-from numpy import finfo
+import numpy as np
 
 class DefaultPrefs():
-    eps  = finfo(float).eps
+    eps  = np.finfo(float).eps
     tech = "Chebtech2"
-    domain = array([-1., 1.])
+    domain = np.array([-1., 1.])
