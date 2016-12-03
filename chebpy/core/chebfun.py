@@ -2,58 +2,17 @@
 
 from __future__ import division
 
-from operator import __add__
-from operator import truediv
-from operator import __mul__
-from operator import __sub__
-
-from numpy import arccos
-from numpy import arccosh
-from numpy import arcsin
-from numpy import arcsinh
-from numpy import arctan
-from numpy import arctanh
-from numpy import cos
-from numpy import cosh
-from numpy import exp
-from numpy import exp2
-from numpy import expm1
-from numpy import sin
-from numpy import sinh
-from numpy import tan
-from numpy import tanh
-from numpy import log
-from numpy import log2
-from numpy import log10
-from numpy import log1p
-from numpy import sqrt
-
-from numpy import array
-from numpy import append
-from numpy import concatenate
-from numpy import full
-from numpy import isscalar
-from numpy import linspace
-from numpy import mean
-from numpy import max
-from numpy import nan
-from numpy import ones
-from numpy import sum
-
-from matplotlib.pyplot import gca
+import operator
+import numpy as np
+import matplotlib.pyplot as plt
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
-from chebpy.core.utilities import Interval
-from chebpy.core.utilities import Domain
-from chebpy.core.utilities import check_funs
-from chebpy.core.utilities import generate_funs
-from chebpy.core.utilities import compute_breakdata
-from chebpy.core.decorators import self_empty
-from chebpy.core.decorators import float_argument
-from chebpy.core.decorators import cast_arg_to_chebfun
-from chebpy.core.exceptions import BadDomainArgument
-from chebpy.core.exceptions import BadFunLengthArgument
+from chebpy.core.utilities import (Interval, Domain, check_funs,
+                                   generate_funs, compute_breakdata)
+from chebpy.core.decorators import (self_empty, float_argument,
+                                    cast_arg_to_chebfun)
+from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
 
 
 class Chebfun(object):
@@ -63,7 +22,7 @@ class Chebfun(object):
     # --------------------------
     @classmethod
     def initempty(cls):
-        return cls(array([]))
+        return cls(np.array([]))
 
     @classmethod
     def initconst(cls, c, domain=DefaultPrefs.domain):
@@ -82,35 +41,35 @@ class Chebfun(object):
 
     @classmethod
     def initfun_fixedlen(cls, f, n, domain=DefaultPrefs.domain):
-        domain = array(domain)
-        nn = array(n)
+        domain = np.array(domain)
+        nn = np.array(n)
         if nn.size == 1:
-            nn = nn * ones(domain.size-1)
+            nn = nn * np.ones(domain.size-1)
         elif nn.size > 1:
             if nn.size != domain.size - 1:
                 raise BadFunLengthArgument
         if domain.size < 2:
             raise BadDomainArgument
-        funs = array([])
+        funs = np.array([])
         intervals = zip(domain[:-1], domain[1:])
         for interval, length in zip(intervals, nn):
             interval = Interval(*interval)
             fun = Bndfun.initfun_fixedlen(f, interval, length)
-            funs = append(funs, fun)
+            funs = np.append(funs, fun)
         return cls(funs)
 
     # --------------------
     #  operator overloads
     # --------------------
     def __add__(self, f):
-        return self._apply_binop(f, __add__)
+        return self._apply_binop(f, operator.add)
 
-    @self_empty(array([]))
+    @self_empty(np.array([]))
     @float_argument
     def __call__(self, x):
 
         # initialise output
-        out = full(x.size, nan)
+        out = np.full(x.size, np.nan)
 
         # evaluate a fun when x is an interior point
         for fun in self:
@@ -137,7 +96,7 @@ class Chebfun(object):
         return self.funs.__iter__()
 
     def __mul__(self, f):
-        return self._apply_binop(f, __mul__)
+        return self._apply_binop(f, operator.mul)
 
     def __neg__(self):
         return self.__class__(-self.funs)
@@ -181,7 +140,7 @@ class Chebfun(object):
         return -(self-f)
 
     def __truediv__(self, f):
-        return self._apply_binop(f, truediv)
+        return self._apply_binop(f, operator.truediv)
 
     __rmul__ = __mul__
     __div__ = __truediv__
@@ -195,7 +154,7 @@ class Chebfun(object):
         return out
 
     def __sub__(self, f):
-        return self._apply_binop(f, __sub__)
+        return self._apply_binop(f, operator.sub)
 
     # -------------------
     #  "private" methods
@@ -215,9 +174,9 @@ class Chebfun(object):
                 return f
         except:
             pass
-        if isscalar(f):
+        if np.isscalar(f):
             chbfn1 = self
-            chbfn2 = f * ones(self.funs.size)
+            chbfn2 = f * np.ones(self.funs.size)
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
@@ -255,16 +214,16 @@ class Chebfun(object):
     # ------------
     @property
     def breakpoints(self):
-        return array([x for x in self.breakdata.keys()])
+        return np.array([x for x in self.breakdata.keys()])
 
     @property
-    @self_empty(array([]))
+    @self_empty(np.array([]))
     def domain(self):
         """Construct and return a Domain object corresponding to self"""
         return Domain.from_chebfun(self)
 
     @property
-    @self_empty(array([]))
+    @self_empty(np.array([]))
     def support(self):
         """Return an array containing the first and last breakpoints"""
         return self.breakpoints[[0,-1]]
@@ -272,7 +231,7 @@ class Chebfun(object):
     @property
     @self_empty(0)
     def hscale(self):
-        return abs(self.support).max()
+        return np.abs(self.support).max()
 
     @property
     @self_empty(False)
@@ -317,10 +276,10 @@ class Chebfun(object):
         """Restrict a chebfun to a subinterval"""
         return self._restrict(subinterval).simplify()
 
-    @self_empty(array([]))
+    @self_empty(np.array([]))
     def roots(self):
         allrts = []
-        prvrts = array([])
+        prvrts = np.array([])
         htol = 1e2 * self.hscale * DefaultPrefs.eps
         for fun in self:
             rts = fun.roots()
@@ -331,7 +290,7 @@ class Chebfun(object):
                     rts = rts[1:]
             allrts.append(rts)
             prvrts = rts
-        return concatenate([x for x in allrts])
+        return np.concatenate([x for x in allrts])
 
     # ----------
     #  calculus
@@ -351,7 +310,7 @@ class Chebfun(object):
         return self.__class__(newfuns)
 
     def diff(self):
-        dfuns = array([fun.diff() for fun in self])
+        dfuns = np.array([fun.diff() for fun in self])
         return self.__class__(dfuns)
 
     def sum(self):
@@ -361,14 +320,14 @@ class Chebfun(object):
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
+        ax = ax if ax else plt.gca()
         a, b = self.support
-        xx = linspace(a, b, 2001)
+        xx = np.linspace(a, b, 2001)
         ax.plot(xx, self(xx), *args, **kwargs)
         return ax
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
+        ax = ax if ax else plt.gca()
         for fun in self:
             fun.plotcoeffs(ax=ax)
         return ax
@@ -384,7 +343,7 @@ class Chebfun(object):
         newdom = joined.merge(diffnc.roots())
         funsA = self._break(newdom).funs
         funsB = other._break(newdom).funs
-        x0 = mean(newdom[:2])
+        x0 = np.mean(newdom[:2])
         if self(x0) > other(x0):
             funsA[1::2] = funsB[1::2]
         else:
@@ -392,9 +351,9 @@ class Chebfun(object):
         funs = [x.simplify() for x in funsA]
         return self.__class__(funs)
 
-# -----------------------
-#  numpy unary functions
-# -----------------------
+# ---------------------------
+#  numpy Universal functions
+# ---------------------------
 def addUfunc(op):
     @self_empty()
     def method(self):
@@ -405,8 +364,9 @@ def addUfunc(op):
     setattr(Chebfun, name, method)
 
 ufuncs = (
-    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
-    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
+    np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
+    np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2, np.log10,
+    np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt,
 )
 
 for op in ufuncs:
