@@ -2,47 +2,21 @@
 
 from __future__ import division
 
-from warnings import warn
+import warnings
+import numpy as np
 
-from numpy import ones
-from numpy import arange
-from numpy import log
-from numpy import log10
-from numpy import linspace
-from numpy import argmin
-from numpy import isnan
-from numpy import zeros
-from numpy import dot
-from numpy import where
-from numpy import mod
-from numpy import append
-from numpy import real
-from numpy import imag
-from numpy import isreal
-from numpy import array
-from numpy import cos
-from numpy import inf
-from numpy import pi
-from numpy import diag
-from numpy import sort
-from numpy.linalg import norm
-from numpy.linalg import eigvals
-
-from chebpy.core.ffts import fft
-from chebpy.core.ffts import ifft
-
+from chebpy.core.ffts import fft, ifft
 from chebpy.core.utilities import Interval
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import preandpostprocess
-
-# local helpers
-def find(x):
-    return where(x)[0]
 
 # constants
 eps = DefaultPrefs.eps
 SPLITPOINT = -0.004849834917525
 
+# local helpers
+def find(x):
+    return np.where(x)[0]
 
 def rootsunit(ak, htol=1e2*eps):
     """Compute the roots of a funciton on [-1,1] using the coefficeints
@@ -76,31 +50,31 @@ def rootsunit(ak, htol=1e2*eps):
         rcfs = vals2coeffs2(rval)
         lrts = rootsunit(lcfs, 2*htol)
         rrts = rootsunit(rcfs, 2*htol)
-        return append(lmap(lrts), rmap(rrts))
+        return np.append(lmap(lrts), rmap(rrts))
 
     # trivial base case
     if n <= 1:
-        return array([])
+        return np.array([])
 
-    # nontrivial bases case: either compute directly or solve
-    # a Collegaue matrix eigenvalue problem
+    # nontrivial base case: either compute directly or solve
+    # a Colleague Matrix eigenvalue problem
     if n == 2:
-        rts = array([-ak[0]/ak[1]])
+        rts = np.array([-ak[0]/ak[1]])
     elif n <= 50:
-        v = .5 * ones(n-2)
-        C = diag(v,-1) + diag(v, 1)
+        v = .5 * np.ones(n-2)
+        C = np.diag(v,-1) + np.diag(v, 1)
         C[0,1] = 1
-        D = zeros(C.shape)
+        D = np.zeros(C.shape)
         D[-1,:] = ak[:-1]
         E = C - .5 * 1./ak[-1] * D
-        rts = eigvals(E)
+        rts = np.linalg.eigvals(E)
 
     # discard values with large imaginary part and treat the remaining
     # ones as real; then sort and retain only the roots inside [-1,1]
-    mask = abs(imag(rts)) < htol
-    rts = real(rts[mask])
+    mask = abs(np.imag(rts)) < htol
+    rts = np.real(rts[mask])
     rts = rts[abs(rts)<=1.+htol]
-    rts = sort(rts)
+    rts = np.sort(rts)
     if rts.size >= 2:
         rts[ 0] = max([rts[ 0],-1])
         rts[-1] = min([rts[-1], 1])
@@ -127,15 +101,15 @@ def bary(xx, fk, xk, vk):
 
     # either iterate over the evaluation points, or ...
     if xx.size < 4*xk.size:
-        out = zeros(xx.size)
+        out = np.zeros(xx.size)
         for i in range(xx.size):
             tt = vk / (xx[i] - xk)
-            out[i] = dot(tt, fk) / tt.sum()
+            out[i] = np.dot(tt, fk) / tt.sum()
 
     # ... iterate over the barycenters
     else:
-        numer = zeros(xx.size)
-        denom = zeros(xx.size)
+        numer = np.zeros(xx.size)
+        denom = np.zeros(xx.size)
         for j in range(xk.size):
             temp = vk[j] / (xx - xk[j])
             numer = numer + temp * fk[j]
@@ -143,7 +117,7 @@ def bary(xx, fk, xk, vk):
         out = numer / denom
 
     # replace NaNs
-    for k in find( isnan(out) ):
+    for k in find(np.isnan(out)):
         idx = find( xx[k] == xk )
         if idx.size > 0:
             out[k] = fk[idx[0]]
@@ -162,7 +136,7 @@ def clenshaw(xx, ak):
     for k in idx[ak.size:1:-2]:
         bk2 = ak[k] + xx*bk1 - bk2
         bk1 = ak[k-1] + xx*bk2 - bk1
-    if mod(ak.size-1, 2) == 1:
+    if np.mod(ak.size-1, 2) == 1:
         bk1, bk2 = ak[1] + xx*bk1 - bk2, bk1
     out = ak[0] + .5*xx*bk1 - bk2
     return out
@@ -184,8 +158,8 @@ def standard_chop(coeffs, tol=eps):
 
     # Step 1
     b = abs(coeffs)
-    m = b[-1] * ones(n)
-    for j in arange(n-2, -1, -1):   # n-2, ... , 2, 1, 0
+    m = b[-1] * np.ones(n)
+    for j in np.arange(n-2, -1, -1):   # n-2, ... , 2, 1, 0
         m[j] = max( (b[j], m[j+1]) )
     if m[0] == 0.:
         # TODO: check this
@@ -194,14 +168,14 @@ def standard_chop(coeffs, tol=eps):
     envelope = m / m[0]
 
     # Step 2
-    for j in arange(1, n):
+    for j in np.arange(1, n):
         j2 = round(1.25*j+5)
         if j2 > n-1:
             # there is no plateau: exit
             return cutoff
         e1 = envelope[j]
         e2 = envelope[int(j2)]
-        r = 3 * (1 - log(e1) / log(tol))
+        r = 3 * (1 - np.log(e1) / np.log(tol))
         plateau = (e1==0.) | (e2/e1>r)
         if plateau:
             # a plateau has been found: go to Step 3
@@ -216,9 +190,9 @@ def standard_chop(coeffs, tol=eps):
         if j3 < j2:
             j2 = j3 + 1
             envelope[j2] = tol**(7./6.)
-        cc = log10(envelope[:int(j2)])
-        cc = cc + linspace(0, (-1./3.)*log10(tol), j2)
-        d = argmin(cc)
+        cc = np.log10(envelope[:int(j2)])
+        cc = cc + np.linspace(0, (-1./3.)*np.log10(tol), j2)
+        d = np.argmin(cc)
         # TODO: check this
         cutoff = d # + 2
     return min( (cutoff, n-1) )
@@ -238,8 +212,8 @@ def adaptive(cls, fun, maxpow2=16):
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warn("The {} constructor did not converge: "\
-                 "using {} points".format(cls.__name__, n))
+            warnings.warn('The {} constructor did not converge: '\
+                          'using {} points'.format(cls.__name__, n))
             break
     return coeffs
 
@@ -247,24 +221,24 @@ def adaptive(cls, fun, maxpow2=16):
 def coeffmult(fc, gc):
     """Coefficient-Space multiplication of equal-length first-kind
     Chebyshev series."""
-    Fc = append( 2.*fc[:1], (fc[1:], fc[:0:-1]) )
-    Gc = append( 2.*gc[:1], (gc[1:], gc[:0:-1]) )
+    Fc = np.append( 2.*fc[:1], (fc[1:], fc[:0:-1]) )
+    Gc = np.append( 2.*gc[:1], (gc[1:], gc[:0:-1]) )
     ak = ifft( fft(Fc) * fft(Gc) )
-    ak = append( ak[:1], ak[1:] + ak[:0:-1] ) * .25
+    ak = np.append( ak[:1], ak[1:] + ak[:0:-1] ) * .25
     ak = ak[:fc.size]
-    inputcfs = append(fc, gc)
-    out = real(ak) if isreal(inputcfs).all() else ak
+    inputcfs = np.append(fc, gc)
+    out = np.real(ak) if np.isreal(inputcfs).all() else ak
     return out
 
 
 def barywts2(n):
     """Barycentric weights for Chebyshev points of 2nd kind"""
     if n == 0:
-        wts = array([])
+        wts = np.array([])
     elif n == 1:
-        wts = array([1])
+        wts = np.array([1])
     else:
-        wts = append( ones(n-1), .5 )
+        wts = np.append(np.ones(n-1), .5)
         wts[n-2::-2] = -1
         wts[0] = .5 * wts[0]
     return wts
@@ -273,10 +247,10 @@ def barywts2(n):
 def chebpts2(n):
     """Return n Chebyshev points of the second-kind"""
     if n == 1:
-        pts = array([0.])
+        pts = np.array([0.])
     else:
-        nn = arange(n)
-        pts = cos( nn[::-1] * pi/(n-1) )
+        nn = np.arange(n)
+        pts = np.cos(nn[::-1]*np.pi/(n-1))
     return pts
 
 
@@ -287,13 +261,13 @@ def vals2coeffs2(vals):
     if n <= 1:
         coeffs = vals
         return coeffs
-    tmp = append( vals[::-1], vals[1:-1] )
-    if isreal(vals).all():
+    tmp = np.append( vals[::-1], vals[1:-1] )
+    if np.isreal(vals).all():
         coeffs = ifft(tmp)
-        coeffs = real(coeffs)
-    elif isreal( 1j*vals ).all():
-        coeffs = ifft( imag(tmp) )
-        coeffs = 1j * real(coeffs)
+        coeffs = np.real(coeffs)
+    elif np.isreal( 1j*vals ).all():
+        coeffs = ifft(np.imag(tmp))
+        coeffs = 1j * np.real(coeffs)
     else:
         coeffs = ifft(tmp)
     coeffs = coeffs[:n]
@@ -310,13 +284,13 @@ def coeffs2vals2(coeffs):
         return vals
     coeffs = coeffs.copy()
     coeffs[1:n-1] = .5 * coeffs[1:n-1]
-    tmp = append( coeffs, coeffs[n-2:0:-1] )
-    if isreal(coeffs).all():
+    tmp = np.append( coeffs, coeffs[n-2:0:-1] )
+    if np.isreal(coeffs).all():
         vals = fft(tmp)
-        vals = real(vals)
-    elif isreal( 1j*coeffs ).all():
-        vals = fft( imag(tmp) )
-        vals = 1j * real(vals)
+        vals = np.real(vals)
+    elif np.isreal(1j*coeffs).all():
+        vals = fft(np.imag(tmp))
+        vals = 1j * np.real(vals)
     else:
         vals = fft(tmp)
     vals = vals[n-1::-1]
@@ -328,9 +302,9 @@ def newtonroots(fun, rts, tol=2*eps, maxiter=10):
     polish already computed roots."""
     if rts.size > 0:
         dfun = fun.diff()
-        prv = inf * rts
+        prv = np.inf*rts
         count = 0
-        while ( norm(rts-prv, inf) > tol ) & ( count <= maxiter ):
+        while (np.linalg.norm(rts-prv, np.inf)>tol) & (count<=maxiter):
             count += 1
             prv = rts
             rts = rts - fun(rts) / dfun(rts)
