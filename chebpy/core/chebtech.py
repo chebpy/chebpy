@@ -2,34 +2,17 @@
 
 from __future__ import division
 
-from abc import ABCMeta
-from abc import abstractmethod
-
-from numpy import arange
-from numpy import array
-from numpy import append
-from numpy import isscalar
-from numpy import linspace
-from numpy import max
-from numpy import ones
-from numpy import zeros
-
-from matplotlib.pyplot import gca
+from abc import ABCMeta, abstractmethod
+import numpy as np
+import matplotlib.pyplot as plt
 
 from chebpy.core.smoothfun import Smoothfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import self_empty
-from chebpy.core.algorithms import bary
-from chebpy.core.algorithms import clenshaw
-from chebpy.core.algorithms import adaptive
-from chebpy.core.algorithms import coeffmult
-from chebpy.core.algorithms import vals2coeffs2
-from chebpy.core.algorithms import coeffs2vals2
-from chebpy.core.algorithms import chebpts2
-from chebpy.core.algorithms import barywts2
-from chebpy.core.algorithms import rootsunit
-from chebpy.core.algorithms import newtonroots
-from chebpy.core.algorithms import standard_chop
+from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
+                                    vals2coeffs2, coeffs2vals2, chebpts2,
+                                    barywts2, rootsunit, newtonroots,
+                                    standard_chop)
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -50,19 +33,19 @@ class Chebtech(Smoothfun):
     @classmethod
     def initconst(cls, c):
         """Initialise a Chebtech from a constant c"""
-        if not isscalar(c):
+        if not np.isscalar(c):
             raise ValueError(c)
-        return cls(array([float(c)]))
+        return cls(np.array([float(c)]))
 
     @classmethod
     def initempty(cls):
         """Initialise an empty Chebtech"""
-        return cls(array([]))
+        return cls(np.array([]))
 
     @classmethod
     def initidentity(cls):
         """Chebtech representation of f(x) = x on [-1,1]"""
-        return cls(array([0,1]))
+        return cls(np.array([0,1]))
 
     @classmethod
     def initfun(cls, fun, n=None):
@@ -171,7 +154,7 @@ class Chebtech(Smoothfun):
         if n - m < 0:
             out = cls(ak[:n].copy())
         elif n - m > 0:
-            out = cls(append(ak, zeros(n-m)))
+            out = cls(np.append(ak, np.zeros(n-m)))
         else:
             out = self.copy()
         return out
@@ -197,7 +180,7 @@ class Chebtech(Smoothfun):
     @self_empty()
     def __add__(self, f):
         cls = self.__class__
-        if isscalar(f):
+        if np.isscalar(f):
             cfs = self.coeffs.copy()
             cfs[0] += f
             return cls(cfs)
@@ -224,7 +207,7 @@ class Chebtech(Smoothfun):
     @self_empty()
     def __div__(self, f):
         cls = self.__class__
-        if isscalar(f):
+        if np.isscalar(f):
             cfs = 1./f * self.coeffs
             return cls(cfs)
         else:
@@ -239,7 +222,7 @@ class Chebtech(Smoothfun):
     @self_empty()
     def __mul__(self, g):
         cls = self.__class__
-        if isscalar(g):
+        if np.isscalar(g):
             cfs = g * self.coeffs
             return cls(cfs)
         else:
@@ -300,8 +283,8 @@ class Chebtech(Smoothfun):
         else:
             ak = self.coeffs.copy()
             ak[1::2] = 0
-            kk = arange(2, ak.size)
-            ii = append([2,0], 2/(1-kk**2))
+            kk = np.arange(2, ak.size)
+            ii = np.append([2,0], 2/(1-kk**2))
             out = (ak*ii).sum()
         return out
 
@@ -311,12 +294,12 @@ class Chebtech(Smoothfun):
         of a Chebtech on the interval [-1,1]. The constant term is chosen
         such that F(-1) = 0."""
         n = self.size
-        ak = append(self.coeffs, [0, 0])
-        bk = zeros(n+1)
-        rk = arange(2,n+1)
+        ak = np.append(self.coeffs, [0, 0])
+        bk = np.zeros(n+1)
+        rk = np.arange(2,n+1)
         bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
         bk[1] = ak[0] - .5*ak[2]
-        vk = ones(n)
+        vk = np.ones(n)
         vk[1::2] = -1
         bk[0] = (vk*bk[1:]).sum()
         out = self.__class__(bk)
@@ -327,12 +310,12 @@ class Chebtech(Smoothfun):
         """Return a Chebtech object representing the derivative of a
         Chebtech on the interval [-1,1]."""
         if self.isconst:
-            out = self.__class__(array([0.]))
+            out = self.__class__(np.array([0.]))
         else:
             n = self.size
             ak = self.coeffs
-            zk = zeros(n-1)
-            wk = 2 * arange(1, n)
+            zk = np.zeros(n-1)
+            wk = 2*np.arange(1, n)
             vk = wk * ak[1:]
             zk[-1::-2] = vk[-1::-2].cumsum()
             zk[-2::-2] = vk[-2::-2].cumsum()
@@ -344,14 +327,14 @@ class Chebtech(Smoothfun):
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
-        xx = linspace(-1, 1, 2001)
+        ax = ax if ax else plt.gca()
+        xx = np.linspace(-1, 1, 2001)
         yy = self(xx)
         ax.plot(xx, yy, *args, **kwargs)
         return ax
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax if ax else gca()
+        ax = ax if ax else plt.gca()
         abscoeffs = abs(self.coeffs)
         ax.semilogy(abscoeffs, ".", *args, **kwargs)
         ax.set_ylabel("coefficient magnitude")
