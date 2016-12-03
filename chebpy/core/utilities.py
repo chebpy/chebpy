@@ -160,7 +160,7 @@ class Domain(np.ndarray):
         else:
             dbpt = np.abs(self-other)
             htol = np.maximum(HTOL, HTOL*np.abs(self))
-            return np.all(dbpt<=htol)
+            return bool(np.all(dbpt<=htol)) # cast back to bool
 
     def __ne__(self, other):
         return not self==other

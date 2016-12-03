@@ -192,6 +192,13 @@ class TestDomain(TestCase):
         self.assertEqual(d1,d2)
         self.assertNotEqual(d1,d3)
 
+    def test__eq___result_type(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-2,0,1,3,5])
+        d3 = Domain([-1,1])
+        self.assertIsInstance(d1==d2, bool)
+        self.assertIsInstance(d1==d3, bool)
+
     def test__eq__close(self):
         tol = .8*HTOL
         d4 = Domain([-2,0,1,3,5])
@@ -206,6 +213,13 @@ class TestDomain(TestCase):
         d3 = Domain([-1,1])
         self.assertFalse(d1!=d2)
         self.assertTrue(d1!=d3)
+
+    def test__ne___result_type(self):
+        d1 = Domain([-2,0,1,3,5])
+        d2 = Domain([-2,0,1,3,5])
+        d3 = Domain([-1,1])
+        self.assertIsInstance(d1!=d2, bool)
+        self.assertIsInstance(d1!=d3, bool)
 
     def test_from_chebfun(self):
         ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
