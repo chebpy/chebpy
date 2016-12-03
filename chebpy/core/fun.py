@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Fun Class
-"""
 
 from __future__ import division
 
-from abc import ABCMeta
-from abc import abstractmethod
-from abc import abstractproperty
+import abc
 
 from chebpy.core.decorators import abstractclassmethod
 
 class Fun(object):
 
-    __metaclass__ = ABCMeta
+    __metaclass__ = abc.ABCMeta
 
     # --------------------------
     #  alternative constructors
@@ -37,133 +32,133 @@ class Fun(object):
     # -------------------
     #  "private" methods
     # -------------------
-    @abstractmethod
+    @abc.abstractmethod
     def __add__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __call__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __init__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __mul__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __neg__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __pos__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __radd__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __repr__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __rmul__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __rsub__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __str__(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def __sub__(self):
         pass
 
     # ------------
     #  properties
     # ------------
-    @abstractproperty
+    @abc.abstractproperty
     def coeffs(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def interval(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def isconst(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def isempty(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def size(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def support(self):
         pass
 
-    @abstractproperty
+    @abc.abstractproperty
     def vscale(self):
         pass
 
     # -----------
     #  utilities
     # -----------
-    @abstractmethod
+    @abc.abstractmethod
     def copy(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def restrict(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def simplify(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def values(self):
         pass
 
     # -------------
     #  rootfinding
     # -------------
-    @abstractmethod
+    @abc.abstractmethod
     def roots(self):
         pass
 
     # ----------
     #  calculus
     # ----------
-    @abstractmethod
+    @abc.abstractmethod
     def cumsum(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def diff(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def sum(self):
         pass
 
     # ----------
     #  plotting
     # ----------
-    @abstractmethod
+    @abc.abstractmethod
     def plot(self):
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def plotcoeffs(self):
         pass
