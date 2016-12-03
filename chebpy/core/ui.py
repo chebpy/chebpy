@@ -19,12 +19,12 @@ def chebfun(f=None, domain=None, n=None):
 
     # chebfun(lambda x: f(x), ... )
     if hasattr(f, "__call__"):
-        return _initfun(f, domain, n)
+        return Chebfun.initfun(f, domain, n)
 
     # chebfun('x', ... )
     if isinstance(f, str) and len(f) is 1 and f.isalpha():
         if n:
-            return _initfun(lambda x: x, domain, n)
+            return Chebfun.initfun(lambda x: x, domain, n)
         else:
             return Chebfun.initidentity(domain)
 
@@ -34,14 +34,8 @@ def chebfun(f=None, domain=None, n=None):
     except:
         raise ValueError(f)
 
-def _initfun(f, domain, n):
-    if n is None:
-        return Chebfun.initfun_adaptive(f, domain)
-    else:
-        return Chebfun.initfun_fixedlen(f, n, domain)
-
 def piecewise_constant(domain=[-1,0,1], values=[0,1]):
-    """Initlialise a piecewise constant Chebfun"""
+    """Initialise a piecewise constant Chebfun"""
     funs = []
     intervals = [x for x in Domain(domain).intervals]
     for interval, value in zip(intervals, values):
