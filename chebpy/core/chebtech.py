@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from abc import ABCMeta, abstractmethod
+import abc
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,7 +28,7 @@ class Chebtech(Smoothfun):
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
     """
-    __metaclass__ = ABCMeta
+    __metaclass__ = abc.ABCMeta
     
     @classmethod
     def initconst(cls, c):
@@ -344,19 +344,19 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     #  subclasses must implement these
     # ---------------------------------
-    @abstractmethod
+    @abc.abstractmethod
     def _chebpts():
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def _barywts():
         pass
     
-    @abstractmethod
+    @abc.abstractmethod
     def _vals2coeffs():
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def _coeffs2vals():
         pass
 

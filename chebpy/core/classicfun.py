@@ -1,57 +1,29 @@
 # -*- coding: utf-8 -*-
-"""
-Placeholder class
-"""
 
 from __future__ import division
 
-from abc import ABCMeta
-
-from numpy import asarray
-from numpy import arccos
-from numpy import arccosh
-from numpy import arcsin
-from numpy import arcsinh
-from numpy import arctan
-from numpy import arctanh
-from numpy import cos
-from numpy import cosh
-from numpy import exp
-from numpy import exp2
-from numpy import expm1
-from numpy import sin
-from numpy import sinh
-from numpy import tan
-from numpy import tanh
-from numpy import log
-from numpy import log2
-from numpy import log10
-from numpy import log1p
-from numpy import sqrt
-from numpy import linspace
-
-from matplotlib.pyplot import gca
+import abc
+import numpy as np
+import matplotlib.pyplot as plt
 
 from chebpy.core.fun import Fun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
-
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import self_empty
-from chebpy.core.exceptions import IntervalMismatch
-from chebpy.core.exceptions import NotSubinterval
+from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
 
 
-Techs = {
+techdict = {
     "Chebtech2": Chebtech2,
 }
 
-Tech = Techs[DefaultPrefs.tech]
+Tech = techdict[DefaultPrefs.tech]
 
 
 class Classicfun(Fun):
 
-    __metaclass__ = ABCMeta
+    __metaclass__ = abc.ABCMeta
 
     # --------------------------
     #  alternative constructors
@@ -75,7 +47,7 @@ class Classicfun(Fun):
     @classmethod
     def initidentity(cls, interval):
         """Classicfun representation of f(x) = x on the supplied interval"""
-        onefun = Tech.initvalues(asarray(interval))
+        onefun = Tech.initvalues(np.asarray(interval))
         return cls(onefun, interval)
 
     @classmethod
@@ -151,7 +123,7 @@ class Classicfun(Fun):
     @property
     def support(self):
         """Return a 2-array of endpoints taken from the interval"""
-        return asarray(self.interval)
+        return np.asarray(self.interval)
 
     @property
     def vscale(self):
@@ -201,8 +173,8 @@ class Classicfun(Fun):
     # ----------
     def plot(self, ax=None, *args, **kwargs):
         a, b = self.support
-        ax = ax if ax else gca()
-        xx = linspace(a, b, 2001)
+        ax = ax if ax else plt.gca()
+        xx = np.linspace(a, b, 2001)
         yy = self(xx)
         ax.plot(xx, yy, *args, **kwargs)
         return ax
@@ -293,9 +265,9 @@ for methodname in methods_onefun_binary:
     addBinaryOp(methodname)
 
 
-# -----------------------
-#  numpy unary functions
-# -----------------------
+# ---------------------------
+#  numpy universal functions
+# ---------------------------
 
 def addUfunc(op):
     @self_empty()
@@ -308,10 +280,9 @@ def addUfunc(op):
     method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
     setattr(Classicfun, name, method)
 
-ufuncs = (
-    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
-    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
-)
+ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
+          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
+          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
 
 for op in ufuncs:
     addUfunc(op)
