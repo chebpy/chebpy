@@ -2,15 +2,8 @@
 
 from __future__ import division
 
-from functools import wraps
-
-from numpy import ones
-from numpy import array
-from numpy import asarray
-from numpy import isscalar
-from numpy import any
-from numpy import isnan
-from numpy import NaN
+import functools
+import numpy as np
 
 # define an abstract class method decorator:
 # http://stackoverflow.com/questions/11217878/python-2-7-combine-abc-abstractmethod-and-classmethod
@@ -26,7 +19,7 @@ class abstractclassmethod(classmethod):
 # TODO: add unit test for this
 def self_empty(resultif=None):
     def decorator(f):
-        @wraps(f)
+        @functools.wraps(f)
         def wrapper(self, *args, **kwargs):
             if self.isempty:
                 if resultif is not None:
@@ -41,60 +34,54 @@ def self_empty(resultif=None):
 
 # pre- and post-processing tasks common to bary and clenshaw
 def preandpostprocess(f):
-
-    @wraps(f)
+    @functools.wraps(f)
     def thewrapper(*args, **kwargs):
         xx, akfk = args[:2]
-
         # are any of the first two arguments empty arrays?
-        if ( asarray(xx).size==0) | (asarray(akfk).size==0 ):
-            return array([])
-
+        if (np.asarray(xx).size==0) | (np.asarray(akfk).size==0):
+            return np.array([])
         # is the function constant?
         elif akfk.size == 1:
-            if isscalar(xx):
+            if np.isscalar(xx):
                 return akfk[0]
             else:
-                return akfk * ones(xx.size)
-
+                return akfk*np.ones(xx.size)
         # are there any NaNs in the second argument?
-        elif any(isnan(akfk)):
-            return NaN * ones(xx.size)
-
+        elif np.any(np.isnan(akfk)):
+            return np.nan*np.ones(xx.size)
         # convert first argument to an array if it is a scalar and then
         # return the first (and only) element of the result if so
         else:
             args = list(args)
-            args[0] = array([xx]) if isscalar(xx) else args[0]
+            args[0] = np.array([xx]) if np.isscalar(xx) else args[0]
             out = f(*args, **kwargs)
-            return out[0] if isscalar(xx) else out
+            return out[0] if np.isscalar(xx) else out
 
     return thewrapper
 
 # Chebfun classmethod wrapper for __call__: ensure that we provide
 # float output for float input and array output otherwise
 def float_argument(f):
-
-    @wraps(f)
+    @functools.wraps(f)
     def thewrapper(self, *args, **kwargs):
         x = args[0]
-        xx = array([x]) if isscalar(x) else array(x)
+        xx = np.array([x]) if np.isscalar(x) else np.array(x)
         # discern between the array(0.1) and array([0.1]) cases
         if xx.size == 1:
             try:
                 xx[0]
             except:
-                xx = array([xx])
+                xx = np.array([xx])
         args = list(args)
         args[0] = xx
         out = f(self, *args, **kwargs)
-        return out[0] if isscalar(x) else out
+        return out[0] if np.isscalar(x) else out
     return thewrapper
 
 # attempt to cast the first argument to chebfun if is not so already. The only
 # castable type at this point is a numeric type
 def cast_arg_to_chebfun(f):
-    @wraps(f)
+    @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
         other = args[0]
         if not isinstance(other, self.__class__):
@@ -107,7 +94,7 @@ def cast_arg_to_chebfun(f):
 def cast_other(f):
     """Generic wrapper to be applied to binary operator type class methods and
     whose purpose is to cast the second positional argument to the type self"""
-    @wraps(f)
+    @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
         cls   = self.__class__
         other = args[0]
