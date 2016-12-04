@@ -1,74 +1,55 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-tests for pyfun/core/chebtech.py
-"""
+
+"""Unit-tests for pyfun/core/chebtech.py"""
 
 from __future__ import division
 
-from operator import __add__
-from operator import truediv
-from operator import __mul__
-from operator import __neg__
-from operator import __pos__
-from operator import __sub__
-
-from unittest import TestCase
-from itertools import combinations
-
-from numpy import all
-from numpy import arange
-from numpy import array
-from numpy import cos
-from numpy import diff
-from numpy import exp
-from numpy import linspace
-from numpy import pi
-from numpy import sin
-from numpy.random import rand
-from numpy.random import seed
-
-from matplotlib.pyplot import subplots
+import itertools
+import operator
+import unittest
+import numpy as np
+import matplotlib.pyplot as plt
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
+from tests.utilities import (testfunctions, infnorm, scaled_tol,
+                             infNormLessThanTol)
 
-from tests.utilities import testfunctions
-from tests.utilities import infnorm
-from tests.utilities import scaled_tol
-from tests.utilities import infNormLessThanTol
+np.random.seed(0)
 
+# aliases
+pi = np.pi
+sin = np.sin
+cos = np.cos
+exp = np.exp
 eps = DefaultPrefs.eps
-
-seed(0)
-
-# staticmethod aliases
 _vals2coeffs = Chebtech2._vals2coeffs
 _coeffs2vals = Chebtech2._coeffs2vals
 
 # ------------------------
-class ChebyshevPoints(TestCase):
+class ChebyshevPoints(unittest.TestCase):
     """Unit-tests for Chebtech2"""
 
     def test_chebpts_0(self):
         self.assertEquals(Chebtech2._chebpts(0).size, 0)
             
     def test_vals2coeffs_empty(self):
-        self.assertEquals(_vals2coeffs(array([])).size, 0)
+        self.assertEquals(_vals2coeffs(np.array([])).size, 0)
 
     def test_coeffs2vals_empty(self):
-        self.assertEquals(_coeffs2vals(array([])).size, 0)
+        self.assertEquals(_coeffs2vals(np.array([])).size, 0)
 
     # check we are returned the array for an array of size 1
     def test_vals2coeffs_size1(self):
-        for k in arange(10):
-            fk = array([k])
+        for k in np.arange(10):
+            fk = np.array([k])
             self.assertLessEqual(infnorm(_vals2coeffs(fk)-fk), eps)
 
     # check we are returned the array for an array of size 1
     def test_coeffs2vals_size1(self):
-        for k in arange(10):
-            ak = array([k])
+        for k in np.arange(10):
+            ak = np.array([k])
             self.assertLessEqual(infnorm(_coeffs2vals(ak)-ak), eps)
 
     # TODO: further checks for chepbts
@@ -78,7 +59,7 @@ class ChebyshevPoints(TestCase):
 # ------------------------------------------------------------------------
 def vals2coeffs2valsTester(n):
     def asserter(self):
-        values = rand(n)
+        values = np.random.rand(n)
         coeffs = _vals2coeffs(values)
         _values_ = _coeffs2vals(coeffs)
         self.assertLessEqual( infnorm(values-_values_), scaled_tol(n) )
@@ -86,13 +67,13 @@ def vals2coeffs2valsTester(n):
 
 def coeffs2vals2coeffsTester(n):
     def asserter(self):
-        coeffs = rand(n)
+        coeffs = np.random.rand(n)
         values = _coeffs2vals(coeffs)
         _coeffs_ = _vals2coeffs(values)
         self.assertLessEqual( infnorm(coeffs-_coeffs_), scaled_tol(n) )
     return asserter
 
-for k, n in enumerate(2**arange(2,18,2)+1):
+for k, n in enumerate(2**np.arange(2,18,2)+1):
 
     # vals2coeffs2vals
     _testfun_ = vals2coeffs2valsTester(n)
@@ -109,11 +90,11 @@ for k, n in enumerate(2**arange(2,18,2)+1):
 # Add second-kind Chebyshev points test cases to ChebyshevPoints
 # ------------------------------------------------------------------------
 chebpts2_testlist = (
-    (Chebtech2._chebpts(1), array([0.]), eps),
-    (Chebtech2._chebpts(2), array([-1., 1.]), eps),
-    (Chebtech2._chebpts(3), array([-1., 0., 1.]), eps),
-    (Chebtech2._chebpts(4), array([-1., -.5, .5, 1.]), 2*eps),
-    (Chebtech2._chebpts(5), array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
+    (Chebtech2._chebpts(1), np.array([0.]), eps),
+    (Chebtech2._chebpts(2), np.array([-1., 1.]), eps),
+    (Chebtech2._chebpts(3), np.array([-1., 0., 1.]), eps),
+    (Chebtech2._chebpts(4), np.array([-1., -.5, .5, 1.]), 2*eps),
+    (Chebtech2._chebpts(5), np.array([-1., -2.**(-.5), 0., 2.**(-.5), 1.]), eps),
 )
 for k, (a,b,tol) in enumerate(chebpts2_testlist):
     _testfun_ = infNormLessThanTol(a,b,tol)
@@ -128,50 +109,50 @@ def chebptsLenTester(k):
         self.assertEquals(pts.size, k)
         self.assertEquals(pts[0], -1.)
         self.assertEquals(pts[-1], 1.)
-        self.assertTrue( all(diff(pts)) > 0 )
+        self.assertTrue(np.all(np.diff(pts))>0)
     return asserter
     
-for k, n in enumerate(2**arange(2,18,2)):
+for k, n in enumerate(2**np.arange(2,18,2)):
     _testfun_ = chebptsLenTester(n+3)
     _testfun_.__name__ = "test_chebpts_len_{:02}".format(k)
     setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 # ------------------------------------------------------------------------
 
 
-class ClassUsage(TestCase):
+class ClassUsage(unittest.TestCase):
     """Unit-tests for miscelaneous Chebtech2 class usage"""
 
     def setUp(self):
-        self.ff = Chebtech2.initfun_fixedlen(lambda x: sin(30*x), 100)
-        self.xx = -1 + 2*rand(100)
+        self.ff = Chebtech2.initfun_fixedlen(lambda x: np.sin(30*x), 100)
+        self.xx = -1 + 2*np.random.rand(100)
 
     # tests for emptiness of Chebtech2 objects
     def test_isempty_True(self):
-        f = Chebtech2(array([]))
+        f = Chebtech2(np.array([]))
         self.assertTrue(f.isempty)
         self.assertFalse(not f.isempty)
 
     def test_isempty_False(self):
-        f = Chebtech2(array([1.]))
+        f = Chebtech2(np.array([1.]))
         self.assertFalse(f.isempty)
         self.assertTrue(not f.isempty)
 
     # tests for constantness of Chebtech2 objects
     def test_isconst_True(self):
-        f = Chebtech2(array([1.]))
+        f = Chebtech2(np.array([1.]))
         self.assertTrue(f.isconst)
         self.assertFalse(not f.isconst)
 
     def test_isconst_False(self):
-        f = Chebtech2(array([]))
+        f = Chebtech2(np.array([]))
         self.assertFalse(f.isconst)
         self.assertTrue(not f.isconst)
 
     # check the size() method is working properly
     def test_size(self):
-        cfs = rand(10)
-        self.assertEquals(Chebtech2(array([])).size, 0)
-        self.assertEquals(Chebtech2(array([1.])).size, 1)
+        cfs = np.random.rand(10)
+        self.assertEquals(Chebtech2(np.array([])).size, 0)
+        self.assertEquals(Chebtech2(np.array([1.])).size, 1)
         self.assertEquals(Chebtech2(cfs).size, cfs.size)
 
     # test the different permutations of self(xx, ..)
@@ -200,7 +181,7 @@ class ClassUsage(TestCase):
             self.assertEquals(self.ff.prolong(k).size, k)
             
     def test_vscale_empty(self):
-        gg = Chebtech2(array([]))
+        gg = Chebtech2(np.array([]))
         self.assertEquals(gg.vscale, 0.)
 
     def test_copy(self):
@@ -252,7 +233,7 @@ for k, args in enumerate(vscales):
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
 
-class Plotting(TestCase):
+class Plotting(unittest.TestCase):
     """Unit-tests for Chebtech2 plotting methods"""
 
     def setUp(self):
@@ -261,21 +242,21 @@ class Plotting(TestCase):
         self.f1 = Chebtech2.initfun_adaptive(f)
 
     def test_plot(self):
-        fig, ax = subplots()
+        fig, ax = plt.subplots()
         self.f0.plot(ax=ax)
 
     def test_plotcoeffs(self):
-        fig, ax = subplots()
+        fig, ax = plt.subplots()
         self.f0.plotcoeffs(ax=ax)
         self.f1.plotcoeffs(ax=ax, color="r")
 
 
 
-class Calculus(TestCase):
+class Calculus(unittest.TestCase):
     """Unit-tests for Chebtech2 calculus operations"""
 
     def setUp(self):
-        self.emptyfun = Chebtech2(array([]))
+        self.emptyfun = Chebtech2(np.array([]))
 
     # tests for the correct results in the empty cases
     def test_sum_empty(self):
@@ -336,7 +317,7 @@ def indefiniteIntegralTester(fun, dfn, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(dfn, n+1)
     coeffs = gg.coeffs
-    coeffs[0] = coeffs[0] - dfn(array([-1]))
+    coeffs[0] = coeffs[0] - dfn(np.array([-1]))
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs - coeffs)
         self.assertLessEqual(absdiff, tol)
@@ -378,30 +359,30 @@ for k, (fun, der, n, tol) in enumerate(derivatives):
     setattr(Calculus, _testfun_.__name__, _testfun_)
 
 
-class Construction(TestCase):
+class Construction(unittest.TestCase):
     """Unit-tests for construction of Chebtech2 objects"""
 
     #TODO: expand to all the constructor variants
     def test_initvalues(self):
         # test n = 0 case separately
-        vals = rand(0)
+        vals = np.random.rand(0)
         fun = Chebtech2.initvalues(vals)
         cfs = Chebtech2._vals2coeffs(vals)
         self.assertTrue(fun.coeffs.size==cfs.size==0)
         # now test the other cases
         for n in range(1,10):
-            vals = rand(n)
+            vals = np.random.rand(n)
             fun = Chebtech2.initvalues(vals)
             cfs = Chebtech2._vals2coeffs(vals)
             self.assertEqual(infnorm(fun.coeffs-cfs), 0.)
 
     def test_initidentity(self):
         x = Chebtech2.initidentity()
-        s = -1 + 2*rand(10000)
+        s = -1 + 2*np.random.rand(10000)
         self.assertEqual(infnorm(s-x(s)), 0.)
 
     def test_coeff_construction(self):
-        coeffs = rand(10)
+        coeffs = np.random.rand(10)
         f = Chebtech2(coeffs)
         self.assertIsInstance(f, Chebtech2)
         self.assertLess(infnorm(f.coeffs-coeffs), eps)
@@ -440,17 +421,17 @@ for (fun, funlen, _) in testfunctions:
     setattr(Construction, _testfun_.__name__, _testfun_)
 
     # add the fixedlen tests
-    for n in array([50, 500]):
+    for n in np.array([50, 500]):
         _testfun_ = fixedlenTester(fun, n)
         _testfun_.__name__ = \
             "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
         setattr(Construction, _testfun_.__name__, _testfun_)
 
 
-class Algebra(TestCase):
+class Algebra(unittest.TestCase):
     """Unit-tests for Chebtech2 algebraic operations"""
     def setUp(self):
-        self.xx = -1 + 2 * rand(1000)
+        self.xx = -1 + 2 * np.random.rand(1000)
         self.emptyfun = Chebtech2.initempty()
 
     # check (empty Chebtech) + (Chebtech) = (empty Chebtech)
@@ -526,8 +507,8 @@ class Algebra(TestCase):
     def test_truediv_empty(self):
         for (fun, funlen, _) in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue(truediv(self.emptyfun,chebtech).isempty)
-            self.assertTrue(truediv(chebtech,self.emptyfun).isempty)
+            self.assertTrue(operator.truediv(self.emptyfun,chebtech).isempty)
+            self.assertTrue(operator.truediv(chebtech,self.emptyfun).isempty)
             # __truediv__
             self.assertTrue((self.emptyfun/chebtech).isempty)
             self.assertTrue((chebtech/self.emptyfun).isempty)
@@ -571,25 +552,20 @@ def binaryOpTester(f, g, binop, nf, ng):
         vscl = max([ff.vscale, gg.vscale])
         lscl = max([ff.size, gg.size])
         self.assertLessEqual(infnorm(fg(self.xx)-FG(self.xx)), 3*vscl*lscl*eps)
-        if binop is __mul__:
+        if binop is operator.mul:
             # check simplify is not being called in __mul__
             self.assertEqual(fg.size, ff.size+gg.size-1)
     return tester
 
-# note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
+# note: defining __radd__(a,b) = operator.add(b,a) and feeding this into the
 # test will not in fact test the __radd__ functionality of the class. These
 # test need to be added manually to the class.
-binops = (
-    __add__,
-    truediv,
-    __mul__,
-    __sub__,
-    )
-
+binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 for binop in binops:
     # add generic binary operator tests
-    for (f, nf, _), (g, ng, denomRoots) in combinations(testfunctions, 2):
-        if binop is truediv and denomRoots:
+    for (f, nf, _), (g, ng, denomRoots) in \
+            itertools.combinations(testfunctions, 2):
+        if binop is operator.truediv and denomRoots:
             # skip truediv test if the denominator has roots
             pass
         else:
@@ -607,10 +583,7 @@ def unaryOpTester(unaryop, f, nf):
         self.assertLessEqual(infnorm(gg(self.xx)-GG(self.xx)), 4e1*eps)
     return tester
 
-unaryops = (
-    __pos__,
-    __neg__,
-    )
+unaryops = (operator.pos, operator.neg)
 for unaryop in unaryops:
     for (f, nf, _) in testfunctions:
         _testfun_ = unaryOpTester(unaryop, f, nf)
@@ -618,7 +591,7 @@ for unaryop in unaryops:
             "test{}{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
-class Roots(TestCase):
+class Roots(unittest.TestCase):
 
     def test_empty(self):
         ff = Chebtech2.initempty()
@@ -639,13 +612,13 @@ def rootsTester(f, roots, tol):
     return tester
 
 rootstestfuns = (
-    (lambda x: 3*x+2.,        array([-2/3]),                         1*eps),
-    (lambda x: x**2,          array([0.,0.]),                        1*eps),
-    (lambda x: x**2+.2*x-.08, array([-.4, .2]),                      1*eps),
-    (lambda x: sin(x),        array([0]),                            1*eps),
-    (lambda x: cos(2*pi*x),   array([-0.75, -0.25,  0.25,  0.75]),   1*eps),
-    (lambda x: sin(100*pi*x), linspace(-1,1,201),                    1*eps),
-    (lambda x: sin(5*pi/2*x), array([-.8, -.4, 0, .4, .8]),          1*eps)
+    (lambda x: 3*x+2.,        np.array([-2/3]),                       1*eps),
+    (lambda x: x**2,          np.array([0.,0.]),                      1*eps),
+    (lambda x: x**2+.2*x-.08, np.array([-.4, .2]),                    1*eps),
+    (lambda x: sin(x),        np.array([0]),                          1*eps),
+    (lambda x: cos(2*pi*x),   np.array([-0.75, -0.25,  0.25,  0.75]), 1*eps),
+    (lambda x: sin(100*pi*x), np.linspace(-1,1,201),                  1*eps),
+    (lambda x: sin(5*pi/2*x), np.array([-.8, -.4, 0, .4, .8]),        1*eps)
     )
 
 for k, args in enumerate(rootstestfuns):
