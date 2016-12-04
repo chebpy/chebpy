@@ -4,44 +4,11 @@
 
 from __future__ import division
 
-from unittest import TestCase
-from itertools import combinations
-
-from operator import __add__
-from operator import truediv
-from operator import __mul__
-from operator import __neg__
-from operator import __pos__
-from operator import __sub__
-
-from numpy import arccos
-from numpy import arccosh
-from numpy import arcsin
-from numpy import arcsinh
-from numpy import arctan
-from numpy import arctanh
-from numpy import cos
-from numpy import cosh
-from numpy import exp
-from numpy import exp2
-from numpy import expm1
-from numpy import sin
-from numpy import sinh
-from numpy import tan
-from numpy import tanh
-from numpy import log
-from numpy import log2
-from numpy import log10
-from numpy import log1p
-from numpy import sqrt
-
-from numpy import array
-from numpy import linspace
-from numpy import pi
-from numpy.random import rand
-from numpy.random import seed
-
-from matplotlib.pyplot import subplots
+import itertools
+import operator
+import unittest
+import numpy as np
+import matplotlib.pyplot as plt
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
@@ -49,13 +16,16 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 
-from tests.utilities import testfunctions
-from tests.utilities import infnorm
+from tests.utilities import testfunctions, infnorm
 
+# aliases
+pi = np.pi
+sin = np.sin
+cos = np.cos
+exp = np.exp
 eps = DefaultPrefs.eps
 
-seed(0)
-
+np.random.seed(0)
 
 # NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class (although it
 # is not abstract) we will test the interface in the way Chebfun will interact
@@ -63,8 +33,7 @@ seed(0)
 # since we have already tested the adaptive constructor in the Chebtech-level
 # tests, we just use the adaptive constructor in these tests.
 
-
-class ClassUsage(TestCase):
+class ClassUsage(unittest.TestCase):
     """Unit-tests for miscelaneous Bndfun class usage"""
 
     def setUp(self):
@@ -72,7 +41,7 @@ class ClassUsage(TestCase):
         subinterval = Interval(-2,3)
         self.f = f
         self.ff = Bndfun.initfun_adaptive(f, subinterval)
-        self.xx = subinterval(-1 + 2*rand(100))
+        self.xx = subinterval(-1 + 2*np.random.rand(100))
         self.emptyfun = Bndfun(Chebtech2.initempty(), subinterval)
         self.constfun = Bndfun(Chebtech2.initconst(1.), subinterval)
 
@@ -96,10 +65,10 @@ class ClassUsage(TestCase):
 
     # check the size() method is working properly
     def test_size(self):
-        cfs = rand(10)
+        cfs = np.random.rand(10)
         subinterval = Interval()
-        b0 = Bndfun(Chebtech2(array([])), subinterval)
-        b1 = Bndfun(Chebtech2(array([1.])), subinterval)
+        b0 = Bndfun(Chebtech2(np.array([])), subinterval)
+        b1 = Bndfun(Chebtech2(np.array([1.])), subinterval)
         b2 = Bndfun(Chebtech2(cfs), subinterval)
         self.assertEquals(b0.size, 0)
         self.assertEquals(b1.size, 1)
@@ -152,7 +121,7 @@ class ClassUsage(TestCase):
     def test_restrict(self):
         i1 = Interval(-1,1)
         gg = self.ff.restrict(i1)
-        yy = -1 + 2*rand(1000)
+        yy = -1 + 2*np.random.rand(1000)
         self.assertLessEqual(infnorm(self.ff(yy)-gg(yy)), 1e2*eps)
 
     # check that the restricted fun matches self on the subinterval
@@ -192,7 +161,7 @@ for k, args in enumerate(vscales):
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
 
-class Plotting(TestCase):
+class Plotting(unittest.TestCase):
     """Unit-tests for Bndfun plotting methods"""
 
     def setUp(self):
@@ -202,22 +171,22 @@ class Plotting(TestCase):
         self.f1 = Bndfun.initfun_adaptive(f, subinterval)
 
     def test_plot(self):
-        fig, ax = subplots()
+        fig, ax = plt.subplots()
         self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
 
     def test_plotcoeffs(self):
-        fig, ax = subplots()
+        fig, ax = plt.subplots()
         self.f0.plotcoeffs(ax=ax)
         self.f1.plotcoeffs(ax=ax, color="r")
 
 
 
-class Calculus(TestCase):
+class Calculus(unittest.TestCase):
     """Unit-tests for Bndfun calculus operations"""
 
     def setUp(self):
         self.emptyfun = Bndfun(Chebtech2.initempty(), Interval())
-        self.yy = -1 + 2*rand(2000)
+        self.yy = -1 + 2*np.random.rand(2000)
 #        self.constfun = Bndfun(Chebtech2.initconst(1.), subinterval)
 
     # tests for the correct results in the empty cases
@@ -281,7 +250,7 @@ def indefiniteIntegralTester(fun, ifn, interval, tol):
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     gg = Bndfun.initfun_fixedlen(ifn, subinterval, ff.size+1)
     coeffs = gg.coeffs
-    coeffs[0] = coeffs[0] - ifn(array([interval[0]]))
+    coeffs[0] = coeffs[0] - ifn(np.array([interval[0]]))
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs - coeffs)
         self.assertLessEqual(absdiff, tol)
@@ -324,11 +293,11 @@ for k, (fun, der, n, tol) in enumerate(derivatives):
     setattr(Calculus, _testfun_.__name__, _testfun_)
 
 
-class Construction(TestCase):
+class Construction(unittest.TestCase):
     """Unit-tests for construction of Bndfun objects"""
 
     def test_onefun_construction(self):
-        coeffs = rand(10)
+        coeffs = np.random.rand(10)
         subinterval = Interval()
         onefun = Chebtech2(coeffs)
         f = Bndfun(onefun, subinterval)
@@ -355,7 +324,7 @@ class Construction(TestCase):
             itvl = Interval(a,b)
             ff = Bndfun.initidentity(itvl)
             self.assertEquals(ff.size, 2)
-            xx = linspace(a,b,1001)
+            xx = np.linspace(a,b,1001)
             tol = eps * abs(itvl).max()
             self.assertLessEqual(infnorm(ff(xx)-xx), tol)
 
@@ -394,17 +363,17 @@ for k, (fun, name, interval, funlen) in enumerate(fun_details):
     setattr(Construction, _testfun_.__name__, _testfun_)
 
     # add the fixedlen tests
-    for n in array([100]):
+    for n in np.array([100]):
         _testfun_ = fixedlenTester(fun, subinterval, n)
         _testfun_.__name__ = \
             "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
         setattr(Construction, _testfun_.__name__, _testfun_)
 
 
-class Algebra(TestCase):
+class Algebra(unittest.TestCase):
     """Unit-tests for Bndfun algebraic operations"""
     def setUp(self):
-        self.yy = -1 + 2 * rand(1000)
+        self.yy = -1 + 2 * np.random.rand(1000)
         self.emptyfun = Bndfun.initempty()
 
     # check (empty Bndfun) + (Bndfun) = (empty Bndfun)
@@ -487,8 +456,8 @@ class Algebra(TestCase):
         subinterval = Interval(-2,3)
         for (fun, _, _) in testfunctions:
             bndfun = Bndfun.initfun_adaptive(fun, subinterval)
-            self.assertTrue(truediv(self.emptyfun, bndfun).isempty)
-            self.assertTrue(truediv(self.emptyfun, bndfun).isempty)
+            self.assertTrue(operator.truediv(self.emptyfun, bndfun).isempty)
+            self.assertTrue(operator.truediv(self.emptyfun, bndfun).isempty)
             # __truediv__
             self.assertTrue((self.emptyfun/bndfun).isempty)
             self.assertTrue((bndfun/self.emptyfun).isempty)
@@ -521,12 +490,7 @@ class Algebra(TestCase):
         self.assertTrue( (-self.emptyfun).isempty )
 
 
-binops = (
-    __add__,
-    truediv,
-    __mul__,
-    __sub__,
-    )
+binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 
 # add tests for the binary operators
 def binaryOpTester(f, g, subinterval, binop):
@@ -549,9 +513,10 @@ subintervals = (Interval(-.5,.9), )
 
 for binop in binops:
     # add the generic binary operator tests
-    for (f, _, _), (g, _, denomRoots) in combinations(testfunctions, 2):
+    for (f, _, _), (g, _, denomRoots) in \
+            itertools.combinations(testfunctions, 2):
         for subinterval in subintervals:
-            if binop is truediv and denomRoots:
+            if binop is operator.truediv and denomRoots:
                 # skip truediv test if denominator has roots on the real line
                 pass
             else:
@@ -562,10 +527,7 @@ for binop in binops:
                         binop.__name__, f.__name__,  g.__name__, a, b)
                 setattr(Algebra, _testfun_.__name__, _testfun_)
 
-unaryops = (
-    __pos__,
-    __neg__,
-    )
+unaryops = (operator.pos, operator.neg)
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, subinterval):
@@ -586,17 +548,16 @@ for unaryop in unaryops:
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
-class Ufuncs(TestCase):
+class Ufuncs(unittest.TestCase):
     """Unit-tests for Bndfun numpy ufunc overloads"""
     def setUp(self):
-        self.yy = -1 + 2 * rand(1000)
+        self.yy = -1 + 2 * np.random.rand(1000)
         self.emptyfun = Bndfun.initempty()
 
 
-ufuncs = (
-    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
-    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
-)
+ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
+          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
+          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
 
 # empty-case tests
 def ufuncEmptyCaseTester(ufunc):
@@ -617,26 +578,26 @@ uf1 = lambda x: x
 uf1.__name__ = "x"
 
 ufunc_test_params = [
-    (arccos,  [([uf1, (-.8,.8)],  eps), ]),
-    (arccosh, [([uf1, (2,3)    ], eps), ]),
-    (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
-    (arcsinh, [([uf1, (2,3)    ], eps), ]),
-    (arctan,  [([uf1, (-.8,.8)],  eps), ]),
-    (arctanh, [([uf1, (-.8,.8)],  eps), ]),
-    (cos,     [([uf1, (-3,3)   ], eps), ]),
-    (cosh,    [([uf1, (-3,3)   ], eps), ]),
-    (exp,     [([uf1, (-3,3)   ], eps), ]),
-    (exp2,    [([uf1, (-3,3)   ], eps), ]),
-    (expm1,   [([uf1, (-3,3)   ], eps), ]),
-    (log,     [([uf1, (2,3)    ], eps), ]),
-    (log2,    [([uf1, (2,3)    ], eps), ]),
-    (log10,   [([uf1, (2,3)    ], eps), ]),
-    (log1p,   [([uf1, (-.8,.8)],  eps), ]),
-    (sinh,    [([uf1, (-3,3)   ], eps), ]),
-    (sin,     [([uf1, (-3,3)   ], eps), ]),
-    (tan,     [([uf1, (-.8,.8)],  eps), ]),
-    (tanh,    [([uf1, (-3,3)   ], eps), ]),
-    (sqrt,    [([uf1, (2,3)    ], eps), ]),
+    (np.arccos,  [([uf1, (-.8,.8)],  eps), ]),
+    (np.arccosh, [([uf1, (2,3)    ], eps), ]),
+    (np.arcsin,  [([uf1, (-.8,.8)],  eps), ]),
+    (np.arcsinh, [([uf1, (2,3)    ], eps), ]),
+    (np.arctan,  [([uf1, (-.8,.8)],  eps), ]),
+    (np.arctanh, [([uf1, (-.8,.8)],  eps), ]),
+    (np.cos,     [([uf1, (-3,3)   ], eps), ]),
+    (np.cosh,    [([uf1, (-3,3)   ], eps), ]),
+    (np.exp,     [([uf1, (-3,3)   ], eps), ]),
+    (np.exp2,    [([uf1, (-3,3)   ], eps), ]),
+    (np.expm1,   [([uf1, (-3,3)   ], eps), ]),
+    (np.log,     [([uf1, (2,3)    ], eps), ]),
+    (np.log2,    [([uf1, (2,3)    ], eps), ]),
+    (np.log10,   [([uf1, (2,3)    ], eps), ]),
+    (np.log1p,   [([uf1, (-.8,.8)],  eps), ]),
+    (np.sinh,    [([uf1, (-3,3)   ], eps), ]),
+    (np.sin,     [([uf1, (-3,3)   ], eps), ]),
+    (np.tan,     [([uf1, (-.8,.8)],  eps), ]),
+    (np.tanh,    [([uf1, (-3,3)   ], eps), ]),
+    (np.sqrt,    [([uf1, (2,3)    ], eps), ]),
 ]
 
 def ufuncTester(ufunc, f, interval, tol):
@@ -659,7 +620,7 @@ for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params:
     setattr(Ufuncs, _testfun_.__name__, _testfun_)
 
 
-class Roots(TestCase):
+class Roots(unittest.TestCase):
 
     def test_empty(self):
         ff = Bndfun.initempty()
@@ -681,12 +642,12 @@ def rootsTester(f, interval, roots, tol):
     return tester
 
 rootstestfuns = (
-    (lambda x: 3*x+2.,        [-2,3],     array([-2/3]),                  eps),
-    (lambda x: x**2+.2*x-.08, [-2,5],     array([-.4, .2]),           3e1*eps),
-    (lambda x: sin(x),        [-7,7],     pi*linspace(-2,2,5),        1e1*eps),
-    (lambda x: cos(2*pi*x),   [-20,10],   linspace(-19.75, 9.75, 60), 3e1*eps),
-    (lambda x: sin(100*pi*x), [-0.5,0.5], linspace(-.5,.5,101),           eps),
-    (lambda x: sin(5*pi/2*x), [-1,1],     array([-.8, -.4, 0, .4, .8]),   eps)
+    (lambda x: 3*x+2.,        [-2,3],     np.array([-2/3]),                  eps),
+    (lambda x: x**2+.2*x-.08, [-2,5],     np.array([-.4, .2]),           3e1*eps),
+    (lambda x: sin(x),        [-7,7],     pi*np.linspace(-2,2,5),        1e1*eps),
+    (lambda x: cos(2*pi*x),   [-20,10],   np.linspace(-19.75, 9.75, 60), 3e1*eps),
+    (lambda x: sin(100*pi*x), [-0.5,0.5], np.linspace(-.5,.5,101),           eps),
+    (lambda x: sin(5*pi/2*x), [-1,1],     np.array([-.8, -.4, 0, .4, .8]),   eps)
     )
 for k, args in enumerate(rootstestfuns):
     _testfun_ = rootsTester(*args)
