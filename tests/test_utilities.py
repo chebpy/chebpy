@@ -1,45 +1,29 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-tests for pyfun/utilities.py
-"""
+
+"""Unit-tests for pyfun/core/utilities.py"""
+
 from __future__ import division
 
-from unittest import TestCase
-
-from numpy import asarray
-from numpy import array
-from numpy import cos
-from numpy import exp
-from numpy import linspace
-from numpy import ndarray
-from numpy.random import rand
-from numpy.random import seed
-
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import DefaultPrefs
-from chebpy.core.utilities import HTOL
-from chebpy.core.utilities import Interval
-from chebpy.core.utilities import Domain
-from chebpy.core.utilities import compute_breakdata
-from chebpy.core.utilities import check_funs
-from chebpy.core.exceptions import IntervalGap
-from chebpy.core.exceptions import IntervalOverlap
-from chebpy.core.exceptions import IntervalValues
-from chebpy.core.exceptions import InvalidDomain
-from chebpy.core.exceptions import SupportMismatch
-from chebpy.core.exceptions import NotSubdomain
+import unittest
+import numpy as np
 
 from chebpy import chebfun
-
+from chebpy.core.bndfun import Bndfun
+from chebpy.core.settings import DefaultPrefs
+from chebpy.core.utilities import (HTOL, Interval, Domain, compute_breakdata,
+                                   check_funs)
+from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
+                                    IntervalValues, InvalidDomain,
+                                    SupportMismatch, NotSubdomain)
 from tests.utilities import infnorm
 
-seed(0)
 
+np.random.seed(0)
 eps = DefaultPrefs.eps
 
 
 # tests for usage of the Interval class
-class TestInterval(TestCase):
+class TestInterval(unittest.TestCase):
 
     def setUp(self):
         self.i1 = Interval(-2,3)
@@ -49,7 +33,7 @@ class TestInterval(TestCase):
 
     def test_init(self):
         Interval(-1,1)
-        self.assertTrue((asarray(Interval())==array([-1,1])).all())
+        self.assertTrue((np.asarray(Interval())==np.array([-1,1])).all())
 
     def test_init_disallow(self):
         self.assertRaises(IntervalValues, Interval, 2, 0)
@@ -81,7 +65,7 @@ class TestInterval(TestCase):
         self.assertTrue(self.i1 not in self.i3)
         self.assertTrue(self.i1 not in self.i4)
 
-# Interval objects used to have tolerance-sensitive defintions of __eq__ and
+# Interval objects used to have tolerance-sensitive definitions of __eq__ and
 # __contains__, though these were removed in the commit following
 # 9eaf1c5e0674dab1a676d04a02ceda329beec2ea.
 #    def test__eq__close(self):
@@ -102,17 +86,17 @@ class TestInterval(TestCase):
 #        self.assertFalse(i3 in i1)
 
     def test_maps(self):
-        yy = -1 + 2 * rand(1000)
+        yy = -1 + 2 * np.random.rand(1000)
         interval = Interval(-2,3)
         vals = interval.invmap(interval(yy)) - yy
         self.assertLessEqual(infnorm(vals), eps)
 
     def test_isinterior(self):
         npts = 1000
-        x1 = linspace(-2, 3,npts)
-        x2 = linspace(-3,-2,npts)
-        x3 = linspace(3,4,npts)
-        x4 = linspace(5,6,npts)
+        x1 = np.linspace(-2, 3,npts)
+        x2 = np.linspace(-3,-2,npts)
+        x3 = np.linspace(3,4,npts)
+        x4 = np.linspace(5,6,npts)
         interval = Interval(-2,3)
         self.assertEquals(interval.isinterior(x1).sum(), npts-2)
         self.assertEquals(interval.isinterior(x2).sum(), 0)
@@ -121,14 +105,14 @@ class TestInterval(TestCase):
 
 
 # tests for usage of the Domain class
-class TestDomain(TestCase):
+class TestDomain(unittest.TestCase):
 
     def test__init__(self):
         Domain([-2,1])
         Domain([-2,0,1])
-        Domain(array([-2,1]))
-        Domain(array([-2,0,1]))
-        Domain(linspace(-10,10,51))
+        Domain(np.array([-2,1]))
+        Domain(np.array([-2,0,1]))
+        Domain(np.linspace(-10,10,51))
 
     def test__init__disallow(self):
         self.assertRaises(InvalidDomain, Domain, [1])
@@ -164,7 +148,7 @@ class TestDomain(TestCase):
     def test__contains__(self):
         d1 = Domain([-2,0,1,3,5])
         d2 = Domain([-1,2])
-        d3 = Domain(linspace(-10,10,1000))
+        d3 = Domain(np.linspace(-10,10,1000))
         d4 = Domain([-1,0,1,2])
         self.assertTrue(d2 in d1)
         self.assertTrue(d1 in d3)
@@ -222,7 +206,7 @@ class TestDomain(TestCase):
         self.assertIsInstance(d1!=d3, bool)
 
     def test_from_chebfun(self):
-        ff = chebfun(lambda x: cos(x), linspace(-10,10,11))
+        ff = chebfun(lambda x: np.cos(x), np.linspace(-10,10,11))
         Domain.from_chebfun(ff)
 
     def test_breakpoints_in(self):
@@ -230,14 +214,14 @@ class TestDomain(TestCase):
         d2 = Domain([-2,0.5,1,3])
 
         result1 = d1.breakpoints_in(d2)
-        self.assertIsInstance(result1, ndarray)
+        self.assertIsInstance(result1, np.ndarray)
         self.assertTrue(result1.size, 3)
         self.assertFalse(result1[0])
         self.assertFalse(result1[1])
         self.assertTrue(result1[2])
 
         result2 = d2.breakpoints_in(d1)
-        self.assertIsInstance(result2, ndarray)
+        self.assertIsInstance(result2, np.ndarray)
         self.assertTrue(result2.size, 4)
         self.assertFalse(result2[0])
         self.assertFalse(result2[1])
@@ -261,15 +245,15 @@ class TestDomain(TestCase):
     def test_support(self):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
-        dom_c = Domain(linspace(-10,10,51))
-        self.assertTrue(all(dom_a.support.view(ndarray)==[-2,1]))
-        self.assertTrue(all(dom_b.support.view(ndarray)==[-2,1]))
-        self.assertTrue(all(dom_c.support.view(ndarray)==[-10,10]))
+        dom_c = Domain(np.linspace(-10,10,51))
+        self.assertTrue(np.all(dom_a.support.view(np.ndarray)==[-2,1]))
+        self.assertTrue(np.all(dom_b.support.view(np.ndarray)==[-2,1]))
+        self.assertTrue(np.all(dom_c.support.view(np.ndarray)==[-10,10]))
 
     def test_size(self):
         dom_a = Domain([-2,1])
         dom_b = Domain([-2,0,1])
-        dom_c = Domain(linspace(-10,10,51))
+        dom_c = Domain(np.linspace(-10,10,51))
         self.assertEqual(dom_a.size, 2)
         self.assertEqual(dom_b.size, 3)
         self.assertEqual(dom_c.size, 51)
@@ -277,7 +261,7 @@ class TestDomain(TestCase):
     def test_restrict(self):
         dom_a = Domain([-2,-1,0,1])
         dom_b = Domain([-1.5,-.5,0.5])
-        dom_c = Domain(linspace(-2,1,16))
+        dom_c = Domain(np.linspace(-2,1,16))
         self.assertEqual(dom_a.restrict(dom_b), Domain([-1.5,-1,-.5,0,.5]))
         self.assertEqual(dom_a.restrict(dom_c), dom_c)
         self.assertEqual(dom_a.restrict(dom_a), dom_a)
@@ -285,13 +269,13 @@ class TestDomain(TestCase):
         self.assertEqual(dom_c.restrict(dom_c), dom_c)
         # tests to check if catch breakpoints that are different by eps
         # (linspace introduces these effects)
-        dom_d = Domain(linspace(-.4,.4,2))
+        dom_d = Domain(np.linspace(-.4,.4,2))
         self.assertEqual(dom_c.restrict(dom_d), Domain([-.4,-.2,0,.2,.4]))
 
     def test_restrict_raises(self):
         dom_a = Domain([-2,-1,0,1])
         dom_b = Domain([-1.5,-.5,0.5])
-        dom_c = Domain(linspace(-2,1,16))
+        dom_c = Domain(np.linspace(-2,1,16))
         self.assertRaises(NotSubdomain, dom_b.restrict, dom_a)
         self.assertRaises(NotSubdomain, dom_b.restrict, dom_c)
 
@@ -322,32 +306,32 @@ class TestDomain(TestCase):
         self.assertRaises(SupportMismatch, dom_b.union, dom_a)
 
 
-class CheckFuns(TestCase):
+class CheckFuns(unittest.TestCase):
     """Tests for the chebpy.core.utilities check_funs method"""
 
     def setUp(self):
-        f = lambda x: exp(x)
+        f = lambda x: np.exp(x)
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1))
         self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5))
         self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5))
         self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2))
-        self.funs_a = array([self.fun1, self.fun0, self.fun2])
-        self.funs_b = array([self.fun1, self.fun2])
-        self.funs_c = array([self.fun0, self.fun3])
-        self.funs_d = array([self.fun1, self.fun4])
+        self.funs_a = np.array([self.fun1, self.fun0, self.fun2])
+        self.funs_b = np.array([self.fun1, self.fun2])
+        self.funs_c = np.array([self.fun0, self.fun3])
+        self.funs_d = np.array([self.fun1, self.fun4])
 
     def test_verify_empty(self):
-        funs = check_funs(array([]))
+        funs = check_funs(np.array([]))
         self.assertTrue(funs.size==0)
 
     def test_verify_contiguous(self):
-        funs = check_funs(array([self.fun0, self.fun1]))
+        funs = check_funs(np.array([self.fun0, self.fun1]))
         self.assertTrue(funs[0]==self.fun0)
         self.assertTrue(funs[1]==self.fun1)
 
     def test_verify_sort(self):
-        funs = check_funs(array([self.fun1, self.fun0]))
+        funs = check_funs(np.array([self.fun1, self.fun0]))
         self.assertTrue(funs[0]==self.fun0)
         self.assertTrue(funs[1]==self.fun1)
 
@@ -361,31 +345,33 @@ class CheckFuns(TestCase):
 
 
 # tests for the chebpy.core.utilities compute_breakdata function
-class ComputeBreakdata(TestCase):
+class ComputeBreakdata(unittest.TestCase):
 
     def setUp(self):
-        f = lambda x: exp(x)
+        f = lambda x: np.exp(x)
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1,0) )
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0,1) )
 
     def test_compute_breakdata_empty(self):
-        breaks = compute_breakdata(array([]))
+        breaks = compute_breakdata(np.array([]))
         # list(...) for Python 2/3 compatibility
-        self.assertTrue(array(list(breaks.items())).size==0)
+        self.assertTrue(np.array(list(breaks.items())).size==0)
 
     def test_compute_breakdata_1(self):
-        funs = array([self.fun0])
+        funs = np.array([self.fun0])
         breaks = compute_breakdata(funs)
         x, y = list(breaks.keys()), list(breaks.values())
-        self.assertLessEqual(infnorm(x-array([-1,0])), eps)
-        self.assertLessEqual(infnorm(y-array([exp(-1),exp(0)])), 2*eps)
+        self.assertLessEqual(infnorm(x-np.array([-1,0])), eps)
+        self.assertLessEqual(infnorm(y-np.array([np.exp(-1),
+                                                 np.exp(0)])), 2*eps)
 
     def test_compute_breakdata_2(self):
-        funs = array([self.fun0, self.fun1])
+        funs = np.array([self.fun0, self.fun1])
         breaks = compute_breakdata(funs)
         x, y = list(breaks.keys()), list(breaks.values())
-        self.assertLessEqual(infnorm(x-array([-1,0,1])), eps)
-        self.assertLessEqual(infnorm(y-array([exp(-1),exp(0),exp(1)])), 2*eps)
+        self.assertLessEqual(infnorm(x-np.array([-1,0,1])), eps)
+        self.assertLessEqual(infnorm(y-np.array([np.exp(-1),np.exp(0),
+                                                 np.exp(1)])), 2*eps)
 
 # reset the testsfun variable so it doesn't get picked up by nose
 testfun = None
