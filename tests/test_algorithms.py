@@ -1,81 +1,74 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-tests for pyfun/utilities.py
-"""
+
+"""Unit-tests for pyfun/utilities.py"""
+
 from __future__ import division
 
-from unittest import TestCase
-
-from numpy import array
-from numpy import linspace
-from numpy import isscalar
-from numpy import exp
-from numpy import cos
-from numpy.random import rand
-from numpy.random import seed
-from numpy import seterr
+import unittest
+import numpy as np
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
+from chebpy.core.algorithms import bary, clenshaw, coeffmult
 
-from chebpy.core.algorithms import bary
-from chebpy.core.algorithms import clenshaw
-from chebpy.core.algorithms import coeffmult
+from tests.utilities import (testfunctions, scaled_tol, infNormLessThanTol,
+                             infnorm)
 
-from tests.utilities import testfunctions
-from tests.utilities import scaled_tol
-from tests.utilities import infNormLessThanTol
-from tests.utilities import infnorm
+# aliases
+pi = np.pi
+sin = np.sin
+cos = np.cos
+exp = np.exp
+eps = DefaultPrefs.eps
+
+np.random.seed(0)
 
 # turn off 'divide' and 'invalid' Runtimewarnings: these are invoked in the
 # barycentric formula and the warned-of behaviour is actually required
-seterr(divide='ignore', invalid='ignore')
+np.seterr(divide='ignore', invalid='ignore')
 
-seed(0)
 
-eps = DefaultPrefs.eps
-
-class Evaluation(TestCase):
+class Evaluation(unittest.TestCase):
     """Tests for the Barycentric formula and Clenshaw algorithm"""
 
     def setUp(self):
         npts = 15
         self.xk = Chebtech2._chebpts(npts)
         self.vk = Chebtech2._barywts(npts)
-        self.fk = rand(npts)
-        self.ak = rand(11)
-        self.xx = -1 + 2*rand(9)
-        self.pts = -1 + 2*rand(1001)
+        self.fk = np.random.rand(npts)
+        self.ak = np.random.rand(11)
+        self.xx = -1 + 2*np.random.rand(9)
+        self.pts = -1 + 2*np.random.rand(1001)
 
     # check an empty array is returned whenever either or both of the first
     # two arguments are themselves empty arrays
     def test_bary__empty(self):
         null = (None, None)
-        self.assertEquals(bary(array([]), array([]), *null).size, 0)
-        self.assertEquals(bary(array([.1]), array([]), *null).size, 0)
-        self.assertEquals(bary(array([]), array([.1]), *null).size, 0)
-        self.assertEquals(bary(self.pts, array([]), *null).size, 0)
-        self.assertEquals(bary(array([]), self.pts, *null).size, 0)
-        self.assertNotEquals(bary(array([.1]), array([.1]), *null).size, 0)
+        self.assertEquals(bary(np.array([]), np.array([]), *null).size, 0)
+        self.assertEquals(bary(np.array([.1]), np.array([]), *null).size, 0)
+        self.assertEquals(bary(np.array([]), np.array([.1]), *null).size, 0)
+        self.assertEquals(bary(self.pts, np.array([]), *null).size, 0)
+        self.assertEquals(bary(np.array([]), self.pts, *null).size, 0)
+        self.assertNotEquals(bary(np.array([.1]), np.array([.1]), *null).size, 0)
 
     def test_clenshaw__empty(self):
-        self.assertEquals(clenshaw(array([]), array([])).size, 0)
-        self.assertEquals(clenshaw(array([]), array([1.])).size, 0)
-        self.assertEquals(clenshaw(array([1.]), array([])).size, 0)
-        self.assertEquals(clenshaw(self.pts, array([])).size, 0)
-        self.assertEquals(clenshaw(array([]), self.pts).size, 0)
-        self.assertNotEquals(clenshaw(array([.1]), array([.1])).size, 0)
+        self.assertEquals(clenshaw(np.array([]), np.array([])).size, 0)
+        self.assertEquals(clenshaw(np.array([]), np.array([1.])).size, 0)
+        self.assertEquals(clenshaw(np.array([1.]), np.array([])).size, 0)
+        self.assertEquals(clenshaw(self.pts, np.array([])).size, 0)
+        self.assertEquals(clenshaw(np.array([]), self.pts).size, 0)
+        self.assertNotEquals(clenshaw(np.array([.1]), np.array([.1])).size, 0)
 
     # check that scalars get evaluated to scalars (not arrays)
     def test_clenshaw__scalar_input(self):
         for x in self.xx:
-            self.assertTrue( isscalar(clenshaw(x, self.ak)) )
-        self.assertFalse( isscalar(clenshaw(xx, self.ak)) )
+            self.assertTrue(np.isscalar(clenshaw(x,self.ak)))
+        self.assertFalse(np.isscalar(clenshaw(xx,self.ak)))
 
     def test_bary__scalar_input(self):
         for x in self.xx:
-            self.assertTrue( isscalar(bary(x, self.fk, self.xk, self.vk)) )
-        self.assertFalse( isscalar(bary(xx, self.fk, self.xk, self.vk)) )
+            self.assertTrue(np.isscalar(bary(x,self.fk,self.xk,self.vk)))
+        self.assertFalse(np.isscalar(bary(xx,self.fk,self.xk,self.vk)))
 
     # Check that we always get float output for constant Chebtechs, even 
     # when passing in an integer input.
@@ -95,8 +88,8 @@ class Evaluation(TestCase):
     # Check that we get consistent output from bary and clenshaw
     # TODO: Move these tests elsewhere?
     def test_bary_clenshaw_consistency(self):
-        coeffs = rand(3)
-        evalpts = (0.5, array([]), array([.5]), array([.5, .6]))
+        coeffs = np.random.rand(3)
+        evalpts = (0.5, np.array([]), np.array([.5]), np.array([.5, .6]))
         for n in range(len(coeffs)):
             ff = Chebtech2(coeffs[:n])
             for xx in evalpts:
@@ -104,8 +97,8 @@ class Evaluation(TestCase):
                 fc = ff(xx, "clenshaw")
                 self.assertEquals(type(fb), type(fc))
 
-evalpts = [linspace(-1,1,n) for n in array([1e2, 1e3, 1e4, 1e5])]
-ptsarry = [Chebtech2._chebpts(n) for n in array([100, 200])]
+evalpts = [np.linspace(-1,1,n) for n in np.array([1e2, 1e3, 1e4, 1e5])]
+ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
 methods = [bary, clenshaw]
 
 def evalTester(method, fun, evalpts, chebpts):
@@ -140,7 +133,7 @@ for method in methods:
                 setattr(Evaluation, testfun.__name__, testfun)
 
 
-class CoeffMult(TestCase):
+class CoeffMult(unittest.TestCase):
 
     def setUp(self):
         self.f = lambda x: exp(x)
