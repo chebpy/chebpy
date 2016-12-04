@@ -4,83 +4,41 @@
 
 from __future__ import division
 
-from operator import __add__
-from operator import __mul__
-from operator import __neg__
-from operator import __pos__
-from operator import __sub__
-from operator import truediv
+import itertools
+import operator
+import unittest
+import numpy as np
+import matplotlib.pyplot as plt
 
-binops = [__add__, __mul__, __sub__, truediv]
-
-try:
-    # for Python 2 we need to test div separately
-    from operator import __div__
-    binops.append(__div__)
-    div_binops = (__div__, truediv)
-except ImportError:
-    # Python 3
-    div_binops = (truediv,)
-
-from unittest import TestCase
-from itertools import combinations
-
-from numpy import arccos
-from numpy import arccosh
-from numpy import arcsin
-from numpy import arcsinh
-from numpy import arctan
-from numpy import arctanh
-from numpy import cos
-from numpy import cosh
-from numpy import exp
-from numpy import exp2
-from numpy import expm1
-from numpy import sin
-from numpy import sinh
-from numpy import tan
-from numpy import tanh
-from numpy import log
-from numpy import log2
-from numpy import log10
-from numpy import log1p
-from numpy import sqrt
-from numpy import ndarray
-from numpy import array
-from numpy import arange
-from numpy import append
-from numpy import sum
-from numpy import abs
-from numpy import pi
-from numpy import linspace
-from numpy import maximum
-from numpy import minimum
-from numpy import equal
-from numpy import isscalar
-from numpy import isfinite
-from numpy.random import rand
-
-from matplotlib.pyplot import subplots
-
+from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPrefs
-from chebpy.core.utilities import Domain
-from chebpy.core.utilities import Interval
-from chebpy.core.exceptions import IntervalGap
-from chebpy.core.exceptions import IntervalOverlap
-from chebpy.core.exceptions import BadDomainArgument
-from chebpy.core.exceptions import BadFunLengthArgument
+from chebpy.core.utilities import Domain, Interval
+from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
+                                    BadDomainArgument, BadFunLengthArgument)
 
-from chebpy import chebfun
+from tests.utilities import infnorm, testfunctions
 
-from tests.utilities import infnorm
-from tests.utilities import testfunctions
+# in Python 3, the operator module does not have a 'div' method
+binops = [operator.add, operator.mul, operator.sub, operator.truediv]
+try:
+    # in Python 2 we need to test div separately
+    binops.append(operator.div)
+    div_binops = (operator.div, operator.truediv)
+except AttributeError:
+    # Python 3
+    div_binops = (operator.truediv,)
 
+# aliases
+pi = np.pi
+sin = np.sin
+cos = np.cos
+exp = np.exp
 eps = DefaultPrefs.eps
 
 
-class Construction(TestCase):
+class Construction(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: exp(x)
@@ -90,10 +48,10 @@ class Construction(TestCase):
         self.fun2 = Bndfun.initfun_adaptive(f, Interval(-.5,0.5))
         self.fun3 = Bndfun.initfun_adaptive(f, Interval(2,2.5))
         self.fun4 = Bndfun.initfun_adaptive(f, Interval(-3,-2))
-        self.funs_a = array([self.fun1, self.fun0, self.fun2])
-        self.funs_b = array([self.fun1, self.fun2])
-        self.funs_c = array([self.fun0, self.fun3])
-        self.funs_d = array([self.fun1, self.fun4])
+        self.funs_a = np.array([self.fun1, self.fun0, self.fun2])
+        self.funs_b = np.array([self.fun1, self.fun2])
+        self.funs_c = np.array([self.fun0, self.fun3])
+        self.funs_d = np.array([self.fun1, self.fun4])
 
     def test__init__pass(self):
         Chebfun([self.fun0])
@@ -113,9 +71,9 @@ class Construction(TestCase):
 
     def test_initconst(self):
         self.assertTrue(Chebfun.initconst(1, [-1,1]).isconst)
-        self.assertTrue(Chebfun.initconst(-10, linspace(-1,1,11)).isconst)
+        self.assertTrue(Chebfun.initconst(-10, np.linspace(-1,1,11)).isconst)
         self.assertTrue(Chebfun.initconst(3, [-2,0,1]).isconst)
-        self.assertTrue(Chebfun.initconst(3.14, linspace(-100,-90,11)).isconst)
+        self.assertTrue(Chebfun.initconst(3.14, np.linspace(-100,-90,11)).isconst)
         self.assertFalse(Chebfun([self.fun0]).isconst)
         self.assertFalse(Chebfun([self.fun1]).isconst)
         self.assertFalse(Chebfun([self.fun2]).isconst)
@@ -123,22 +81,22 @@ class Construction(TestCase):
 
     def test_initidentity(self):
         _doms = (
-            linspace(-1,1,2),
-            linspace(-1,1,11),
-            linspace(-10,17,351),
-            linspace(-9.3,-3.2,22),  
-            linspace(2.5,144.3,2112),
+            np.linspace(-1,1,2),
+            np.linspace(-1,1,11),
+            np.linspace(-10,17,351),
+            np.linspace(-9.3,-3.2,22),
+            np.linspace(2.5,144.3,2112),
         )
         for _dom in _doms:
             ff = Chebfun.initidentity(_dom)
             a, b = ff.support
-            xx = linspace(a, b, 1001)
+            xx = np.linspace(a, b, 1001)
             tol = eps * ff.hscale
             self.assertLessEqual(infnorm(ff(xx)-xx), tol)
         # test the default case
         ff = Chebfun.initidentity()
         a, b = ff.support
-        xx = linspace(a, b, 1001)
+        xx = np.linspace(a, b, 1001)
         tol = eps * ff.hscale
         self.assertLessEqual(infnorm(ff(xx)-xx), tol)     
 
@@ -224,7 +182,7 @@ class Construction(TestCase):
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
 
 
-class Properties(TestCase):
+class Properties(unittest.TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
@@ -233,13 +191,13 @@ class Properties(TestCase):
 
     def test_breakpoints(self):
         self.assertEqual(self.f0.breakpoints.size, 0)
-        self.assertTrue(equal(self.f1.breakpoints,[-1,1]).all())
-        self.assertTrue(equal(self.f2.breakpoints,[-1,0,1,2]).all())
+        self.assertTrue(np.equal(self.f1.breakpoints,[-1,1]).all())
+        self.assertTrue(np.equal(self.f2.breakpoints,[-1,0,1,2]).all())
 
     def test_domain(self):
         d1 = Domain([-1,1])
         d2 = Domain([-1,0,1,2])
-        self.assertIsInstance(self.f0.domain, ndarray)
+        self.assertIsInstance(self.f0.domain, np.ndarray)
         self.assertIsInstance(self.f1.domain, Domain)
         self.assertIsInstance(self.f2.domain, Domain)
         self.assertEqual(self.f0.domain.size, 0)
@@ -266,12 +224,12 @@ class Properties(TestCase):
         self.assertTrue(c2.isconst)
 
     def test_support(self):
-        self.assertIsInstance(self.f0.support, ndarray)
-        self.assertIsInstance(self.f1.support, ndarray)
-        self.assertIsInstance(self.f2.support, ndarray)
+        self.assertIsInstance(self.f0.support, np.ndarray)
+        self.assertIsInstance(self.f1.support, np.ndarray)
+        self.assertIsInstance(self.f2.support, np.ndarray)
         self.assertEqual(self.f0.support.size, 0)
-        self.assertTrue(equal(self.f1.support,[-1,1]).all())
-        self.assertTrue(equal(self.f2.support,[-1,2]).all())
+        self.assertTrue(np.equal(self.f1.support,[-1,1]).all())
+        self.assertTrue(np.equal(self.f2.support,[-1,2]).all())
 
     def test_vscale(self):
         self.assertEqual(self.f0.vscale, 0)
@@ -279,7 +237,7 @@ class Properties(TestCase):
         self.assertEqual(self.f2.vscale, 4)
 
 
-class ClassUsage(TestCase):
+class ClassUsage(unittest.TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
@@ -307,19 +265,19 @@ class ClassUsage(TestCase):
         for f in [self.f0, self.f1, self.f2]:
             a1 = [x for x in f]
             a2 = [x for x in f.funs]
-            self.assertTrue(equal(a1,a2).all())
+            self.assertTrue(np.equal(a1,a2).all())
 
     def test_x_property(self):
         _doms = (
-            linspace(-1,1,2),
-            linspace(-1,1,11),
-            linspace(-9.3,-3.2,22),
+            np.linspace(-1,1,2),
+            np.linspace(-1,1,11),
+            np.linspace(-9.3,-3.2,22),
         )
         for _dom in _doms:
             f = Chebfun.initfun_fixedlen(sin, 1000, _dom)
             x = f.x
             a, b = x.support
-            pts = linspace(a, b, 1001)
+            pts = np.linspace(a, b, 1001)
             tol = eps * f.hscale
             self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
@@ -329,10 +287,10 @@ class ClassUsage(TestCase):
         for dom in doms:
             ff = Chebfun.initfun_fixedlen(cos, 25, domain=dom)
             # define some arbitrary subdomains
-            yy = linspace(dom[0], dom[-1], 11)
+            yy = np.linspace(dom[0], dom[-1], 11)
             subdoms = [yy, yy[2:7], yy[::2]]
             for subdom in subdoms:
-                xx = linspace(subdom[0], subdom[-1], 1001)
+                xx = np.linspace(subdom[0], subdom[-1], 1001)
                 gg = ff._restrict(subdom)
                 vscl = ff.vscale
                 hscl = ff.hscale
@@ -350,7 +308,7 @@ class ClassUsage(TestCase):
         self.assertTrue(self.f0._restrict([-1,1]).isempty)
 
     def test_simplify(self):
-        dom = linspace(-2,1.5,13)
+        dom = np.linspace(-2,1.5,13)
         f = chebfun(cos, dom, 70).simplify()
         g = chebfun(cos, dom)
         self.assertEquals(f.domain, g.domain)
@@ -363,8 +321,8 @@ class ClassUsage(TestCase):
         self.assertTrue(self.f0.simplify().isempty)
 
     def test_restrict(self):
-        dom1 = Domain(linspace(-2,1.5,13))
-        dom2 = Domain(linspace(-1.7,0.93,17))
+        dom1 = Domain(np.linspace(-2,1.5,13))
+        dom2 = Domain(np.linspace(-1.7,0.93,17))
         dom3 = dom1.merge(dom2).restrict(dom2)
         f = chebfun(cos, dom1).restrict(dom2)
         g = chebfun(cos, dom3)
@@ -377,11 +335,11 @@ class ClassUsage(TestCase):
     def test_restrict_empty(self):
         self.assertTrue(self.f0.restrict([-1,1]).isempty)
 
-class Algebra(TestCase):
+class Algebra(unittest.TestCase):
 
     def setUp(self):
         self.emptyfun = Chebfun.initempty()
-        self.yy = -1 + 2*rand(1000)
+        self.yy = -1 + 2*np.random.rand(1000)
 
     # check  +(empty Chebfun) = (empty Chebfun)
     def test__pos__empty(self):
@@ -397,7 +355,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
                 self.assertTrue((self.emptyfun+ff).isempty)
                 self.assertTrue((ff+self.emptyfun).isempty)
 
@@ -408,8 +366,8 @@ class Algebra(TestCase):
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
-                    xx = linspace(a, b, 1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
                     g = lambda x: c + f(x)
                     gg1 = c + ff
                     gg2 = ff + c
@@ -426,7 +384,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
                 self.assertTrue((self.emptyfun-ff).isempty)
                 self.assertTrue((ff-self.emptyfun).isempty)
 
@@ -437,8 +395,8 @@ class Algebra(TestCase):
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
-                    xx = linspace(a, b, 1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
                     g = lambda x: c - f(x)
                     gg1 = c - ff
                     gg2 = ff - c
@@ -455,7 +413,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
                 self.assertTrue((self.emptyfun*ff).isempty)
                 self.assertTrue((ff*self.emptyfun).isempty)
 
@@ -466,8 +424,8 @@ class Algebra(TestCase):
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
-                    xx = linspace(a, b, 1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
                     g = lambda x: c * f(x)
                     gg1 = c * ff
                     gg2 = ff * c
@@ -484,7 +442,7 @@ class Algebra(TestCase):
         for (f, _, _) in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
-                ff = Chebfun.initfun_adaptive(f, linspace(a, b, 13))
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
                 self.assertTrue((self.emptyfun/ff).isempty)
                 self.assertTrue((ff/self.emptyfun).isempty)
 
@@ -495,8 +453,8 @@ class Algebra(TestCase):
             for c in (-1, 1, 10, -1e5):
                 for dom, _ in chebfun_testdomains:
                     a,b = dom
-                    xx = linspace(a, b, 1001)
-                    ff = Chebfun.initfun_adaptive(f, linspace(a, b, 11))
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
                     g = lambda x: f(x) / c
                     gg = ff / c
                     vscl = gg.vscale
@@ -526,16 +484,16 @@ chebfun_testdomains = [
 # add tests for the binary operators
 def binaryOpTester(f, g, binop, dom, tol):
     a, b = dom
-    xx = linspace(a,b,1001)
+    xx = np.linspace(a,b,1001)
     n, m = 3, 8
-    ff = Chebfun.initfun_adaptive(f, linspace(a,b,n+1))
-    gg = Chebfun.initfun_adaptive(g, linspace(a,b,m+1))
+    ff = Chebfun.initfun_adaptive(f, np.linspace(a,b,n+1))
+    gg = Chebfun.initfun_adaptive(g, np.linspace(a,b,m+1))
     FG = lambda x: binop(f(x), g(x))
     fg = binop(ff, gg)
     def tester(self):
         vscl = max([ff.vscale, gg.vscale])
         hscl = max([ff.hscale, gg.hscale])
-        lscl = max([fun.size for fun in append(ff.funs, gg.funs)])
+        lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
         self.assertEqual(ff.funs.size, n)
         self.assertEqual(gg.funs.size, m)
         self.assertEqual(fg.funs.size, n+m-1)
@@ -544,7 +502,8 @@ def binaryOpTester(f, g, binop, dom, tol):
 
 
 for binop in binops:
-    for (f, _, _), (g, _, denomHasRoots) in combinations(testfunctions, 2):
+    for (f, _, _), (g, _, denomHasRoots) in \
+            itertools.combinations(testfunctions, 2):
         for dom, tol in chebfun_testdomains:
             if binop in div_binops and denomHasRoots:
                 # skip truediv test if denominator has roots on the real line
@@ -567,8 +526,8 @@ for binop in binops:
 # add tests for the unary operators
 def unaryOpTester(f, unaryop, dom, tol):
     a, b = dom
-    xx = linspace(a,b,1001)
-    ff = Chebfun.initfun_adaptive(f, linspace(a,b,9))
+    xx = np.linspace(a,b,1001)
+    ff = Chebfun.initfun_adaptive(f, np.linspace(a,b,9))
     GG = lambda x: unaryop(f(x))
     gg = unaryop(ff)
     def tester(self):
@@ -579,11 +538,7 @@ def unaryOpTester(f, unaryop, dom, tol):
         self.assertLessEqual(infnorm(gg(xx)-GG(xx)), vscl*hscl*lscl*tol)
     return tester
 
-unaryops = (
-    __pos__,
-    __neg__,
-    )
-
+unaryops = (operator.pos, operator.neg)
 for unaryop in unaryops:
     for (f, _, _) in testfunctions:
         for dom, tol in chebfun_testdomains:
@@ -595,16 +550,15 @@ for unaryop in unaryops:
 
 
 
-class Ufuncs(TestCase):
+class Ufuncs(unittest.TestCase):
 
     def setUp(self):
         self.emptyfun = Chebfun.initempty()
-        self.yy = -1 + 2*rand(1000)
+        self.yy = -1 + 2*np.random.rand(1000)
 
-ufuncs = (
-    arccos, arccosh, arcsin, arcsinh, arctan, arctanh, cos, cosh, exp, exp2,
-    expm1, log, log2, log10, log1p, sinh, sin, tan, tanh, sqrt,
-)
+ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
+          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
+          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
 
 # empty-case tests
 def ufuncEmptyCaseTester(ufunc):
@@ -625,32 +579,32 @@ uf1 = lambda x: x
 uf1.__name__ = "x"
 
 ufunc_test_params = [
-        (arccos,  [([uf1, (-.8,.8)],  eps), ]),
-        (arccosh, [([uf1, (2,3)    ], eps), ]),
-        (arcsin,  [([uf1, (-.8,.8)],  eps), ]),
-        (arcsinh, [([uf1, (2,3)    ], eps), ]),
-        (arctan,  [([uf1, (-.8,.8)],  eps), ]),
-        (arctanh, [([uf1, (-.8,.8)],  eps), ]),
-        (cos,     [([uf1, (-3,3)   ], eps), ]),
-        (cosh,    [([uf1, (-3,3)   ], eps), ]),
+        (np.arccos,  [([uf1, (-.8,.8)],  eps), ]),
+        (np.arccosh, [([uf1, (2,3)    ], eps), ]),
+        (np.arcsin,  [([uf1, (-.8,.8)],  eps), ]),
+        (np.arcsinh, [([uf1, (2,3)    ], eps), ]),
+        (np.arctan,  [([uf1, (-.8,.8)],  eps), ]),
+        (np.arctanh, [([uf1, (-.8,.8)],  eps), ]),
+        (np.cos,     [([uf1, (-3,3)   ], eps), ]),
+        (np.cosh,    [([uf1, (-3,3)   ], eps), ]),
         (exp,     [([uf1, (-3,3)   ], eps), ]),
-        (exp2,    [([uf1, (-3,3)   ], eps), ]),
-        (expm1,   [([uf1, (-3,3)   ], eps), ]),
-        (log,     [([uf1, (2,3)    ], eps), ]),
-        (log2,    [([uf1, (2,3)    ], eps), ]),
-        (log10,   [([uf1, (2,3)    ], eps), ]),
-        (log1p,   [([uf1, (-.8,.8)],  eps), ]),
-        (sinh,    [([uf1, (-3,3)   ], eps), ]),
-        (sin,     [([uf1, (-3,3)   ], eps), ]),
-        (tan,     [([uf1, (-.8,.8)],  eps), ]),
-        (tanh,    [([uf1, (-3,3)   ], eps), ]),
-        (sqrt,    [([uf1, (2,3)    ], eps), ]),
+        (np.exp2,    [([uf1, (-3,3)   ], eps), ]),
+        (np.expm1,   [([uf1, (-3,3)   ], eps), ]),
+        (np.log,     [([uf1, (2,3)    ], eps), ]),
+        (np.log2,    [([uf1, (2,3)    ], eps), ]),
+        (np.log10,   [([uf1, (2,3)    ], eps), ]),
+        (np.log1p,   [([uf1, (-.8,.8)],  eps), ]),
+        (np.sinh,    [([uf1, (-3,3)   ], eps), ]),
+        (np.sin,     [([uf1, (-3,3)   ], eps), ]),
+        (np.tan,     [([uf1, (-.8,.8)],  eps), ]),
+        (np.tanh,    [([uf1, (-3,3)   ], eps), ]),
+        (np.sqrt,    [([uf1, (2,3)    ], eps), ]),
 ]
 
 
 def ufuncTester(ufunc, f, interval, tol):
     a,b = interval
-    ff = Chebfun.initfun_adaptive(f, linspace(a,b,13))
+    ff = Chebfun.initfun_adaptive(f, np.linspace(a,b,13))
     gg = lambda x: ufunc(f(x))
     GG = ufunc(ff)
     def tester(self):
@@ -669,7 +623,7 @@ for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params:
     setattr(Ufuncs, _testfun_.__name__, _testfun_)
 
 
-class Evaluation(TestCase):
+class Evaluation(unittest.TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
@@ -677,43 +631,43 @@ class Evaluation(TestCase):
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
     def test__call__empty_chebfun(self):
-        self.assertEqual(self.f0(linspace(-1,1,100)).size, 0)
+        self.assertEqual(self.f0(np.linspace(-1,1,100)).size, 0)
 
     def test__call__empty_array(self):
-        self.assertEqual(self.f0(array([])).size, 0)
-        self.assertEqual(self.f1(array([])).size, 0)
-        self.assertEqual(self.f2(array([])).size, 0)
+        self.assertEqual(self.f0(np.array([])).size, 0)
+        self.assertEqual(self.f1(np.array([])).size, 0)
+        self.assertEqual(self.f2(np.array([])).size, 0)
 
     def test__call__point_evaluation(self):
         # check we get back a scalar for scalar input
-        self.assertTrue(isscalar(self.f1(0.1)))
+        self.assertTrue(np.isscalar(self.f1(0.1)))
 
     def test__call__singleton(self):
         # check that the output is the same for the following inputs:
-        # array(x), array([x]), [x]
-        a = self.f1(array(0.1))
-        b = self.f1(array([0.1]))
+        # np.array(x), np.array([x]), [x]
+        a = self.f1(np.array(0.1))
+        b = self.f1(np.array([0.1]))
         c = self.f1([0.1])
         self.assertEqual(a.size, 1)
         self.assertEqual(b.size, 1)
         self.assertEqual(c.size, 1)
-        self.assertTrue(equal(a,b).all())
-        self.assertTrue(equal(b,c).all())
-        self.assertTrue(equal(a,c).all())
+        self.assertTrue(np.equal(a,b).all())
+        self.assertTrue(np.equal(b,c).all())
+        self.assertTrue(np.equal(a,c).all())
 
     def test__call__breakpoints(self):
         # check we get the values at the breakpoints back
         x1 = self.f1.breakpoints
         x2 = self.f2.breakpoints
-        self.assertTrue(equal(self.f1(x1), [1,1]).all())
-        self.assertTrue(equal(self.f2(x2), [1,0,1,4]).all())
+        self.assertTrue(np.equal(self.f1(x1), [1,1]).all())
+        self.assertTrue(np.equal(self.f2(x2), [1,0,1,4]).all())
 
     def test__call__outside_interval(self):
         # check we are able to evaluate the Chebfun outside the
         # interval of definition
-        x = linspace(-3,3,100)
-        self.assertTrue(isfinite(self.f1(x)).all())
-        self.assertTrue(isfinite(self.f2(x)).all())
+        x = np.linspace(-3,3,100)
+        self.assertTrue(np.isfinite(self.f1(x)).all())
+        self.assertTrue(np.isfinite(self.f2(x)).all())
 
     def test__call__general_evaluation(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
@@ -724,15 +678,15 @@ class Evaluation(TestCase):
         ff1 = Chebfun.initfun_adaptive(f, dom1)
         ff2 = Chebfun.initfun_adaptive(f, dom2)
         ff3 = Chebfun.initfun_adaptive(f, dom3)
-        x1 = linspace(dom1[0], dom1[-1], npts)
-        x2 = linspace(dom2[0], dom2[-1], npts)
-        x3 = linspace(dom3[0], dom3[-1], npts)
+        x1 = np.linspace(dom1[0], dom1[-1], npts)
+        x2 = np.linspace(dom2[0], dom2[-1], npts)
+        x3 = np.linspace(dom3[0], dom3[-1], npts)
         self.assertLessEqual(infnorm(f(x1)-ff1(x1)), 5e1*eps)
         self.assertLessEqual(infnorm(f(x2)-ff2(x2)), 2e1*eps)
         self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
 
 
-class Calculus(TestCase):
+class Calculus(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x-1.4)
@@ -741,7 +695,7 @@ class Calculus(TestCase):
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
-        self.f4 = Chebfun.initfun_adaptive(f, linspace(-1,1,11))
+        self.f4 = Chebfun.initfun_adaptive(f, np.linspace(-1,1,11))
 
     def test_sum(self):
         self.assertLessEqual(abs(self.f1.sum()-0.372895407327895),2*eps)
@@ -750,14 +704,14 @@ class Calculus(TestCase):
         self.assertLessEqual(abs(self.f4.sum()-0.372895407327895),2*eps)
 
     def test_diff(self):
-        xx = linspace(-5,5,10000)
+        xx = np.linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
             a, b = f.support
             x = xx[(xx>a)&(xx<b)]
             self.assertLessEqual(infnorm(f.diff()(x)-self.df(x)), 2e3*eps)
 
     def test_cumsum(self):
-        xx = linspace(-5,5,10000)
+        xx = np.linspace(-5,5,10000)
         for f in [self.f1, self.f2, self.f3, self.f4]:
             a, b = f.support
             x = xx[(xx>a)&(xx<b)]
@@ -779,22 +733,25 @@ class Calculus(TestCase):
         self.assertTrue(df.isempty)
 
 
-class Roots(TestCase):
+class Roots(unittest.TestCase):
 
     def setUp(self):
-        self.f1 = Chebfun.initfun_adaptive(lambda x: cos(4*pi*x), linspace(-10,10,101))        
-        self.f2 = Chebfun.initfun_adaptive(lambda x: sin(2*pi*x), linspace(-1,1,5))
-        self.f3 = Chebfun.initfun_adaptive(lambda x: sin(4*pi*x), linspace(-10,10,101))        
+        self.f1 = Chebfun.initfun_adaptive(lambda x: cos(4*pi*x),
+                                           np.linspace(-10,10,101))
+        self.f2 = Chebfun.initfun_adaptive(lambda x: sin(2*pi*x),
+                                           np.linspace(-1,1,5))
+        self.f3 = Chebfun.initfun_adaptive(lambda x: sin(4*pi*x),
+                                           np.linspace(-10,10,101))
 
     def test_empty(self):
         rts = Chebfun.initempty().roots()
-        self.assertIsInstance(rts, ndarray)
+        self.assertIsInstance(rts, np.ndarray)
         self.assertEqual(rts.size, 0)
 
     def test_multiple_pieces(self):
         rts = self.f1.roots()
         self.assertEqual(rts.size, 80)
-        self.assertLessEqual(infnorm(rts-arange(-9.875,10,.25)), 10*eps)
+        self.assertLessEqual(infnorm(rts-np.arange(-9.875,10,.25)), 10*eps)
 
     # check we don't get repeated roots at breakpoints
     def test_breakpoint_roots_1(self):
@@ -806,11 +763,11 @@ class Roots(TestCase):
     def test_breakpoint_roots_2(self):
         rts = self.f3.roots()
         self.assertEqual(rts.size, 81)
-        self.assertLessEqual(infnorm(rts-arange(-10,10.25,.25)), 1e1*eps)
+        self.assertLessEqual(infnorm(rts-np.arange(-10,10.25,.25)), 1e1*eps)
 
 
 
-class Plotting(TestCase):
+class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
@@ -820,21 +777,21 @@ class Plotting(TestCase):
 
     def test_plot(self):
         for fun in [self.f1, self.f2, self.f3]:
-            fig, ax = subplots()
+            fig, ax = plt.subplots()
             fun.plot(ax=ax)
 
     def test_plotcoeffs(self):
         for fun in [self.f1, self.f2, self.f3]:
-            fig, ax = subplots()
+            fig, ax = plt.subplots()
             fun.plotcoeffs(ax=ax)
 
 
-class PrivateMethods(TestCase):
+class PrivateMethods(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(x-.1)
         self.f1 = Chebfun.initfun_adaptive(f, [-2,0,3])
-        self.f2 = Chebfun.initfun_adaptive(f, linspace(-2,3,5))
+        self.f2 = Chebfun.initfun_adaptive(f, np.linspace(-2,3,5))
 
     # in the test_break_x methods, we check that (1) the newly computed domain
     # is what it should be, and (2) the new chebfun still provides an accurate
@@ -846,7 +803,7 @@ class PrivateMethods(TestCase):
         self.assertEqual(f1_new.domain, newdom)
         self.assertNotEqual(f1_new.domain, altdom)
         self.assertNotEqual(f1_new.domain, self.f1.domain)
-        xx = linspace(-2,3,1000)
+        xx = np.linspace(-2,3,1000)
         error = infnorm(self.f1(xx)-f1_new(xx))
         self.assertLessEqual(error, 3*eps)
 
@@ -856,22 +813,22 @@ class PrivateMethods(TestCase):
         f1_new = self.f1._break(newdom)
         self.assertEqual(f1_new.domain, newdom)
         self.assertNotEqual(f1_new.domain, altdom)
-        xx = linspace(-2,3,1000)
+        xx = np.linspace(-2,3,1000)
         error = infnorm(self.f1(xx)-f1_new(xx))
         self.assertLessEqual(error, 3*eps)
 
     def test__break_3(self):
-        altdom = Domain(linspace(-2,3,1000))
+        altdom = Domain(np.linspace(-2,3,1000))
         newdom = self.f2.domain.union(altdom)
         f2_new = self.f2._break(newdom)
         self.assertEqual(f2_new.domain, newdom)
         self.assertNotEqual(f2_new.domain, altdom)
         self.assertNotEqual(f2_new.domain, self.f2.domain)
-        xx = linspace(-2,3,1000)
+        xx = np.linspace(-2,3,1000)
         error = infnorm(self.f2(xx)-f2_new(xx))
         self.assertLessEqual(error, 3*eps)
 
-class DomainBreakingOps(TestCase):
+class DomainBreakingOps(unittest.TestCase):
     pass
 
 # domain, test_tolerance
@@ -886,7 +843,7 @@ domainBreakOp_args = [
 # add tests for maximu, minimum
 def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
     a, b = dom
-    xx = linspace(a,b,1001)
+    xx = np.linspace(a,b,1001)
     ff = chebfun(f, dom)
     gg = chebfun(g, dom)
     # convert constant g to to callable
@@ -898,11 +855,11 @@ def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
     def tester(self):
         vscl = max([ff.vscale, gg.vscale])
         hscl = max([ff.hscale, gg.hscale])
-        lscl = max([fun.size for fun in append(ff.funs, gg.funs)])
+        lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
         self.assertLessEqual(infnorm(fg(xx)-ffgg), vscl*hscl*lscl*tol)
     return tester
 
-for domainBreakOp in (maximum, ):
+for domainBreakOp in (np.maximum,):
     for n, args in enumerate(domainBreakOp_args):
         ff, gg, dom, tol = args
         _testfun_ = domainBreakOpTester(domainBreakOp, ff, gg, dom, tol)
