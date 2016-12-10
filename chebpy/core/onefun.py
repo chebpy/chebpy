@@ -79,6 +79,10 @@ class Onefun(object):
         pass
 
     @abc.abstractmethod
+    def __pow__(self):
+        pass
+
+    @abc.abstractmethod
     def __radd__(self):
         pass
 

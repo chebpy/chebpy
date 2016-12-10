@@ -244,6 +244,14 @@ class Chebtech(Smoothfun):
     def __pos__(self):
         return self
 
+    @self_empty()
+    def __pow__(self, f):
+        if np.isscalar(f):
+            powfun = lambda x: np.power(self(x), f)
+        else:
+            powfun = lambda x: np.power(self(x), f(x))
+        return self.__class__.initfun_adaptive(powfun)
+
     def __rdiv__(self, f):
         # Executed when __div__(f, self) fails, which is to say whenever f
         # is not a Chebtech. We proceeed on the assumption f is a scalar.

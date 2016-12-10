@@ -122,25 +122,25 @@ class Chebfun(object):
             newfuns.append(newfun)
         return self.__class__(newfuns)
 
-    @self_empty("chebfun<empty>")
+    @self_empty('chebfun<empty>')
     def __repr__(self):
-        rowcol = "row" if self.transposed else "column"
+        rowcol = 'row' if self.transposed else 'column'
         numpcs = self.funs.size
-        plural = "" if numpcs == 1 else "s"
-        header = "chebfun {} ({} smooth piece{})\n"\
+        plural = '' if numpcs == 1 else 's'
+        header = 'chebfun {} ({} smooth piece{})\n'\
             .format(rowcol, numpcs, plural)
-        toprow = "       interval       length     endpoint values\n"
-        tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
-        rowdta = ""
+        toprow = '       interval       length     endpoint values\n'
+        tmplat = '[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n'
+        rowdta = ''
         for fun in self:
             endpts = fun.support
             xl, xr = endpts
             fl, fr = fun(endpts)
             row = tmplat.format(xl, xr, fun.size, fl, fr)
             rowdta += row
-        btmrow = "vertical scale = {:3.2g}".format(self.vscale)
-        btmxtr = "" if numpcs == 1 else \
-            "    total length = {}".format(sum([f.size for f in self]))
+        btmrow = 'vertical scale = {:3.2g}'.format(self.vscale)
+        btmxtr = '' if numpcs == 1 else \
+            '    total length = {}'.format(sum([f.size for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
     def __rsub__(self, f):
@@ -155,27 +155,30 @@ class Chebfun(object):
     __radd__ = __add__
 
     def __str__(self):
-        rowcol = "row" if self.transposed else "col"
-        out = "<chebfun-{},{},{}>\n".format(
+        rowcol = 'row' if self.transposed else 'col'
+        out = '<chebfun-{},{},{}>\n'.format(
             rowcol, self.funs.size, sum([f.size for f in self]))
         return out
 
     def __sub__(self, f):
         return self._apply_binop(f, operator.sub)
 
+    def __pow__(self, f):
+        return self._apply_binop(f, operator.pow)
+
     # -------------------
-    #  "private" methods
+    #  'private' methods
     # -------------------
     @self_empty()
     def _apply_binop(self, f, op):
-        """Funnel method used in the implementation of Chebfun binary
+        '''Funnel method used in the implementation of Chebfun binary
         operators. The high-level idea is to first break each chebfun into a
         series of pieces corresponding to the union of the domains of each
         before applying the supplied binary operator and simplifying. In the
         case of the second argument being a scalar we don't need to do the
         simplify step, since at the Tech-level these operations are are defined
         such that there is no change in the number of coefficients.
-        """
+        '''
         try:
             if f.isempty:
                 return f
@@ -200,9 +203,9 @@ class Chebfun(object):
 
 
     def _break(self, targetdomain):
-        """Resamples self to the supplied Domain object, targetdomain. This
+        '''Resamples self to the supplied Domain object, targetdomain. This
         method is intended as private since one will typically need to have
-        called either Domain.union(f), or Domain.merge(f) prior to call."""
+        called either Domain.union(f), or Domain.merge(f) prior to call.'''
         newfuns = []
         subintervals = targetdomain.intervals
         interval = next(subintervals) # next(..) for Python2/3 compatibility
@@ -226,13 +229,13 @@ class Chebfun(object):
     @property
     @self_empty(np.array([]))
     def domain(self):
-        """Construct and return a Domain object corresponding to self"""
+        '''Construct and return a Domain object corresponding to self'''
         return Domain.from_chebfun(self)
 
     @property
     @self_empty(np.array([]))
     def support(self):
-        """Return an array containing the first and last breakpoints"""
+        '''Return an array containing the first and last breakpoints'''
         return self.breakpoints[[0,-1]]
 
     @property
@@ -259,7 +262,7 @@ class Chebfun(object):
     @property
     @self_empty()
     def x(self):
-        """Return a Chebfun representing the identity the support of self"""
+        '''Return a Chebfun representing the identity the support of self'''
         return self.__class__.initidentity(self.support)
 
     # -----------
@@ -270,17 +273,17 @@ class Chebfun(object):
 
     @self_empty()
     def _restrict(self, subinterval):
-        """Restrict a chebfun to a subinterval, without simplifying"""
+        '''Restrict a chebfun to a subinterval, without simplifying'''
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
     @self_empty()
     def simplify(self):
-        """Simplify each fun in the chebfun"""
+        '''Simplify each fun in the chebfun'''
         return self.__class__([fun.simplify() for fun in self])
 
     def restrict(self, subinterval):
-        """Restrict a chebfun to a subinterval"""
+        '''Restrict a chebfun to a subinterval'''
         return self._restrict(subinterval).simplify()
 
     @self_empty(np.array([]))
@@ -359,7 +362,7 @@ class Chebfun(object):
         return self.__class__(funs)
 
 # ---------------------------
-#  numpy Universal functions
+#  numpy universal functions
 # ---------------------------
 def addUfunc(op):
     @self_empty()
@@ -367,7 +370,7 @@ def addUfunc(op):
         return self.__class__([op(fun) for fun in self])
     name = op.__name__
     method.__name__ = name
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Chebfun, name, method)
 
 ufuncs = (

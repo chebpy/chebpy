@@ -15,7 +15,7 @@ from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
 
 
 techdict = {
-    "Chebtech2": Chebtech2,
+    'Chebtech2': Chebtech2,
 }
 
 Tech = techdict[DefaultPrefs.tech]
@@ -30,52 +30,52 @@ class Classicfun(Fun):
     # --------------------------
     @classmethod
     def initempty(cls):
-        """Adaptive initialisation of a Classicfun from a callable
+        '''Adaptive initialisation of a Classicfun from a callable
         function f and a Interval object. The interval's interval has no
         relevance to the emptiness status of a Classicfun so we
-        arbitrarily set this to be DefaultPrefs.interval"""
+        arbitrarily set this to be DefaultPrefs.interval'''
         interval = Interval()
         onefun = Tech.initempty()
         return cls(onefun, interval)
 
     @classmethod
     def initconst(cls, c, interval):
-        """Classicfun representation of a constant on the supplied interval"""
+        '''Classicfun representation of a constant on the supplied interval'''
         onefun = Tech.initconst(c)
         return cls(onefun, interval)
 
     @classmethod
     def initidentity(cls, interval):
-        """Classicfun representation of f(x) = x on the supplied interval"""
+        '''Classicfun representation of f(x) = x on the supplied interval'''
         onefun = Tech.initvalues(np.asarray(interval))
         return cls(onefun, interval)
 
     @classmethod
     def initfun_adaptive(cls, f, interval):
-        """Adaptive initialisation of a BndFun from a callable function f
-        and a Interval object"""
+        '''Adaptive initialisation of a BndFun from a callable function f
+        and a Interval object'''
         uifunc = lambda y: f(interval(y))
         onefun = Tech.initfun(uifunc)
         return cls(onefun, interval)
 
     @classmethod
     def initfun_fixedlen(cls, f, interval, n):
-        """Fixed length initialisation of a BndFun from a callable
-        function f and a Interval object"""
+        '''Fixed length initialisation of a BndFun from a callable
+        function f and a Interval object'''
         uifunc = lambda y: f(interval(y))
         onefun = Tech.initfun(uifunc, n)
         return cls(onefun, interval)
 
     # -------------------
-    #  "private" methods
+    #  'private' methods
     # -------------------
-    def __call__(self, x, how="clenshaw"):
+    def __call__(self, x, how='clenshaw'):
         y = self.interval.invmap(x)
         return self.onefun(y, how)
 
     def __init__(self, onefun, interval):
-        """Initialise a Classicfun from its two defining properties: a
-        Interval object and a Onefun object"""
+        '''Initialise a Classicfun from its two defining properties: a
+        Interval object and a Onefun object'''
         self.onefun = onefun
         self._interval = interval
 
@@ -83,7 +83,7 @@ class Classicfun(Fun):
         return self.__str__()
 
     def __str__(self):
-        out = "{0}([{2}, {3}], {1})".format(
+        out = '{0}([{2}, {3}], {1})'.format(
             self.__class__.__name__, self.size, *self.support)
         return out
 
@@ -92,51 +92,51 @@ class Classicfun(Fun):
     # ------------
     @property
     def coeffs(self):
-        """Return the coeffs property of the underlying onefun"""
+        '''Return the coeffs property of the underlying onefun'''
         return self.onefun.coeffs
 
     @property
     def endvalues(self):
-        """Return a 2-array of endpointvalues taken from the interval"""
+        '''Return a 2-array of endpointvalues taken from the interval'''
         return self.__call__(self.support)
 
     @property
     def interval(self):
-        """Return the Interval object associated with the Classicfun"""
+        '''Return the Interval object associated with the Classicfun'''
         return self._interval
 
     @property
     def isconst(self):
-        """Return the isconst property of the underlying onefun"""
+        '''Return the isconst property of the underlying onefun'''
         return self.onefun.isconst
 
     @property
     def isempty(self):
-        """Return the isempty property of the underlying onefun"""
+        '''Return the isempty property of the underlying onefun'''
         return self.onefun.isempty
 
     @property
     def size(self):
-        """Return the size property of the underlying onefun"""
+        '''Return the size property of the underlying onefun'''
         return self.onefun.size
 
     @property
     def support(self):
-        """Return a 2-array of endpoints taken from the interval"""
+        '''Return a 2-array of endpoints taken from the interval'''
         return np.asarray(self.interval)
 
     @property
     def vscale(self):
-        """Return the vscale property of the underlying onefun"""
+        '''Return the vscale property of the underlying onefun'''
         return self.onefun.vscale
 
     # -----------
     #  utilities
     # -----------
     def restrict(self, subinterval):
-        """Return a Classicfun that matches self on a subinterval of its
+        '''Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length
-        construction using same number of degrees of freedom as self."""
+        construction using same number of degrees of freedom as self.'''
         if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
         if self.interval == subinterval:
@@ -185,15 +185,15 @@ class Classicfun(Fun):
 # ----------------------------------------------------------------
 
 methods_onefun_other = (
-    "values",
-    "plotcoeffs",
+    'values',
+    'plotcoeffs',
 )
 
 def addUtility(methodname):
     def method(self, *args, **kwargs):
         return getattr(self.onefun, methodname)(*args, **kwargs)
     method.__name__ = methodname
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_other:
@@ -205,10 +205,10 @@ for methodname in methods_onefun_other:
 # -----------------------------------------------------------------------
 
 methods_onefun_zeroargs = (
-    "__pos__",
-    "__neg__",
-    "copy",
-    "simplify",
+    '__pos__',
+    '__neg__',
+    'copy',
+    'simplify',
 )
 
 def addZeroArgOp(methodname):
@@ -216,7 +216,7 @@ def addZeroArgOp(methodname):
         onefun = getattr(self.onefun, methodname)(*args, **kwargs)
         return self.__class__(onefun, self.interval)
     method.__name__ = methodname
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_zeroargs:
@@ -227,17 +227,19 @@ for methodname in methods_onefun_zeroargs:
 # binary operators which return a onefun
 # -----------------------------------------
 
+# ToDo: change these to operator module methods
 methods_onefun_binary= (
-    "__add__",
-    "__div__",
-    "__mul__",
-    "__radd__",
-    "__rdiv__",
-    "__rmul__",
-    "__rsub__",
-    "__rtruediv__",
-    "__sub__",
-    "__truediv__",
+    '__add__',
+    '__div__',
+    '__mul__',
+    '__pow__',
+    '__radd__',
+    '__rdiv__',
+    '__rmul__',
+    '__rsub__',
+    '__rtruediv__',
+    '__sub__',
+    '__truediv__',
 )
 
 def addBinaryOp(methodname):
@@ -258,7 +260,7 @@ def addBinaryOp(methodname):
         onefun = getattr(self.onefun, methodname)(g, *args, **kwargs)
         return cls(onefun, self.interval)
     method.__name__ = methodname
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_binary:
@@ -277,7 +279,7 @@ def addUfunc(op):
         return cls.initfun_adaptive(fun, self.interval)
     name = op.__name__
     method.__name__ = name
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, name, method)
 
 ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
