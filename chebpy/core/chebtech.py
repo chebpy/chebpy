@@ -35,7 +35,7 @@ class Chebtech(Smoothfun):
         """Initialise a Chebtech from a constant c"""
         if not np.isscalar(c):
             raise ValueError(c)
-        return cls(np.array([float(c)]))
+        return cls(np.array([c]))
 
     @classmethod
     def initempty(cls):
@@ -78,7 +78,7 @@ class Chebtech(Smoothfun):
         return cls(cls._vals2coeffs(values))
 
     def __init__(self, coeffs):
-        self._coeffs = coeffs
+        self._coeffs = np.array(coeffs, dtype=float)
 
     def __call__(self, x, how="clenshaw"):
         method = {
@@ -242,7 +242,7 @@ class Chebtech(Smoothfun):
         return self.__class__(coeffs)
 
     def __pos__(self):
-        return self.copy()
+        return self
 
     def __rdiv__(self, f):
         # Executed when __div__(f, self) fails, which is to say whenever f
