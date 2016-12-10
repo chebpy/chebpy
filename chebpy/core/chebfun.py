@@ -111,6 +111,9 @@ class Chebfun(object):
     def __pos__(self):
         return self
 
+    def __pow__(self, f):
+        return self._apply_binop(f, operator.pow)
+
     def __rtruediv__(self, c):
         # Executed when truediv(f, self) fails, which is to say whenever c
         # is not a Chebfun. We proceeed on the assumption f is a scalar.
@@ -146,6 +149,10 @@ class Chebfun(object):
     def __rsub__(self, f):
         return -(self-f)
 
+    @cast_arg_to_chebfun
+    def __rpow__(self, f):
+        return f ** self
+
     def __truediv__(self, f):
         return self._apply_binop(f, operator.truediv)
 
@@ -162,9 +169,6 @@ class Chebfun(object):
 
     def __sub__(self, f):
         return self._apply_binop(f, operator.sub)
-
-    def __pow__(self, f):
-        return self._apply_binop(f, operator.pow)
 
     # -------------------
     #  'private' methods
