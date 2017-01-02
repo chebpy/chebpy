@@ -25,8 +25,6 @@ cos = np.cos
 exp = np.exp
 eps = DefaultPrefs.eps
 
-np.random.seed(0)
-
 # NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class (although it
 # is not abstract) we will test the interface in the way Chebfun will interact
 # with it, which means working explcitly with Interval objects. Furthermore,
@@ -41,7 +39,7 @@ class ClassUsage(unittest.TestCase):
         subinterval = Interval(-2,3)
         self.f = f
         self.ff = Bndfun.initfun_adaptive(f, subinterval)
-        self.xx = subinterval(-1 + 2*np.random.rand(100))
+        self.xx = subinterval(np.linspace(-1,1,100))
         self.emptyfun = Bndfun(Chebtech2.initempty(), subinterval)
         self.constfun = Bndfun(Chebtech2.initconst(1.), subinterval)
 
@@ -121,7 +119,7 @@ class ClassUsage(unittest.TestCase):
     def test_restrict(self):
         i1 = Interval(-1,1)
         gg = self.ff.restrict(i1)
-        yy = -1 + 2*np.random.rand(1000)
+        yy = np.linspace(-1,1,1000)
         self.assertLessEqual(infnorm(self.ff(yy)-gg(yy)), 1e2*eps)
 
     # check that the restricted fun matches self on the subinterval
@@ -186,7 +184,7 @@ class Calculus(unittest.TestCase):
 
     def setUp(self):
         self.emptyfun = Bndfun(Chebtech2.initempty(), Interval())
-        self.yy = -1 + 2*np.random.rand(2000)
+        self.yy = np.linspace(-1,1,2000)
 #        self.constfun = Bndfun(Chebtech2.initconst(1.), subinterval)
 
     # tests for the correct results in the empty cases
@@ -373,7 +371,7 @@ for k, (fun, name, interval, funlen) in enumerate(fun_details):
 class Algebra(unittest.TestCase):
     """Unit-tests for Bndfun algebraic operations"""
     def setUp(self):
-        self.yy = -1 + 2 * np.random.rand(1000)
+        self.yy = np.linspace(-1,1,1000)
         self.emptyfun = Bndfun.initempty()
 
     # check (empty Bndfun) + (Bndfun) = (empty Bndfun)
@@ -467,7 +465,7 @@ class Algebra(unittest.TestCase):
     def test_truediv_constant(self):
         subinterval = Interval(-.5,.9)
         xx = subinterval(self.yy)
-        for (fun, funlen, hasRoots) in testfunctions:
+        for (fun, _, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
                 hscl = abs(subinterval).max()
                 tol = hscl * eps * abs(const)
@@ -483,12 +481,43 @@ class Algebra(unittest.TestCase):
 
     # check    +(empty Bndfun) = (empty Bndfun)
     def test__pos__empty(self):
-        self.assertTrue( (+self.emptyfun).isempty )
+        self.assertTrue((+self.emptyfun).isempty)
 
     # check -(empty Bndfun) = (empty Bndfun)
     def test__neg__empty(self):
-        self.assertTrue( (-self.emptyfun).isempty )
+        self.assertTrue((-self.emptyfun).isempty)
 
+    # check (empty Bndfun) ** c = (empty Bndfun)
+    def test_pow_empty(self):
+        for c in range(10):
+            self.assertTrue((self.emptyfun**c).isempty)
+
+    # check c ** (empty Bndfun) = (empty Bndfun)
+    def test_rpow_empty(self):
+        for c in range(10):
+            self.assertTrue((c**self.emptyfun).isempty)
+
+    # check the output of Bndfun ** constant
+    def test_pow_const(self):
+        subinterval = Interval(-.5,.9)
+        xx = subinterval(self.yy)
+        for func in (np.sin, np.exp, np.cos):
+            for c in (1, 2):
+                f = lambda x: func(x) ** c
+                ff = Bndfun.initfun_adaptive(func, subinterval) ** c
+                tol = 2e1 * eps * abs(c)
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+
+    # check the output of constant ** Bndfun
+    def test_rpow_const(self):
+        subinterval = Interval(-.5,.9)
+        xx = subinterval(self.yy)
+        for func in (np.sin, np.exp, np.cos):
+            for c in (1, 2):
+                f = lambda x: c ** func(x)
+                ff = c ** Bndfun.initfun_adaptive(func, subinterval)
+                tol = 1e1 * eps * abs(c)
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
 
 binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 
@@ -502,14 +531,19 @@ def binaryOpTester(f, g, subinterval, binop):
         vscl = max([ff.vscale, gg.vscale])
         lscl = max([ff.size, gg.size])
         xx = subinterval(self.yy)
-        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), 2*vscl*lscl*eps)
+        self.assertLessEqual(infnorm(fg(xx)-FG(xx)), 6*vscl*lscl*eps)
     return tester
 
 # Note: defining __radd__(a,b) = __add__(b,a) and feeding this into the
 # test will not in fact test the __radd__ functionality of the class.
 # These tests will need to be added manually.
 
-subintervals = (Interval(-.5,.9), )
+subintervals = (
+    Interval(-.5,.9),
+    Interval(-1.2, 1.3),
+    Interval(-2.2, -1.9),
+    Interval(0.4, 1.3),
+)
 
 for binop in binops:
     # add the generic binary operator tests
@@ -523,9 +557,24 @@ for binop in binops:
                 _testfun_ = binaryOpTester(f, g, subinterval, binop)
                 a, b = subinterval
                 _testfun_.__name__ = \
-                    "test{}{}_{}_[{:.1f},{:.1f}]".format(
+                    "test_{}_{}_{}_[{:.1f},{:.1f}]".format(
                         binop.__name__, f.__name__,  g.__name__, a, b)
                 setattr(Algebra, _testfun_.__name__, _testfun_)
+
+powtestfuns = (
+    [(np.exp, 'exp'), (np.sin, 'sin')],
+    [(np.exp, 'exp'), (lambda x: 2-x, 'linear')],
+    [(lambda x: 2-x, 'linear'), (np.exp, 'exp')],
+)
+# add operator.power tests
+for (f, namef), (g, nameg) in powtestfuns:
+    for subinterval in subintervals:
+        _testfun_ = binaryOpTester(f, g, subinterval, operator.pow)
+        a, b = subinterval
+        _testfun_.__name__ = \
+            "test_{}_{}_{}_[{:.1f},{:.1f}]".format(
+                'pow', namef, nameg, a, b)
+        setattr(Algebra, _testfun_.__name__, _testfun_)
 
 unaryops = (operator.pos, operator.neg)
 
@@ -544,14 +593,14 @@ for unaryop in unaryops:
         subinterval = Interval(-.5,.9)
         _testfun_ = unaryOpTester(unaryop, f, subinterval)
         _testfun_.__name__ = \
-            "test{}{}".format(unaryop.__name__, f.__name__)
+            "test_{}_{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
 class Ufuncs(unittest.TestCase):
     """Unit-tests for Bndfun numpy ufunc overloads"""
     def setUp(self):
-        self.yy = -1 + 2 * np.random.rand(1000)
+        self.yy = np.linspace(-1,1,1000)
         self.emptyfun = Bndfun.initempty()
 
 

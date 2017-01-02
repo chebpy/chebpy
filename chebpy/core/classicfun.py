@@ -236,6 +236,7 @@ methods_onefun_binary= (
     '__radd__',
     '__rdiv__',
     '__rmul__',
+    '__rpow__',
     '__rsub__',
     '__rtruediv__',
     '__sub__',
