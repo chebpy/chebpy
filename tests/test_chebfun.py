@@ -37,6 +37,13 @@ cos = np.cos
 exp = np.exp
 eps = DefaultPrefs.eps
 
+# domain, test_tolerance
+chebfun_testdomains = [
+    ([-1,1], 2*eps),
+    ([-2,1], eps),
+    ([-1,2], eps),
+    ([-5,9], 35*eps),
+]
 
 class Construction(unittest.TestCase):
 
@@ -472,14 +479,54 @@ class Algebra(unittest.TestCase):
                         tol = 2*abs(c)*vscl*hscl*lscl*eps
                         self.assertLessEqual(infnorm(h(xx)-hh(xx)), tol)
 
+    # check (empty Chebfun) ** (Chebfun) = (empty Chebfun)
+    def test_pow_empty(self):
+        for (f, _, _) in testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
+                self.assertTrue((self.emptyfun**ff).isempty)
 
-# domain, test_tolerance
-chebfun_testdomains = [
-    ([-1,1], 2*eps),
-    ([-2,1], eps),
-    ([-1,2], eps),
-    ([-5,9], 35*eps),
-]
+   # chec (Chebfun) ** (empty Chebfun) = (empty Chebfun)
+    def test_rpow_empty(self):
+        for (f, _, _) in testfunctions:
+            for dom, _ in chebfun_testdomains:
+                a, b = dom
+                ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
+                self.assertTrue((ff**self.emptyfun).isempty)
+
+    # check the output of (Chebfun) ** (constant)
+    def test_pow_constant(self):
+        for ((_,_), (f, _)) in powtestfuns:
+            for c in (1, 2, 3):
+                for dom, _ in powtestdomains:
+                    a,b = dom
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
+                    g = lambda x: f(x) ** c
+                    gg = ff ** c
+                    vscl = gg.vscale
+                    hscl = gg.hscale
+                    lscl = max([fun.size for fun in gg])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
+                    self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
+
+    # check the output of (constant) ** (Chebfun)
+    def test_rpow_constant(self):
+        for ((_,_), (f, _)) in powtestfuns:
+            for c in (1, 2, 3):
+                for dom, _ in powtestdomains:
+                    a,b = dom
+                    xx = np.linspace(a, b, 1001)
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
+                    g = lambda x: c ** f(x)
+                    gg = c ** ff
+                    vscl = gg.vscale
+                    hscl = gg.hscale
+                    lscl = max([fun.size for fun in gg])
+                    tol = 2*abs(c)*vscl*hscl*lscl*eps
+                    self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
+
 
 # add tests for the binary operators
 def binaryOpTester(f, g, binop, dom, tol):
@@ -518,9 +565,31 @@ for binop in binops:
                 if binopname[-1] != '_':
                     binopname = binopname + '_'
                 _testfun_.__name__ = \
-                    "test{}{}_{}_[{:.0f},..,{:.0f}]".format(
+                    "test_{}_{}_{}_[{:.0f},..,{:.0f}]".format(
                         binopname, f.__name__,  g.__name__, a, b)
                 setattr(Algebra, _testfun_.__name__, _testfun_)
+
+powtestfuns = (
+    [(np.exp, 'exp'), (np.sin, 'sin')],
+    [(np.exp, 'exp'), (lambda x: 2-x, 'linear')],
+    [(lambda x: 2-x, 'linear'), (np.exp, 'exp')],
+)
+
+powtestdomains = [
+    ([-.5,.9], eps),
+    ([-1.2, 1.3], eps),
+    ([-2.2, -1.9], eps),
+    ([0.4, 1.3], eps),
+]
+
+# add operator.pow tests
+for (f, namef), (g, nameg) in powtestfuns:
+    for dom, tol in powtestdomains:
+        _testfun_ = binaryOpTester(f, g, operator.pow, dom, 2*tol)
+        _testfun_.__name__ = \
+            "test_{}_{}_{}_[{:.1f},..,{:.1f}]".format(
+                'pow', namef, nameg, *dom)
+        setattr(Algebra, _testfun_.__name__, _testfun_)
 
 
 # add tests for the unary operators
@@ -544,7 +613,7 @@ for unaryop in unaryops:
         for dom, tol in chebfun_testdomains:
             _testfun_ = unaryOpTester(f, unaryop, dom, tol)
             _testfun_.__name__ = \
-                "test{}{}_[{:.0f},..,{:.0f}]".format(
+                "test_{}_{}_[{:.0f},..,{:.0f}]".format(
                     unaryop.__name__, f.__name__, dom[0], dom[1])
             setattr(Algebra, _testfun_.__name__, _testfun_)
 
@@ -579,26 +648,26 @@ uf1 = lambda x: x
 uf1.__name__ = "x"
 
 ufunc_test_params = [
-        (np.arccos,  [([uf1, (-.8,.8)],  eps), ]),
-        (np.arccosh, [([uf1, (2,3)    ], eps), ]),
-        (np.arcsin,  [([uf1, (-.8,.8)],  eps), ]),
-        (np.arcsinh, [([uf1, (2,3)    ], eps), ]),
-        (np.arctan,  [([uf1, (-.8,.8)],  eps), ]),
-        (np.arctanh, [([uf1, (-.8,.8)],  eps), ]),
-        (np.cos,     [([uf1, (-3,3)   ], eps), ]),
-        (np.cosh,    [([uf1, (-3,3)   ], eps), ]),
-        (exp,     [([uf1, (-3,3)   ], eps), ]),
-        (np.exp2,    [([uf1, (-3,3)   ], eps), ]),
-        (np.expm1,   [([uf1, (-3,3)   ], eps), ]),
-        (np.log,     [([uf1, (2,3)    ], eps), ]),
-        (np.log2,    [([uf1, (2,3)    ], eps), ]),
-        (np.log10,   [([uf1, (2,3)    ], eps), ]),
-        (np.log1p,   [([uf1, (-.8,.8)],  eps), ]),
-        (np.sinh,    [([uf1, (-3,3)   ], eps), ]),
-        (np.sin,     [([uf1, (-3,3)   ], eps), ]),
-        (np.tan,     [([uf1, (-.8,.8)],  eps), ]),
-        (np.tanh,    [([uf1, (-3,3)   ], eps), ]),
-        (np.sqrt,    [([uf1, (2,3)    ], eps), ]),
+        (np.arccos,  [([uf1, (-.8,.8)], eps), ]),
+        (np.arccosh, [([uf1, (2,3)   ], eps), ]),
+        (np.arcsin,  [([uf1, (-.8,.8)], eps), ]),
+        (np.arcsinh, [([uf1, (2,3)   ], eps), ]),
+        (np.arctan,  [([uf1, (-.8,.8)], eps), ]),
+        (np.arctanh, [([uf1, (-.8,.8)], eps), ]),
+        (np.cos,     [([uf1, (-3,3)  ], eps), ]),
+        (np.cosh,    [([uf1, (-3,3)  ], eps), ]),
+        (exp,        [([uf1, (-3,3)  ], eps), ]),
+        (np.exp2,    [([uf1, (-3,3)  ], eps), ]),
+        (np.expm1,   [([uf1, (-3,3)  ], eps), ]),
+        (np.log,     [([uf1, (2,3)   ], eps), ]),
+        (np.log2,    [([uf1, (2,3)   ], eps), ]),
+        (np.log10,   [([uf1, (2,3)   ], eps), ]),
+        (np.log1p,   [([uf1, (-.8,.8)], eps), ]),
+        (np.sinh,    [([uf1, (-3,3)  ], eps), ]),
+        (np.sin,     [([uf1, (-3,3)  ], eps), ]),
+        (np.tan,     [([uf1, (-.8,.8)], eps), ]),
+        (np.tanh,    [([uf1, (-3,3)  ], eps), ]),
+        (np.sqrt,    [([uf1, (2,3)   ], eps), ]),
 ]
 
 
