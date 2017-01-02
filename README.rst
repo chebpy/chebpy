@@ -15,6 +15,9 @@ ChebPy - A Python implementation of Chebfun
 
 Chebpy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
 
+- For installation details, see `INSTALL.rst <INSTALL.rst>`_.
+- For implementation notes, see `implementation-notes.rst <implementation-notes.rst>`_
+
 ----
 Demo
 ----
@@ -176,11 +179,11 @@ to the stated level of precision:
 
 
 
-Chebfun is capable of handling point-discontinuities. Here's one way of
-seeing this in which we compute the pointwise maximum of two functions.
-The resulting function is 'piecewise-smooth', being defined as the
+Chebfun is capable of handling certain classes of point-discontinuity.
+Here for instance we compute the pointwise maximum of two functions for
+which the resulting function is 'piecewise-smooth', being defined as the
 concatenation of twelve individual smooth pieces. The breakpoints have
-been automatically determined by solving the corresponding root-finding
+been automatically determined by solving the appropriate root-finding
 problem.
 
 .. code:: python
@@ -258,9 +261,9 @@ the following Chebfun representation of the standardised Gaussian
 distribution. We use a sufficiently wide interval as to facilitate a
 machine-precision representation. On this occasion we utlilise a slightly
 different (but still perfectly valid) approach to construction whereby we
-supply the function handle -- in this case, a Python lambda, but more
-generally any object in possession of a ``__call__`` attribute --
-together with the interval of definition.
+supply the function handle (in this case, a Python lambda, but more
+generally any object in possession of a ``__call__`` attribute) together
+with the interval of definition.
 
 .. code:: python
 
@@ -342,9 +345,9 @@ Skew, Kurtosis):
 
     x = pdf.x
     m1 = (pdf*x).sum()
-    m2 = (pdf*(x-m1)*(x-m1)).sum()
-    m3 = (pdf*(x-m1)*(x-m1)*(x-m1)).sum() / m2**1.5
-    m4 = (pdf*(x-m1)*(x-m1)*(x-m1)*(x-m1)).sum() / m2**2
+    m2 = (pdf*(x-m1)**2).sum()
+    m3 = (pdf*(x-m1)**3).sum() / m2**1.5
+    m4 = (pdf*(x-m1)**4).sum() / m2**2
     print '    mean = {:+.4f}'.format(m1)
     print 'variance = {:+.4f}'.format(m2)
     print '    skew = {:+.4f}'.format(m3)
@@ -357,11 +360,4 @@ Skew, Kurtosis):
     variance = +1.0000
         skew = -0.0000
     kurtosis = +3.0000
-
----------------
-Further Details
----------------
-
-- For installation details, see `INSTALL.rst <INSTALL.rst>`_.
-- For implementation notes, see `implementation-notes.rst <implementation-notes.rst>`_
 
