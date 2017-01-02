@@ -541,6 +541,35 @@ class Algebra(unittest.TestCase):
     def test__neg__empty(self):
         self.assertTrue((-self.emptyfun).isempty)
 
+    def test_pow_empty(self):
+        for c in range(10):
+            self.assertTrue((self.emptyfun**c).isempty)
+
+    def test_rpow_empty(self):
+        for c in range(10):
+            self.assertTrue((c**self.emptyfun).isempty)
+
+    # check the output of Chebtech ** constant
+    #                 and constant ** Chebtech
+    def test_pow_const(self):
+        xx = self.xx
+        for (fun, funlen) in [(np.sin, 15), (np.exp,15)]:
+            for c in (1, 2):
+                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+                f = lambda x: fun(x) ** c
+                ff = techfun ** c
+                tol = 2e1 * eps * abs(c)
+                self.assertLessEqual(infnorm(f(xx)-ff(xx)), tol)
+
+    def test_rpow_const(self):
+        xx = self.xx
+        for (fun, funlen) in [(np.sin, 15), (np.exp,15)]:
+            for c in (1, 2):
+                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+                g = lambda x: c ** fun(x)
+                gg = c ** techfun
+                tol = 2e1 * eps * abs(c)
+                self.assertLessEqual(infnorm(g(xx)-gg(xx)), tol)
 
 # add tests for the binary operators
 def binaryOpTester(f, g, binop, nf, ng):
@@ -571,8 +600,20 @@ for binop in binops:
         else:
             _testfun_ = binaryOpTester(f, g, binop, nf, ng)
             _testfun_.__name__ = \
-                "test{}{}_{}".format(binop.__name__, f.__name__,  g.__name__)
+                "test_{}_{}_{}".format(binop.__name__, f.__name__,  g.__name__)
             setattr(Algebra, _testfun_.__name__, _testfun_)
+
+powtestfuns = (
+    [(np.exp, 15, 'exp'), (np.sin, 15, 'sin')],
+    [(np.exp, 15, 'exp'), (lambda x: 2-x, 2, 'linear')],
+    [(lambda x: 2-x, 2, 'linear'), (np.exp, 15, 'exp')],
+)
+# add operator.power tests
+for (f, nf, namef), (g, ng, nameg) in powtestfuns:
+    _testfun_ = binaryOpTester(f, g, operator.pow, nf, ng)
+    _testfun_.__name__ = \
+        "test_{}_{}_{}".format('pow', namef,  nameg)
+    setattr(Algebra, _testfun_.__name__, _testfun_)
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
@@ -588,7 +629,7 @@ for unaryop in unaryops:
     for (f, nf, _) in testfunctions:
         _testfun_ = unaryOpTester(unaryop, f, nf)
         _testfun_.__name__ = \
-            "test{}{}".format(unaryop.__name__, f.__name__)
+            "test_{}_{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
 
 class Roots(unittest.TestCase):

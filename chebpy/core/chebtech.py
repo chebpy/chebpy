@@ -264,6 +264,11 @@ class Chebtech(Smoothfun):
     def __rsub__(self, f):
         return -(self-f)
 
+    @self_empty()
+    def __rpow__(self, f):
+        powfun = lambda x: np.power(f, self(x))
+        return self.__class__.initfun_adaptive(powfun)
+
     __rtruediv__ = __rdiv__
     __rmul__ = __mul__
 
