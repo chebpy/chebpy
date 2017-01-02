@@ -17,9 +17,6 @@ from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
 
 class Chebfun(object):
 
-    # --------------------------
-    #  alternative constructors
-    # --------------------------
     @classmethod
     def initempty(cls):
         return cls(np.array([]))
@@ -170,9 +167,9 @@ class Chebfun(object):
     def __sub__(self, f):
         return self._apply_binop(f, operator.sub)
 
-    # -------------------
-    #  'private' methods
-    # -------------------
+    # ------------------
+    #  internal helpers
+    # ------------------
     @self_empty()
     def _apply_binop(self, f, op):
         '''Funnel method used in the implementation of Chebfun binary
@@ -365,9 +362,9 @@ class Chebfun(object):
         funs = [x.simplify() for x in funsA]
         return self.__class__(funs)
 
-# ---------------------------
-#  numpy universal functions
-# ---------------------------
+# ---------
+#  ufuncs
+# ---------
 def addUfunc(op):
     @self_empty()
     def method(self):
