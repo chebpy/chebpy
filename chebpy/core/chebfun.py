@@ -349,17 +349,20 @@ class Chebfun(object):
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other):
-        diffnc = self - other
-        joined = self.domain.union(other.domain)
-        newdom = joined.merge(diffnc.roots())
-        funsA = self._break(newdom).funs
-        funsB = other._break(newdom).funs
-        x0 = np.mean(newdom[:2])
-        if self(x0) > other(x0):
-            funsA[1::2] = funsB[1::2]
-        else:
-            funsA[0::2] = funsB[0::2]
-        funs = [x.simplify() for x in funsA]
+        roots = (self-other).roots()
+        newdom = self.domain.union(other.domain).merge(roots)
+        switch = newdom.support.merge(roots)
+        keys = .5 * ((-1) ** np.arange(switch.size-1) + 1)
+        if self(switch[0]) < other(switch[0]):
+            keys = 1 - keys
+        funs = np.array([])
+        for interval, use_self in zip(switch.intervals, keys):
+            subdom = newdom.restrict(interval)
+            if use_self:
+                subfun = self.restrict(subdom)
+            else:
+                subfun = other.restrict(subdom)
+            funs = np.append(funs, subfun.funs)
         return self.__class__(funs)
 
 # ---------
