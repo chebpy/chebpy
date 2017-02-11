@@ -212,6 +212,9 @@ class Properties(unittest.TestCase):
         self.assertEqual(self.f2.domain, d2)
 
     def test_hscale(self):
+        self.assertIsInstance(self.f0.hscale, np.float)
+        self.assertIsInstance(self.f1.hscale, np.float)
+        self.assertIsInstance(self.f2.hscale, np.float)
         self.assertEqual(self.f0.hscale, 0)
         self.assertEqual(self.f1.hscale, 1)
         self.assertEqual(self.f2.hscale, 2)
@@ -231,9 +234,9 @@ class Properties(unittest.TestCase):
         self.assertTrue(c2.isconst)
 
     def test_support(self):
-        self.assertIsInstance(self.f0.support, np.ndarray)
-        self.assertIsInstance(self.f1.support, np.ndarray)
-        self.assertIsInstance(self.f2.support, np.ndarray)
+        self.assertIsInstance(self.f0.support, Domain)
+        self.assertIsInstance(self.f1.support, Domain)
+        self.assertIsInstance(self.f2.support, Domain)
         self.assertEqual(self.f0.support.size, 0)
         self.assertTrue(np.equal(self.f1.support,[-1,1]).all())
         self.assertTrue(np.equal(self.f2.support,[-1,2]).all())

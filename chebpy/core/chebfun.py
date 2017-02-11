@@ -234,15 +234,15 @@ class Chebfun(object):
         return Domain.from_chebfun(self)
 
     @property
-    @self_empty(np.array([]))
+    @self_empty(Domain([]))
     def support(self):
         '''Return an array containing the first and last breakpoints'''
-        return self.breakpoints[[0,-1]]
+        return Domain(self.breakpoints[[0,-1]])
 
     @property
-    @self_empty(0)
+    @self_empty(0.)
     def hscale(self):
-        return np.abs(self.support).max()
+        return np.float(np.abs(self.support).max())
 
     @property
     @self_empty(False)
@@ -256,7 +256,7 @@ class Chebfun(object):
         return self.funs.size == 0
 
     @property
-    @self_empty(0)
+    @self_empty(0.)
     def vscale(self):
         return max([fun.vscale for fun in self])
 

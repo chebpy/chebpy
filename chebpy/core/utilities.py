@@ -76,9 +76,12 @@ class Domain(np.ndarray):
 
     def __new__(cls, breakpoints):
         bpts = np.asarray(breakpoints, dtype=float)
-        if bpts.size < 2 or np.any(np.diff(bpts)<=0):
+        if bpts.size == 0:
+            return bpts.view(cls)
+        elif bpts.size < 2 or np.any(np.diff(bpts)<=0):
             raise InvalidDomain
-        return bpts.view(cls)
+        else:
+            return bpts.view(cls)
 
     def __contains__(self, other):
         """Checks whether one domain object is a subodomain of another (to
