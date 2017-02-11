@@ -901,7 +901,15 @@ class PrivateMethods(unittest.TestCase):
         self.assertLessEqual(error, 3*eps)
 
 class DomainBreakingOps(unittest.TestCase):
-    pass
+
+    def test_maximum_multipiece(self):
+        x = chebfun('x', np.linspace(-2,3,11))
+        y = chebfun(2, x.domain)
+        g = (x**y).maximum(1.5)
+        t = np.linspace(-2,3,2001)
+        f = lambda x: np.maximum(x**2,1.5)
+        self.assertLessEqual(infnorm(f(t)-g(t)), 1e1*eps)
+
 
 # domain, test_tolerance
 domainBreakOp_args = [
@@ -912,7 +920,7 @@ domainBreakOp_args = [
 #    ([-5,9], 35*eps),
 ]
 
-# add tests for maximu, minimum
+# add tests for maximum, minimum
 def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
     a, b = dom
     xx = np.linspace(a,b,1001)
