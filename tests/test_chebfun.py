@@ -349,7 +349,7 @@ class Algebra(unittest.TestCase):
 
     def setUp(self):
         self.emptyfun = Chebfun.initempty()
-        self.yy = -1 + 2*np.random.rand(1000)
+        self.yy = np.linspace(-1,1,2000)
 
     # check  +(empty Chebfun) = (empty Chebfun)
     def test__pos__empty(self):
@@ -626,7 +626,7 @@ class Ufuncs(unittest.TestCase):
 
     def setUp(self):
         self.emptyfun = Chebfun.initempty()
-        self.yy = -1 + 2*np.random.rand(1000)
+        self.yy = np.linspace(-1,1,2000)
 
 ufuncs = (np.absolute, np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan,
           np.arctanh, np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log,
@@ -650,7 +650,8 @@ for ufunc in ufuncs:
 
 uf1 = lambda x: x
 uf1.__name__ = "x"
-uf2 = sin
+uf2 = lambda x: sin(x)
+uf2.__name__ = "sin(x)"
 uf3 = lambda x: sin(25*x-1)
 uf3.__name__ = "sin(25*x-1)"
 
@@ -715,7 +716,7 @@ for (ufunc,  [([f, intvl], tol), ]) in ufunc_test_params:
     interval = Interval(*intvl)
     _testfun_ = ufuncTester(ufunc, f, interval, tol)
     _testfun_.__name__ = \
-        "test_{}_{}_[{:.1f},..,{:.1f}]".format(
+        "test_{}({})_[{:.1f},..,{:.1f}]".format(
         ufunc.__name__, f.__name__, *intvl)
     setattr(Ufuncs, _testfun_.__name__, _testfun_)
 
