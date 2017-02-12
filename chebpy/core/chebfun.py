@@ -350,7 +350,7 @@ class Chebfun(object):
     def absolute(self):
         '''Absolute value of a Chebfun'''
         newdom = self.domain.merge(self.roots())
-        funs = [x.absolute().simplify() for x in self._break(newdom)]
+        funs = [x.absolute() for x in self._break(newdom)]
         return self.__class__(funs)
 
     @self_empty()
