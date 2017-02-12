@@ -179,15 +179,11 @@ class Classicfun(Fun):
         ax.plot(xx, yy, *args, **kwargs)
         return ax
 
-
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is
 # ----------------------------------------------------------------
 
-methods_onefun_other = (
-    'values',
-    'plotcoeffs',
-)
+methods_onefun_other = ('values', 'plotcoeffs')
 
 def addUtility(methodname):
     def method(self, *args, **kwargs):
@@ -201,15 +197,10 @@ for methodname in methods_onefun_other:
 
 
 # -----------------------------------------------------------------------
-#  unary operators and zero-argument utlity methods which return a onefun
+#  unary operators and zero-argument utlity methods returning a onefun
 # -----------------------------------------------------------------------
 
-methods_onefun_zeroargs = (
-    '__pos__',
-    '__neg__',
-    'copy',
-    'simplify',
-)
+methods_onefun_zeroargs = ('__pos__', '__neg__', 'copy', 'simplify')
 
 def addZeroArgOp(methodname):
     def method(self, *args, **kwargs):
@@ -222,26 +213,14 @@ def addZeroArgOp(methodname):
 for methodname in methods_onefun_zeroargs:
     addZeroArgOp(methodname)
 
-
 # -----------------------------------------
-# binary operators which return a onefun
+# binary operators returning a onefun
 # -----------------------------------------
 
 # ToDo: change these to operator module methods
-methods_onefun_binary= (
-    '__add__',
-    '__div__',
-    '__mul__',
-    '__pow__',
-    '__radd__',
-    '__rdiv__',
-    '__rmul__',
-    '__rpow__',
-    '__rsub__',
-    '__rtruediv__',
-    '__sub__',
-    '__truediv__',
-)
+methods_onefun_binary = ('__add__', '__div__', '__mul__', '__pow__',
+                         '__radd__', '__rdiv__', '__rmul__', '__rpow__',
+                         '__rsub__', '__rtruediv__', '__sub__', '__truediv__')
 
 def addBinaryOp(methodname):
     @self_empty()
@@ -267,7 +246,6 @@ def addBinaryOp(methodname):
 for methodname in methods_onefun_binary:
     addBinaryOp(methodname)
 
-
 # ---------------------------
 #  numpy universal functions
 # ---------------------------
@@ -283,9 +261,10 @@ def addUfunc(op):
     method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, name, method)
 
-ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
-          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
-          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
+ufuncs = (np.absolute, np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan,
+          np.arctanh, np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log,
+          np.log2, np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh,
+          np.sqrt)
 
 for op in ufuncs:
     addUfunc(op)

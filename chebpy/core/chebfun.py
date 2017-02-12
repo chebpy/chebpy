@@ -258,7 +258,7 @@ class Chebfun(object):
     @property
     @self_empty(0.)
     def vscale(self):
-        return max([fun.vscale for fun in self])
+        return np.max([fun.vscale for fun in self])
 
     @property
     @self_empty()
@@ -325,7 +325,7 @@ class Chebfun(object):
         return self.__class__(dfuns)
 
     def sum(self):
-        return sum([fun.sum() for fun in self])
+        return np.sum([fun.sum() for fun in self])
 
     # ----------
     #  plotting
@@ -346,6 +346,13 @@ class Chebfun(object):
     # ----------
     #  utilities
     # ----------
+    @self_empty()
+    def absolute(self):
+        '''Absolute value of a Chebfun'''
+        newdom = self.domain.merge(self.roots())
+        funs = [x.absolute().simplify() for x in self._break(newdom)]
+        return self.__class__(funs)
+
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other):
@@ -389,11 +396,9 @@ def addUfunc(op):
     method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Chebfun, name, method)
 
-ufuncs = (
-    np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
-    np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2, np.log10,
-    np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt,
-)
+ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
+          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
+          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
 
 for op in ufuncs:
     addUfunc(op)

@@ -603,15 +603,15 @@ class Ufuncs(unittest.TestCase):
         self.yy = np.linspace(-1,1,1000)
         self.emptyfun = Bndfun.initempty()
 
-
-ufuncs = (np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan, np.arctanh,
-          np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log, np.log2,
-          np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh, np.sqrt)
+ufuncs = (np.absolute, np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan,
+          np.arctanh, np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log,
+          np.log2, np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh,
+          np.sqrt)
 
 # empty-case tests
 def ufuncEmptyCaseTester(ufunc):
     def tester(self):
-        self.assertTrue(ufunc(self.emptyfun).isempty)
+        self.assertTrue(getattr(self.emptyfun, ufunc.__name__)().isempty)
     return tester
 
 for ufunc in ufuncs:
@@ -627,32 +627,33 @@ uf1 = lambda x: x
 uf1.__name__ = "x"
 
 ufunc_test_params = [
-    (np.arccos,  [([uf1, (-.8,.8)],  eps), ]),
-    (np.arccosh, [([uf1, (2,3)    ], eps), ]),
-    (np.arcsin,  [([uf1, (-.8,.8)],  eps), ]),
-    (np.arcsinh, [([uf1, (2,3)    ], eps), ]),
-    (np.arctan,  [([uf1, (-.8,.8)],  eps), ]),
-    (np.arctanh, [([uf1, (-.8,.8)],  eps), ]),
-    (np.cos,     [([uf1, (-3,3)   ], eps), ]),
-    (np.cosh,    [([uf1, (-3,3)   ], eps), ]),
-    (np.exp,     [([uf1, (-3,3)   ], eps), ]),
-    (np.exp2,    [([uf1, (-3,3)   ], eps), ]),
-    (np.expm1,   [([uf1, (-3,3)   ], eps), ]),
-    (np.log,     [([uf1, (2,3)    ], eps), ]),
-    (np.log2,    [([uf1, (2,3)    ], eps), ]),
-    (np.log10,   [([uf1, (2,3)    ], eps), ]),
-    (np.log1p,   [([uf1, (-.8,.8)],  eps), ]),
-    (np.sinh,    [([uf1, (-3,3)   ], eps), ]),
-    (np.sin,     [([uf1, (-3,3)   ], eps), ]),
-    (np.tan,     [([uf1, (-.8,.8)],  eps), ]),
-    (np.tanh,    [([uf1, (-3,3)   ], eps), ]),
-    (np.sqrt,    [([uf1, (2,3)    ], eps), ]),
+    (np.absolute, [([uf1, (-3,-.5)], eps), ]),
+    (np.arccos,   [([uf1, (-.8,.8)], eps), ]),
+    (np.arccosh,  [([uf1, (2,3)   ], eps), ]),
+    (np.arcsin,   [([uf1, (-.8,.8)], eps), ]),
+    (np.arcsinh,  [([uf1, (2,3)   ], eps), ]),
+    (np.arctan,   [([uf1, (-.8,.8)], eps), ]),
+    (np.arctanh,  [([uf1, (-.8,.8)], eps), ]),
+    (np.cos,      [([uf1, (-3,3)  ], eps), ]),
+    (np.cosh,     [([uf1, (-3,3)  ], eps), ]),
+    (np.exp,      [([uf1, (-3,3)  ], eps), ]),
+    (np.exp2,     [([uf1, (-3,3)  ], eps), ]),
+    (np.expm1,    [([uf1, (-3,3)  ], eps), ]),
+    (np.log,      [([uf1, (2,3)   ], eps), ]),
+    (np.log2,     [([uf1, (2,3)   ], eps), ]),
+    (np.log10,    [([uf1, (2,3)   ], eps), ]),
+    (np.log1p,    [([uf1, (-.8,.8)], eps), ]),
+    (np.sinh,     [([uf1, (-3,3)  ], eps), ]),
+    (np.sin,      [([uf1, (-3,3)  ], eps), ]),
+    (np.tan,      [([uf1, (-.8,.8)], eps), ]),
+    (np.tanh,     [([uf1, (-3,3)  ], eps), ]),
+    (np.sqrt,     [([uf1, (2,3)   ], eps), ]),
 ]
 
 def ufuncTester(ufunc, f, interval, tol):
     ff = Bndfun.initfun_adaptive(f, interval)
     gg = lambda x: ufunc(f(x))
-    GG = ufunc(ff)
+    GG = getattr(ff, ufunc.__name__)()
     def tester(self):
         xx = interval(self.yy)
         vscl = GG.vscale
