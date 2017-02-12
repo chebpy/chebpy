@@ -650,8 +650,8 @@ for ufunc in ufuncs:
 
 uf1 = lambda x: x
 uf1.__name__ = "x"
-uf2 = lambda x: sin(x)
-uf2.__name__ = "sin(x)"
+uf2 = lambda x: sin(x-.5)
+uf2.__name__ = "sin(x-.5)"
 uf3 = lambda x: sin(25*x-1)
 uf3.__name__ = "sin(25*x-1)"
 
