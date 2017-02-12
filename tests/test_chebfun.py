@@ -628,6 +628,9 @@ class Ufuncs(unittest.TestCase):
         self.emptyfun = Chebfun.initempty()
         self.yy = np.linspace(-1,1,2000)
 
+    def test_abs_absolute_alias(self):
+        self.assertEqual(Chebfun.abs, Chebfun.absolute)
+
 ufuncs = (np.absolute, np.arccos, np.arccosh, np.arcsin, np.arcsinh, np.arctan,
           np.arctanh, np.cos, np.cosh, np.exp, np.exp2, np.expm1, np.log,
           np.log2, np.log10, np.log1p, np.sinh, np.sin, np.tan, np.tanh,

@@ -353,6 +353,8 @@ class Chebfun(object):
         funs = [x.absolute() for x in self._break(newdom)]
         return self.__class__(funs)
 
+    abs = absolute
+
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other):
