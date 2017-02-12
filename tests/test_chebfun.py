@@ -910,20 +910,24 @@ class DomainBreakingOps(unittest.TestCase):
         f = lambda x: np.maximum(x**2,1.5)
         self.assertLessEqual(infnorm(f(t)-g(t)), 1e1*eps)
 
+    def test_minimum_multipiece(self):
+        x = chebfun('x', np.linspace(-2,3,11))
+        y = chebfun(2, x.domain)
+        g = (x**y).minimum(1.5)
+        t = np.linspace(-2,3,2001)
+        f = lambda x: np.minimum(x**2,1.5)
+        self.assertLessEqual(infnorm(f(t)-g(t)), 1e1*eps)
 
 # domain, test_tolerance
 domainBreakOp_args = [
     (lambda x: x, 0, [-1,1], eps),
     (sin, cos, [-1,1], eps),
-#    ([-2,1], eps),
-#    ([-1,2], eps),
-#    ([-5,9], 35*eps),
+    (cos, np.abs, [-1,0,1], eps),
 ]
 
 # add tests for maximum, minimum
 def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
-    a, b = dom
-    xx = np.linspace(a,b,1001)
+    xx = np.linspace(dom[0],dom[-1],1001)
     ff = chebfun(f, dom)
     gg = chebfun(g, dom)
     # convert constant g to to callable
@@ -939,7 +943,7 @@ def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
         self.assertLessEqual(infnorm(fg(xx)-ffgg), vscl*hscl*lscl*tol)
     return tester
 
-for domainBreakOp in (np.maximum,):
+for domainBreakOp in (np.maximum, np.minimum):
     for n, args in enumerate(domainBreakOp_args):
         ff, gg, dom, tol = args
         _testfun_ = domainBreakOpTester(domainBreakOp, ff, gg, dom, tol)
