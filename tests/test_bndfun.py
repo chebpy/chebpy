@@ -625,6 +625,9 @@ for ufunc in ufuncs:
 
 uf1 = lambda x: x
 uf1.__name__ = "x"
+uf2 = sin
+uf3 = lambda x: sin(25*x-1)
+uf3.__name__ = "sin(25*x-1)"
 
 ufunc_test_params = [
     (np.absolute, [([uf1, (-3,-.5)], eps), ]),
@@ -648,6 +651,24 @@ ufunc_test_params = [
     (np.tan,      [([uf1, (-.8,.8)], eps), ]),
     (np.tanh,     [([uf1, (-3,3)  ], eps), ]),
     (np.sqrt,     [([uf1, (2,3)   ], eps), ]),
+
+    (np.cos,      [([uf2, (-3,3)  ], eps), ]),
+    (np.cosh,     [([uf2, (-3,3)  ], eps), ]),
+    (np.exp,      [([uf2, (-3,3)  ], eps), ]),
+    (np.expm1,    [([uf2, (-3,3)  ], eps), ]),
+    (np.sinh,     [([uf2, (-3,3)  ], eps), ]),
+    (np.sin,      [([uf2, (-3,3)  ], eps), ]),
+    (np.tan,      [([uf2, (-.8,.8)], eps), ]),
+    (np.tanh,     [([uf2, (-3,3)  ], eps), ]),
+
+    (np.cos,      [([uf3, (-3,3)  ], eps), ]),
+    (np.cosh,     [([uf3, (-3,3)  ], eps), ]),
+    (np.exp,      [([uf3, (-3,3)  ], eps), ]),
+    (np.expm1,    [([uf3, (-3,3)  ], eps), ]),
+    (np.sinh,     [([uf3, (-3,3)  ], eps), ]),
+    (np.sin,      [([uf3, (-3,3)  ], eps), ]),
+    (np.tan,      [([uf3, (-.8,.8)], eps), ]),
+    (np.tanh,     [([uf3, (-3,3)  ], eps), ]),
 ]
 
 def ufuncTester(ufunc, f, interval, tol):
