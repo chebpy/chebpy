@@ -349,11 +349,23 @@ class Chebfun(object):
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other):
+        '''Pointwise maximum of self and another chebfun'''
+        return self._maximum_minimum(other, operator.ge)
+
+    @self_empty()
+    @cast_arg_to_chebfun
+    def minimum(self, other):
+        '''Pointwise mimimum of self and another chebfun'''
+        return self._maximum_minimum(other, operator.lt)
+
+    def _maximum_minimum(self, other, comparator):
+        '''Method for computing the pointwise maximum/minimum of two
+        Chebfuns'''
         roots = (self-other).roots()
         newdom = self.domain.union(other.domain).merge(roots)
         switch = newdom.support.merge(roots)
         keys = .5 * ((-1) ** np.arange(switch.size-1) + 1)
-        if self(switch[0]) < other(switch[0]):
+        if comparator(other(switch[0]), self(switch[0])):
             keys = 1 - keys
         funs = np.array([])
         for interval, use_self in zip(switch.intervals, keys):
