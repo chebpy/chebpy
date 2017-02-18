@@ -31,7 +31,7 @@ def rootsunit(ak, htol=1e2*eps):
         companion matrix", Quarterly Journal of Mathematics 12 (1961).
 
     .. [2] J. A. Boyd, "Computing zeros on a real interval through
-        Chebyshev =expansion and polynomial rootfinding", SIAM Journal on
+        Chebyshev expansion and polynomial rootfinding", SIAM Journal on
         Numerical Analysis 40 (2002).
 
     .. [3] L. N. Trefethen, Approximation Theory and Approximation
