@@ -5,13 +5,32 @@ from __future__ import division
 import functools
 import numpy as np
 
-# define an abstract class method decorator:
+# bespoke abstract class method decorator taken from:
 # http://stackoverflow.com/questions/11217878/python-2-7-combine-abc-abstractmethod-and-classmethod
 class abstractclassmethod(classmethod):
     __isabstractmethod__ = True
     def __init__(self, callable):
         callable.__isabstractmethod__ = True
         super(abstractclassmethod, self).__init__(callable)
+
+def cache(f):
+    '''Object method output caching mechanism. Particularly useful for speeding
+    up repeated execution of relatively expensive zero-argument operations such
+    as .roots(). Can be used on arbitrary objects.'''
+    @functools.wraps(f)
+    def wrapper(self):
+        try:
+            # f has been executed previously
+            out = self._cache[f]
+        except AttributeError:
+            # f has not been executed previously and self._cache does not exist
+            self._cache = {}
+            out = self._cache[f] = f(self)
+        except KeyError:
+            # f has not been executed previously, but self._cache exists
+            out = self._cache[f] = f(self)
+        return out
+    return wrapper
 
 # Factory method to produce a decorator that checks whether the object
 # whose classmethod is being wrapped is empty, returning the object if
@@ -56,7 +75,6 @@ def preandpostprocess(f):
             args[0] = np.array([xx]) if np.isscalar(xx) else args[0]
             out = f(*args, **kwargs)
             return out[0] if np.isscalar(xx) else out
-
     return thewrapper
 
 # Chebfun classmethod wrapper for __call__: ensure that we provide

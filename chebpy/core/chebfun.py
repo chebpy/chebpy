@@ -11,7 +11,7 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import (Interval, Domain, check_funs,
                                    generate_funs, compute_breakdata)
 from chebpy.core.decorators import (self_empty, float_argument,
-                                    cast_arg_to_chebfun)
+                                    cast_arg_to_chebfun, cache)
 from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
 
 
@@ -287,8 +287,11 @@ class Chebfun(object):
         '''Restrict a chebfun to a subinterval'''
         return self._restrict(subinterval).simplify()
 
+    @cache
     @self_empty(np.array([]))
     def roots(self):
+        '''Compute the roots of a Chebfun, i.e., the set of values x for which
+        f(x) = 0.'''
         allrts = []
         prvrts = np.array([])
         htol = 1e2 * self.hscale * DefaultPrefs.eps
