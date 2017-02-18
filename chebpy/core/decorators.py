@@ -16,19 +16,21 @@ class abstractclassmethod(classmethod):
 def cache(f):
     '''Object method output caching mechanism. Particularly useful for speeding
     up repeated execution of relatively expensive zero-argument operations such
-    as .roots(). Can be used on arbitrary objects.'''
+    as .roots(). Cached computations are stored in a dictionary called _cache
+    which is bound to self using keys corresponding to the method name.
+    Can be used in principle on arbitrary objects.'''
     @functools.wraps(f)
     def wrapper(self):
         try:
             # f has been executed previously
-            out = self._cache[f]
+            out = self._cache[f.__name__]
         except AttributeError:
             # f has not been executed previously and self._cache does not exist
             self._cache = {}
-            out = self._cache[f] = f(self)
+            out = self._cache[f.__name__] = f(self)
         except KeyError:
             # f has not been executed previously, but self._cache exists
-            out = self._cache[f] = f(self)
+            out = self._cache[f.__name__] = f(self)
         return out
     return wrapper
 
