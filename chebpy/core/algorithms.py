@@ -10,7 +10,7 @@ from chebpy.core.utilities import Interval
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import preandpostprocess
 
-# deactivate default numpy divsion and multiply warnings
+# supress numpy division and multiply warnings
 np.seterr(divide='ignore', invalid='ignore')
 
 # constants
