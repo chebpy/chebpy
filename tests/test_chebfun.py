@@ -866,7 +866,13 @@ class Roots(unittest.TestCase):
         self.assertEqual(rts.size, 81)
         self.assertLessEqual(infnorm(rts-np.arange(-10,10.25,.25)), 1e1*eps)
 
-
+    def test_roots_cache(self):
+        # check that a _cache property is created containing the stored roots
+        ff = chebfun(sin, np.linspace(-10,10,13))
+        self.assertFalse(hasattr(ff, '_cache'))
+        ff.roots()
+        self.assertTrue(hasattr(ff, '_cache'))
+        self.assertTrue(ff.roots.__name__ in ff._cache.keys())
 
 class Plotting(unittest.TestCase):
 
