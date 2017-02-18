@@ -10,6 +10,9 @@ from chebpy.core.utilities import Interval
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import preandpostprocess
 
+# deactivate default numpy divsion and multiply warnings
+np.seterr(divide='ignore', invalid='ignore')
+
 # constants
 eps = DefaultPrefs.eps
 SPLITPOINT = -0.004849834917525
