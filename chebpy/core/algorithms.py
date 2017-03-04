@@ -159,11 +159,10 @@ def standard_chop(coeffs, tol=eps):
     if n < 17:
         return cutoff
 
-    # Step 1
-    b = abs(coeffs)
-    m = b[-1] * np.ones(n)
-    for j in np.arange(n-2, -1, -1):   # n-2, ... , 2, 1, 0
-        m[j] = max( (b[j], m[j+1]) )
+    # Step 1: Convert coeffs input to a new monotonically nonincreasing
+    # vector (envelope) normalized to begin with the value 1.
+    b = np.flipud(np.abs(coeffs))
+    m = np.flipud(np.maximum.accumulate(b))
     if m[0] == 0.:
         # TODO: check this
         cutoff = 1 # cutoff = 0
