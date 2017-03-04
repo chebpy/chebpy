@@ -169,7 +169,8 @@ def standard_chop(coeffs, tol=eps):
         return cutoff
     envelope = m / m[0]
 
-    # Step 2
+    # Step 2: Scan envelope for a value plateauPoint, the first point, if any,
+    # that is followed by a plateau
     for j in np.arange(1, n):
         j2 = round(1.25*j+5)
         if j2 > n-1:
@@ -184,7 +185,8 @@ def standard_chop(coeffs, tol=eps):
             plateauPoint = j
             break
 
-    # Step 3
+    # Step 3: Fix cutoff at a point where envelope, plus a linear function
+    # included to bias the result towards the left end, is minimal.
     if envelope[int(plateauPoint)] == 0.:
         cutoff = plateauPoint
     else:
