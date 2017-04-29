@@ -173,7 +173,7 @@ class Classicfun(Fun):
     # ----------
     def plot(self, ax=None, *args, **kwargs):
         a, b = self.support
-        ax = ax if ax else plt.gca()
+        ax = ax or plt.gca()
         xx = np.linspace(a, b, 2001)
         yy = self(xx)
         ax.plot(xx, yy, *args, **kwargs)

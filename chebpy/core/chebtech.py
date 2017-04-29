@@ -340,14 +340,14 @@ class Chebtech(Smoothfun):
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        ax = ax if ax else plt.gca()
+        ax = ax or plt.gca()
         xx = np.linspace(-1, 1, 2001)
         yy = self(xx)
         ax.plot(xx, yy, *args, **kwargs)
         return ax
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax if ax else plt.gca()
+        ax = ax or plt.gca()
         abscoeffs = abs(self.coeffs)
         ax.semilogy(abscoeffs, '.', *args, **kwargs)
         ax.set_ylabel('coefficient magnitude')

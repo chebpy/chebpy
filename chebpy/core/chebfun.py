@@ -334,14 +334,14 @@ class Chebfun(object):
     #  plotting
     # ----------
     def plot(self, ax=None, *args, **kwargs):
-        ax = ax if ax else plt.gca()
+        ax = ax or plt.gca()
         a, b = self.support
         xx = np.linspace(a, b, 2001)
         ax.plot(xx, self(xx), *args, **kwargs)
         return ax
 
     def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax if ax else plt.gca()
+        ax = ax or plt.gca()
         for fun in self:
             fun.plotcoeffs(ax=ax)
         return ax
