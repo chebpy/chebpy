@@ -848,10 +848,10 @@ class Calculus(unittest.TestCase):
         self.assertLessEqual(self.g1.dot(self.f4)-0.66870683499839867, 3*eps)
 
     def test_dot_commute(self):
-        self.assertLessEqual(self.g1.dot(self.f1)-0.66870683499839867, 2*eps)
-        self.assertLessEqual(self.g2.dot(self.f2)-0.64053327987194342, 2*eps)
-        self.assertLessEqual(self.g3.dot(self.f3)-0.67372257930409951, 2*eps)
-        self.assertLessEqual(self.g4.dot(self.f4)-0.66870683499839922, 2*eps)
+        self.assertLessEqual(self.g1.dot(self.f1)-0.66870683499839867, 3*eps)
+        self.assertLessEqual(self.g2.dot(self.f2)-0.64053327987194342, 3*eps)
+        self.assertLessEqual(self.g3.dot(self.f3)-0.67372257930409951, 3*eps)
+        self.assertLessEqual(self.g4.dot(self.f4)-0.66870683499839922, 3*eps)
 
     def test_dot_empty(self):
         emptyfun = Chebfun.initempty()
