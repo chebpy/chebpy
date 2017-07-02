@@ -330,6 +330,9 @@ class Chebfun(object):
     def sum(self):
         return np.sum([fun.sum() for fun in self])
 
+    def dot(self, f):
+        return (self*f).sum()
+
     # ----------
     #  plotting
     # ----------

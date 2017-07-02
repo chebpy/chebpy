@@ -260,7 +260,7 @@ class Calculus(unittest.TestCase):
 
     # tests for the correct results in the empty cases
     def test_sum_empty(self):
-        self.assertEqual(self.emptyfun.sum(), 0)
+        self.assertEqual(self.emptyfun.sum(),0)
 
     def test_cumsum_empty(self):
         self.assertTrue(self.emptyfun.cumsum().isempty)

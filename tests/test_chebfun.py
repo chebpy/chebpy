@@ -791,12 +791,17 @@ class Calculus(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x-1.4)
+        g = lambda x: exp(x)
         self.df = lambda x: 4*cos(4*x-1.4)
         self.If = lambda x: -.25*cos(4*x-1.4)
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
         self.f4 = Chebfun.initfun_adaptive(f, np.linspace(-1,1,11))
+        self.g1 = Chebfun.initfun_adaptive(g, [-1,1])
+        self.g2 = Chebfun.initfun_adaptive(g, [-3,0,1])
+        self.g3 = Chebfun.initfun_adaptive(g, [-2,-0.3,1.2])
+        self.g4 = Chebfun.initfun_adaptive(g, np.linspace(-1,1,11))
 
     def test_sum(self):
         self.assertLessEqual(abs(self.f1.sum()-0.372895407327895),2*eps)
@@ -833,6 +838,25 @@ class Calculus(unittest.TestCase):
         self.assertIsInstance(df, Chebfun)
         self.assertTrue(df.isempty)
 
+    def test_dot(self):
+        self.assertLessEqual(self.f1.dot(self.g1)-0.66870683499839867, 2*eps)
+        self.assertLessEqual(self.f2.dot(self.g2)-0.64053327987194342, 2*eps)
+        self.assertLessEqual(self.f3.dot(self.g3)-0.67372257930409951, 2*eps)
+        self.assertLessEqual(self.f4.dot(self.g4)-0.66870683499839922, 2*eps)
+        # different partitions of same interval
+        self.assertLessEqual(self.f1.dot(self.g4)-0.66870683499839867, 2*eps)
+        self.assertLessEqual(self.g1.dot(self.f4)-0.66870683499839867, 2*eps)
+
+    def test_dot_commute(self):
+        self.assertLessEqual(self.g1.dot(self.f1)-0.66870683499839867, 2*eps)
+        self.assertLessEqual(self.g2.dot(self.f2)-0.64053327987194342, 2*eps)
+        self.assertLessEqual(self.g3.dot(self.f3)-0.67372257930409951, 2*eps)
+        self.assertLessEqual(self.g4.dot(self.f4)-0.66870683499839922, 2*eps)
+
+    def test_dot_empty(self):
+        emptyfun = Chebfun.initempty()
+        self.assertEqual(self.f1.dot(emptyfun), 0)
+        self.assertEqual(emptyfun.dot(self.f1), 0)
 
 class Roots(unittest.TestCase):
 

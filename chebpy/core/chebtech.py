@@ -288,6 +288,8 @@ class Chebtech(Smoothfun):
     # ----------
     #  calculus
     # ----------
+    # Note that function returns 0 for an empty Chebtech object; this is
+    # consistent with numpy, which returns zero for the sum of an empty array
     @self_empty(resultif=0.)
     def sum(self):
         '''Definite integral of a Chebtech on the interval [-1,1]'''
