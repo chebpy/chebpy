@@ -839,10 +839,10 @@ class Calculus(unittest.TestCase):
         self.assertTrue(df.isempty)
 
     def test_dot(self):
-        self.assertLessEqual(self.f1.dot(self.g1)-0.66870683499839867, 2*eps)
-        self.assertLessEqual(self.f2.dot(self.g2)-0.64053327987194342, 2*eps)
-        self.assertLessEqual(self.f3.dot(self.g3)-0.67372257930409951, 2*eps)
-        self.assertLessEqual(self.f4.dot(self.g4)-0.66870683499839922, 2*eps)
+        self.assertLessEqual(self.f1.dot(self.g1)-0.66870683499839867, 3*eps)
+        self.assertLessEqual(self.f2.dot(self.g2)-0.64053327987194342, 3*eps)
+        self.assertLessEqual(self.f3.dot(self.g3)-0.67372257930409951, 3*eps)
+        self.assertLessEqual(self.f4.dot(self.g4)-0.66870683499839922, 3*eps)
         # different partitions of same interval
         self.assertLessEqual(self.f1.dot(self.g4)-0.66870683499839867, 3*eps)
         self.assertLessEqual(self.g1.dot(self.f4)-0.66870683499839867, 3*eps)
