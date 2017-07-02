@@ -845,7 +845,7 @@ class Calculus(unittest.TestCase):
         self.assertLessEqual(self.f4.dot(self.g4)-0.66870683499839922, 2*eps)
         # different partitions of same interval
         self.assertLessEqual(self.f1.dot(self.g4)-0.66870683499839867, 2*eps)
-        self.assertLessEqual(self.g1.dot(self.f4)-0.66870683499839867, 2*eps)
+        self.assertLessEqual(self.g1.dot(self.f4)-0.66870683499839867, 3*eps)
 
     def test_dot_commute(self):
         self.assertLessEqual(self.g1.dot(self.f1)-0.66870683499839867, 2*eps)
