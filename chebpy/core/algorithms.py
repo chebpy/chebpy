@@ -130,7 +130,7 @@ def bary(xx, fk, xk, vk):
 
 @preandpostprocess
 def clenshaw(xx, ak):
-    """Clenshaw's algorithm for the evaluation of a first-kind Chebyshev 
+    """Clenshaw's algorithm for the evaluation of a first-kind Chebyshev
     series expansion at some array of points x"""
     bk1 = 0*xx
     bk2 = 0*xx
@@ -209,7 +209,10 @@ def adaptive(cls, fun, maxpow2=16):
     for k in range(4, maxpow2+1):
         n = 2**k + 1
         points = cls._chebpts(n)
-        values = fun(points)
+        try:
+            values = fun(points)
+        except:  # needed when trying to sample wrapped C functions
+            values = np.vectorize(fun)(points)
         coeffs = cls._vals2coeffs(values)
         chplen = standard_chop(coeffs)
         if chplen < coeffs.size:
