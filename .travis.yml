@@ -7,9 +7,9 @@ install:
     - pip install -r requirements.txt
     - pip install coveralls
 python:
-    - "2.7"
-    - "3.4"
-    - "3.5"
+#    - "2.7"
+#    - "3.4"
+#    - "3.5"
     - "3.6"
 addons:
   apt:
@@ -19,4 +19,3 @@ script:
     - nosetests -v --with-coverage --cover-package=chebpy
 after_success:
     - coveralls
-
