@@ -5,18 +5,18 @@ except ImportError:
 
 setup(
     name='chebpy',
-    version='0.0.1',
+    version='0.1.0',
     description='A Python implementation of Chebfun',
     long_description=open('README.rst',"rt").read(),
-    # author='',
-    author_email='',
+    author='Mark Richardson',
+    author_email='mrichardson82@gmail.com',
     url='https://github.com/chebpy/chebpy',
-    # license='',
+    license=open('LICENSE.rst',"rt").read(),
     packages= ['chebpy', 'chebpy.core'],
     install_requires=[
-        "numpy >= 1.11.0",
-        "matplotlib < 2.0.0", # mpl > 2.0 only works on py3
-        "pyFFTW >= 0.8.1",
+        'numpy>=1.16',
+        'matplotlib>=3.0',
+        'pyfftw>=0.11',
     ],
     test_suite="tests",
 )
