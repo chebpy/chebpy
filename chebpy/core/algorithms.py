@@ -195,7 +195,7 @@ def standard_chop(coeffs, tol=eps):
             j2 = j3 + 1
             envelope[j2] = tol**(7./6.)
         cc = np.log10(envelope[:int(j2)])
-        cc = cc + np.linspace(0, (-1./3.)*np.log10(tol), j2)
+        cc = cc + np.linspace(0, (-1./3.)*np.log10(tol), int(j2))
         d = np.argmin(cc)
         # TODO: check this
         cutoff = d # + 2
