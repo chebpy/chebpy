@@ -4,7 +4,6 @@ from __future__ import division
 
 import operator
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
@@ -13,6 +12,7 @@ from chebpy.core.utilities import (Interval, Domain, check_funs,
 from chebpy.core.decorators import (self_empty, float_argument,
                                     cast_arg_to_chebfun, cache)
 from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
+from chebpy.core.plotting import import_plt, plotfun
 
 
 class Chebfun(object):
@@ -334,22 +334,6 @@ class Chebfun(object):
         return (self*f).sum()
 
     # ----------
-    #  plotting
-    # ----------
-    def plot(self, ax=None, *args, **kwargs):
-        ax = ax or plt.gca()
-        a, b = self.support
-        xx = np.linspace(a, b, 2001)
-        ax.plot(xx, self(xx), *args, **kwargs)
-        return ax
-
-    def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax or plt.gca()
-        for fun in self:
-            fun.plotcoeffs(ax=ax)
-        return ax
-
-    # ----------
     #  utilities
     # ----------
     @self_empty()
@@ -391,6 +375,24 @@ class Chebfun(object):
                 subfun = other.restrict(subdom)
             funs = np.append(funs, subfun.funs)
         return self.__class__(funs)
+
+# ----------
+#  plotting
+# ----------
+
+plt = import_plt()
+if plt:
+    def plot(self, ax=None, *args, **kwargs):
+        return plotfun(self, self.support, ax=ax, *args, **kwargs)
+    setattr(Chebfun, 'plot', plot)
+
+    def plotcoeffs(self, ax=None, *args, **kwargs):
+        ax = ax or plt.gca()
+        for fun in self:
+            fun.plotcoeffs(ax=ax)
+        return ax
+    setattr(Chebfun, 'plotcoeffs', plotcoeffs)
+
 
 # ---------
 #  ufuncs

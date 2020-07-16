@@ -4,7 +4,6 @@ from __future__ import division
 
 import abc
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy.core.fun import Fun
 from chebpy.core.chebtech import Chebtech2
@@ -12,6 +11,7 @@ from chebpy.core.utilities import Interval
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.decorators import self_empty
 from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
+from chebpy.core.plotting import import_plt, plotfun
 
 
 techdict = {
@@ -168,16 +168,16 @@ class Classicfun(Fun):
         a, b = self.support
         return .5*(b-a) * self.onefun.sum()
 
-    # ----------
-    #  plotting
-    # ----------
+
+# ----------
+#  plotting
+# ----------
+
+plt = import_plt()
+if plt:
     def plot(self, ax=None, *args, **kwargs):
-        a, b = self.support
-        ax = ax or plt.gca()
-        xx = np.linspace(a, b, 2001)
-        yy = self(xx)
-        ax.plot(xx, yy, *args, **kwargs)
-        return ax
+        return plotfun(self, self.support, ax, *args, **kwargs)
+    setattr(Classicfun, 'plot', plot)
 
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is
@@ -193,6 +193,8 @@ def addUtility(methodname):
     setattr(Classicfun, methodname, method)
 
 for methodname in methods_onefun_other:
+    if methodname[:4] == 'plot' and plt is None:
+        continue
     addUtility(methodname)
 
 
