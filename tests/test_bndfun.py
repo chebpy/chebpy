@@ -8,13 +8,13 @@ import itertools
 import operator
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
+from chebpy.core.plotting import import_plt
 
 from tests.utilities import testfunctions, infnorm
 
@@ -169,13 +169,17 @@ class Plotting(unittest.TestCase):
         self.f1 = Bndfun.initfun_adaptive(f, subinterval)
 
     def test_plot(self):
-        fig, ax = plt.subplots()
-        self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
 
     def test_plotcoeffs(self):
-        fig, ax = plt.subplots()
-        self.f0.plotcoeffs(ax=ax)
-        self.f1.plotcoeffs(ax=ax, color="r")
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            self.f0.plotcoeffs(ax=ax)
+            self.f1.plotcoeffs(ax=ax, color="r")
 
 
 

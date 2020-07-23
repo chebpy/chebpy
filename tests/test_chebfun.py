@@ -8,7 +8,6 @@ import itertools
 import operator
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
@@ -17,6 +16,7 @@ from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     BadDomainArgument, BadFunLengthArgument)
+from chebpy.core.plotting import import_plt
 
 from tests.utilities import infnorm, testfunctions
 
@@ -907,14 +907,18 @@ class Plotting(unittest.TestCase):
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
 
     def test_plot(self):
-        for fun in [self.f1, self.f2, self.f3]:
-            fig, ax = plt.subplots()
-            fun.plot(ax=ax)
+        plt = import_plt()
+        if plt:
+            for fun in [self.f1, self.f2, self.f3]:
+                fig, ax = plt.subplots()
+                fun.plot(ax=ax)
 
     def test_plotcoeffs(self):
-        for fun in [self.f1, self.f2, self.f3]:
-            fig, ax = plt.subplots()
-            fun.plotcoeffs(ax=ax)
+        plt = import_plt()
+        if plt:
+            for fun in [self.f1, self.f2, self.f3]:
+                fig, ax = plt.subplots()
+                fun.plotcoeffs(ax=ax)
 
 
 class PrivateMethods(unittest.TestCase):
