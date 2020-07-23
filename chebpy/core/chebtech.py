@@ -364,13 +364,13 @@ class Chebtech(Smoothfun):
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, *args, **kwargs):
-        return plotfun(self, self.support, ax, *args, **kwargs)
+    def plot(self, ax=None, **kwargs):
+        return plotfun(self, self.support, ax=ax, **kwargs)
     setattr(Chebtech, 'plot', plot)
 
-    def plotcoeffs(self, ax=None, *args, **kwargs):
+    def plotcoeffs(self, ax=None, **kwargs):
         ax = ax or plt.gca()
-        return plotfuncoeffs(abs(self.coeffs), ax, *args, **kwargs)
+        return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
     setattr(Chebtech, 'plotcoeffs', plotcoeffs)
 
 

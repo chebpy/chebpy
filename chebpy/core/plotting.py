@@ -20,17 +20,17 @@ def import_plt():
     return _import_optional('matplotlib.pyplot')
 
 
-def plotfun(fn_y, support, ax=None, *args, **kwargs):
+def plotfun(fn_y, support, ax=None, N=2001, **kwargs):
     ax = ax or import_plt().gca()
     a, b = support
-    xx = np.linspace(a, b, 2001)
-    ax.plot(xx, fn_y(xx), *args, **kwargs)
+    xx = np.linspace(a, b, N)
+    ax.plot(xx, fn_y(xx), **kwargs)
     return ax
 
 
-def plotfuncoeffs(abscoeffs, ax=None, *args, **kwargs):
+def plotfuncoeffs(abscoeffs, ax=None, **kwargs):
     ax = ax or import_plt().gca()
-    ax.semilogy(abscoeffs, '.', *args, **kwargs)
-    ax.set_ylabel('coefficient magnitude')
-    ax.set_xlabel('polynomial degree')
+    ax.set_ylabel(kwargs.pop('xlabel', 'coefficient magnitude'))
+    ax.set_xlabel(kwargs.pop('ylabel', 'polynomial degree'))
+    ax.semilogy(abscoeffs, '.', **kwargs)
     return ax

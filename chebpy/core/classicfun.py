@@ -175,8 +175,8 @@ class Classicfun(Fun):
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, *args, **kwargs):
-        return plotfun(self, self.support, ax, *args, **kwargs)
+    def plot(self, ax=None, **kwargs):
+        return plotfun(self, self.support, ax=ax, **kwargs)
     setattr(Classicfun, 'plot', plot)
 
 # ----------------------------------------------------------------

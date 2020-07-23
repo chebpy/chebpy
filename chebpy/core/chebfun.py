@@ -382,14 +382,14 @@ class Chebfun(object):
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, *args, **kwargs):
-        return plotfun(self, self.support, ax=ax, *args, **kwargs)
+    def plot(self, ax=None, **kwargs):
+        return plotfun(self, self.support, ax=ax, **kwargs)
     setattr(Chebfun, 'plot', plot)
 
-    def plotcoeffs(self, ax=None, *args, **kwargs):
+    def plotcoeffs(self, ax=None, **kwargs):
         ax = ax or plt.gca()
         for fun in self:
-            fun.plotcoeffs(ax=ax)
+            fun.plotcoeffs(ax=ax, **kwargs)
         return ax
     setattr(Chebfun, 'plotcoeffs', plotcoeffs)
 
