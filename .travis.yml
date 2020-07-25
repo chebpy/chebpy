@@ -7,6 +7,7 @@ language: python
 install:
     - pip install -r requirements.txt
     - pip install coveralls
+    - pip install matplotlib
 python:
 #    - "2.7"
 #    - "3.4"
