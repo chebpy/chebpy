@@ -365,7 +365,7 @@ class Chebtech(Smoothfun):
 plt = import_plt()
 if plt:
     def plot(self, ax=None, **kwargs):
-        return plotfun(self, self.support, ax=ax, **kwargs)
+        return plotfun(self, (-1, 1), ax=ax, **kwargs)
     setattr(Chebtech, 'plot', plot)
 
     def plotcoeffs(self, ax=None, **kwargs):
