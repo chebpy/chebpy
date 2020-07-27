@@ -15,7 +15,6 @@ setup(
     packages= ['chebpy', 'chebpy.core'],
     install_requires=[
         'numpy>=1.16',
-        'matplotlib>=3.0',
         'pyfftw>=0.11',
     ],
     test_suite="tests",

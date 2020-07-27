@@ -4,7 +4,6 @@ from __future__ import division
 
 import abc
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy.core.smoothfun import Smoothfun
 from chebpy.core.settings import DefaultPrefs
@@ -13,6 +12,8 @@ from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
+from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
+
 
 # machine epsilon
 eps = DefaultPrefs.eps
@@ -338,24 +339,6 @@ class Chebtech(Smoothfun):
             out = self.__class__(zk)
         return out
 
-    # ----------
-    #  plotting
-    # ----------
-    def plot(self, ax=None, *args, **kwargs):
-        ax = ax or plt.gca()
-        xx = np.linspace(-1, 1, 2001)
-        yy = self(xx)
-        ax.plot(xx, yy, *args, **kwargs)
-        return ax
-
-    def plotcoeffs(self, ax=None, *args, **kwargs):
-        ax = ax or plt.gca()
-        abscoeffs = abs(self.coeffs)
-        ax.semilogy(abscoeffs, '.', *args, **kwargs)
-        ax.set_ylabel('coefficient magnitude')
-        ax.set_xlabel('polynomial degree')
-        return ax
-
     # ---------------------------------
     #  subclasses must implement these
     # ---------------------------------
@@ -374,6 +357,21 @@ class Chebtech(Smoothfun):
     @abc.abstractmethod
     def _coeffs2vals():
         pass
+
+# ----------
+#  plotting
+# ----------
+
+plt = import_plt()
+if plt:
+    def plot(self, ax=None, **kwargs):
+        return plotfun(self, (-1, 1), ax=ax, **kwargs)
+    setattr(Chebtech, 'plot', plot)
+
+    def plotcoeffs(self, ax=None, **kwargs):
+        ax = ax or plt.gca()
+        return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
+    setattr(Chebtech, 'plotcoeffs', plotcoeffs)
 
 
 class Chebtech2(Chebtech):

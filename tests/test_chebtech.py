@@ -8,11 +8,11 @@ import itertools
 import operator
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
+from chebpy.core.plotting import import_plt
 from tests.utilities import (testfunctions, infnorm, scaled_tol,
                              infNormLessThanTol)
 
@@ -242,13 +242,17 @@ class Plotting(unittest.TestCase):
         self.f1 = Chebtech2.initfun_adaptive(f)
 
     def test_plot(self):
-        fig, ax = plt.subplots()
-        self.f0.plot(ax=ax)
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            self.f0.plot(ax=ax)
 
     def test_plotcoeffs(self):
-        fig, ax = plt.subplots()
-        self.f0.plotcoeffs(ax=ax)
-        self.f1.plotcoeffs(ax=ax, color="r")
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            self.f0.plotcoeffs(ax=ax)
+            self.f1.plotcoeffs(ax=ax, color="r")
 
 
 
