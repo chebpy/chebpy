@@ -284,6 +284,7 @@ class Chebtech(Smoothfun):
         coefficients in the associated Chebyshev series approximation'''
         rts = rootsunit(self.coeffs)
         rts = newtonroots(self, rts)
+        rts = np.clip(rts, -1, 1)  # if newton roots are just outside [-1,1]
         return rts
 
     # ----------
