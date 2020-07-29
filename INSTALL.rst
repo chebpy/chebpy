@@ -1,7 +1,16 @@
-Installation
-------------
+Default installation
+--------------------
 
-To install ChebPy, you should first install the `fftw` library::
+Perhaps the most convenient way to get going is to run::
+
+    $ pip install git+https://github.com/chebpy/chebpy.git
+    
+If you are running Anaconda this can also be run from the Anaconda prompt. The above has been tested from both Windows and Linux and requires `git <https://git-scm.com>`_ as a prerequisite. 
+
+Alternative installation
+------------------------
+
+To install manually, first install the `fftw` library::
 
     # On Linux
     $ sudo apt-get install libfftw3-dev
