@@ -97,7 +97,7 @@ class Evaluation(unittest.TestCase):
                 fc = ff(xx, "clenshaw")
                 self.assertEquals(type(fb), type(fc))
 
-evalpts = [np.linspace(-1,1,n) for n in np.array([1e2, 1e3, 1e4, 1e5])]
+evalpts = [np.linspace(-1,1,int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
 ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
 methods = [bary, clenshaw]
 

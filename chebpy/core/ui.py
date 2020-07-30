@@ -22,7 +22,7 @@ def chebfun(f=None, domain=None, n=None):
         return Chebfun.initfun(f, domain, n)
 
     # chebfun('x', ... )
-    if isinstance(f, str) and len(f) is 1 and f.isalpha():
+    if isinstance(f, str) and len(f) == 1 and f.isalpha():
         if n:
             return Chebfun.initfun(lambda x: x, domain, n)
         else:
