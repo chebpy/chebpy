@@ -5,7 +5,7 @@
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 
 
 def chebfun(f=None, domain=None, n=None):
@@ -15,7 +15,7 @@ def chebfun(f=None, domain=None, n=None):
     if f is None:
         return Chebfun.initempty()
 
-    domain = DefaultPrefs.domain if domain is None else domain
+    domain = prefs.domain if domain is None else domain
 
     # chebfun(lambda x: f(x), ... )
     if hasattr(f, "__call__"):

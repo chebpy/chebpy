@@ -6,7 +6,7 @@ import operator
 import numpy as np
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.utilities import (Interval, Domain, check_funs,
                                    generate_funs, compute_breakdata)
 from chebpy.core.decorators import (self_empty, float_argument,
@@ -22,38 +22,43 @@ class Chebfun(object):
         return cls(np.array([]))
 
     @classmethod
-    def initconst(cls, c, domain=DefaultPrefs.domain):
+    def initconst(cls, c, domain=None):
+        domain = prefs.domain if domain is None else domain
         funs = generate_funs(domain, Bndfun.initconst, [c])
         return cls(funs)
 
     @classmethod
-    def initidentity(cls, domain=DefaultPrefs.domain):
+    def initidentity(cls, domain=None):
+        domain = prefs.domain if domain is None else domain
         funs = generate_funs(domain, Bndfun.initidentity)
         return cls(funs)
 
     @classmethod
-    def initfun(cls, f, domain=DefaultPrefs.domain, n=None):
+    def initfun(cls, f, domain=None, n=None):
+        domain = prefs.domain if domain is None else domain
         if n:
             return Chebfun.initfun_fixedlen(f, n, domain)
         else:
             return Chebfun.initfun_adaptive(f, domain)
 
     @classmethod
-    def initfun_adaptive(cls, f, domain=DefaultPrefs.domain):
+    def initfun_adaptive(cls, f, domain=None):
+        domain = prefs.domain if domain is None else domain
         funs = generate_funs(domain, Bndfun.initfun_adaptive, [f])
         return cls(funs)
 
     @classmethod
-    def initfun_fixedlen(cls, f, n, domain=DefaultPrefs.domain):
+    def initfun_fixedlen(cls, f, n, domain=None):
+        domain = prefs.domain if domain is None else domain
         domain = np.array(domain)
         nn = np.array(n)
+        if domain.size < 2:
+            raise BadDomainArgument
         if nn.size == 1:
             nn = nn * np.ones(domain.size-1)
         elif nn.size > 1:
             if nn.size != domain.size - 1:
                 raise BadFunLengthArgument
-        if domain.size < 2:
-            raise BadDomainArgument
         funs = np.array([])
         intervals = zip(domain[:-1], domain[1:])
         for interval, length in zip(intervals, nn):
@@ -294,7 +299,7 @@ class Chebfun(object):
         f(x) = 0.'''
         allrts = []
         prvrts = np.array([])
-        htol = 1e2 * self.hscale * DefaultPrefs.eps
+        htol = 1e2 * self.hscale * prefs.eps
         for fun in self:
             rts = fun.roots()
             # ignore first root if equal to the last root of previous fun

@@ -6,17 +6,13 @@ import abc
 import numpy as np
 
 from chebpy.core.smoothfun import Smoothfun
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import self_empty
 from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
 from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
-
-
-# machine epsilon
-eps = DefaultPrefs.eps
 
 
 class Chebtech(Smoothfun):
@@ -199,6 +195,7 @@ class Chebtech(Smoothfun):
             cfs = f.coeffs + g.coeffs
 
             # check for zero output
+            eps = prefs.eps
             tol = .2 * eps * max([f.vscale, g.vscale])
             if all(abs(cfs)<tol):
                 return cls.initconst(0.)

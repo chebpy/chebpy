@@ -5,14 +5,15 @@ from __future__ import division
 import collections
 import numpy as np
 
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import cast_other
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     IntervalValues, InvalidDomain,
                                     SupportMismatch, NotSubdomain,
                                     BadDomainArgument)
 
-HTOL = 5 * DefaultPrefs.eps
+def HTOL():
+    return 5 * prefs.eps
 
 
 class Interval(np.ndarray):
@@ -88,7 +89,7 @@ class Domain(np.ndarray):
         within a tolerance)"""
         a,b = self.support
         x,y = other.support
-        bounds = np.array([1-HTOL, 1+HTOL])
+        bounds = np.array([1-HTOL(), 1+HTOL()])
         lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         return (lbnd<=x) & (y<=rbnd)
 
@@ -114,7 +115,7 @@ class Domain(np.ndarray):
         """Union of two domain objects with an initial check that the support
         of each object matches"""
         dspt = np.abs(self.support-other.support)
-        htol = np.maximum(HTOL, HTOL*np.abs(self.support))
+        htol = np.maximum(HTOL(), HTOL()*np.abs(self.support))
         if np.any(dspt>htol):
             raise SupportMismatch
         return self.merge(other)
@@ -124,7 +125,7 @@ class Domain(np.ndarray):
         the same support"""
         all_bpts = np.append(self, other)
         new_bpts = np.unique(all_bpts)
-        mergetol = np.maximum(HTOL, HTOL*np.abs(new_bpts))
+        mergetol = np.maximum(HTOL(), HTOL()*np.abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
@@ -136,7 +137,7 @@ class Domain(np.ndarray):
             raise NotSubdomain
         dom = self.merge(other)
         a,b = other.support
-        bounds = np.array([1-HTOL, 1+HTOL])
+        bounds = np.array([1-HTOL(), 1+HTOL()])
         lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         new = dom[(lbnd<=dom)&(dom<=rbnd)]
         return self.__class__(new)
@@ -145,12 +146,12 @@ class Domain(np.ndarray):
         """Return a Boolean array of size equal to self where True indicates
         that the breakpoint is in other to within the specified tolerance"""
         out = np.empty(self.size, dtype=bool)
-        window = np.array([1-HTOL, 1+HTOL])
+        window = np.array([1-HTOL(), 1+HTOL()])
         # TODO: is there way to vectorise this?
         for idx, bpt in enumerate(self):
             lbnd, rbnd = np.sort(bpt*window)
-            lbnd = -HTOL if np.abs(lbnd) < HTOL else lbnd
-            rbnd = +HTOL if np.abs(rbnd) < HTOL else rbnd
+            lbnd = -HTOL() if np.abs(lbnd) < HTOL() else lbnd
+            rbnd = +HTOL() if np.abs(rbnd) < HTOL() else rbnd
             isin = (lbnd<=other) & (other<=rbnd)
             out[idx] = np.any(isin)
         return out
@@ -162,7 +163,7 @@ class Domain(np.ndarray):
             return False
         else:
             dbpt = np.abs(self-other)
-            htol = np.maximum(HTOL, HTOL*np.abs(self))
+            htol = np.maximum(HTOL(), HTOL()*np.abs(self))
             return bool(np.all(dbpt<=htol)) # cast back to bool
 
     def __ne__(self, other):

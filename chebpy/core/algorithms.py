@@ -7,21 +7,20 @@ import numpy as np
 
 from chebpy.core.ffts import fft, ifft
 from chebpy.core.utilities import Interval
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import preandpostprocess
 
 # supress numpy division and multiply warnings
 np.seterr(divide='ignore', invalid='ignore')
 
 # constants
-eps = DefaultPrefs.eps
 SPLITPOINT = -0.004849834917525
 
 # local helpers
 def find(x):
     return np.where(x)[0]
 
-def rootsunit(ak, htol=1e2*eps):
+def rootsunit(ak, htol=None):
     """Compute the roots of a funciton on [-1,1] using the coefficeints
     in the associated Chebyshev series representation.
 
@@ -37,6 +36,7 @@ def rootsunit(ak, htol=1e2*eps):
     .. [3] L. N. Trefethen, Approximation Theory and Approximation
         Practice, SIAM, 2013, chapter 18.
     """
+    htol = 1e2*prefs.eps if htol is None else htol
     n = standard_chop(ak)
     ak = ak[:n]
 
@@ -145,7 +145,7 @@ def clenshaw(xx, ak):
     return out
 
 
-def standard_chop(coeffs, tol=eps):
+def standard_chop(coeffs, tol=None):
     """Chop a Chebyshev series to a given tolerance. This is a Python
     transcription of the algorithm described in:
 
@@ -153,6 +153,7 @@ def standard_chop(coeffs, tol=eps):
     (http://arxiv.org/pdf/1512.01803v1.pdf)
     """
 
+    tol = prefs.eps if tol is None else tol
     # ensure length at least 17:
     n = coeffs.size
     cutoff = n
@@ -301,9 +302,10 @@ def coeffs2vals2(coeffs):
     return vals
 
 
-def newtonroots(fun, rts, tol=2*eps, maxiter=10):
+def newtonroots(fun, rts, tol=None, maxiter=10):
     """Rootfinding for a callable and differentiable fun, typically used to
     polish already computed roots."""
+    tol = 2*prefs.eps if tol is None else tol
     if rts.size > 0:
         dfun = fun.diff()
         prv = np.inf*rts
