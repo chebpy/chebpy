@@ -19,6 +19,7 @@ class DefaultPrefs():
     eps = np.finfo(float).eps
     tech = "Chebtech2"
     domain = np.array([-1., 1.])
+    N_plot = 2001
 
 class UserPrefs():
     def __init__(self):
