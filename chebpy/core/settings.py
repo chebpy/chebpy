@@ -19,7 +19,7 @@ class UserPrefs():
         `.reset(*names)` resets only the selected ones.
         This leaves additional user-added prefs untouched."""
         if len(names) == 0:
-            names = DefaultPrefs.__dict__.keys()
+            names = [k for k in DefaultPrefs.__dict__.keys() if k[0] != "_"]
         for name in names:
             self.__setattr__(name, DefaultPrefs.__dict__[name])
 
