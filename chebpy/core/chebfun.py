@@ -294,9 +294,10 @@ class Chebfun(object):
 
     @cache
     @self_empty(np.array([]))
-    def roots(self):
+    def roots(self, merge=None):
         '''Compute the roots of a Chebfun, i.e., the set of values x for which
         f(x) = 0.'''
+        merge = merge if merge is not None else prefs.mergeroots
         allrts = []
         prvrts = np.array([])
         htol = 1e2 * self.hscale * prefs.eps
@@ -305,7 +306,7 @@ class Chebfun(object):
             # ignore first root if equal to the last root of previous fun
             # TODO: there could be multiple roots at breakpoints
             if prvrts.size > 0 and rts.size > 0:
-                if abs(prvrts[-1]-rts[0]) <= htol:
+                if merge and abs(prvrts[-1]-rts[0]) <= htol:
                     rts = rts[1:]
             allrts.append(rts)
             prvrts = rts

@@ -276,12 +276,15 @@ class Chebtech(Smoothfun):
     # -------
     #  roots
     # -------
-    def roots(self):
+    def roots(self, sort=None):
         '''Compute the roots of the Chebtech on [-1,1] using the
         coefficients in the associated Chebyshev series approximation'''
+        sort = sort if sort is not None else prefs.sortroots
         rts = rootsunit(self.coeffs)
         rts = newtonroots(self, rts)
+        # fix problems with newton for roots that are numerically very close
         rts = np.clip(rts, -1, 1)  # if newton roots are just outside [-1,1]
+        rts = rts if not sort else np.sort(finalrts)
         return rts
 
     # ----------

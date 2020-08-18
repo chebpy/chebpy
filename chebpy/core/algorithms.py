@@ -304,10 +304,11 @@ def coeffs2vals2(coeffs):
     return vals
 
 
-def newtonroots(fun, rts, tol=None, maxiter=10):
+def newtonroots(fun, rts, tol=None, maxiter=None):
     """Rootfinding for a callable and differentiable fun, typically used to
     polish already computed roots."""
     tol = tol if tol is not None else 2*prefs.eps
+    maxiter = maxiter if maxiter is not None else prefs.maxiter
     if rts.size > 0:
         dfun = fun.diff()
         prv = np.inf*rts

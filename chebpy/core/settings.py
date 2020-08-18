@@ -14,6 +14,9 @@ class UserPrefs():
         self.domain = np.array([-1., 1.])
         self.N_plot = 2001
         self.maxpow2 = 16
+        self.maxiter = 10
+        self.sortroots = False
+        self.mergeroots = True
     def reset(self, *names):
         """Reset default preferences.
         `.reset()` resets all preferences to the DefaultPrefs state
