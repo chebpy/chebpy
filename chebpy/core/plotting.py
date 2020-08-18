@@ -23,7 +23,7 @@ def import_plt():
 
 def plotfun(fn_y, support, ax=None, N=None, **kwargs):
     ax = ax or import_plt().gca()
-    N = prefs.N_plot if N is None else N
+    N = N if N is not None else prefs.N_plot
     a, b = support
     xx = np.linspace(a, b, N)
     ax.plot(xx, fn_y(xx), **kwargs)

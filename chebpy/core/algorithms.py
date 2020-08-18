@@ -36,7 +36,7 @@ def rootsunit(ak, htol=None):
     .. [3] L. N. Trefethen, Approximation Theory and Approximation
         Practice, SIAM, 2013, chapter 18.
     """
-    htol = 1e2*prefs.eps if htol is None else htol
+    htol = htol if htol is not None else 1e2*prefs.eps
     n = standard_chop(ak)
     ak = ak[:n]
 
@@ -153,7 +153,7 @@ def standard_chop(coeffs, tol=None):
     (http://arxiv.org/pdf/1512.01803v1.pdf)
     """
 
-    tol = prefs.eps if tol is None else tol
+    tol = tol if tol is not None else prefs.eps
     # ensure length at least 17:
     n = coeffs.size
     cutoff = n
@@ -305,7 +305,7 @@ def coeffs2vals2(coeffs):
 def newtonroots(fun, rts, tol=None, maxiter=10):
     """Rootfinding for a callable and differentiable fun, typically used to
     polish already computed roots."""
-    tol = 2*prefs.eps if tol is None else tol
+    tol = tol if tol is not None else 2*prefs.eps
     if rts.size > 0:
         dfun = fun.diff()
         prv = np.inf*rts

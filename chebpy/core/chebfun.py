@@ -23,19 +23,19 @@ class Chebfun(object):
 
     @classmethod
     def initconst(cls, c, domain=None):
-        domain = prefs.domain if domain is None else domain
+        domain = domain if domain is not None else prefs.domain
         funs = generate_funs(domain, Bndfun.initconst, [c])
         return cls(funs)
 
     @classmethod
     def initidentity(cls, domain=None):
-        domain = prefs.domain if domain is None else domain
+        domain = domain if domain is not None else prefs.domain
         funs = generate_funs(domain, Bndfun.initidentity)
         return cls(funs)
 
     @classmethod
     def initfun(cls, f, domain=None, n=None):
-        domain = prefs.domain if domain is None else domain
+        domain = domain if domain is not None else prefs.domain
         if n:
             return Chebfun.initfun_fixedlen(f, n, domain)
         else:
@@ -43,13 +43,13 @@ class Chebfun(object):
 
     @classmethod
     def initfun_adaptive(cls, f, domain=None):
-        domain = prefs.domain if domain is None else domain
+        domain = domain if domain is not None else prefs.domain
         funs = generate_funs(domain, Bndfun.initfun_adaptive, [f])
         return cls(funs)
 
     @classmethod
     def initfun_fixedlen(cls, f, n, domain=None):
-        domain = prefs.domain if domain is None else domain
+        domain = domain if domain is not None else prefs.domain
         domain = np.array(domain)
         nn = np.array(n)
         if domain.size < 2:

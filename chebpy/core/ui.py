@@ -15,7 +15,7 @@ def chebfun(f=None, domain=None, n=None):
     if f is None:
         return Chebfun.initempty()
 
-    domain = prefs.domain if domain is None else domain
+    domain = domain if domain is not None else prefs.domain
 
     # chebfun(lambda x: f(x), ... )
     if hasattr(f, "__call__"):
