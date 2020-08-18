@@ -33,19 +33,19 @@ class Classicfun(Fun):
         relevance to the emptiness status of a Classicfun so we
         arbitrarily set this to be DefaultPrefs.interval'''
         interval = Interval()
-        onefun = techdict[prefs.tech].initempty()
+        onefun = techdict[prefs.tech].initempty(interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initconst(cls, c, interval):
         '''Classicfun representation of a constant on the supplied interval'''
-        onefun = techdict[prefs.tech].initconst(c)
+        onefun = techdict[prefs.tech].initconst(c, interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initidentity(cls, interval):
         '''Classicfun representation of f(x) = x on the supplied interval'''
-        onefun = techdict[prefs.tech].initvalues(np.asarray(interval))
+        onefun = techdict[prefs.tech].initvalues(np.asarray(interval), interval=interval)
         return cls(onefun, interval)
 
     @classmethod
@@ -53,7 +53,7 @@ class Classicfun(Fun):
         '''Adaptive initialisation of a BndFun from a callable function f
         and a Interval object'''
         uifunc = lambda y: f(interval(y))
-        onefun = techdict[prefs.tech].initfun(uifunc)
+        onefun = techdict[prefs.tech].initfun(uifunc, interval=interval)
         return cls(onefun, interval)
 
     @classmethod
@@ -61,7 +61,7 @@ class Classicfun(Fun):
         '''Fixed length initialisation of a BndFun from a callable
         function f and a Interval object'''
         uifunc = lambda y: f(interval(y))
-        onefun = techdict[prefs.tech].initfun(uifunc, n)
+        onefun = techdict[prefs.tech].initfun(uifunc, n, interval=interval)
         return cls(onefun, interval)
 
     # -------------------
