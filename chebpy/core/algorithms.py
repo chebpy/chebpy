@@ -203,11 +203,13 @@ def standard_chop(coeffs, tol=None):
     return min( (cutoff, n-1) )
 
 
-def adaptive(cls, fun, maxpow2=16):
+def adaptive(cls, fun, maxpow2=None):
     """Adaptive constructor: cycle over powers of two, calling
     standard_chop each time, the output of which determines whether or not
     we are happy."""
-    for k in range(4, maxpow2+1):
+    minpow2 = 4  # 17 points
+    maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
+    for k in range(minpow2, max(minpow2, maxpow2)+1):
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
