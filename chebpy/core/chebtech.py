@@ -63,10 +63,15 @@ class Chebtech(Smoothfun):
         return cls(coeffs)
 
     @classmethod
-    def initfun_adaptive(cls, fun):
+    def initfun_adaptive(cls, fun, interval=None):
         '''Initialise a Chebtech from the callable fun utilising the adaptive
         constructor to determine the number of degrees of freedom parameter.'''
-        coeffs = adaptive(cls, fun)
+        interval = interval if interval is not None else prefs.domain
+        dom = (interval[0], interval[-1])
+        hscale = max(np.linalg.norm(dom, np.inf), 1)
+        hscaleF = dom[-1]-dom[0]  # this scales hscale back to 1 if interval=domain
+        hscale = max(hscale/hscaleF, 1)  # otherwise, hscale < 1 in default case
+        coeffs = adaptive(cls, fun, hscale=hscale)
         return cls(coeffs)
 
     @classmethod

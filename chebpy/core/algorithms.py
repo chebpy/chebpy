@@ -203,7 +203,7 @@ def standard_chop(coeffs, tol=None):
     return min( (cutoff, n-1) )
 
 
-def adaptive(cls, fun, maxpow2=None):
+def adaptive(cls, fun, hscale=1, maxpow2=None):
     """Adaptive constructor: cycle over powers of two, calling
     standard_chop each time, the output of which determines whether or not
     we are happy."""
@@ -214,7 +214,9 @@ def adaptive(cls, fun, maxpow2=None):
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
-        chplen = standard_chop(coeffs)
+        eps = prefs.eps
+        tol = eps*max(hscale, 1)  # scale (decrease) tolerance by hscale
+        chplen = standard_chop(coeffs, tol=tol)
         if chplen < coeffs.size:
             coeffs = coeffs[:chplen]
             break
