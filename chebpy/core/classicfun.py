@@ -8,7 +8,7 @@ import numpy as np
 from chebpy.core.fun import Fun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import self_empty
 from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
 from chebpy.core.plotting import import_plt, plotfun
@@ -17,8 +17,6 @@ from chebpy.core.plotting import import_plt, plotfun
 techdict = {
     'Chebtech2': Chebtech2,
 }
-
-Tech = techdict[DefaultPrefs.tech]
 
 
 class Classicfun(Fun):
@@ -35,19 +33,19 @@ class Classicfun(Fun):
         relevance to the emptiness status of a Classicfun so we
         arbitrarily set this to be DefaultPrefs.interval'''
         interval = Interval()
-        onefun = Tech.initempty()
+        onefun = techdict[prefs.tech].initempty()
         return cls(onefun, interval)
 
     @classmethod
     def initconst(cls, c, interval):
         '''Classicfun representation of a constant on the supplied interval'''
-        onefun = Tech.initconst(c)
+        onefun = techdict[prefs.tech].initconst(c)
         return cls(onefun, interval)
 
     @classmethod
     def initidentity(cls, interval):
         '''Classicfun representation of f(x) = x on the supplied interval'''
-        onefun = Tech.initvalues(np.asarray(interval))
+        onefun = techdict[prefs.tech].initvalues(np.asarray(interval))
         return cls(onefun, interval)
 
     @classmethod
@@ -55,7 +53,7 @@ class Classicfun(Fun):
         '''Adaptive initialisation of a BndFun from a callable function f
         and a Interval object'''
         uifunc = lambda y: f(interval(y))
-        onefun = Tech.initfun(uifunc)
+        onefun = techdict[prefs.tech].initfun(uifunc)
         return cls(onefun, interval)
 
     @classmethod
@@ -63,7 +61,7 @@ class Classicfun(Fun):
         '''Fixed length initialisation of a BndFun from a callable
         function f and a Interval object'''
         uifunc = lambda y: f(interval(y))
-        onefun = Tech.initfun(uifunc, n)
+        onefun = techdict[prefs.tech].initfun(uifunc, n)
         return cls(onefun, interval)
 
     # -------------------

@@ -32,7 +32,13 @@ in their present form in Matlab Chebfun:
 
 -  ``Interval`` (core/utilities.py)
 -  ``Domain`` (core/utilities.py)
--  ``DefaultPrefs`` (core/settings.py)
+
+Chebpy allows the user to override some default preferences, similar to 
+what is available through ``chebfunpref`` in ``Chebfun`` (bottom right).
+Not all options are the same, and chebpy allows additional customisation
+not found in ``Chebfun``.
+
+-  ``UserPrefs`` (core/settings.py)
 
 The general rule is that each Chebpy class lives in its own python file.
 
@@ -331,4 +337,23 @@ values mapped to [a,b]:
             -8.00000000e-01,  -6.00000000e-01,  -4.00000000e-01,
             -2.00000000e-01,  -2.22044605e-16])
 
+
+UserPrefs
+~~~~~~~~~~~~~~
+
+The user may want to specify different tolerances, for example if speed is important
+or the function under consideration is particularly difficult. It is also possible to
+change default behaviour like plotting.
+
+.. code:: python
+
+    import matplotlib.pyplot as plt
+    import chebpy
+    chebpy.core.settings.userPrefs.eps = 1e-10  # lower the tolerance in chebpy
+    cheb = chebpy.chebfun(lambda x: x**2)
+    chebpy.core.settings.userPrefs.N_plot = 21  # use fewer points for plotting
+    cheb.plot(marker='x', label='few points')
+    chebpy.core.settings.userPrefs.reset('N_plot')  # restore default
+    cheb.plot(label='many points')
+    plt.show()
 

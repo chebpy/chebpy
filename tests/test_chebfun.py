@@ -133,7 +133,8 @@ class Construction(unittest.TestCase):
         initfun = Chebfun.initfun_adaptive
         self.assertRaises(BadDomainArgument, initfun, self.f, [-2])
         self.assertRaises(BadDomainArgument, initfun, self.f, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=None)
+        self.assertRaises(BadDomainArgument, initfun, self.f, domain=0)
+        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[])
 
     def test_initfun_fixedlen_continuous_domain(self):
         ff = Chebfun.initfun_fixedlen(self.f, 20, [-2,-1])
@@ -173,7 +174,8 @@ class Construction(unittest.TestCase):
         initfun = Chebfun.initfun_fixedlen
         self.assertRaises(BadDomainArgument, initfun, self.f, 10, [-2])
         self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=None)
+        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=0)
+        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[])
         self.assertRaises(BadFunLengthArgument, initfun, self.f, [30,40], [-1,1])
         self.assertRaises(TypeError, initfun, self.f, None, [-1,1])
 

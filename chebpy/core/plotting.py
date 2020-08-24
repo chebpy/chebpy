@@ -2,6 +2,7 @@ import importlib
 
 import numpy as np
 
+from chebpy.core.settings import userPrefs as prefs
 
 def _import_optional(name):
     """Attempt to import the specified module.
@@ -20,8 +21,9 @@ def import_plt():
     return _import_optional('matplotlib.pyplot')
 
 
-def plotfun(fn_y, support, ax=None, N=2001, **kwargs):
+def plotfun(fn_y, support, ax=None, N=None, **kwargs):
     ax = ax or import_plt().gca()
+    N = N if N is not None else prefs.N_plot
     a, b = support
     xx = np.linspace(a, b, N)
     ax.plot(xx, fn_y(xx), **kwargs)
