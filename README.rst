@@ -8,7 +8,7 @@ ChebPy - A Python implementation of Chebfun
     :target: https://coveralls.io/github/chebpy/chebpy?branch=master
 .. image:: https://codeclimate.com/github/chebpy/chebpy/badges/gpa.svg
    :target: https://codeclimate.com/github/chebpy/chebpy
-.. image:: https://img.shields.io/badge/python-2.7,%203.4,%203.5,%203.6-blue.svg?
+.. image:: https://img.shields.io/badge/python-%203.6,%203.7,%203.8-blue.svg?
     :target: https://travis-ci.org/chebpy/chebpy
 
 |
@@ -31,8 +31,8 @@ For convenience we'll import everything from
     from matplotlib.pyplot import *
     from chebpy import chebfun
 
-The function ``chebfun`` behaves in much the same way as its Matlab
-counterpart. As good a way as any to begin is to type:
+The function ``chebfun`` behaves in essentially the same way as its Matlab
+counterpart. A good way to begin is to type:
 
 .. code:: python
 
@@ -51,14 +51,14 @@ counterpart. As good a way as any to begin is to type:
 
 
 
-What's happened here is that we've instantiated a numerical
+What's happened here is we've instantiated a numerical
 representation of the identity function on the interval ``[0,10]`` and
-assigned this to a computer variable called ``x``. This
-representation has length 2, meaning that it consists of two degrees of
-freedom (as you would expect of a linear function).
+assigned this to a computer variable ``x``. This particular
+representation has length 2, meaning that it is a degree one polynomial defined
+via two degrees of (i.e. a linear function).
 
-Arbitrary functions of the variable ``x`` can now be defined. For instance,
-here is a function ``f`` that oscillates with two modal frequencies.
+Arbitrary functions of the variable ``x`` can now be computed. For instance
+here is the specification of a function ``f`` that oscillates with two modes.
 
 .. code:: python
 
@@ -77,7 +77,7 @@ here is a function ``f`` that oscillates with two modal frequencies.
 
 
 
-The zeros of f can be computed via the command ``roots``:
+The zeros of f can be computed via ``roots``:
 
 .. code:: python
 
@@ -96,10 +96,10 @@ The zeros of f can be computed via the command ``roots``:
 
 
 
-One can in general expect Chebpy computations to be accurate to machine
-precision, which is to say to approximately fifteen digits in
-double-precision floating-point arithmetic. We can verify this for the
-computed roots of ``f`` by computing:
+By default Chebpy computations are accurate to machine
+precision, or approximately fifteen digits in double-precision arithmetic (see also 
+`UserPrefs <https://github.com/chebpy/chebpy/blob/master/implementation-notes.rst#userprefs>`_.)
+We can verify this for the computed roots of ``f`` by typing:
 
 .. code:: python
 
@@ -132,8 +132,8 @@ The function and its roots can be plotted together as follows:
 .. image:: images/readme-diag-1.png
 
 
-Calculus operations are possible with Chebfun objects. Here for instance
-is the derivative and indefinite integral of f:
+Calculus operations are natively with Chebfun objects. For example here is the 
+derivative and indefinite integral of f:
 
 .. code:: python
 
@@ -147,8 +147,8 @@ is the derivative and indefinite integral of f:
 .. image:: images/readme-diag-2.png
 
 
-One can verify by elementary calculus that the exact value of the
-definite integral of ``f`` is equal to:
+One can verify anayltically that the exact value of the
+definite integral here is:
 
 .. code:: python
 
@@ -163,8 +163,8 @@ definite integral of ``f`` is equal to:
 
 
 
-This matches the numerical integral, computed via the ``sum`` command,
-to the stated level of precision:
+This matches our numerical integral (via Clenshaw-Curtis quadtrature), which is computable
+in chebpy via the ``sum`` command, thus:
 
 .. code:: python
 
@@ -179,11 +179,11 @@ to the stated level of precision:
 
 
 
-Chebfun is capable of handling certain classes of point-discontinuity.
-Here for instance we compute the pointwise maximum of two functions for
+Chebfun is capable of handling certain instances of nonsmoothness.
+For example, here we compute the pointwise maximum of two functions for
 which the resulting function is 'piecewise-smooth', being defined as the
 concatenation of twelve individual smooth pieces. The breakpoints have
-been automatically determined by solving the appropriate root-finding
+been automatically determined by solving the correpsonding root-finding
 problem.
 
 .. code:: python
@@ -215,8 +215,8 @@ problem.
 
 
 
-Here's a plot of the two functions ``f`` and ``g``, and their
-pointwise maximum, ``h``:
+Here's a plot of both ``f`` and ``g``, and their
+maximum, ``h``:
 
 .. code:: python
 
@@ -230,9 +230,9 @@ pointwise maximum, ``h``:
 .. image:: images/readme-diag-3.png
 
 
-The piecewise function ``h`` is just another Chebfun representation,
-and the same set of operations can be applied as before. Here for
-instance is the exponential of ``h`` and its integral:
+The function ``h`` is another Chebfun representation,
+and thus the same set of operations can be applied as normal.
+Here for instance is the exponential of ``h`` and its integral:
 
 .. code:: python
 
@@ -258,7 +258,7 @@ instance is the exponential of ``h`` and its integral:
 
 Here's a further example, this time related to statistics. We consider
 the following Chebfun representation of the standardised Gaussian
-distribution. We use a sufficiently wide interval as to facilitate a
+distribution, using a sufficiently wide interval as to facilitate a
 machine-precision representation. On this occasion we utlilise a slightly
 different (but still perfectly valid) approach to construction whereby we
 supply the function handle (in this case, a Python lambda, but more
