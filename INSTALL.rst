@@ -7,6 +7,10 @@ Perhaps the most convenient way to get going is to run::
     
 If you are running Anaconda this can also be run from the Anaconda prompt. The above has been tested from both Windows and Linux and requires `git <https://git-scm.com>`_ as a prerequisite. 
 
+To update chebpy from source, run::
+
+    $ pip install git+https://github.com/chebpy/chebpy.git -U
+
 Alternative installation
 ------------------------
 
