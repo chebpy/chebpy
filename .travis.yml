@@ -3,6 +3,8 @@ services:
     - xvfb
 before_script:
     - "export DISPLAY=:99.0"
+    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    - chmod +x ./cc-test-reporter
 language: python
 install:
     - pip install -r requirements.txt
@@ -23,3 +25,10 @@ script:
     - nosetests -v --with-coverage --cover-package=chebpy
 after_success:
     - coveralls
+# for codecoverage on codeclimate.com
+env:
+  global:
+    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
+    - CODECLIMATE_REPO_TOKEN=[token]
+    - CC_TEST_REPORTER_ID=[id]
+ 
