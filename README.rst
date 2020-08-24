@@ -8,7 +8,7 @@ ChebPy - A Python implementation of Chebfun
     :target: https://coveralls.io/github/chebpy/chebpy?branch=master
 .. image:: https://codeclimate.com/github/chebpy/chebpy/badges/gpa.svg
    :target: https://codeclimate.com/github/chebpy/chebpy
-.. image:: https://img.shields.io/badge/python-%203.6,%203.7,%203.8-blue.svg?
+.. image:: https://img.shields.io/badge/python-%203.6,%203.7-blue.svg?
     :target: https://travis-ci.org/chebpy/chebpy
 
 |
