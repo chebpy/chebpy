@@ -98,7 +98,7 @@ The zeros of f can be computed via ``roots``:
 
 By default Chebpy computations are accurate to machine
 precision, or approximately fifteen digits in double-precision arithmetic (see also 
-`UserPrefs <https://github.com/chebpy/chebpy/blob/master/implementation-notes.rst#userprefs>`_.)
+`UserPrefs <https://github.com/chebpy/chebpy/blob/master/implementation-notes.rst#userprefs>`_).
 We can verify this for the computed roots of ``f`` by typing:
 
 .. code:: python
