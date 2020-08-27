@@ -268,7 +268,7 @@ with the interval of definition.
     gaussian = lambda x: 1/sqrt(2*pi) * exp(-.5*x**2)
     pdf = chebfun(gaussian, [-15, 15])
     pdf.plot()
-    ylim([-0.05,.45]);
+    ylim([-.05, .45]);
     title('Standard Gaussian distribution (mean  0, variance 1)');
 
 
@@ -300,7 +300,7 @@ computed as the indefinite integral (``cumsum``) of the density:
 
     cdf = pdf.cumsum()
     cdf.plot()
-    ylim([-.1,1.1]);
+    ylim([-0.1, 1.1]);
 
 
 
