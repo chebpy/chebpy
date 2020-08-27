@@ -55,10 +55,10 @@ What's happened here is we've instantiated a numerical
 representation of the identity function on the interval ``[0,10]`` and
 assigned this to a computer variable ``x``. This particular
 representation has length 2, meaning that it is a degree one polynomial defined
-via two degrees of (i.e. a linear function).
+via two degrees of freedom (as you would expect of a linear function).
 
-Arbitrary functions of the variable ``x`` can now be computed. For instance
-here is the specification of a function ``f`` that oscillates with two modes.
+An intuitive set of composition-like operations can now be performed. For instance
+here is the specification of a function ``f`` that oscillates with two modes:
 
 .. code:: python
 
@@ -77,7 +77,9 @@ here is the specification of a function ``f`` that oscillates with two modes.
 
 
 
-The zeros of f can be computed via ``roots``:
+The zeros of f can be computed via ``roots``, which behind the scenes is implemented via 
+a recursive subdivision algorithm in which a number of Colleague Matrix eigenvalue
+sub-problems are solved:
 
 .. code:: python
 
@@ -145,7 +147,7 @@ derivative and indefinite integral of f:
 .. image:: images/readme-diag-2.png
 
 
-One can verify anayltically that the exact value of the
+One can verify analytically that the exact value of the
 definite integral here is:
 
 .. code:: python
@@ -161,7 +163,7 @@ definite integral here is:
 
 
 
-This matches our numerical integral (via Clenshaw-Curtis quadtrature), which is computable
+This matches our numerical integral (via Clenshaw-Curtis quadrature), which is computable
 in chebpy via the ``sum`` command thus:
 
 .. code:: python
