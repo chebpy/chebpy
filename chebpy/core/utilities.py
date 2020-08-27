@@ -61,6 +61,14 @@ class Interval(np.ndarray):
         a,b = self
         return np.logical_and(a<x, x<b)
 
+    @property
+    def hscale(self):
+        a, b = self
+        h = max(infnorm(self), 1)
+        hF = b - a             # if interval == domain: scale hscale back to 1
+        hscale = max(h/hF, 1)  #                  else: hscale < 1
+        return hscale
+
 
 def _merge_duplicates(arr, tols):
     """Remove duplicate entries from an input array to within array tolerance
@@ -242,3 +250,7 @@ def generate_funs(domain, bndfun_constructor, arglist=[]):
         fun = bndfun_constructor(*args)
         funs = np.append(funs, fun)
     return funs
+
+
+def infnorm(vals):
+    return np.linalg.norm(vals, np.inf)

@@ -11,8 +11,9 @@ from chebpy.core.decorators import self_empty
 from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
-                                    standard_chop, interval2hscale)
+                                    standard_chop)
 from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
+from chebpy.core.utilities import Interval
 
 
 class Chebtech(Smoothfun):
@@ -67,8 +68,8 @@ class Chebtech(Smoothfun):
         '''Initialise a Chebtech from the callable fun utilising the adaptive
         constructor to determine the number of degrees of freedom parameter.'''
         interval = interval if interval is not None else prefs.domain
-        hscale = interval2hscale(interval)
-        coeffs = adaptive(cls, fun, hscale=hscale)
+        interval = Interval(*interval)
+        coeffs = adaptive(cls, fun, hscale=interval.hscale)
         return cls(coeffs, interval=interval)
 
     @classmethod
@@ -79,7 +80,7 @@ class Chebtech(Smoothfun):
     def __init__(self, coeffs, interval=None):
         interval = interval if interval is not None else prefs.domain
         self._coeffs = np.array(coeffs, dtype=float)
-        self._interval = np.array(interval)
+        self._interval = Interval(*interval)
 
     def __call__(self, x, how='clenshaw'):
         method = {
@@ -180,10 +181,8 @@ class Chebtech(Smoothfun):
         oldlen = len(self.coeffs)
         longself = self.prolong(max(17, oldlen))
         cfs = longself.coeffs
-        # tolerance
-        hscale = interval2hscale(self.interval)
-        eps = prefs.eps
-        tol = eps*max(hscale, 1)  # scale (decrease) tolerance by hscale
+        # scale (decrease) tolerance by hscale
+        tol = prefs.eps*max(self.interval.hscale, 1)
         # chop
         npts = standard_chop(cfs, tol=tol)
         npts = min(oldlen, npts)

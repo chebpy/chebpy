@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 
 from chebpy.core.ffts import fft, ifft
-from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Interval, infnorm
 from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import preandpostprocess
 
@@ -320,16 +320,8 @@ def newtonroots(fun, rts, tol=None, maxiter=None):
         dfun = fun.diff()
         prv = np.inf*rts
         count = 0
-        while (np.linalg.norm(rts-prv, np.inf)>tol) & (count<=maxiter):
+        while (infnorm(rts-prv)>tol) & (count<=maxiter):
             count += 1
             prv = rts
             rts = rts - fun(rts) / dfun(rts)
     return rts
-
-
-def interval2hscale(interval):
-    dom = (interval[0], interval[-1])
-    hscale = max(np.linalg.norm(dom, np.inf), 1)
-    hscaleF = dom[-1]-dom[0]  # this scales hscale back to 1 if interval=domain
-    hscale = max(hscale/hscaleF, 1)  # otherwise, hscale < 1 in default case
-    return hscale
