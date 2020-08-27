@@ -37,7 +37,7 @@ def rootsunit(ak, htol=None):
         Practice, SIAM, 2013, chapter 18.
     """
     htol = htol if htol is not None else 1e2*prefs.eps
-    n = standard_chop(ak)
+    n = standard_chop(ak, tol=htol)
     ak = ak[:n]
 
     # if n > 50, we split and recurse
