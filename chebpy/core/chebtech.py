@@ -177,13 +177,16 @@ class Chebtech(Smoothfun):
         '''Call standard_chop on the coefficients of self, returning a
         Chebtech comprised of a copy of the truncated coefficients.'''
         # coefficients
-        cfs = self.coeffs
+        oldlen = len(self.coeffs)
+        longself = self.prolong(max(17, oldlen))
+        cfs = longself.coeffs
         # tolerance
         hscale = interval2hscale(self.interval)
         eps = prefs.eps
         tol = eps*max(hscale, 1)  # scale (decrease) tolerance by hscale
         # chop
         npts = standard_chop(cfs, tol=tol)
+        npts = min(oldlen, npts)
         # construct
         return self.__class__(cfs[:npts].copy(), interval=self.interval)
 
