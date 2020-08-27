@@ -77,10 +77,6 @@ class Fun(object):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __str__(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def __sub__(self):
         raise NotImplementedError
 

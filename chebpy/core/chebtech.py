@@ -96,12 +96,9 @@ class Chebtech(Smoothfun):
         vk = self._barywts(fk.size)
         return bary(x, fk, xk, vk)
 
-    def __str__(self):
+    def __repr__(self):
         out = '<{0}{{{1}}}>'.format(self.__class__.__name__, self.size)
         return out
-
-    def __repr__(self):
-        return self.__str__()
 
     # ------------
     #  properties

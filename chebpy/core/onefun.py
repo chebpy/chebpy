@@ -55,10 +55,6 @@ class Onefun(object):
     def __repr__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def __str__(self):
-        raise NotImplementedError
-
     # ----------------
     #    algebra
     # ----------------
