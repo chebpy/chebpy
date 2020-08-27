@@ -125,14 +125,13 @@ The function and its roots can be plotted together as follows:
 
     f.plot();
     plot(r, f(r), 'or');
-    title('An oscillatory function and its roots');
 
 
 
 .. image:: images/readme-diag-1.png
 
 
-Calculus operations are natively with Chebfun objects. For example here is the 
+Calculus operations are natively possible with Chebfun objects. For example here is the 
 derivative and indefinite integral of f:
 
 .. code:: python
@@ -140,7 +139,6 @@ derivative and indefinite integral of f:
     Df = f.diff()
     If = f.cumsum()
     f.plot(); Df.plot(); If.plot()
-    legend(['f', 'df/dx', 'integral']);
 
 
 
@@ -164,7 +162,7 @@ definite integral here is:
 
 
 This matches our numerical integral (via Clenshaw-Curtis quadtrature), which is computable
-in chebpy via the ``sum`` command, thus:
+in chebpy via the ``sum`` command thus:
 
 .. code:: python
 
@@ -179,12 +177,12 @@ in chebpy via the ``sum`` command, thus:
 
 
 
-Chebfun is capable of handling certain instances of nonsmoothness.
-For example, here we compute the pointwise maximum of two functions for
-which the resulting function is 'piecewise-smooth', being defined as the
-concatenation of twelve individual smooth pieces. The breakpoints have
-been automatically determined by solving the correpsonding root-finding
-problem.
+Chebfun is capable of handling certain classes of mathematical nonsmoothness.
+For example, here we compute the pointwise maximum of two functions, which 
+results in a 'piecewise-smooth' concatenation of twelve individual
+pieces (in Chebfun & ChebPy terminology this is a collection of 'Funs').
+The breakpoints between the pieces (Funs) have been determined by ChebPy in
+the background by solving the corresponding root-finding problem.
 
 .. code:: python
 
@@ -230,9 +228,9 @@ maximum, ``h``:
 .. image:: images/readme-diag-3.png
 
 
-The function ``h`` is another Chebfun representation,
-and thus the same set of operations can be applied as normal.
-Here for instance is the exponential of ``h`` and its integral:
+The function ``h`` is a further Chebfun representation (Chebfun operations
+such as this are closures) and thus the same set of operations
+can be applied as normal. Here for instance is the exponential of ``h`` and its integral:
 
 .. code:: python
 
