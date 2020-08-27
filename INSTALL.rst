@@ -1,25 +1,21 @@
-Default installation
---------------------
+User Installation
+-----------------
 
-Perhaps the most convenient way to get going is to run::
+The most convenient way to get going is to run::
 
     $ pip install git+https://github.com/chebpy/chebpy.git
     
-In case you are running Anaconda this can also be run from the Anaconda prompt. The above has been tested from both Windows and Linux and requires `git <https://git-scm.com>`_. To update chebpy from source, run::
+This can also be run from the Anaconda prompt in case you are running Anaconda. The above has been tested from both Windows and Linux but requires `git <https://git-scm.com>`_.
+
+To update chebpy from source, run::
 
     $ pip install git+https://github.com/chebpy/chebpy.git -U
 
-Alternative installation
+Contributor Installation
 ------------------------
 
-To install manually, first install the `fftw` library::
+Find a suitable location on your machine and run::
 
-    # On Linux
-    $ sudo apt-get install libfftw3-dev
+    $ git clone https://github.com/chebpy/chebpy.git
 
-    # Via Homebrew on Mac
-    $ brew install fftw
-
-And then proceed to install chebpy with::
-
-    $ python setup.py install
+Adding the outer chebpy folder to a PYTHONPATH environment variable is then one way to proceed.
