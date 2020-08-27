@@ -11,7 +11,7 @@ from chebpy.core.decorators import self_empty
 from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
-                                    standard_chop)
+                                    standard_chop, interval2hscale)
 from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
 
 
@@ -67,10 +67,7 @@ class Chebtech(Smoothfun):
         '''Initialise a Chebtech from the callable fun utilising the adaptive
         constructor to determine the number of degrees of freedom parameter.'''
         interval = interval if interval is not None else prefs.domain
-        dom = (interval[0], interval[-1])
-        hscale = max(np.linalg.norm(dom, np.inf), 1)
-        hscaleF = dom[-1]-dom[0]  # this scales hscale back to 1 if interval=domain
-        hscale = max(hscale/hscaleF, 1)  # otherwise, hscale < 1 in default case
+        hscale = interval2hscale(interval)
         coeffs = adaptive(cls, fun, hscale=hscale)
         return cls(coeffs, interval=interval)
 
@@ -179,8 +176,15 @@ class Chebtech(Smoothfun):
     def simplify(self):
         '''Call standard_chop on the coefficients of self, returning a
         Chebtech comprised of a copy of the truncated coefficients.'''
+        # coefficients
         cfs = self.coeffs
-        npts = standard_chop(cfs)
+        # tolerance
+        hscale = interval2hscale(self.interval)
+        eps = prefs.eps
+        tol = eps*max(hscale, 1)  # scale (decrease) tolerance by hscale
+        # chop
+        npts = standard_chop(cfs, tol=tol)
+        # construct
         return self.__class__(cfs[:npts].copy(), interval=self.interval)
 
     # ---------
