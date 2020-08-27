@@ -153,7 +153,12 @@ def standard_chop(coeffs, tol=None):
     (http://arxiv.org/pdf/1512.01803v1.pdf)
     """
 
+    # check magnitude of tol:
     tol = tol if tol is not None else prefs.eps
+    if tol >= 1:
+        cutoff = 1
+        return cutoff
+
     # ensure length at least 17:
     n = coeffs.size
     cutoff = n
