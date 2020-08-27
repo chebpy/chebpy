@@ -15,154 +15,154 @@ class Fun(object):
     # --------------------------
     @abstractclassmethod
     def initconst(cls):
-        pass
+        raise NotImplementedError
 
     @abstractclassmethod
     def initempty(cls):
-        pass
+        raise NotImplementedError
 
     @abstractclassmethod
     def initfun_adaptive(cls):
-        pass
+        raise NotImplementedError
 
     @abstractclassmethod
     def initfun_fixedlen(cls):
-        pass
+        raise NotImplementedError
 
     # -------------------
     #  "private" methods
     # -------------------
     @abc.abstractmethod
     def __add__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __call__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __init__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __mul__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __neg__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __pos__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __pow__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __radd__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __repr__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __rmul__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __rsub__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __str__(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __sub__(self):
-        pass
+        raise NotImplementedError
 
     # ------------
     #  properties
     # ------------
     @abc.abstractproperty
     def coeffs(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def interval(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def isconst(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def isempty(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def size(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def support(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractproperty
     def vscale(self):
-        pass
+        raise NotImplementedError
 
     # -----------
     #  utilities
     # -----------
     @abc.abstractmethod
     def copy(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def restrict(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def simplify(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def values(self):
-        pass
+        raise NotImplementedError
 
     # -------------
     #  rootfinding
     # -------------
     @abc.abstractmethod
     def roots(self):
-        pass
+        raise NotImplementedError
 
     # ----------
     #  calculus
     # ----------
     @abc.abstractmethod
     def cumsum(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def diff(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def sum(self):
-        pass
+        raise NotImplementedError
 
     # ----------
     #  plotting
     # ----------
     @abc.abstractmethod
     def plot(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def plotcoeffs(self):
-        pass
+        raise NotImplementedError

@@ -345,19 +345,19 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     @abc.abstractmethod
     def _chebpts():
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _barywts():
-        pass
-    
+        raise NotImplementedError
+
     @abc.abstractmethod
     def _vals2coeffs():
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _coeffs2vals():
-        pass
+        raise NotImplementedError
 
 # ----------
 #  plotting
