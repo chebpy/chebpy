@@ -460,6 +460,15 @@ class Algebra(unittest.TestCase):
                 self.assertLessEqual(infnorm(f(xx)-f1(xx)), tol)
                 self.assertLessEqual(infnorm(f(xx)-f2(xx)), tol)
 
+    # check the output of (Chebtech - Chebtech)
+    def test__add__negself(self):
+        xx = self.xx
+        for (fun, funlen, _) in testfunctions:
+            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+            chebzero = chebtech - chebtech
+            self.assertTrue(chebzero.isconst)
+            self.assertEqual(infnorm(chebzero(xx)), 0)
+
     # check (empty Chebtech) - (Chebtech) = (empty Chebtech)
     #   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
     def test__sub__rsub__empty(self):
