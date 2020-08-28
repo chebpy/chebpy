@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 
 from chebpy.core.ffts import fft, ifft
-from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Interval, infnorm
 from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import preandpostprocess
 
@@ -37,7 +37,7 @@ def rootsunit(ak, htol=None):
         Practice, SIAM, 2013, chapter 18.
     """
     htol = htol if htol is not None else 1e2*prefs.eps
-    n = standard_chop(ak)
+    n = standard_chop(ak, tol=htol)
     ak = ak[:n]
 
     # if n > 50, we split and recurse
@@ -153,7 +153,12 @@ def standard_chop(coeffs, tol=None):
     (http://arxiv.org/pdf/1512.01803v1.pdf)
     """
 
+    # check magnitude of tol:
     tol = tol if tol is not None else prefs.eps
+    if tol >= 1:
+        cutoff = 1
+        return cutoff
+
     # ensure length at least 17:
     n = coeffs.size
     cutoff = n
@@ -203,7 +208,7 @@ def standard_chop(coeffs, tol=None):
     return min( (cutoff, n-1) )
 
 
-def adaptive(cls, fun, maxpow2=None):
+def adaptive(cls, fun, hscale=1, maxpow2=None):
     """Adaptive constructor: cycle over powers of two, calling
     standard_chop each time, the output of which determines whether or not
     we are happy."""
@@ -214,7 +219,9 @@ def adaptive(cls, fun, maxpow2=None):
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
-        chplen = standard_chop(coeffs)
+        eps = prefs.eps
+        tol = eps*max(hscale, 1)  # scale (decrease) tolerance by hscale
+        chplen = standard_chop(coeffs, tol=tol)
         if chplen < coeffs.size:
             coeffs = coeffs[:chplen]
             break
@@ -313,7 +320,7 @@ def newtonroots(fun, rts, tol=None, maxiter=None):
         dfun = fun.diff()
         prv = np.inf*rts
         count = 0
-        while (np.linalg.norm(rts-prv, np.inf)>tol) & (count<=maxiter):
+        while (infnorm(rts-prv)>tol) & (count<=maxiter):
             count += 1
             prv = rts
             rts = rts - fun(rts) / dfun(rts)
