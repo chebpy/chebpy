@@ -101,12 +101,9 @@ class Chebtech(Smoothfun):
         vk = self._barywts(fk.size)
         return bary(x, fk, xk, vk)
 
-    def __str__(self):
+    def __repr__(self):
         out = '<{0}{{{1}}}>'.format(self.__class__.__name__, self.size)
         return out
-
-    def __repr__(self):
-        return self.__str__()
 
     # ------------
     #  properties
@@ -363,19 +360,19 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     @abc.abstractmethod
     def _chebpts():
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _barywts():
-        pass
-    
+        raise NotImplementedError
+
     @abc.abstractmethod
     def _vals2coeffs():
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _coeffs2vals():
-        pass
+        raise NotImplementedError
 
 # ----------
 #  plotting

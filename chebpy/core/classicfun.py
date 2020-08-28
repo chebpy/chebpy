@@ -78,9 +78,6 @@ class Classicfun(Fun):
         self._interval = interval
 
     def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
         out = '{0}([{2}, {3}], {1})'.format(
             self.__class__.__name__, self.size, *self.support)
         return out
