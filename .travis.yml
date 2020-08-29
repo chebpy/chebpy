@@ -3,8 +3,8 @@ services:
     - xvfb
 before_script:
     - "export DISPLAY=:99.0"
-    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-    - chmod +x ./cc-test-reporter
+    # link to codeclimate
+    - ./cc-test-reporter before-build
 language: python
 install:
     - pip install -r requirements.txt
@@ -16,7 +16,7 @@ python:
 #    - "3.5"
     - "3.6"
     - "3.7"
-#    - "3.8"   # pyfftw does not yet support 3.8
+#    - "3.8"   # pyfftw appears to not yet support 3.8
 addons:
   apt:
     packages:
@@ -25,10 +25,7 @@ script:
     - nosetests -v --with-coverage --cover-package=chebpy
 after_success:
     - coveralls
-# for codecoverage on codeclimate.com
-env:
-  global:
-    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
-    - CODECLIMATE_REPO_TOKEN=[token]
-    - CC_TEST_REPORTER_ID=[id]
+# link to codeclimate
+after_script:
+  - if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
  
