@@ -1,24 +1,15 @@
-import importlib
-
 import numpy as np
 
 from chebpy.core.settings import userPrefs as prefs
-
-def _import_optional(name):
-    """Attempt to import the specified module.
-    Either returns the module, or None.
-    
-    See https://github.com/pandas-dev/pandas/blob/master/pandas/compat/_optional.py
-    """
-    try:
-        module = importlib.import_module(name)
-    except ImportError:
-        return None
-    return module
+from chebpy.core.importing import import_optional
 
 
 def import_plt():
-    return _import_optional('matplotlib.pyplot')
+    """Import matplotlib.pyplot if available and not skipped.
+    No fallback option exists, because the plot* functions
+    are not added if module import return None.
+    """
+    return import_optional('matplotlib.pyplot', 'MPL')
 
 
 def plotfun(fn_y, support, ax=None, N=None, **kwargs):
