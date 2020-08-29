@@ -1,9 +1,15 @@
 sudo: false
 services:
     - xvfb
+env:
+  global:
+    # codeclimate reporter ID
+    - CC_TEST_REPORTER_ID=a28cfd4f5e103aa7d10816ece4062d8fe6bef88041b984abccddce0f3fb97cd5
 before_script:
     - "export DISPLAY=:99.0"
-    # link to codeclimate
+    # fetch codeclimate test reporter
+    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    - chmod +x ./cc-test-reporter
     - ./cc-test-reporter before-build
 language: python
 install:
@@ -25,7 +31,6 @@ script:
     - nosetests -v --with-coverage --cover-package=chebpy
 after_success:
     - coveralls
-# link to codeclimate
+# pipe results to codeclimate
 after_script:
-  - if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
- 
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
