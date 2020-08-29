@@ -1,69 +1,109 @@
-# -*- coding: utf-8 -*-
 
-class IntervalOverlap(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The supplied Interval objects overlap"
-        super(self.__class__, self).__init__(message)
+import abc
 
-class IntervalGap(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The supplied Interval objects do not form a "\
-            "complete partition of the approximation interval"
-        super(self.__class__, self).__init__(message)
 
-class IntervalMismatch(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "This operation can only be performed for Fun "\
-            "objects defined on identical intervals"
-        super(self.__class__, self).__init__(message)
+class ChebpyBaseException(Exception):
 
-class NotSubinterval(Exception):
-    pass
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = self.default_message
 
-class IntervalValues(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The defining values of a Interval object must "\
-            "be strictly increasing"
-        super(self.__class__, self).__init__(message)
+    def __str__(self):
+        return self.message
 
-# chebpy.core.utilities.Domain
-class InvalidDomain(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "Domain objects must be initialised from an iterable "\
-            "collection of at least two monotonically increasing scalars"
-        super(self.__class__, self).__init__(message)
+    @abc.abstractproperty
+    def default_message(self):
+        raise NotImplementedError
 
-class NotSubdomain(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The support of the target Domain object is required to "\
-            "define a subinterval of the support of the original"
-        super(self.__class__, self).__init__(message)
 
-# chebpy.core.utilities.Domain
-class SupportMismatch(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "Both objects are required to be supported "\
-            "on the same interval"
-        super(self.__class__, self).__init__(message)
+# ===============================================
+#    chebpy.core.utilities.Interval exceptions
+# ===============================================
 
-class BadDomainArgument(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The \'domain\' argument must be an iterable "\
-                "containing two or more elements"
-        super(self.__class__, self).__init__(message)
 
-class BadFunLengthArgument(Exception):
-    def __init__(self, message=None):
-        if message is None:
-            message = "The \'n\' argument must be either a single "\
-                "numeric value, or an iterable thereof containing one "\
-                "fewer elements than the size of the domain"
-        super(self.__class__, self).__init__(message)
+IntervalOverlap = type(
+    'IntervalOverlap',
+    (ChebpyBaseException, ),
+    {'default_message': 'The supplied Interval objects overlap'},
+)
+
+
+IntervalGap = type(
+    'IntervalGap',
+    (ChebpyBaseException, ),
+    {'default_message': 'The supplied Interval objects do not form a complete '
+                        'partition of the approximation interval'},
+)
+
+
+IntervalMismatch = type(
+    'IntervalMismatch',
+    (ChebpyBaseException, ),
+    {'default_message': 'This operation can only be performed for Fun objects '
+                        'defined on identical intervals'},
+)
+
+
+NotSubinterval = type(
+    'NotSubinterval',
+    (ChebpyBaseException, ),
+    {'default_message': 'Not a subinterval'},
+)
+
+
+IntervalValues = type(
+    'IntervalValues',
+    (ChebpyBaseException, ),
+    {'default_message': 'The defining values of a Interval object must be '
+                        'strictly increasing'},
+)
+
+
+# ===============================================
+#    chebpy.core.utilities.Domain exceptions
+# ===============================================
+
+
+InvalidDomain = type(
+    'InvalidDomain',
+    (ChebpyBaseException, ),
+    {'default_message': 'Domain objects must be initialised from an iterable '
+                        'collection of at least two monotonically increasing '
+                        'scalars'},
+)
+
+
+NotSubdomain = type(
+    'NotSubdomain',
+    (ChebpyBaseException, ),
+    {'default_message': 'The support of the target Domain object is required '
+                        'to define a subinterval of the support of the '
+                        'original'},
+)
+
+
+SupportMismatch = type(
+    'SupportMismatch',
+    (ChebpyBaseException, ),
+    {'default_message': 'Both objects are required to be supported on the '
+                        'same interval'},
+)
+
+
+BadDomainArgument = type(
+    'BadDomainArgument',
+    (ChebpyBaseException, ),
+    {'default_message': 'The \'domain\' argument must be an iterable '
+                        'containing two or more elements'},
+)
+
+
+BadFunLengthArgument = type(
+    'BadFunLengthArgument',
+    (ChebpyBaseException, ),
+    {'default_message': 'The \'n\' argument must be either a single numeric '
+                        'value, or iterable thereof posessing one fewer '
+                        'elements than the size of the domain'},
+)
