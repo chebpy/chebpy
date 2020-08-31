@@ -68,9 +68,9 @@ class ClassUsage(unittest.TestCase):
         b0 = Bndfun(Chebtech2(np.array([])), subinterval)
         b1 = Bndfun(Chebtech2(np.array([1.])), subinterval)
         b2 = Bndfun(Chebtech2(cfs), subinterval)
-        self.assertEquals(b0.size, 0)
-        self.assertEquals(b1.size, 1)
-        self.assertEquals(b2.size, cfs.size)
+        self.assertEqual(b0.size, 0)
+        self.assertEqual(b1.size, 1)
+        self.assertEqual(b2.size, cfs.size)
 
     def test_support(self):
         a, b = self.ff.support
@@ -105,15 +105,15 @@ class ClassUsage(unittest.TestCase):
         self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
 
     def test_vscale_empty(self):
-        self.assertEquals(self.emptyfun.vscale, 0.)
+        self.assertEqual(self.emptyfun.vscale, 0.)
 
     def test_copy(self):
         ff = self.ff
         gg = self.ff.copy()
-        self.assertEquals(ff, ff)
-        self.assertEquals(gg, gg)
-        self.assertNotEquals(ff, gg)
-        self.assertEquals(infnorm(ff.coeffs-gg.coeffs), 0)
+        self.assertEqual(ff, ff)
+        self.assertEqual(gg, gg)
+        self.assertNotEqual(ff, gg)
+        self.assertEqual(infnorm(ff.coeffs-gg.coeffs), 0)
 
     # check that the restricted fun matches self on the subinterval
     def test_restrict(self):
@@ -309,14 +309,14 @@ class Construction(unittest.TestCase):
     def test_const_construction(self):
         subinterval = Interval()
         ff = Bndfun.initconst(1., subinterval)
-        self.assertEquals(ff.size, 1)
+        self.assertEqual(ff.size, 1)
         self.assertTrue(ff.isconst)
         self.assertFalse(ff.isempty)
         self.assertRaises(ValueError, Bndfun.initconst, [1.], subinterval)
 
     def test_empty_construction(self):
         ff = Bndfun.initempty()
-        self.assertEquals(ff.size, 0)
+        self.assertEqual(ff.size, 0)
         self.assertFalse(ff.isconst)
         self.assertTrue(ff.isempty)
         self.assertRaises(TypeError, Bndfun.initempty, [1.])
@@ -325,7 +325,7 @@ class Construction(unittest.TestCase):
         for (a,b) in [(-1,1), (-10,-2), (-2.3, 1.24), (20,2000)]:
             itvl = Interval(a,b)
             ff = Bndfun.initidentity(itvl)
-            self.assertEquals(ff.size, 2)
+            self.assertEqual(ff.size, 2)
             xx = np.linspace(a,b,1001)
             tol = eps * abs(itvl).max()
             self.assertLessEqual(infnorm(ff(xx)-xx), tol)
@@ -333,13 +333,13 @@ class Construction(unittest.TestCase):
 def adaptiveTester(fun, subinterval, funlen):
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     def tester(self):
-        self.assertEquals(ff.size, funlen)
+        self.assertEqual(ff.size, funlen)
     return tester
 
 def fixedlenTester(fun, subinterval, n):
     ff = Bndfun.initfun_fixedlen(fun, subinterval, n)
     def tester(self):
-        self.assertEquals(ff.size, n)
+        self.assertEqual(ff.size, n)
     return tester
 
 funs = []
@@ -700,13 +700,13 @@ class Roots(unittest.TestCase):
 
     def test_empty(self):
         ff = Bndfun.initempty()
-        self.assertEquals(ff.roots().size, 0)
+        self.assertEqual(ff.roots().size, 0)
 
     def test_const(self):
         ff = Bndfun.initconst(0., Interval(-2,3))
         gg = Bndfun.initconst(2., Interval(-2,3))
-        self.assertEquals(ff.roots().size, 0)
-        self.assertEquals(gg.roots().size, 0)
+        self.assertEqual(ff.roots().size, 0)
+        self.assertEqual(gg.roots().size, 0)
 
 # add tests for roots
 def rootsTester(f, interval, roots, tol):
