@@ -92,14 +92,6 @@ SupportMismatch = type(
 )
 
 
-BadDomainArgument = type(
-    'BadDomainArgument',
-    (ChebpyBaseException, ),
-    {'default_message': 'The \'domain\' argument must be an iterable '
-                        'containing two or more elements'},
-)
-
-
 BadFunLengthArgument = type(
     'BadFunLengthArgument',
     (ChebpyBaseException, ),

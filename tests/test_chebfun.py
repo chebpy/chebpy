@@ -15,7 +15,7 @@ from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
-                                    BadDomainArgument, BadFunLengthArgument)
+                                    InvalidDomain, BadFunLengthArgument)
 from chebpy.core.plotting import import_plt
 
 from tests.utilities import infnorm, testfunctions
@@ -131,10 +131,13 @@ class Construction(unittest.TestCase):
 
     def test_initfun_adaptive_raises(self):
         initfun = Chebfun.initfun_adaptive
-        self.assertRaises(BadDomainArgument, initfun, self.f, [-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=0)
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[])
+        self.assertRaises(InvalidDomain, initfun, self.f, [-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, domain=[-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, domain=0)
+
+    def test_initfun_adaptive_empty_domain(self):
+        f = Chebfun.initfun_adaptive(self.f, domain=[])
+        self.assertTrue(f.isempty)
 
     def test_initfun_fixedlen_continuous_domain(self):
         ff = Chebfun.initfun_fixedlen(self.f, 20, [-2,-1])
@@ -172,22 +175,28 @@ class Construction(unittest.TestCase):
 
     def test_initfun_fixedlen_raises(self):
         initfun = Chebfun.initfun_fixedlen
-        self.assertRaises(BadDomainArgument, initfun, self.f, 10, [-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=0)
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[])
+        self.assertRaises(InvalidDomain, initfun, self.f, 10, [-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, n=10, domain=[-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, n=10, domain=0)
         self.assertRaises(BadFunLengthArgument, initfun, self.f, [30,40], [-1,1])
-        self.assertRaises(TypeError, initfun, self.f, None, [-1,1])
+        self.assertRaises(TypeError, initfun, self.f, [], [-2,-1,0])
+
+    def test_initfun_fixedlen_empty_domain(self):
+        f = Chebfun.initfun_fixedlen(self.f, n=10, domain=[])
+        self.assertTrue(f.isempty)
 
     def test_initfun_fixedlen_succeeds(self):
-        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [], [-2,-1,0]).isempty)
-        # check that providing a vector with None elements calls the
+        # check providing a vector with None elements calls the
         # Tech adaptive constructor
-        g0 = Chebfun.initfun_adaptive(self.f, [-2,-1,0])
-        g1 = Chebfun.initfun_fixedlen(self.f, [None,None], [-2,-1,0])
-        g2 = Chebfun.initfun_fixedlen(self.f, [None,40], [-2,-1,0])
-        for fun1, fun2 in zip(g1,g0):
-            self.assertEqual(sum(fun1.coeffs-fun2.coeffs), 0)
+        dom = [-2, -1, 0]
+        g0 = Chebfun.initfun_adaptive(self.f, dom)
+        g1 = Chebfun.initfun_fixedlen(self.f, [None, None], dom)
+        g2 = Chebfun.initfun_fixedlen(self.f, [None, 40], dom)
+        g3 = Chebfun.initfun_fixedlen(self.f, None, dom)
+        for funA, funB in zip(g1, g0):
+            self.assertEqual(sum(funA.coeffs-funB.coeffs), 0)
+        for funA, funB in zip(g3, g0):
+            self.assertEqual(sum(funA.coeffs-funB.coeffs), 0)
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
 
 

@@ -1,71 +1,59 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
 
 import operator
 import numpy as np
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.utilities import (Interval, Domain, check_funs,
-                                   generate_funs, compute_breakdata)
+from chebpy.core.utilities import (Domain, check_funs, generate_funs,
+                                   compute_breakdata)
 from chebpy.core.decorators import (self_empty, float_argument,
                                     cast_arg_to_chebfun, cache)
-from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
+from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.plotting import import_plt, plotfun
 
 
-class Chebfun(object):
+class Chebfun:
+
+    def __init__(self, funs):
+        self.funs = check_funs(funs)
+        self.breakdata = compute_breakdata(self.funs)
+        self.transposed = False
 
     @classmethod
     def initempty(cls):
-        return cls(np.array([]))
-
-    @classmethod
-    def initconst(cls, c, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initconst, [c])
-        return cls(funs)
+        return cls([])
 
     @classmethod
     def initidentity(cls, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initidentity)
+        return cls(generate_funs(domain, Bndfun.initidentity))
+
+    @classmethod
+    def initconst(cls, c, domain=None):
+        return cls(generate_funs(domain, Bndfun.initconst, {'c': c}))
+
+    @classmethod
+    def initfun_adaptive(cls, f, domain=None):
+        return cls(generate_funs(domain, Bndfun.initfun_adaptive, {'f': f}))
+
+    @classmethod
+    def initfun_fixedlen(cls, f, n, domain=None):
+        nn = np.array(n)
+        if nn.size < 2:
+            funs = generate_funs(domain, Bndfun.initfun_fixedlen, {'f': f, 'n': n})
+        else:
+            domain = Domain(domain if domain is not None else prefs.domain)
+            if not nn.size == domain.size - 1: raise BadFunLengthArgument
+            funs = []
+            for interval, length in zip(domain.intervals, nn):
+                funs.append(Bndfun.initfun_fixedlen(f, interval, length))
         return cls(funs)
 
     @classmethod
     def initfun(cls, f, domain=None, n=None):
-        domain = domain if domain is not None else prefs.domain
-        if n:
-            return Chebfun.initfun_fixedlen(f, n, domain)
+        if n is None:
+            return cls.initfun_adaptive(f, domain)
         else:
-            return Chebfun.initfun_adaptive(f, domain)
-
-    @classmethod
-    def initfun_adaptive(cls, f, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initfun_adaptive, [f])
-        return cls(funs)
-
-    @classmethod
-    def initfun_fixedlen(cls, f, n, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        domain = np.array(domain)
-        nn = np.array(n)
-        if domain.size < 2:
-            raise BadDomainArgument
-        if nn.size == 1:
-            nn = nn * np.ones(domain.size-1)
-        elif nn.size > 1:
-            if nn.size != domain.size - 1:
-                raise BadFunLengthArgument
-        funs = np.array([])
-        intervals = zip(domain[:-1], domain[1:])
-        for interval, length in zip(intervals, nn):
-            interval = Interval(*interval)
-            fun = Bndfun.initfun_fixedlen(f, interval, length)
-            funs = np.append(funs, fun)
-        return cls(funs)
+            return cls.initfun_fixedlen(f, n, domain)
 
     # --------------------
     #  operator overloads
@@ -95,11 +83,6 @@ class Chebfun(object):
         out[lpts] = self.funs[0](x[lpts])
         out[rpts] = self.funs[-1](x[rpts])
         return out
-
-    def __init__(self, funs):
-        self.funs = check_funs(funs)
-        self.breakdata = compute_breakdata(self.funs)
-        self.transposed = False
 
     def __iter__(self):
         return self.funs.__iter__()
@@ -242,7 +225,7 @@ class Chebfun(object):
     @self_empty(Domain([]))
     def support(self):
         '''Return an array containing the first and last breakpoints'''
-        return Domain(self.breakpoints[[0,-1]])
+        return self.domain.support
 
     @property
     @self_empty(0.)
