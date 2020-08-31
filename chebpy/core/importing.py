@@ -11,7 +11,7 @@ def import_optional(name, envvarname, fallback=None):
     if use_module.lower() in ['true', '1']:
         try:
             return importlib.import_module(name)
-        except ImportError:
+        except ImportError: # pragma: no cover
             pass
     if fallback is not None:
         return importlib.import_module(fallback)
