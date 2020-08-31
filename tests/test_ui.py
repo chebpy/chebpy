@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from chebpy import chebfun, pwc
+from chebpy.core.ui import chebfun, pwc
 from chebpy.core.settings import DefaultPrefs
 
 class Constructors(unittest.TestCase):

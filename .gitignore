@@ -34,3 +34,4 @@ nosetests.xml
 *.pyc
 .idea/
 docs/_*
+.venv

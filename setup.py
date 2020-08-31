@@ -1,3 +1,5 @@
+from chebpy import __version__ as version
+
 try:
     from setuptools import setup
 except ImportError:
@@ -5,7 +7,7 @@ except ImportError:
 
 setup(
     name='chebpy',
-    version='0.1.0',
+    version=version,
     description='A Python implementation of Chebfun',
     long_description=open('README.rst',"rt").read(),
     author='Mark Richardson',

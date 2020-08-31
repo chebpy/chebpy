@@ -7,7 +7,7 @@ from __future__ import division
 import unittest
 import numpy as np
 
-from chebpy import chebfun
+from chebpy.api import chebfun
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import (HTOL, Interval, Domain, compute_breakdata,
@@ -99,10 +99,10 @@ class TestInterval(unittest.TestCase):
         x3 = np.linspace(3,4,npts)
         x4 = np.linspace(5,6,npts)
         interval = Interval(-2,3)
-        self.assertEquals(interval.isinterior(x1).sum(), npts-2)
-        self.assertEquals(interval.isinterior(x2).sum(), 0)
-        self.assertEquals(interval.isinterior(x3).sum(), 0)
-        self.assertEquals(interval.isinterior(x4).sum(), 0)
+        self.assertEqual(interval.isinterior(x1).sum(), npts-2)
+        self.assertEqual(interval.isinterior(x2).sum(), 0)
+        self.assertEqual(interval.isinterior(x3).sum(), 0)
+        self.assertEqual(interval.isinterior(x4).sum(), 0)
 
 
 # tests for usage of the Domain class
