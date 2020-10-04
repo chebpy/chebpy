@@ -254,7 +254,8 @@ class Chebfun(object):
     def iscontinuous(self):
         endvalues = np.array([fun.endvalues for fun in self])
         interiors = endvalues.flatten()[1:-1]
-        return np.all(interiors[0::2]-interiors[1::2]<=self.vscale*prefs.eps)
+        abs_jumps = np.abs(interiors[0::2] - interiors[1::2])
+        return np.all(abs_jumps<=self.vscale*prefs.eps)
 
     @property
     @self_empty(False)

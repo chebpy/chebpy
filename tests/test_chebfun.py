@@ -198,6 +198,7 @@ class Properties(unittest.TestCase):
         self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
         self.f3 = pwc(np.linspace(-1, 1, 5), [-1, 0, 2, 1])
+        self.f4 = pwc()
 
     def test_breakpoints(self):
         self.assertEqual(self.f0.breakpoints.size, 0)
@@ -230,9 +231,11 @@ class Properties(unittest.TestCase):
     def test_iscontinuous(self):
         self.assertFalse(self.f0.iscontinuous)
         self.assertFalse(self.f3.iscontinuous)
+        self.assertFalse(self.f4.iscontinuous)
         self.assertTrue(self.f1.iscontinuous)
         self.assertTrue(self.f2.iscontinuous)
         self.assertTrue(self.f3.cumsum().iscontinuous)
+        self.assertTrue(self.f4.cumsum().iscontinuous)
 
     def test_isconst(self):
         self.assertFalse(self.f0.isconst)
