@@ -9,7 +9,7 @@ import operator
 import unittest
 import numpy as np
 
-from chebpy import chebfun
+from chebpy import chebfun, pwc
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPrefs
@@ -28,7 +28,7 @@ try:
     div_binops = (operator.div, operator.truediv)
 except AttributeError:
     # Python 3
-    div_binops = (operator.truediv,)
+    div_binops = (operator.truediv, )
 
 # aliases
 pi = np.pi
@@ -195,8 +195,9 @@ class Properties(unittest.TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
-        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
-        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
+        self.f3 = pwc(np.linspace(-1, 1, 5), [-1, 0, 2, 1])
 
     def test_breakpoints(self):
         self.assertEqual(self.f0.breakpoints.size, 0)
@@ -226,12 +227,19 @@ class Properties(unittest.TestCase):
         self.assertFalse(self.f1.isempty)
         self.assertFalse(self.f2.isempty)
 
+    def test_iscontinuous(self):
+        self.assertFalse(self.f0.iscontinuous)
+        self.assertFalse(self.f3.iscontinuous)
+        self.assertTrue(self.f1.iscontinuous)
+        self.assertTrue(self.f2.iscontinuous)
+        self.assertTrue(self.f3.cumsum().iscontinuous)
+
     def test_isconst(self):
         self.assertFalse(self.f0.isconst)
         self.assertFalse(self.f1.isconst)
         self.assertFalse(self.f2.isconst)
-        c1 = Chebfun.initfun_fixedlen(lambda x: 0*x+3, 1, [-2,-1,0,1,2,3])
-        c2 = Chebfun.initfun_fixedlen(lambda x: 0*x-1, 1, [-2,3])
+        c1 = Chebfun.initfun_fixedlen(lambda x: 0*x+3, 1, [-2, -1, 0, 1, 2, 3])
+        c2 = Chebfun.initfun_fixedlen(lambda x: 0*x-1, 1, [-2, 3])
         self.assertTrue(c1.isconst)
         self.assertTrue(c2.isconst)
 
@@ -309,9 +317,22 @@ class ClassUsage(unittest.TestCase):
             tol = eps * f.hscale
             self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
-    def test_restrict_(self):
+    def test_simplify(self):
+        dom = np.linspace(-2, 1.5, 13)
+        f = chebfun(cos, dom, 70).simplify()
+        g = chebfun(cos, dom)
+        self.assertEquals(f.domain, g.domain)
+        for n, fun in enumerate(f):
+            # we allow one degree of freedom difference
+            # TODO: check this
+            self.assertLessEqual(fun.size-g.funs[n].size, 1)
+
+    def test_simplify_empty(self):
+        self.assertTrue(self.f0.simplify().isempty)
+
+    def test__restrict_nosimplify(self):
         # test a variety of domains with breaks
-        doms = [(-4,4), (-4,0,4), (-2,-1, 0.3, 1, 2.5)]
+        doms = [(-4, 4), (-4, 0, 4), (-2, -1, 0.3, 1, 2.5)]
         for dom in doms:
             ff = Chebfun.initfun_fixedlen(cos, 25, domain=dom)
             # define some arbitrary subdomains
@@ -319,7 +340,7 @@ class ClassUsage(unittest.TestCase):
             subdoms = [yy, yy[2:7], yy[::2]]
             for subdom in subdoms:
                 xx = np.linspace(subdom[0], subdom[-1], 1001)
-                gg = ff._restrict(subdom)
+                gg = ff._restrict_nosimplify(subdom)
                 vscl = ff.vscale
                 hscl = ff.hscale
                 lscl = max([fun.size for fun in ff])
@@ -332,25 +353,12 @@ class ClassUsage(unittest.TestCase):
                     # chec each fun has length 25
                     self.assertEqual(fun.size, 25)
 
-    def test_restrict__empty(self):
-        self.assertTrue(self.f0._restrict([-1,1]).isempty)
-
-    def test_simplify(self):
-        dom = np.linspace(-2,1.5,13)
-        f = chebfun(cos, dom, 70).simplify()
-        g = chebfun(cos, dom)
-        self.assertEquals(f.domain, g.domain)
-        for n, fun in enumerate(f):
-            # we allow one degree of freedom difference
-            # TODO: check this
-            self.assertLessEqual(fun.size-g.funs[n].size, 1)
-
-    def test_simplify_empty(self):
-        self.assertTrue(self.f0.simplify().isempty)
+    def test__restrict_nosimplify_empty(self):
+        self.assertTrue(self.f0._restrict_nosimplify([-1, 1]).isempty)
 
     def test_restrict(self):
-        dom1 = Domain(np.linspace(-2,1.5,13))
-        dom2 = Domain(np.linspace(-1.7,0.93,17))
+        dom1 = Domain(np.linspace(-2, 1.5, 13))
+        dom2 = Domain(np.linspace(-1.7, 0.93, 17))
         dom3 = dom1.merge(dom2).restrict(dom2)
         f = chebfun(cos, dom1).restrict(dom2)
         g = chebfun(cos, dom3)
@@ -362,6 +370,7 @@ class ClassUsage(unittest.TestCase):
 
     def test_restrict_empty(self):
         self.assertTrue(self.f0.restrict([-1,1]).isempty)
+
 
 class Algebra(unittest.TestCase):
 
@@ -746,8 +755,8 @@ class Evaluation(unittest.TestCase):
 
     def setUp(self):
         self.f0 = Chebfun.initempty()
-        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
-        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
 
     def test__call__empty_chebfun(self):
         self.assertEqual(self.f0(np.linspace(-1,1,100)).size, 0)
@@ -778,8 +787,8 @@ class Evaluation(unittest.TestCase):
         # check we get the values at the breakpoints back
         x1 = self.f1.breakpoints
         x2 = self.f2.breakpoints
-        self.assertTrue(np.equal(self.f1(x1), [1,1]).all())
-        self.assertTrue(np.equal(self.f2(x2), [1,0,1,4]).all())
+        self.assertTrue(np.equal(self.f1(x1), [1, 1]).all())
+        self.assertTrue(np.equal(self.f2(x2), [1, 0, 1, 4]).all())
 
     def test__call__outside_interval(self):
         # check we are able to evaluate the Chebfun outside the
@@ -879,12 +888,10 @@ class Calculus(unittest.TestCase):
 class Roots(unittest.TestCase):
 
     def setUp(self):
-        self.f1 = Chebfun.initfun_adaptive(lambda x: cos(4*pi*x),
-                                           np.linspace(-10,10,101))
-        self.f2 = Chebfun.initfun_adaptive(lambda x: sin(2*pi*x),
-                                           np.linspace(-1,1,5))
-        self.f3 = Chebfun.initfun_adaptive(lambda x: sin(4*pi*x),
-                                           np.linspace(-10,10,101))
+        initadapt = Chebfun.initfun_adaptive
+        self.f1 = initadapt(lambda x: cos(4*pi*x), np.linspace(-10, 10, 101))
+        self.f2 = initadapt(lambda x: sin(2*pi*x), np.linspace(-1, 1, 5))
+        self.f3 = initadapt(lambda x: sin(4*pi*x), np.linspace(-10, 10, 101))
 
     def test_empty(self):
         rts = Chebfun.initempty().roots()
@@ -894,7 +901,7 @@ class Roots(unittest.TestCase):
     def test_multiple_pieces(self):
         rts = self.f1.roots()
         self.assertEqual(rts.size, 80)
-        self.assertLessEqual(infnorm(rts-np.arange(-9.875,10,.25)), 10*eps)
+        self.assertLessEqual(infnorm(rts-np.arange(-9.875, 10, .25)), 10*eps)
 
     # check we don't get repeated roots at breakpoints
     def test_breakpoint_roots_1(self):
@@ -906,7 +913,7 @@ class Roots(unittest.TestCase):
     def test_breakpoint_roots_2(self):
         rts = self.f3.roots()
         self.assertEqual(rts.size, 81)
-        self.assertLessEqual(infnorm(rts-np.arange(-10,10.25,.25)), 1e1*eps)
+        self.assertLessEqual(infnorm(rts-np.arange(-10, 10.25, .25)), 1e1*eps)
 
     def test_roots_cache(self):
         # check that a _cache property is created containing the stored roots
@@ -920,9 +927,9 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
-        self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
-        self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
-        self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+        self.f1 = Chebfun.initfun_adaptive(f, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(f, [-3, 0, 1])
+        self.f3 = Chebfun.initfun_adaptive(f, [-2, -0.3, 1.2])
 
     def test_plot(self):
         plt = import_plt()
@@ -943,8 +950,8 @@ class PrivateMethods(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(x-.1)
-        self.f1 = Chebfun.initfun_adaptive(f, [-2,0,3])
-        self.f2 = Chebfun.initfun_adaptive(f, np.linspace(-2,3,5))
+        self.f1 = Chebfun.initfun_adaptive(f, [-2, 0, 3])
+        self.f2 = Chebfun.initfun_adaptive(f, np.linspace(-2, 3, 5))
 
     # in the test_break_x methods, we check that (1) the newly computed domain
     # is what it should be, and (2) the new chebfun still provides an accurate

@@ -251,6 +251,13 @@ class Chebfun(object):
 
     @property
     @self_empty(False)
+    def iscontinuous(self):
+        endvalues = np.array([fun.endvalues for fun in self])
+        interiors = endvalues.flatten()[1:-1]
+        return np.all(interiors[0::2]-interiors[1::2]<=self.vscale*prefs.eps)
+
+    @property
+    @self_empty(False)
     def isconst(self):
         # TODO: find an abstract way of referencing funs[0].coeffs[0]
         c = self.funs[0].coeffs[0]
@@ -278,19 +285,19 @@ class Chebfun(object):
         return self.__class__([fun.copy() for fun in self])
 
     @self_empty()
-    def _restrict(self, subinterval):
-        '''Restrict a chebfun to a subinterval, without simplifying'''
-        newdom = self.domain.restrict(Domain(subinterval))
-        return self._break(newdom)
-
-    @self_empty()
     def simplify(self):
         '''Simplify each fun in the chebfun'''
         return self.__class__([fun.simplify() for fun in self])
 
+    @self_empty()
+    def _restrict_nosimplify(self, subinterval):
+        '''Restrict a chebfun to a subinterval, without simplifying'''
+        newdom = self.domain.restrict(Domain(subinterval))
+        return self._break(newdom)
+
     def restrict(self, subinterval):
         '''Restrict a chebfun to a subinterval'''
-        return self._restrict(subinterval).simplify()
+        return self._restrict_nosimplify(subinterval).simplify()
 
     @cache
     @self_empty(np.array([]))
