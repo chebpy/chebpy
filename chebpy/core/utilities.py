@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
-
 import collections
 import numpy as np
 
@@ -12,8 +8,8 @@ from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     SupportMismatch, NotSubdomain,
                                     BadDomainArgument)
 
-def HTOL():
-    return 5 * prefs.eps
+# constants
+HTOL = 5 * prefs.eps
 
 
 class Interval(np.ndarray):
@@ -70,16 +66,6 @@ class Interval(np.ndarray):
         return hscale
 
 
-def _merge_duplicates(arr, tols):
-    """Remove duplicate entries from an input array to within array tolerance
-    tols, working from left to right."""
-    # TODO: pathological cases may make this break since this method works by
-    # using consecutive differences. Might be better to take an average
-    # (median?), rather than the left-hand value.
-    idx = np.append(np.abs(np.diff(arr))>tols[:-1], True)
-    return arr[idx]
-
-
 class Domain(np.ndarray):
     """Numpy ndarray, with additional Chebfun-specific domain logic"""
 
@@ -97,7 +83,7 @@ class Domain(np.ndarray):
         within a tolerance)"""
         a,b = self.support
         x,y = other.support
-        bounds = np.array([1-HTOL(), 1+HTOL()])
+        bounds = np.array([1-HTOL, 1+HTOL])
         lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         return (lbnd<=x) & (y<=rbnd)
 
@@ -123,7 +109,7 @@ class Domain(np.ndarray):
         """Union of two domain objects with an initial check that the support
         of each object matches"""
         dspt = np.abs(self.support-other.support)
-        htol = np.maximum(HTOL(), HTOL()*np.abs(self.support))
+        htol = np.maximum(HTOL, HTOL*np.abs(self.support))
         if np.any(dspt>htol):
             raise SupportMismatch
         return self.merge(other)
@@ -133,8 +119,8 @@ class Domain(np.ndarray):
         the same support"""
         all_bpts = np.append(self, other)
         new_bpts = np.unique(all_bpts)
-        mergetol = np.maximum(HTOL(), HTOL()*np.abs(new_bpts))
-        mgd_bpts = _merge_duplicates(new_bpts, mergetol)
+        mergetol = np.maximum(HTOL, HTOL*np.abs(new_bpts))
+        mgd_bpts = merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
     @cast_other
@@ -145,7 +131,7 @@ class Domain(np.ndarray):
             raise NotSubdomain
         dom = self.merge(other)
         a,b = other.support
-        bounds = np.array([1-HTOL(), 1+HTOL()])
+        bounds = np.array([1-HTOL, 1+HTOL])
         lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
         new = dom[(lbnd<=dom)&(dom<=rbnd)]
         return self.__class__(new)
@@ -154,12 +140,12 @@ class Domain(np.ndarray):
         """Return a Boolean array of size equal to self where True indicates
         that the breakpoint is in other to within the specified tolerance"""
         out = np.empty(self.size, dtype=bool)
-        window = np.array([1-HTOL(), 1+HTOL()])
+        window = np.array([1-HTOL, 1+HTOL])
         # TODO: is there way to vectorise this?
         for idx, bpt in enumerate(self):
             lbnd, rbnd = np.sort(bpt*window)
-            lbnd = -HTOL() if np.abs(lbnd) < HTOL() else lbnd
-            rbnd = +HTOL() if np.abs(rbnd) < HTOL() else rbnd
+            lbnd = -HTOL if np.abs(lbnd) < HTOL else lbnd
+            rbnd = +HTOL if np.abs(rbnd) < HTOL else rbnd
             isin = (lbnd<=other) & (other<=rbnd)
             out[idx] = np.any(isin)
         return out
@@ -171,14 +157,24 @@ class Domain(np.ndarray):
             return False
         else:
             dbpt = np.abs(self-other)
-            htol = np.maximum(HTOL(), HTOL()*np.abs(self))
+            htol = np.maximum(HTOL, HTOL*np.abs(self))
             return bool(np.all(dbpt<=htol)) # cast back to bool
 
     def __ne__(self, other):
         return not self==other
 
 
-def _sortindex(intervals):
+def merge_duplicates(arr, tols):
+    """Remove duplicate entries from an input array to within array tolerance
+    tols, working from left to right."""
+    # TODO: pathological cases may make this break since this method works by
+    # using consecutive differences. Might be better to take an average
+    # (median?), rather than the left-hand value.
+    idx = np.append(np.abs(np.diff(arr))>tols[:-1], True)
+    return arr[idx]
+
+
+def sort_index(intervals):
     """Helper function to return an index determining the ordering of the
     supplied array of interval objects. We check that the intervals (1) do not
     overlap, and (2) represent a complete partition of the broader
@@ -204,13 +200,13 @@ def _sortindex(intervals):
 def check_funs(funs):
     """Return an array of sorted funs.  As the name suggests, this method
     checks that the funs provided do not overlap or have gaps (the actual
-    checks are performed in _sortindex)"""
+    checks are performed in sort_index)"""
     funs = np.array(funs)
     if funs.size == 0:
         sortedfuns = np.array([])
     else:
         intervals = (fun.interval for fun in funs)
-        idx = _sortindex(intervals)
+        idx = sort_index(intervals)
         sortedfuns = funs[idx]
     return sortedfuns
 

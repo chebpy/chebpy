@@ -20,7 +20,6 @@ from tests.utilities import infnorm
 
 np.random.seed(0)
 eps = DefaultPrefs.eps
-HTOL = HTOL()
 
 
 # tests for usage of the Interval class
