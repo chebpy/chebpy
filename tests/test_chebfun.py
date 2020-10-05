@@ -176,16 +176,16 @@ class Construction(unittest.TestCase):
         self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[-2])
         self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=0)
         self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[])
-        self.assertRaises(BadFunLengthArgument, initfun, self.f, [30,40], [-1,1])
-        self.assertRaises(TypeError, initfun, self.f, None, [-1,1])
+        self.assertRaises(BadFunLengthArgument, initfun, self.f, [30, 40], [-1, 1])
+        self.assertRaises(TypeError, initfun, self.f, None, [-1, 1])
 
     def test_initfun_fixedlen_succeeds(self):
-        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [], [-2,-1,0]).isempty)
+        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [], [-2, -1, 0]).isempty)
         # check that providing a vector with None elements calls the
         # Tech adaptive constructor
-        g0 = Chebfun.initfun_adaptive(self.f, [-2,-1,0])
-        g1 = Chebfun.initfun_fixedlen(self.f, [None,None], [-2,-1,0])
-        g2 = Chebfun.initfun_fixedlen(self.f, [None,40], [-2,-1,0])
+        g0 = Chebfun.initfun_adaptive(self.f, [-2, -1, 0])
+        g1 = Chebfun.initfun_fixedlen(self.f, [None, None], [-2, -1, 0])
+        g2 = Chebfun.initfun_fixedlen(self.f, [None, 40], [-2, -1, 0])
         for fun1, fun2 in zip(g1,g0):
             self.assertEqual(sum(fun1.coeffs-fun2.coeffs), 0)
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
@@ -199,11 +199,16 @@ class Properties(unittest.TestCase):
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
         self.f3 = pwc(np.linspace(-1, 1, 5), [-1, 0, 2, 1])
         self.f4 = pwc()
+        self.f5 = Chebfun.initfun_adaptive(lambda x: x**2 +x +1, [-1, 0, 1, 2])
+        self.f6 = pwc(np.linspace(-1, 1, 5), [-1, 1, 2, 1])
+        self.f7 = Chebfun.initfun_adaptive(np.sin, [-1, 0, 1])
+        self.f8 = Chebfun.initfun_adaptive(lambda x: np.exp(-x**2), [-6.1, 6.1])
+        self.f9 = pwc(np.linspace(-1, 1, 5), [0.5, 1, 2, 1])
 
     def test_breakpoints(self):
         self.assertEqual(self.f0.breakpoints.size, 0)
-        self.assertTrue(np.equal(self.f1.breakpoints,[-1,1]).all())
-        self.assertTrue(np.equal(self.f2.breakpoints,[-1,0,1,2]).all())
+        self.assertTrue(np.equal(self.f1.breakpoints,[-1, 1]).all())
+        self.assertTrue(np.equal(self.f2.breakpoints,[-1, 0, 1, 2]).all())
 
     def test_domain(self):
         d1 = Domain([-1,1])
@@ -237,6 +242,28 @@ class Properties(unittest.TestCase):
         self.assertTrue(self.f3.cumsum().iscontinuous)
         self.assertTrue(self.f4.cumsum().iscontinuous)
 
+    def test_ismonotonic(self):
+        self.assertFalse(self.f0.ismonotonic)
+        self.assertFalse(self.f1.ismonotonic)
+        self.assertFalse(self.f2.ismonotonic)
+        self.assertFalse(self.f3.ismonotonic)
+        self.assertFalse(self.f4.ismonotonic)
+        self.assertFalse(self.f5.ismonotonic)
+        self.assertFalse(self.f6.ismonotonic)
+        self.assertTrue(self.f7.ismonotonic)
+        self.assertFalse(self.f8.ismonotonic)
+        self.assertFalse(self.f9.ismonotonic)
+        self.assertFalse(self.f0.cumsum().ismonotonic)
+        self.assertFalse(self.f1.cumsum().ismonotonic)
+        self.assertFalse(self.f2.cumsum().ismonotonic)
+        self.assertFalse(self.f3.cumsum().ismonotonic)
+        self.assertFalse(self.f4.cumsum().ismonotonic)
+        self.assertTrue(self.f5.cumsum().ismonotonic)
+        self.assertFalse(self.f6.cumsum().ismonotonic)
+        self.assertFalse(self.f7.cumsum().ismonotonic)
+        self.assertTrue(self.f8.cumsum().ismonotonic)
+        self.assertTrue(self.f9.cumsum().ismonotonic)
+
     def test_isconst(self):
         self.assertFalse(self.f0.isconst)
         self.assertFalse(self.f1.isconst)
@@ -251,8 +278,8 @@ class Properties(unittest.TestCase):
         self.assertIsInstance(self.f1.support, Domain)
         self.assertIsInstance(self.f2.support, Domain)
         self.assertEqual(self.f0.support.size, 0)
-        self.assertTrue(np.equal(self.f1.support,[-1,1]).all())
-        self.assertTrue(np.equal(self.f2.support,[-1,2]).all())
+        self.assertTrue(np.equal(self.f1.support,[-1, 1]).all())
+        self.assertTrue(np.equal(self.f2.support,[-1, 2]).all())
 
     def test_vscale(self):
         self.assertEqual(self.f0.vscale, 0)

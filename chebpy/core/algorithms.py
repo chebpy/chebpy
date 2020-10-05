@@ -21,7 +21,7 @@ def find(x):
     return np.where(x)[0]
 
 def rootsunit(ak, htol=None):
-    """Compute the roots of a funciton on [-1,1] using the coefficeints
+    """Compute the roots of a function on [-1,1] using the coefficeints
     in the associated Chebyshev series representation.
 
     References

@@ -8,6 +8,7 @@ from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     SupportMismatch, NotSubdomain,
                                     BadDomainArgument)
 
+
 # constants
 HTOL = 5 * prefs.eps
 
@@ -79,7 +80,7 @@ class Domain(np.ndarray):
             return bpts.view(cls)
 
     def __contains__(self, other):
-        """Checks whether one domain object is a subodomain of another (to
+        """Checks whether one domain object is a subdomain of another (to
         within a tolerance)"""
         a,b = self.support
         x,y = other.support

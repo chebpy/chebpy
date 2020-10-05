@@ -8,10 +8,12 @@ import numpy as np
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.utilities import (Interval, Domain, check_funs,
-                                   generate_funs, compute_breakdata)
+                                   generate_funs, compute_breakdata,
+                                   merge_duplicates, HTOL)
 from chebpy.core.decorators import (self_empty, float_argument,
                                     cast_arg_to_chebfun, cache)
-from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
+from chebpy.core.exceptions import (BadDomainArgument, BadFunLengthArgument,
+                                    InvalidDomain)
 from chebpy.core.plotting import import_plt, plotfun
 
 
@@ -86,12 +88,12 @@ class Chebfun(object):
             out[idx] = fun(x[idx])
 
         # evaluate the breakpoint data for x at a breakpoint
-        breakpoints = self.breakpoints
-        for breakpoint in breakpoints:
-            out[x==breakpoint] = self.breakdata[breakpoint]
+        break_points = self.breakpoints
+        for break_point in break_points:
+            out[x==break_point] = self.breakdata[break_point]
 
         # first and last funs used to evaluate outside of the chebfun domain
-        lpts, rpts = x < breakpoints[0], x > breakpoints[-1]
+        lpts, rpts = x < break_points[0], x > break_points[-1]
         out[lpts] = self.funs[0](x[lpts])
         out[rpts] = self.funs[-1](x[rpts])
         return out
@@ -230,10 +232,10 @@ class Chebfun(object):
     # ------------
     @property
     def breakpoints(self):
-        return np.array([x for x in self.breakdata.keys()])
+        return Domain(np.array([x for x in self.breakdata.keys()]))
 
     @property
-    @self_empty(np.array([]))
+    @self_empty(Domain([]))
     def domain(self):
         '''Construct and return a Domain object corresponding to self'''
         return Domain.from_chebfun(self)
@@ -250,12 +252,9 @@ class Chebfun(object):
         return np.float(np.abs(self.support).max())
 
     @property
-    @self_empty(False)
-    def iscontinuous(self):
-        endvalues = np.array([fun.endvalues for fun in self])
-        interiors = endvalues.flatten()[1:-1]
-        abs_jumps = np.abs(interiors[0::2] - interiors[1::2])
-        return np.all(abs_jumps<=self.vscale*prefs.eps)
+    @self_empty(0.)
+    def vscale(self):
+        return np.max([fun.vscale for fun in self])
 
     @property
     @self_empty(False)
@@ -265,13 +264,35 @@ class Chebfun(object):
         return all(fun.isconst and fun.coeffs[0]==c for fun in self)
 
     @property
+    @self_empty(False)
+    def iscontinuous(self):
+        endvalues = np.array([fun.endvalues for fun in self])
+        interiors = endvalues.flatten()[1:-1]
+        abs_jumps = np.abs(interiors[0::2] - interiors[1::2])
+        return np.all(abs_jumps<=self.vscale*prefs.eps)
+
+    @property
     def isempty(self):
         return self.funs.size == 0
 
     @property
-    @self_empty(0.)
-    def vscale(self):
-        return np.max([fun.vscale for fun in self])
+    @self_empty(False)
+    def ismonotonic(self):
+        # first try the (cheap) test of assembling fun ranges into a Domain
+        # object (thus ensuring monotonicity). This is a necessary but not
+        # sufficient condition for full-interval monotonicity
+        try:
+            endvalues = np.array([fun.endvalues for fun in self])
+            flattened = endvalues.flatten()
+            horiz_tol = np.maximum(HTOL, HTOL*np.abs(flattened))
+            Domain(merge_duplicates(flattened, horiz_tol))
+        except InvalidDomain:
+            return False
+        # otherwise revert to manual constant fun checks and rootfinding
+        return np.logical_and(
+            np.all([not x.isconst for x in self.simplify()]),
+            self.diff().roots().size==0,
+            )
 
     @property
     @self_empty()
