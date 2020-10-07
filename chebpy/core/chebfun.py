@@ -278,21 +278,25 @@ class Chebfun(object):
     @property
     @self_empty(False)
     def ismonotonic(self):
-        # first try the (cheap) test of assembling fun ranges into a Domain
+        # try an initial (cheap) test of assembling fun ranges into a Domain
         # object (thus ensuring monotonicity). This is a necessary but not
-        # sufficient condition for full-interval monotonicity
+        # sufficient condition for full-interval monotonicity and its purpose
+        # is to decide about monotonicty wrt piecewise linear functions.
         try:
-            endvalues = np.array([fun.endvalues for fun in self])
-            flattened = endvalues.flatten()
+            flattened = np.array([fun.endvalues for fun in self]).flatten()
             horiz_tol = np.maximum(HTOL, HTOL*np.abs(flattened))
-            Domain(merge_duplicates(flattened, horiz_tol))
+            endsmerge = merge_duplicates(flattened, horiz_tol)
+            if np.all(np.diff(endsmerge)<0):
+                # flip vals for decreasing functions
+                endsmerge = np.flipud(endsmerge)
+            Domain(endsmerge)
         except InvalidDomain:
             return False
-        # otherwise revert to manual constant fun checks and rootfinding
+        # if this succeeds revert to manual constant fun checks and rootfinding
         return np.logical_and(
             np.all([not x.isconst for x in self.simplify()]),
             self.diff().roots().size==0,
-            )
+        )
 
     @property
     @self_empty()

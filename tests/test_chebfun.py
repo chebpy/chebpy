@@ -264,6 +264,29 @@ class Properties(unittest.TestCase):
         self.assertTrue(self.f8.cumsum().ismonotonic)
         self.assertTrue(self.f9.cumsum().ismonotonic)
 
+    def test_ismonotonic_invariance(self):
+        # check results of test_ismonotonic are invariant to negation
+        self.assertFalse((-self.f0).ismonotonic)
+        self.assertFalse((-self.f1).ismonotonic)
+        self.assertFalse((-self.f2).ismonotonic)
+        self.assertFalse((-self.f3).ismonotonic)
+        self.assertFalse((-self.f4).ismonotonic)
+        self.assertFalse((-self.f5).ismonotonic)
+        self.assertFalse((-self.f6).ismonotonic)
+        self.assertTrue((-self.f7).ismonotonic)
+        self.assertFalse((-self.f8).ismonotonic)
+        self.assertFalse((-self.f9).ismonotonic)
+        self.assertFalse((-self.f0.cumsum()).ismonotonic)
+        self.assertFalse((-self.f1.cumsum()).ismonotonic)
+        self.assertFalse((-self.f2.cumsum()).ismonotonic)
+        self.assertFalse((-self.f3.cumsum()).ismonotonic)
+        self.assertFalse((-self.f4.cumsum()).ismonotonic)
+        self.assertTrue((-self.f5.cumsum()).ismonotonic)
+        self.assertFalse((-self.f6.cumsum()).ismonotonic)
+        self.assertFalse((-self.f7.cumsum()).ismonotonic)
+        self.assertTrue((-self.f8.cumsum()).ismonotonic)
+        self.assertTrue((-self.f9.cumsum()).ismonotonic)
+
     def test_isconst(self):
         self.assertFalse(self.f0.isconst)
         self.assertFalse(self.f1.isconst)
