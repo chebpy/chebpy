@@ -42,6 +42,17 @@ class Interval(np.ndarray):
         self.invmap = lambda x: (2.*x-a-b) / (b-a)
         self.drvmap = lambda y: 0.*y + .5*(b-a)
         return self
+      
+    def __reduce__(self):
+        old_pickle = super(Interval, self).__reduce__()
+        new_pickle = old_pickle[2] + (self.formap, self.invmap, self.drvmap)
+        return (old_pickle[0], old_pickle[1], new_pickle)
+      
+    def __setstate__(self):
+        self.formap = state[-3]
+        self.invmap = state[-2]
+        self.drvmap = state[-1]
+        super(Interval, self).__setstate__(state[:-3])
 
     def __eq__(self, other):
         (a,b), (x,y) = self, other
