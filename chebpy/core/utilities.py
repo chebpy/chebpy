@@ -37,12 +37,20 @@ class Interval(np.ndarray):
     def __new__(cls, a=-1., b=1.):
         if a >= b:
             raise IntervalValues
-        self = np.asarray((a,b), dtype=float).view(cls)
-        self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
-        self.invmap = lambda x: (2.*x-a-b) / (b-a)
-        self.drvmap = lambda y: 0.*y + .5*(b-a)
-        return self
+        return np.asarray((a,b), dtype=float).view(cls)
 
+    def formap(self, y):
+        a, b = self
+        return .5*b*(y+1.) + .5*a*(1.-y)
+
+    def invmap(self, x):
+        a, b = self
+        return (2.*x-a-b) / (b-a)
+
+    def drvmap(self, y):
+        a, b = self
+        return 0.*y + .5*(b-a)
+      
     def __eq__(self, other):
         (a,b), (x,y) = self, other
         return (a==x) & (y==b)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import pickle
 import numpy as np
 from chebpy import chebfun, pwc
 from chebpy.core.settings import DefaultPrefs
@@ -76,3 +77,17 @@ class Constructors(unittest.TestCase):
         for fun, val in zip(f,vals):
             self.assertTrue(fun.isconst)
             self.assertEqual(fun.coeffs[0], val)
+
+class Pickling(unittest.TestCase):
+
+    def setUp(self):
+        self.f0 = chebfun(np.sin, [-2, 0, 1])
+        self.f1 = pickle.loads(pickle.dumps(self.f0))
+
+    def test_evaluate(self):
+        x = -1
+        self.assertEqual(self.f0(x), self.f1(x))
+
+    #TODO: implement test for equality once objects can be compared
+    #def test_equality(self):
+        #self.assertEqual(vars(self.f0), vars(self.f1))
