@@ -265,6 +265,22 @@ class ClassUsage(unittest.TestCase):
         self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1,0,1,2])
 
+    def test__str__(self):
+        try:
+            str0 = str(self.f0)
+            str1 = str(self.f1)
+            str2 = str(self.f2)
+        except:
+            self.fail('str() failed unexpectedly')
+
+    def test__repr__(self):
+        try:
+            repr0 = repr(self.f0)
+            repr1 = repr(self.f1)
+            repr2 = repr(self.f2)
+        except:
+            self.fail('repr() failed unexpectedly')
+
     def test_copy(self):
         f0_copy = self.f0.copy()
         f1_copy = self.f1.copy()

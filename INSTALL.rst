@@ -1,21 +1,28 @@
-User Installation
------------------
+Latest stable release via Conda
+-------------------------------
 
-The most convenient way to get going is to run::
+If you're working with Conda you can run::
+
+    $ conda install -c conda-forge chebfun
+
+Directly from GitHub
+--------------------
+
+If you're not working with conda (or would otherwise like to obtain up-to-date master branch of ChebPy), run::
 
     $ pip install git+https://github.com/chebpy/chebpy.git
     
-This can also be run from the Anaconda prompt in case you are running Anaconda. The above has been tested from both Windows and Linux (and requires `git <https://git-scm.com>`_).
-
-To update chebpy from source, run::
+To update, run::
 
     $ pip install git+https://github.com/chebpy/chebpy.git -U
 
-Contributor Installation
-------------------------
+The above has been tested from both Windows and Linux (and requires `git <https://git-scm.com>`_). 
+
+Contributors
+------------
 
 Find a suitable location on your machine and run::
 
     $ git clone https://github.com/chebpy/chebpy.git
 
-Adding the outer chebpy folder to a PYTHONPATH environment variable is then one way to proceed.
+One way to proceed is then to add the outer chebpy/ folder to a PYTHONPATH environment variable.

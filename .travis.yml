@@ -21,5 +21,6 @@ addons:
     - libfftw3-dev
 script:
     - nosetests -v --with-coverage --cover-package=chebpy
+    - CHEBPY_USE_MPL=0 CHEBPY_USE_PYFFTW=0 nosetests -v --with-coverage --cover-package=chebpy
 after_success:
     - coveralls

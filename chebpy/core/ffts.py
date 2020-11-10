@@ -3,9 +3,12 @@
 # import fftw via pyfftw if the user has it installed, otherwise default to 
 # fftpack via numpy
 
-try:
-    from pyfftw.interfaces.numpy_fft import fft
-    from pyfftw.interfaces.numpy_fft import ifft
-except:
-    from numpy.fft import fft
-    from numpy.fft import ifft
+from chebpy.core.importing import import_optional
+
+
+# import the requested FFT module
+_fft = import_optional('pyfftw.interfaces.numpy_fft', 'PYFFTW',
+                       fallback='numpy.fft')
+
+# assign the interfaces for import from other modules
+fft, ifft = _fft.fft, _fft.ifft
