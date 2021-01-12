@@ -130,6 +130,17 @@ class ClassUsage(unittest.TestCase):
         self.assertEqual(gg.size, standard_chop(ff.onefun.coeffs))
         self.assertEqual(infnorm(ff.coeffs[:gg.size]-gg.coeffs), 0)
         self.assertEqual(ff.interval, gg.interval)
+
+    def test_translate(self):
+        c = -1
+        shifted_interval = self.ff.interval + c
+        gg = self.ff.translate(c)
+        hh = Bndfun.initfun_adaptive(lambda x: self.ff(x-c), shifted_interval)
+        yk = shifted_interval(np.linspace(-1,1,100))
+        self.assertEqual(gg.interval, hh.interval)
+        self.assertLessEqual(infnorm(gg.coeffs-hh.coeffs), 1e1*eps)
+        self.assertLessEqual(infnorm(gg(yk)-hh(yk)), 1e2*eps)
+
 # --------------------------------------
 #          vscale estimates
 # --------------------------------------

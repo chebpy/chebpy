@@ -137,7 +137,11 @@ class Classicfun(Fun):
         if self.interval == subinterval:
             return self
         else:
-            return type(self).initfun_fixedlen(self, subinterval, self.size)
+            return self.__class__.initfun_fixedlen(self, subinterval, self.size)
+
+    def translate(self, c):
+        '''Translate a fun by c, i.e., return f(x-c)'''
+        return self.__class__(self.onefun, self.interval+c)
 
     # -------------
     #  rootfinding

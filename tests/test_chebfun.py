@@ -319,6 +319,7 @@ class ClassUsage(unittest.TestCase):
             self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
     def test_restrict_(self):
+        '''Tests the ._restrict operator'''
         # test a variety of domains with breaks
         doms = [(-4,4), (-4,0,4), (-2,-1, 0.3, 1, 2.5)]
         for dom in doms:
@@ -371,6 +372,25 @@ class ClassUsage(unittest.TestCase):
 
     def test_restrict_empty(self):
         self.assertTrue(self.f0.restrict([-1,1]).isempty)
+
+    def test_translate(self):
+        c = -1.5
+        g1 = self.f1.translate(c)
+        g2 = self.f2.translate(c)
+        # check domains match
+        self.assertEqual(self.f1.domain+c, g1.domain)
+        self.assertEqual(self.f2.domain+c, g2.domain)
+        # check fun lengths match
+        self.assertEqual(self.f1.funs.size, g1.funs.size)
+        self.assertEqual(self.f2.funs.size, g2.funs.size)
+        # check coefficients match on each fun
+        for f1k, g1k in zip(self.f1, g1):
+            self.assertLessEqual(infnorm(f1k.coeffs-g1k.coeffs), tol)
+        for f2k, g2k in zip(self.f2, g2):
+            self.assertLessEqual(infnorm(f2k.coeffs-g2k.coeffs), tol)
+
+    def test_translate_empty(self):
+        self.assertTrue(self.f0.translate(3))
 
 class Algebra(unittest.TestCase):
 

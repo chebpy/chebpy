@@ -266,11 +266,6 @@ class Chebfun:
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
-    @self_empty()
-    def simplify(self):
-        '''Simplify each fun in the chebfun'''
-        return self.__class__([fun.simplify() for fun in self])
-
     def restrict(self, subinterval):
         '''Restrict a chebfun to a subinterval'''
         return self._restrict(subinterval).simplify()
@@ -294,6 +289,15 @@ class Chebfun:
             allrts.append(rts)
             prvrts = rts
         return np.concatenate([x for x in allrts])
+
+    @self_empty()
+    def simplify(self):
+        '''Simplify each fun in the chebfun'''
+        return self.__class__([fun.simplify() for fun in self])
+
+    def translate(self, c):
+        '''Translate a chebfun by c, i.e., return f(x-c)'''
+        return self.__class__([x.translate(c) for x in self])
 
     # ----------
     #  calculus
