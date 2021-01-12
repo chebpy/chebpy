@@ -135,10 +135,10 @@ class ClassUsage(unittest.TestCase):
         c = -1
         shifted_interval = self.ff.interval + c
         gg = self.ff.translate(c)
-        hh = Bndfun.initfun_adaptive(lambda x: self.ff(x-c), shifted_interval)
+        hh = Bndfun.initfun_fixedlen(lambda x: self.ff(x-c), shifted_interval, gg.size)
         yk = shifted_interval(np.linspace(-1,1,100))
         self.assertEqual(gg.interval, hh.interval)
-        self.assertLessEqual(infnorm(gg.coeffs-hh.coeffs), 1e1*eps)
+        self.assertLessEqual(infnorm(gg.coeffs-hh.coeffs), 2e1*eps)
         self.assertLessEqual(infnorm(gg(yk)-hh(yk)), 1e2*eps)
 
 # --------------------------------------
