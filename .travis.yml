@@ -9,12 +9,9 @@ install:
     - pip install coveralls
     - pip install matplotlib
 python:
-#    - "2.7"
-#    - "3.4"
-#    - "3.5"
     - "3.6"
     - "3.7"
-#    - "3.8"   # pyfftw does not yet support 3.8
+    - "3.8"
 addons:
   apt:
     packages:
