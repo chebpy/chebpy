@@ -6,7 +6,7 @@ ChebPy - A Python implementation of Chebfun
     :target: https://travis-ci.org/chebpy/chebpy
 .. image:: https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master
     :target: https://coveralls.io/github/chebpy/chebpy?branch=master
-.. image:: https://img.shields.io/badge/python-%203.6,%203.7-blue.svg?
+.. image:: https://img.shields.io/badge/python-%203.6,%203.7,%203.8-blue.svg?
     :target: https://travis-ci.org/chebpy/chebpy
 .. image:: https://anaconda.org/conda-forge/chebfun/badges/installer/conda.svg
     :target: https://anaconda.org/conda-forge/chebfun
