@@ -18,6 +18,10 @@ To update, run::
 
 The above has been tested from both Windows and Linux (and requires `git <https://git-scm.com>`_). 
 
+If pip fails with "error: unknown file type '.pyx'", then you may need to first run
+
+    $ pip install cython
+
 Contributors
 ------------
 
