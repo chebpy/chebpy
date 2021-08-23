@@ -26,6 +26,8 @@ def plot_complex_fun(cfn, support, ax=None, N=None, **kwargs):
     N = N if N is not None else prefs.N_plot
     ff = cfn(np.linspace(*support, N))
     ax.plot(np.real(ff), np.imag(ff), **kwargs)
+    ax.set_xlabel(kwargs.pop('ylabel', 'real'))
+    ax.set_ylabel(kwargs.pop('xlabel', 'imag'))
     return ax
 
 

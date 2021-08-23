@@ -240,6 +240,7 @@ class Plotting(unittest.TestCase):
         f = lambda x: sin(3*x) + 5e-1*cos(30*x)
         self.f0 = Chebtech2.initfun_fixedlen(f, 100)
         self.f1 = Chebtech2.initfun_adaptive(f)
+        self.f2 = Chebtech2.initfun_adaptive(lambda x: np.exp(2*np.pi*1j*x))
 
     def test_plot(self):
         plt = import_plt()
@@ -247,13 +248,21 @@ class Plotting(unittest.TestCase):
             fig, ax = plt.subplots()
             self.f0.plot(ax=ax)
 
+    def test_plot_complex(self):
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            # plot Bernstein ellipses
+            joukowsky = lambda z: .5*(z+1/z)
+            for rho in np.arange(1.1, 2, 0.1):
+                joukowsky(rho*self.f2).plot(ax=ax)
+
     def test_plotcoeffs(self):
         plt = import_plt()
         if plt:
             fig, ax = plt.subplots()
             self.f0.plotcoeffs(ax=ax)
             self.f1.plotcoeffs(ax=ax, color="r")
-
 
 
 class Calculus(unittest.TestCase):
@@ -271,6 +280,20 @@ class Calculus(unittest.TestCase):
 
     def test_diff_empty(self):
         self.assertTrue(self.emptyfun.diff().isempty)
+
+
+class Complex(unittest.TestCase):
+    """Unit-tests for Chebtech2 calculus operations"""
+
+    def setUp(self):
+        self.x = Chebtech2.initidentity()
+
+    def test_init_empty(self):
+        Chebtech2.initempty()
+
+    def test_initfun_adaptive(self):
+        Chebtech2.initfun_adaptive(lambda x: np.exp(2*np.pi*1j*x))
+
 
 # --------------------------------------
 #           definite integrals
