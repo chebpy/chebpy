@@ -84,12 +84,10 @@ class Chebtech(Smoothfun):
         else:
             imagnorm = np.linalg.norm(np.imag(coeffs), np.inf)
         if imagnorm > 10 * prefs.eps:
-            self.iscomplex = True
-            dtype = complex
+            self.dtype = complex
         else:
-            self.iscomplex = False
-            dtype = float
-        self._coeffs = np.array(coeffs, dtype=dtype)
+            self.dtype = float
+        self._coeffs = np.array(coeffs, dtype=self.dtype)
         self._interval = Interval(*interval)
 
     def __call__(self, x, how='clenshaw'):
@@ -221,7 +219,7 @@ class Chebtech(Smoothfun):
 
             # check for zero output
             eps = prefs.eps
-            tol = .2 * eps * max([f.vscale, g.vscale])
+            tol = .5 * eps * max([f.vscale, g.vscale])
             if all(abs(cfs)<tol):
                 return cls.initconst(0., interval=self.interval)
             else:
@@ -337,7 +335,7 @@ class Chebtech(Smoothfun):
         such that F(-1) = 0.'''
         n = self.size
         ak = np.append(self.coeffs, [0, 0])
-        bk = np.zeros(n+1)
+        bk = np.zeros(n+1, dtype=self.coeffs.dtype)
         rk = np.arange(2,n+1)
         bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
         bk[1] = ak[0] - .5*ak[2]
@@ -356,7 +354,7 @@ class Chebtech(Smoothfun):
         else:
             n = self.size
             ak = self.coeffs
-            zk = np.zeros(n-1)
+            zk = np.zeros(n-1, dtype=self.coeffs.dtype)
             wk = 2*np.arange(1, n)
             vk = wk * ak[1:]
             zk[-1::-2] = vk[-1::-2].cumsum()
@@ -391,7 +389,7 @@ class Chebtech(Smoothfun):
 plt = import_plt()
 if plt:
     def plot(self, ax=None, **kwargs):
-        if self.iscomplex:
+        if self.dtype == complex:
             return plot_complex_fun(self, (-1, 1), ax=ax, **kwargs)
         else: # not a complex-valued chebtech
             return plotfun(self, (-1, 1), ax=ax, **kwargs)

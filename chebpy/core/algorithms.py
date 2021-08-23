@@ -67,7 +67,7 @@ def rootsunit(ak, htol=None):
         v = .5 * np.ones(n-2)
         C = np.diag(v,-1) + np.diag(v, 1)
         C[0,1] = 1
-        D = np.zeros(C.shape)
+        D = np.zeros(C.shape, dtype=ak.dtype)
         D[-1,:] = ak[:-1]
         E = C - .5 * 1./ak[-1] * D
         rts = np.linalg.eigvals(E)

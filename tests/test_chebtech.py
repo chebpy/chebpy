@@ -287,12 +287,35 @@ class Complex(unittest.TestCase):
 
     def setUp(self):
         self.x = Chebtech2.initidentity()
+        self.z = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi*1j*x))
 
     def test_init_empty(self):
         Chebtech2.initempty()
 
-    def test_initfun_adaptive(self):
-        Chebtech2.initfun_adaptive(lambda x: np.exp(2*np.pi*1j*x))
+    def test_roots(self):
+        r0 = self.z.roots()
+        r1 = (self.z-1).roots()
+        r2 = (self.z-1j).roots()
+        r3 = (self.z+1).roots()
+        r4 = (self.z+1j).roots()
+        self.assertEqual(r0.size, 0)
+        self.assertTrue(np.allclose(r1, [0]))
+        self.assertTrue(np.allclose(r2, [.5]))
+        self.assertTrue(np.allclose(r3, [-1, 1]))
+        self.assertTrue(np.allclose(r4, [-.5]))
+
+    def test_rho_ellipse_construction(self):
+        zz = 1.2 * self.z
+        e = .5 * (zz + 1/zz)
+        self.assertTrue(e.size, 29)
+        self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(1), 0, places=14)
+
+    def test_calculus(self):
+        self.assertTrue(np.allclose([self.z.sum()], [0]))
+        self.assertTrue((self.z.cumsum().diff()-self.z).size, 1)
+        self.assertTrue((self.z-self.z.cumsum().diff()).size, 1)
 
 
 # --------------------------------------
