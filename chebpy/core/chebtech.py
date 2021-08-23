@@ -12,7 +12,7 @@ from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
-from chebpy.core.plotting import import_plt, plotfun, plot_complex_fun, plotfuncoeffs
+from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
 from chebpy.core.utilities import Interval
 
 
@@ -135,6 +135,11 @@ class Chebtech(Smoothfun):
     def isempty(self):
         '''Return True if the Chebtech is empty'''
         return self.size == 0
+
+    @property
+    def iscomplex(self):
+        '''Determine whether the underlying onefun is complex or real valued'''
+        return self.dtype == complex
 
     @property
     def isconst(self):
@@ -389,10 +394,7 @@ class Chebtech(Smoothfun):
 plt = import_plt()
 if plt:
     def plot(self, ax=None, **kwargs):
-        if self.dtype == complex:
-            return plot_complex_fun(self, (-1, 1), ax=ax, **kwargs)
-        else: # not a complex-valued chebtech
-            return plotfun(self, (-1, 1), ax=ax, **kwargs)
+        return plotfun(self, (-1, 1), ax=ax, **kwargs)
     setattr(Chebtech, 'plot', plot)
 
     def plotcoeffs(self, ax=None, **kwargs):

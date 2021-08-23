@@ -100,6 +100,10 @@ class Fun(object):
         raise NotImplementedError
 
     @abc.abstractproperty
+    def iscomplex(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
     def size(self):
         raise NotImplementedError
 
