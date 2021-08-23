@@ -12,7 +12,7 @@ from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     vals2coeffs2, coeffs2vals2, chebpts2,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
-from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
+from chebpy.core.plotting import import_plt, plotfun, plot_complex_fun, plotfuncoeffs
 from chebpy.core.utilities import Interval
 
 
@@ -79,7 +79,17 @@ class Chebtech(Smoothfun):
 
     def __init__(self, coeffs, interval=None):
         interval = interval if interval is not None else prefs.domain
-        self._coeffs = np.array(coeffs, dtype=float)
+        if coeffs.size == 0:
+            imagnorm = 0
+        else:
+            imagnorm = np.linalg.norm(np.imag(coeffs), np.inf)
+        if imagnorm > 10 * prefs.eps:
+            self.iscomplex = True
+            dtype = complex
+        else:
+            self.iscomplex = False
+            dtype = float
+        self._coeffs = np.array(coeffs, dtype=dtype)
         self._interval = Interval(*interval)
 
     def __call__(self, x, how='clenshaw'):
@@ -381,7 +391,10 @@ class Chebtech(Smoothfun):
 plt = import_plt()
 if plt:
     def plot(self, ax=None, **kwargs):
-        return plotfun(self, (-1, 1), ax=ax, **kwargs)
+        if self.iscomplex:
+            return plot_complex_fun(self, (-1, 1), ax=ax, **kwargs)
+        else: # not a complex-valued chebtech
+            return plotfun(self, (-1, 1), ax=ax, **kwargs)
     setattr(Chebtech, 'plot', plot)
 
     def plotcoeffs(self, ax=None, **kwargs):

@@ -21,6 +21,14 @@ def plotfun(fn_y, support, ax=None, N=None, **kwargs):
     return ax
 
 
+def plot_complex_fun(cfn, support, ax=None, N=None, **kwargs):
+    ax = ax or import_plt().gca()
+    N = N if N is not None else prefs.N_plot
+    ff = cfn(np.linspace(*support, N))
+    ax.plot(np.real(ff), np.imag(ff), **kwargs)
+    return ax
+
+
 def plotfuncoeffs(abscoeffs, ax=None, **kwargs):
     ax = ax or import_plt().gca()
     ax.set_ylabel(kwargs.pop('xlabel', 'coefficient magnitude'))
