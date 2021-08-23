@@ -299,7 +299,7 @@ class Chebtech(Smoothfun):
         rts = newtonroots(self, rts)
         # fix problems with newton for roots that are numerically very close
         rts = np.clip(rts, -1, 1)  # if newton roots are just outside [-1,1]
-        rts = rts if not sort else np.sort(finalrts)
+        rts = rts if not sort else np.sort(rts)
         return rts
 
     # ----------
