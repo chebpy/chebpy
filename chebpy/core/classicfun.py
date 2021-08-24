@@ -133,6 +133,19 @@ class Classicfun(Fun):
     # -----------
     #  utilities
     # -----------
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__(self.onefun.imag(), self.interval)
+        else:
+            return self.initconst(0, interval=self.interval)
+
+    def real(self):
+        if self.iscomplex:
+            return self.__class__(self.onefun.real(), self.interval)
+        else:
+            return self
+
     def restrict(self, subinterval):
         '''Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length

@@ -160,6 +160,16 @@ class Chebtech(Smoothfun):
     # -----------
     #  utilities
     # -----------
+    def copy(self):
+        '''Return a deep copy of the Chebtech'''
+        return self.__class__(self.coeffs.copy(), interval=self.interval.copy())
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__(np.imag(self.coeffs), self.interval)
+        else:
+            return self.initconst(0, interval=self.interval)
+
     def prolong(self, n):
         '''Return a Chebtech of length n, obtained either by truncating
         if n < self.size or zero-padding if n > self.size. In all cases a
@@ -182,20 +192,6 @@ class Chebtech(Smoothfun):
         else:
             return self
 
-    def imag(self):
-        if self.iscomplex:
-            return self.__class__(np.imag(self.coeffs), self.interval)
-        else:
-            return self.initconst(0, interval=self.interval)
-
-    def copy(self):
-        '''Return a deep copy of the Chebtech'''
-        return self.__class__(self.coeffs.copy(), interval=self.interval.copy())
-
-    def values(self):
-        '''Function values at Chebyshev points'''
-        return coeffs2vals2(self.coeffs)
-
     def simplify(self):
         '''Call standard_chop on the coefficients of self, returning a
         Chebtech comprised of a copy of the truncated coefficients.'''
@@ -210,6 +206,10 @@ class Chebtech(Smoothfun):
         npts = min(oldlen, npts)
         # construct
         return self.__class__(cfs[:npts].copy(), interval=self.interval)
+
+    def values(self):
+        '''Function values at Chebyshev points'''
+        return coeffs2vals2(self.coeffs)
 
     # ---------
     #  algebra
