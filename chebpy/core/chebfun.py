@@ -265,7 +265,20 @@ class Chebfun:
 
     # -----------
     #  utilities
-    # -----------
+    # ----------
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__([fun.imag() for fun in self])
+        else:
+            return self.initconst(0, domain=self.domain)
+
+    def real(self):
+        if self.iscomplex:
+            return self.__class__([fun.real() for fun in self])
+        else:
+            return self
+
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 

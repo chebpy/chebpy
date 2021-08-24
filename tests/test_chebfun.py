@@ -866,6 +866,18 @@ class Complex(unittest.TestCase):
         self.assertTrue((self.z.cumsum().diff()-self.z).isconst)
         self.assertTrue((self.z-self.z.cumsum().diff()).isconst)
 
+    def test_real_imag(self):
+        # check definition of real and imaginary
+        zreal = self.z.real()
+        zimag = self.z.imag()
+        np.testing.assert_equal(zreal.funs[0].coeffs, np.real(self.z.funs[0].coeffs))
+        np.testing.assert_equal(zimag.funs[0].coeffs, np.imag(self.z.funs[0].coeffs))
+        # check real part of real chebtech is the same chebtech
+        self.assertTrue(zreal.real()==zreal)
+        # check imaginary part of real chebtech is the zero chebtech
+        self.assertTrue(zreal.imag().isconst)
+        self.assertTrue(zreal.imag().funs[0].coeffs[0]==0)
+
 
 class Calculus(unittest.TestCase):
 
