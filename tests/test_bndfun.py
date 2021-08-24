@@ -175,15 +175,26 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(1*x) + 5e-1*cos(10*x) + 5e-3*sin(100*x)
+        u = lambda x: np.exp(2*np.pi*1j*x)
         subinterval = Interval(-6, 10)
         self.f0 = Bndfun.initfun_fixedlen(f, subinterval, 1000)
         self.f1 = Bndfun.initfun_adaptive(f, subinterval)
+        self.f2 = Bndfun.initfun_adaptive(u, Interval(-1, 1))
 
     def test_plot(self):
         plt = import_plt()
         if plt:
             fig, ax = plt.subplots()
             self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
+
+    def test_plot_complex(self):
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            # plot Bernstein ellipses
+            joukowsky = lambda z: .5*(z+1/z)
+            for rho in np.arange(1.1, 2, 0.1):
+                (np.exp(1j*.25*np.pi)*joukowsky(rho*self.f2)).plot(ax=ax)
 
     def test_plotcoeffs(self):
         plt = import_plt()
@@ -304,6 +315,40 @@ for k, (fun, der, n, tol) in enumerate(derivatives):
     _testfun_ = derivativeTester(fun, der, n, tol)
     _testfun_.__name__ = "test_diff_{:02}".format(k)
     setattr(Calculus, _testfun_.__name__, _testfun_)
+
+
+class Complex(unittest.TestCase):
+
+    def setUp(self):
+        self.z = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi*1j*x), Interval(-1, 1))
+
+    def test_init_empty(self):
+        Bndfun.initempty()
+
+    def test_roots(self):
+        r0 = self.z.roots()
+        r1 = (self.z-1).roots()
+        r2 = (self.z-1j).roots()
+        r3 = (self.z+1).roots()
+        r4 = (self.z+1j).roots()
+        self.assertEqual(r0.size, 0)
+        self.assertTrue(np.allclose(r1, [0]))
+        self.assertTrue(np.allclose(r2, [.5]))
+        self.assertTrue(np.allclose(r3, [-1, 1]))
+        self.assertTrue(np.allclose(r4, [-.5]))
+
+    def test_rho_ellipse_construction(self):
+        zz = 1.2 * self.z
+        e = .5 * (zz + 1/zz)
+        self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(1), 0, places=14)
+
+    def test_calculus(self):
+        self.assertTrue(np.allclose([self.z.sum()], [0]))
+        self.assertTrue((self.z.cumsum().diff()-self.z).size, 1)
+        self.assertTrue((self.z-self.z.cumsum().diff()).size, 1)
+
 
 
 class Construction(unittest.TestCase):

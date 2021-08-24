@@ -238,9 +238,10 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(3*x) + 5e-1*cos(30*x)
+        u = lambda x: np.exp(2*np.pi*1j*x)
         self.f0 = Chebtech2.initfun_fixedlen(f, 100)
         self.f1 = Chebtech2.initfun_adaptive(f)
-        self.f2 = Chebtech2.initfun_adaptive(lambda x: np.exp(2*np.pi*1j*x))
+        self.f2 = Chebtech2.initfun_adaptive(u)
 
     def test_plot(self):
         plt = import_plt()
@@ -283,10 +284,8 @@ class Calculus(unittest.TestCase):
 
 
 class Complex(unittest.TestCase):
-    """Unit-tests for Chebtech2 calculus operations"""
 
     def setUp(self):
-        self.x = Chebtech2.initidentity()
         self.z = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi*1j*x))
 
     def test_init_empty(self):
@@ -307,7 +306,6 @@ class Complex(unittest.TestCase):
     def test_rho_ellipse_construction(self):
         zz = 1.2 * self.z
         e = .5 * (zz + 1/zz)
-        self.assertTrue(e.size, 29)
         self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
         self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
         self.assertAlmostEqual(e(0)+e(1), 0, places=14)
