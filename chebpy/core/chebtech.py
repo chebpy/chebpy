@@ -176,6 +176,18 @@ class Chebtech(Smoothfun):
             out = self.copy()
         return out
 
+    def real(self):
+        if self.iscomplex:
+            return self.__class__(np.real(self.coeffs), self.interval)
+        else:
+            return self
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__(np.imag(self.coeffs), self.interval)
+        else:
+            return self.initconst(0, interval=self.interval)
+
     def copy(self):
         '''Return a deep copy of the Chebtech'''
         return self.__class__(self.coeffs.copy(), interval=self.interval.copy())

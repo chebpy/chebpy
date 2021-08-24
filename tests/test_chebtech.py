@@ -315,6 +315,18 @@ class Complex(unittest.TestCase):
         self.assertTrue((self.z.cumsum().diff()-self.z).size, 1)
         self.assertTrue((self.z-self.z.cumsum().diff()).size, 1)
 
+    def test_real_imag(self):
+        # ceck definition of real and imaginary
+        zreal = self.z.real()
+        zimag = self.z.imag()
+        np.testing.assert_equal(zreal.coeffs, np.real(self.z.coeffs))
+        np.testing.assert_equal(zimag.coeffs, np.imag(self.z.coeffs))
+        # check real part of real chebtech is the same chebtech
+        self.assertTrue(zreal.real()==zreal)
+        # check imaginary part of real chebtech is the zero chebtech
+        self.assertTrue(zreal.imag().isconst)
+        self.assertTrue(zreal.imag().coeffs[0]==0)
+
 
 # --------------------------------------
 #           definite integrals
