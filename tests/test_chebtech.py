@@ -464,7 +464,8 @@ class Construction(unittest.TestCase):
 def adaptiveTester(fun, funlen):
     ff = Chebtech2.initfun_adaptive(fun)
     def tester(self):
-        self.assertEquals(ff.size, funlen)
+        self.assertLessEqual(ff.size-funlen, 2)
+        self.assertGreater(ff.size-funlen, -1)
     return tester
 
 def fixedlenTester(fun, n):

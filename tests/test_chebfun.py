@@ -635,7 +635,7 @@ powtestdomains = [
 # add operator.pow tests
 for (f, namef), (g, nameg) in powtestfuns:
     for dom, tol in powtestdomains:
-        _testfun_ = binaryOpTester(f, g, operator.pow, dom, 2*tol)
+        _testfun_ = binaryOpTester(f, g, operator.pow, dom, 3*tol)
         _testfun_.__name__ = \
             "test_{}_{}_{}_[{:.1f},..,{:.1f}]".format(
                 'pow', namef, nameg, *dom)
