@@ -33,6 +33,8 @@ class Chebtech(Smoothfun):
         '''Initialise a Chebtech from a constant c'''
         if not np.isscalar(c):
             raise ValueError(c)
+        if isinstance(c, int):
+            c = float(c)
         return cls(np.array([c]), interval=interval)
 
     @classmethod
@@ -79,15 +81,7 @@ class Chebtech(Smoothfun):
 
     def __init__(self, coeffs, interval=None):
         interval = interval if interval is not None else prefs.domain
-        if coeffs.size == 0:
-            imagnorm = 0
-        else:
-            imagnorm = np.linalg.norm(np.imag(coeffs), np.inf)
-        if imagnorm > 10 * prefs.eps:
-            self.dtype = complex
-        else:
-            self.dtype = float
-        self._coeffs = np.array(coeffs, dtype=self.dtype)
+        self._coeffs = np.array(coeffs)
         self._interval = Interval(*interval)
 
     def __call__(self, x, how='clenshaw'):
@@ -139,7 +133,7 @@ class Chebtech(Smoothfun):
     @property
     def iscomplex(self):
         '''Determine whether the underlying onefun is complex or real valued'''
-        return self.dtype == complex
+        return self._coeffs.dtype == complex
 
     @property
     def isconst(self):
