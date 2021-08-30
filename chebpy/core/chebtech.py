@@ -207,7 +207,11 @@ class Chebtech(Smoothfun):
     def __add__(self, f):
         cls = self.__class__
         if np.isscalar(f):
-            cfs = self.coeffs.copy()
+            if np.iscomplexobj(f):
+                dtype = complex
+            else:
+                dtype = self.coeffs.dtype
+            cfs = np.array(self.coeffs, dtype=dtype)
             cfs[0] += f
             return cls(cfs, interval=self.interval)
         else:
