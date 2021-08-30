@@ -834,6 +834,51 @@ class Evaluation(unittest.TestCase):
         self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
 
 
+class Complex(unittest.TestCase):
+
+    def setUp(self):
+        self.z = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi*1j*x), [-1, 1])
+
+    def test_init_empty(self):
+        Chebfun.initempty()
+
+    def test_roots(self):
+        r0 = self.z.roots()
+        r1 = (self.z-1).roots()
+        r2 = (self.z-1j).roots()
+        r3 = (self.z+1).roots()
+        r4 = (self.z+1j).roots()
+        self.assertEqual(r0.size, 0)
+        self.assertTrue(np.allclose(r1, [0]))
+        self.assertTrue(np.allclose(r2, [.5]))
+        self.assertTrue(np.allclose(r3, [-1, 1]))
+        self.assertTrue(np.allclose(r4, [-.5]))
+
+    def test_rho_ellipse_construction(self):
+        zz = 1.2 * self.z
+        e = .5 * (zz + 1/zz)
+        self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(1), 0, places=14)
+
+    def test_calculus(self):
+        self.assertTrue(np.allclose([self.z.sum()], [0]))
+        self.assertTrue((self.z.cumsum().diff()-self.z).isconst)
+        self.assertTrue((self.z-self.z.cumsum().diff()).isconst)
+
+    def test_real_imag(self):
+        # check definition of real and imaginary
+        zreal = self.z.real()
+        zimag = self.z.imag()
+        np.testing.assert_equal(zreal.funs[0].coeffs, np.real(self.z.funs[0].coeffs))
+        np.testing.assert_equal(zimag.funs[0].coeffs, np.imag(self.z.funs[0].coeffs))
+        # check real part of real chebtech is the same chebtech
+        self.assertTrue(zreal.real()==zreal)
+        # check imaginary part of real chebtech is the zero chebtech
+        self.assertTrue(zreal.imag().isconst)
+        self.assertTrue(zreal.imag().funs[0].coeffs[0]==0)
+
+
 class Calculus(unittest.TestCase):
 
     def setUp(self):
@@ -949,9 +994,11 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        u = lambda x: np.exp(2*np.pi*1j*x)
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+        self.f4 = Chebfun.initfun_adaptive(u, [-1, 1])
 
     def test_plot(self):
         plt = import_plt()
@@ -959,6 +1006,15 @@ class Plotting(unittest.TestCase):
             for fun in [self.f1, self.f2, self.f3]:
                 fig, ax = plt.subplots()
                 fun.plot(ax=ax)
+
+    def test_plot_complex(self):
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            # plot Bernstein ellipses
+            joukowsky = lambda z: .5*(z+1/z)
+            for rho in np.arange(1.1, 2, 0.1):
+                (np.exp(1j*.5*np.pi)*joukowsky(rho*self.f4)).plot(ax=ax)
 
     def test_plotcoeffs(self):
         plt = import_plt()

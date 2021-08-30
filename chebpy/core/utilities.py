@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
-
+import six
 import collections
 import numpy as np
 
@@ -10,6 +7,7 @@ from chebpy.core.decorators import cast_other
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     IntervalValues, InvalidDomain,
                                     SupportMismatch, NotSubdomain)
+
 
 def HTOL():
     return 5 * prefs.eps
@@ -257,3 +255,9 @@ def generate_funs(domain, bndfun_constructor, kwds={}):
 
 def infnorm(vals):
     return np.linalg.norm(vals, np.inf)
+
+
+def coerce_list(x):
+    if not isinstance(x, collections.Iterable) or isinstance(x, six.string_types):
+        x = [x]
+    return x

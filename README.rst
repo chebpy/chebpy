@@ -361,3 +361,91 @@ Skew, Kurtosis):
         skew = -0.0000
     kurtosis = +3.0000
 
+
+----
+Complex chebfuns
+----
+
+As of v 0.4, ChebPy supports complex variable representations. This makes it extremely convenient to perform certain computations in the complex plane.
+
+For example, here is how we can plot a series of "Bernstein ellipses" in the complex plane. (Bernstein ellipses are important objects in the formal convergence theory of of Chebyshev series approximations.) They are computed as transformations of the complex unit circle under the Joukowsky map:
+
+.. code:: python
+
+    x = chebfun('x', [-1, 1])
+    z = exp(2*pi*1j*x)
+    joukowsky = lambda z: .5*(z+1/z)
+    for rho in arange(1.1, 2, 0.1):
+        ellipse = joukowsky(rho*z)
+        ellipse.plot(linewidth=2)
+
+.. image:: images/readme-diag-7.png
+
+
+Per the first line of the above code segment, each of these ellipses is a complex-valued function of the real variable ``x`` defined on ``[-1, 1]``. It is trivial to extract the real and imaginary components and plot these on the ``x`` domain, which we do for the last (largest) ellipse in the sequence as follows:
+
+
+.. code:: python
+
+    fig, ax = subplots()
+    ellipse.real().plot(linewidth=3)
+    ellipse.imag().plot(linewidth=3)
+    ax.legend(['real', 'imag'])
+
+
+.. image:: images/readme-diag-8.png
+
+
+Here is an example of using ChebPy to perform a contour integral calculation (replicating Trefethen & Hale's original `example <https://www.chebfun.org/examples/complex/KeyholeContour.html>`_):
+
+
+.. code:: python
+
+    # set up the keyhole contour
+    r, R, e = 0.2, 2, 0.1
+    v = [-R+e*1j, -r+e*1j, -r-e*1j, -R-e*1j]
+    s = chebfun('x', [0, 1])         # dummy variable
+    z0 = v[0] + (v[1]-v[0])*s        # top of the keyhole
+    z1 = v[1] * v[2]**s / v[1]**s    # inner circle
+    z2 = v[2] + s * (v[3]-v[2])      # bottom of keyhole
+    z3 = v[3] * v[0]**s / v[3]**s    # outer circle
+
+    # plot
+    fig, ax = subplots()
+    kwds = dict(color='b', linewidth=3)
+    z0.plot(ax=ax, **kwds)
+    z1.plot(ax=ax, **kwds)
+    z2.plot(ax=ax, **kwds)
+    z3.plot(ax=ax, **kwds)
+    xlim = ax.get_xlim()
+    ax.plot([-4, 0], [0, 0], color='r', linewidth=2, linestyle='-')
+    ax.set_xlim(xlim)
+
+.. image:: images/readme-diag-9.png
+
+We then perform the numerical integration as follows:
+
+.. code:: python
+
+    # integral
+    f = lambda x: log(x) * tanh(x)
+
+    def contour_integral(z, f):
+        I = f(z) * z.diff()
+        return I.sum()
+ 
+    y0 = np.sum([contour_integral(z, f) for z in (z0, z1, z2, z3)])
+    y1 = 4j * pi * log(pi/2)
+
+
+This yields a typically high-accuracy result:
+
+.. code:: python
+    
+    print('   y0 = {:+.15f}\n'.format(y0)+\
+          '   y1 = {:+.15f}\n'.format(y1)+\
+          'y1-y0 = {:+.15f}'.format(y1-y0))
+ 
+       y0 = +0.000000000000003+5.674755637702217j
+       y1 = +0.000000000000000+5.674755637702224j
+    y1-y0 = -0.000000000000003+0.000000000000006j

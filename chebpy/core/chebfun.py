@@ -66,7 +66,8 @@ class Chebfun:
     def __call__(self, x):
 
         # initialise output
-        out = np.full(x.size, np.nan)
+        dtype = complex if self.iscomplex else float
+        out = np.full(x.size, np.nan, dtype=dtype)
 
         # evaluate a fun when x is an interior point
         for fun in self:
@@ -75,8 +76,8 @@ class Chebfun:
 
         # evaluate the breakpoint data for x at a breakpoint
         breakpoints = self.breakpoints
-        for breakpoint in breakpoints:
-            out[x==breakpoint] = self.breakdata[breakpoint]
+        for break_point in breakpoints:
+            out[x==break_point] = self.breakdata[break_point]
 
         # first and last funs used to evaluate outside of the chebfun domain
         lpts, rpts = x < breakpoints[0], x > breakpoints[-1]
@@ -218,19 +219,26 @@ class Chebfun:
     @property
     @self_empty(np.array([]))
     def domain(self):
-        '''Construct and return a Domain object corresponding to self'''
+        '''Construct and return a Domain object corresponding to self.
+        '''
         return Domain.from_chebfun(self)
 
     @property
     @self_empty(Domain([]))
     def support(self):
-        '''Return an array containing the first and last breakpoints'''
+        '''Return an array containing the first and last breakpoints.
+        '''
         return self.domain.support
 
     @property
     @self_empty(0.)
     def hscale(self):
         return np.float(np.abs(self.support).max())
+
+    @property
+    @self_empty(False)
+    def iscomplex(self):
+        return any(fun.iscomplex for fun in self)
 
     @property
     @self_empty(False)
@@ -251,30 +259,47 @@ class Chebfun:
     @property
     @self_empty()
     def x(self):
-        '''Return a Chebfun representing the identity the support of self'''
+        '''Identity function on the support of self.
+        '''
         return self.__class__.initidentity(self.support)
 
     # -----------
     #  utilities
-    # -----------
+    # ----------
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__([fun.imag() for fun in self])
+        else:
+            return self.initconst(0, domain=self.domain)
+
+    def real(self):
+        if self.iscomplex:
+            return self.__class__([fun.real() for fun in self])
+        else:
+            return self
+
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
     @self_empty()
     def _restrict(self, subinterval):
-        '''Restrict a chebfun to a subinterval, without simplifying'''
+        '''Restrict a chebfun to a subinterval, without simplifying.
+        '''
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
     def restrict(self, subinterval):
-        '''Restrict a chebfun to a subinterval'''
+        '''Restrict a chebfun to a subinterval.
+        '''
         return self._restrict(subinterval).simplify()
 
     @cache
     @self_empty(np.array([]))
     def roots(self, merge=None):
         '''Compute the roots of a Chebfun, i.e., the set of values x for which
-        f(x) = 0.'''
+        f(x) = 0.
+        '''
         merge = merge if merge is not None else prefs.mergeroots
         allrts = []
         prvrts = np.array([])
@@ -375,14 +400,14 @@ class Chebfun:
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, **kwargs):
-        return plotfun(self, self.support, ax=ax, **kwargs)
+    def plot(self, ax=None, **kwds):
+        return plotfun(self, self.support, ax=ax, **kwds)
     setattr(Chebfun, 'plot', plot)
 
-    def plotcoeffs(self, ax=None, **kwargs):
+    def plotcoeffs(self, ax=None, **kwds):
         ax = ax or plt.gca()
         for fun in self:
-            fun.plotcoeffs(ax=ax, **kwargs)
+            fun.plotcoeffs(ax=ax, **kwds)
         return ax
     setattr(Chebfun, 'plotcoeffs', plotcoeffs)
 

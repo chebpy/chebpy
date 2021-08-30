@@ -106,6 +106,11 @@ class Classicfun(Fun):
         return self.onefun.isconst
 
     @property
+    def iscomplex(self):
+        '''Determine whether the underlying onefun is complex or real valued'''
+        return self.onefun.iscomplex
+
+    @property
     def isempty(self):
         '''Return the isempty property of the underlying onefun'''
         return self.onefun.isempty
@@ -128,6 +133,19 @@ class Classicfun(Fun):
     # -----------
     #  utilities
     # -----------
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__(self.onefun.imag(), self.interval)
+        else:
+            return self.initconst(0, interval=self.interval)
+
+    def real(self):
+        if self.iscomplex:
+            return self.__class__(self.onefun.real(), self.interval)
+        else:
+            return self
+
     def restrict(self, subinterval):
         '''Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length
@@ -174,8 +192,8 @@ class Classicfun(Fun):
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, **kwargs):
-        return plotfun(self, self.support, ax=ax, **kwargs)
+    def plot(self, ax=None, **kwds):
+        return plotfun(self, self.support, ax=ax, **kwds)
     setattr(Classicfun, 'plot', plot)
 
 # ----------------------------------------------------------------
@@ -185,8 +203,8 @@ if plt:
 methods_onefun_other = ('values', 'plotcoeffs')
 
 def addUtility(methodname):
-    def method(self, *args, **kwargs):
-        return getattr(self.onefun, methodname)(*args, **kwargs)
+    def method(self, *args, **kwds):
+        return getattr(self.onefun, methodname)(*args, **kwds)
     method.__name__ = methodname
     method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
     setattr(Classicfun, methodname, method)
@@ -204,8 +222,8 @@ for methodname in methods_onefun_other:
 methods_onefun_zeroargs = ('__pos__', '__neg__', 'copy', 'simplify')
 
 def addZeroArgOp(methodname):
-    def method(self, *args, **kwargs):
-        onefun = getattr(self.onefun, methodname)(*args, **kwargs)
+    def method(self, *args, **kwds):
+        onefun = getattr(self.onefun, methodname)(*args, **kwds)
         return self.__class__(onefun, self.interval)
     method.__name__ = methodname
     method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'
@@ -225,7 +243,7 @@ methods_onefun_binary = ('__add__', '__div__', '__mul__', '__pow__',
 
 def addBinaryOp(methodname):
     @self_empty()
-    def method(self, f, *args, **kwargs):
+    def method(self, f, *args, **kwds):
         cls = self.__class__
         if isinstance(f, cls):
             # TODO: as in ChebTech, is a decorator apporach here better?
@@ -238,7 +256,7 @@ def addBinaryOp(methodname):
         else:
             # let the lower level classes raise any other exceptions
             g = f
-        onefun = getattr(self.onefun, methodname)(g, *args, **kwargs)
+        onefun = getattr(self.onefun, methodname)(g, *args, **kwds)
         return cls(onefun, self.interval)
     method.__name__ = methodname
     method.__doc__ = 'TODO: CHANGE THIS TO SOMETHING MEANINGFUL'

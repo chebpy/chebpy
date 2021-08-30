@@ -220,7 +220,7 @@ vscales = [
     (lambda x: 0*x+1.,              1, 1),
 ]
 
-def definiteIntegralTester(fun, n, vscale):
+def vscaleTester(fun, n, vscale):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     def tester(self):
         absdiff = abs(ff.vscale-vscale)
@@ -228,7 +228,7 @@ def definiteIntegralTester(fun, n, vscale):
     return tester
 
 for k, args in enumerate(vscales):
-    _testfun_ = definiteIntegralTester(*args)
+    _testfun_ = vscaleTester(*args)
     _testfun_.__name__ = "test_vscale_{:02}".format(k)
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
@@ -238,8 +238,10 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(3*x) + 5e-1*cos(30*x)
+        u = lambda x: np.exp(2*np.pi*1j*x)
         self.f0 = Chebtech2.initfun_fixedlen(f, 100)
         self.f1 = Chebtech2.initfun_adaptive(f)
+        self.f2 = Chebtech2.initfun_adaptive(u)
 
     def test_plot(self):
         plt = import_plt()
@@ -247,13 +249,21 @@ class Plotting(unittest.TestCase):
             fig, ax = plt.subplots()
             self.f0.plot(ax=ax)
 
+    def test_plot_complex(self):
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            # plot Bernstein ellipses
+            joukowsky = lambda z: .5*(z+1/z)
+            for rho in np.arange(1.1, 2, 0.1):
+                joukowsky(rho*self.f2).plot(ax=ax)
+
     def test_plotcoeffs(self):
         plt = import_plt()
         if plt:
             fig, ax = plt.subplots()
             self.f0.plotcoeffs(ax=ax)
             self.f1.plotcoeffs(ax=ax, color="r")
-
 
 
 class Calculus(unittest.TestCase):
@@ -271,6 +281,52 @@ class Calculus(unittest.TestCase):
 
     def test_diff_empty(self):
         self.assertTrue(self.emptyfun.diff().isempty)
+
+
+class Complex(unittest.TestCase):
+
+    def setUp(self):
+        self.z = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi*1j*x))
+
+    def test_init_empty(self):
+        Chebtech2.initempty()
+
+    def test_roots(self):
+        r0 = self.z.roots()
+        r1 = (self.z-1).roots()
+        r2 = (self.z-1j).roots()
+        r3 = (self.z+1).roots()
+        r4 = (self.z+1j).roots()
+        self.assertEqual(r0.size, 0)
+        self.assertTrue(np.allclose(r1, [0]))
+        self.assertTrue(np.allclose(r2, [.5]))
+        self.assertTrue(np.allclose(r3, [-1, 1]))
+        self.assertTrue(np.allclose(r4, [-.5]))
+
+    def test_rho_ellipse_construction(self):
+        zz = 1.2 * self.z
+        e = .5 * (zz + 1/zz)
+        self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(1), 0, places=14)
+
+    def test_calculus(self):
+        self.assertTrue(np.allclose([self.z.sum()], [0]))
+        self.assertTrue((self.z.cumsum().diff()-self.z).size, 1)
+        self.assertTrue((self.z-self.z.cumsum().diff()).size, 1)
+
+    def test_real_imag(self):
+        # ceck definition of real and imaginary
+        zreal = self.z.real()
+        zimag = self.z.imag()
+        np.testing.assert_equal(zreal.coeffs, np.real(self.z.coeffs))
+        np.testing.assert_equal(zimag.coeffs, np.imag(self.z.coeffs))
+        # check real part of real chebtech is the same chebtech
+        self.assertTrue(zreal.real()==zreal)
+        # check imaginary part of real chebtech is the zero chebtech
+        self.assertTrue(zreal.imag().isconst)
+        self.assertTrue(zreal.imag().coeffs[0]==0)
+
 
 # --------------------------------------
 #           definite integrals
@@ -408,7 +464,8 @@ class Construction(unittest.TestCase):
 def adaptiveTester(fun, funlen):
     ff = Chebtech2.initfun_adaptive(fun)
     def tester(self):
-        self.assertEquals(ff.size, funlen)
+        self.assertLessEqual(ff.size-funlen, 2)
+        self.assertGreater(ff.size-funlen, -1)
     return tester
 
 def fixedlenTester(fun, n):
