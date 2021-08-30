@@ -220,7 +220,7 @@ vscales = [
     (lambda x: 0*x+1.,              1, 1),
 ]
 
-def definiteIntegralTester(fun, n, vscale):
+def vscaleTester(fun, n, vscale):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     def tester(self):
         absdiff = abs(ff.vscale-vscale)
@@ -228,7 +228,7 @@ def definiteIntegralTester(fun, n, vscale):
     return tester
 
 for k, args in enumerate(vscales):
-    _testfun_ = definiteIntegralTester(*args)
+    _testfun_ = vscaleTester(*args)
     _testfun_.__name__ = "test_vscale_{:02}".format(k)
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 

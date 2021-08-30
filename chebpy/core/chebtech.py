@@ -13,7 +13,7 @@ from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
 from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
-from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Interval, coerce_list
 
 
 class Chebtech(Smoothfun):
@@ -150,12 +150,7 @@ class Chebtech(Smoothfun):
     @self_empty(0.)
     def vscale(self):
         '''Estimate the vertical scale of a Chebtech'''
-        if self.isconst:
-            values = self.coeffs
-        else:
-            values = self.values()
-        vscale = abs(values).max()
-        return vscale
+        return np.abs(coerce_list((self.values()))).max()
 
     # -----------
     #  utilities
