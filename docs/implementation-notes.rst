@@ -9,7 +9,7 @@ fit together (diagram courtesy of the Chebfun team, via
 https://github.com/chebfun/chebfun/wiki/Class-diagram):
 
 
-.. image:: images/implementation-notes-chebfun-v5-class-diag.png
+.. image:: ./implementation-notes-chebfun-v5-class-diag.png
 
 
 At this stage, only a relatively small subset of Matlab Chebfun has been
@@ -193,7 +193,7 @@ permutations.
 
 
 
-.. image:: images/implementation-notes-diag-1.png
+.. image:: ./implementation-notes-diag-1.png
 
 
 So, the following works:
@@ -314,7 +314,7 @@ nevertheless be a useful feature for developers):
 
 
 
-.. image:: images/implementation-notes-diag-2.png
+.. image:: ./implementation-notes-diag-2.png
 
 
 So while the ``Onefun`` attribute determines approximation behaviour, the
