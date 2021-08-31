@@ -1,4 +1,3 @@
-import six
 import collections
 import numpy as np
 
@@ -258,6 +257,6 @@ def infnorm(vals):
 
 
 def coerce_list(x):
-    if not isinstance(x, collections.Iterable) or isinstance(x, six.string_types):
+    if not isinstance(x, collections.Iterable) or isinstance(x, str):
         x = [x]
     return x
