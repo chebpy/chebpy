@@ -369,7 +369,7 @@ Complex chebfuns
 
 As of v0.4.0 ChebPy supports complex variable representations. This makes it extremely convenient to perform certain computations in the complex plane.
 
-For example, here is how we can plot a series of "Bernstein ellipses". (These are important objects in the convergence theory of of Chebyshev series approximations of analytic functions.) They are computed as transformations of the scaled complex unit circle under the Joukowsky map:
+For example here is how we can plot a series of "Bernstein ellipses" - important objects in the convergence theory of Chebyshev series approximations for analytic functions. They are computed as transformations of the scaled complex unit circle under the Joukowsky map:
 
 .. code:: python
 
