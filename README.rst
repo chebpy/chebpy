@@ -22,13 +22,12 @@ ChebPy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
 Demo
 ----
 
-For convenience we'll import everything from
-``numpy`` and ``matplotlib``.
+We'll need ``numpy`` and ``matplotlib.pyplot``.
 
 .. code:: python
 
-    from numpy import *
-    from matplotlib.pyplot import *
+    import numpy as np
+    import matplotlib.pyplot as plt
     from chebpy import chebfun
 
 The function ``chebfun`` behaves in essentially the same way as its Matlab
@@ -62,7 +61,7 @@ here is the specification of a function ``f`` that oscillates with two modes:
 
 .. code:: python
 
-    f = sin(x) + sin(5*x)
+    f = np.sin(x) + np.sin(5*x)
     f
 
 
@@ -125,8 +124,8 @@ The function and its roots can be plotted together as follows:
 
 .. code:: python
 
-    f.plot();
-    plot(r, f(r), 'or');
+    ax = f.plot();
+    ax.plot(r, f(r), 'or');
 
 
 
@@ -215,15 +214,15 @@ the background by solving the corresponding root-finding problem.
 
 
 
-Here's a plot of both ``f`` and ``g``, and their
-maximum, ``h``:
+Here's a plot of both ``f`` and ``g``, and their maximum, ``h``:
 
 .. code:: python
 
-    f.plot(linewidth=1, linestyle='--')
-    g.plot(linewidth=1, linestyle='--')
-    h.plot()
-    ylim([-2.5, 2.5]);
+    fig, ax = plt.subplots()
+    f.plot(ax=ax, linewidth=1, linestyle='--')
+    g.plot(ax=ax, linewidth=1, linestyle='--')
+    h.plot(ax=ax)
+    ax.set_ylim([-2.5, 2.5]);
 
 
 
@@ -267,11 +266,11 @@ with the interval of definition.
 
 .. code:: python
 
-    gaussian = lambda x: 1/sqrt(2*pi) * exp(-.5*x**2)
+    gaussian = lambda x: 1/np.sqrt(2*pi) * np.exp(-.5*x**2)
     pdf = chebfun(gaussian, [-15, 15])
-    pdf.plot()
-    ylim([-.05, .45]);
-    title('Standard Gaussian distribution (mean  0, variance 1)');
+    ax = pdf.plot()
+    ax.set_ylim([-.05, .45]);
+    ax.set_title('Standard Gaussian distribution (mean  0, variance 1)');
 
 
 
@@ -301,8 +300,8 @@ computed as the indefinite integral (``cumsum``) of the density:
 .. code:: python
 
     cdf = pdf.cumsum()
-    cdf.plot()
-    ylim([-0.1, 1.1]);
+    ax = cdf.plot()
+    ax.set_ylim([-0.1, 1.1]);
 
 
 
@@ -374,9 +373,9 @@ For example here is how we can plot a series of "Bernstein ellipses" - important
 .. code:: python
 
     x = chebfun('x', [-1, 1])
-    z = exp(2*pi*1j*x)
+    z = np.exp(2*np.pi*1j*x)
     joukowsky = lambda z: .5*(z+1/z)
-    for rho in arange(1.1, 2, 0.1):
+    for rho in np.arange(1.1, 2, 0.1):
         ellipse = joukowsky(rho*z)
         ellipse.plot(linewidth=2)
 
@@ -388,7 +387,7 @@ Per the first line of the above code segment, each of these ellipses is a comple
 
 .. code:: python
 
-    fig, ax = subplots()
+    fig, ax = plt.subplots()
     ellipse.real().plot(linewidth=3)
     ellipse.imag().plot(linewidth=3)
     ax.legend(['real', 'imag'])
@@ -411,16 +410,19 @@ Here is an example of using ChebPy to perform a contour integral calculation (re
     z2 = v[2] + s * (v[3]-v[2])      # bottom of keyhole
     z3 = v[3] * v[0]**s / v[3]**s    # outer circle
 
-    # plot the keyhole & branch cut
-    fig, ax = subplots()
+    # plot the keyhole contour
+    fig, ax = plt.subplots()
     kwds = dict(color='b', linewidth=3)
     z0.plot(ax=ax, **kwds)
     z1.plot(ax=ax, **kwds)
     z2.plot(ax=ax, **kwds)
     z3.plot(ax=ax, **kwds)
-    xlim = ax.get_xlim()
+
+    # plot the branch cut
     ax.plot([-4, 0], [0, 0], color='r', linewidth=2, linestyle='-')
-    ax.set_xlim(xlim)
+  
+    ax.axis('equal');
+    ax.set_xlim([-2.2, 2.2])
 
 .. image:: images/readme-diag-9.png
 
@@ -429,13 +431,13 @@ We then perform the numerical integration as follows:
 
 .. code:: python
 
-    f = lambda x: log(x) * tanh(x)
+    f = lambda x: np.log(x) * np.tanh(x)
     def contour_integral(z, f):
         I = f(z) * z.diff()
         return I.sum()
 
     y0 = np.sum([contour_integral(z, f) for z in (z0, z1, z2, z3)])    # numerical integral
-    y1 = 4j * pi * log(pi/2)                                           # exact value
+    y1 = 4j * np.pi * np.log(np.pi/2)                                  # exact value
 
 
 As usual, this yields a high-accuracy result:
