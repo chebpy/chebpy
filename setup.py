@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='chebpy',
-    version='0.4.0',
+    version='0.4.1',
     description='A Python implementation of Chebfun',
     long_description=open('README.rst',"rt").read(),
     author='Mark Richardson',
