@@ -151,7 +151,7 @@ definite integral here is:
 
 .. code:: python
 
-    1.2-cos(10)-.2*cos(50)
+    1.2 - np.cos(10) - 0.2 * np.cos(50)
 
 
 
@@ -235,7 +235,7 @@ can be applied as normal. Here for instance is the exponential of ``h`` and its 
 
 .. code:: python
 
-    exp(h).plot();
+    np.exp(h).plot();
 
 
 
@@ -244,7 +244,7 @@ can be applied as normal. Here for instance is the exponential of ``h`` and its 
 
 .. code:: python
 
-    exp(h).sum()
+    np.exp(h).sum()
 
 
 
@@ -266,7 +266,7 @@ with the interval of definition.
 
 .. code:: python
 
-    gaussian = lambda x: 1/np.sqrt(2*pi) * np.exp(-.5*x**2)
+    gaussian = lambda x: 1/np.sqrt(2*np.pi) * np.exp(-.5*x**2)
     pdf = chebfun(gaussian, [-15, 15])
     ax = pdf.plot()
     ax.set_ylim([-.05, .45]);
@@ -314,10 +314,10 @@ corresponding to the quantile of interest. For example:
 
 .. code:: python
 
-    print 'quantile    z-score '
-    print '--------------------'
-    for quantile in arange(.1, .0, -.01):
-        print '  {:2.0f}%       {:+5.3f}'.format(1e2*quantile, (cdf-quantile).roots()[0])
+    print('quantile    z-score ')
+    print('--------------------')
+    for quantile in np.arange(.1, .0, -.01):
+        print('  {:2.0f}%       {:+5.3f}'.format(1e2*quantile, (cdf-quantile).roots()[0]))
 
 
 .. parsed-literal::
@@ -342,15 +342,15 @@ Skew, Kurtosis):
 
 .. code:: python
 
-    x = pdf.x
+    x = pdf.x  # identity on domain of pdf
     m1 = (pdf*x).sum()
     m2 = (pdf*(x-m1)**2).sum()
     m3 = (pdf*(x-m1)**3).sum() / m2**1.5
     m4 = (pdf*(x-m1)**4).sum() / m2**2
-    print '    mean = {:+.4f}'.format(m1)
-    print 'variance = {:+.4f}'.format(m2)
-    print '    skew = {:+.4f}'.format(m3)
-    print 'kurtosis = {:+.4f}'.format(m4)
+    print('    mean = {:+.4f}'.format(m1))
+    print('variance = {:+.4f}'.format(m2))
+    print('    skew = {:+.4f}'.format(m3))
+    print('kurtosis = {:+.4f}'.format(m4))
 
 
 .. parsed-literal::
