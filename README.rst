@@ -13,7 +13,7 @@ ChebPy - A Python implementation of Chebfun
 
 |
 
-Chebpy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
+ChebPy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
 
 - For installation details, see `INSTALL.rst <INSTALL.rst>`_.
 - For implementation notes, see `implementation-notes.rst <implementation-notes.rst>`_
@@ -362,13 +362,14 @@ Skew, Kurtosis):
     kurtosis = +3.0000
 
 
+
 ----
 Complex chebfuns
 ----
 
-As of v 0.4, ChebPy supports complex variable representations. This makes it extremely convenient to perform certain computations in the complex plane.
+As of v0.4.0 ChebPy supports complex variable representations. This makes it extremely convenient to perform certain computations in the complex plane.
 
-For example, here is how we can plot a series of "Bernstein ellipses" in the complex plane. (Bernstein ellipses are important objects in the formal convergence theory of of Chebyshev series approximations.) They are computed as transformations of the complex unit circle under the Joukowsky map:
+For example, here is how we can plot a series of "Bernstein ellipses". (These are important objects in the convergence theory of of Chebyshev series approximations of analytic functions.) They are computed as transformations of the scaled complex unit circle under the Joukowsky map:
 
 .. code:: python
 
@@ -396,7 +397,7 @@ Per the first line of the above code segment, each of these ellipses is a comple
 .. image:: images/readme-diag-8.png
 
 
-Here is an example of using ChebPy to perform a contour integral calculation (replicating Trefethen & Hale's original `example <https://www.chebfun.org/examples/complex/KeyholeContour.html>`_):
+Here is an example of using ChebPy to perform a contour integral calculation (replicating Trefethen & Hale's `example <https://www.chebfun.org/examples/complex/KeyholeContour.html>`_):
 
 
 .. code:: python
@@ -410,7 +411,7 @@ Here is an example of using ChebPy to perform a contour integral calculation (re
     z2 = v[2] + s * (v[3]-v[2])      # bottom of keyhole
     z3 = v[3] * v[0]**s / v[3]**s    # outer circle
 
-    # plot
+    # plot the keyhole & branch cut
     fig, ax = subplots()
     kwds = dict(color='b', linewidth=3)
     z0.plot(ax=ax, **kwds)
@@ -423,28 +424,30 @@ Here is an example of using ChebPy to perform a contour integral calculation (re
 
 .. image:: images/readme-diag-9.png
 
+
 We then perform the numerical integration as follows:
 
 .. code:: python
 
-    # integral
     f = lambda x: log(x) * tanh(x)
-
     def contour_integral(z, f):
         I = f(z) * z.diff()
         return I.sum()
- 
-    y0 = np.sum([contour_integral(z, f) for z in (z0, z1, z2, z3)])
-    y1 = 4j * pi * log(pi/2)
+
+    y0 = np.sum([contour_integral(z, f) for z in (z0, z1, z2, z3)])    # numerical integral
+    y1 = 4j * pi * log(pi/2)                                           # exact value
 
 
-This yields a typically high-accuracy result:
+As usual, this yields a high-accuracy result:
 
 .. code:: python
     
     print('   y0 = {:+.15f}\n'.format(y0)+\
           '   y1 = {:+.15f}\n'.format(y1)+\
           'y1-y0 = {:+.15f}'.format(y1-y0))
+
+
+.. code:: python
  
        y0 = +0.000000000000003+5.674755637702217j
        y1 = +0.000000000000000+5.674755637702224j
