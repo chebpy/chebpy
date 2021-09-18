@@ -13,6 +13,13 @@ ChebPy - A Python implementation of Chebfun
 
 |
 
+
+Numerical computing with Chebyshev series approximations in Python.
+
+
+.. image:: images/chebpy-demo.png
+
+
 ChebPy is a Python implementation of `Chebfun <http://www.chebfun.org/>`_.
 
 - The software is licensed under a 3-Clause BSD License, see `LICENSE.rst <LICENSE.rst>`_.
