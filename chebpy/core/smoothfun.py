@@ -1,6 +1,6 @@
-import abc
+from abc import ABC
 
 from .onefun import Onefun
 
-class Smoothfun(Onefun):
-    __metaclass__ = abc.ABCMeta
+class Smoothfun(Onefun, ABC):
+    pass

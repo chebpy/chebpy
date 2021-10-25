@@ -1,4 +1,5 @@
-import collections
+from collections import OrderedDict
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -225,7 +226,7 @@ def compute_breakdata(funs):
     thus at the point of calling we are guaranteed to have a fully partitioned
     and nonoverlapping domain."""
     if funs.size == 0:
-        return collections.OrderedDict()
+        return OrderedDict()
     else:
         points = np.array([fun.support for fun in funs])
         values = np.array([fun.endvalues for fun in funs])
@@ -238,7 +239,7 @@ def compute_breakdata(funs):
         y = .5 * (yy[::2] + yy[1::2])
         xout = np.append(np.append(xl, x), xr)
         yout = np.append(np.append(yl, y), yr)
-        return collections.OrderedDict(zip(xout, yout))
+        return OrderedDict(zip(xout, yout))
 
 
 def generate_funs(domain, bndfun_constructor, kwds={}):
@@ -257,6 +258,6 @@ def infnorm(vals):
 
 
 def coerce_list(x):
-    if not isinstance(x, collections.Iterable) or isinstance(x, str):
+    if not isinstance(x, Iterable) or isinstance(x, str):
         x = [x]
     return x

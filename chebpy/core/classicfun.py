@@ -1,4 +1,4 @@
-import abc
+from abc import ABC
 
 import numpy as np
 
@@ -16,9 +16,7 @@ techdict = {
 }
 
 
-class Classicfun(Fun):
-
-    __metaclass__ = abc.ABCMeta
+class Classicfun(Fun, ABC):
 
     # --------------------------
     #  alternative constructors

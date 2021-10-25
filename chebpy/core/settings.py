@@ -1,11 +1,11 @@
 import numpy as np
 
 
-class DefaultPrefs():
+class DefaultPrefs:
     pass
 
 
-class UserPrefs():
+class UserPrefs:
     def __init__(self):
         self.eps = np.finfo(float).eps
         self.tech = "Chebtech2"

@@ -1,4 +1,4 @@
-import importlib
+from importlib import import_module
 import os
 
 def import_optional(name, envvarname, fallback=None):
@@ -10,10 +10,10 @@ def import_optional(name, envvarname, fallback=None):
     use_module = os.environ.get('CHEBPY_USE_'+envvarname.upper(), '1')
     if use_module.lower() in ['true', '1']:
         try:
-            return importlib.import_module(name)
+            return import_module(name)
         except ImportError: # pragma: no cover
             pass
     if fallback is not None:
-        return importlib.import_module(fallback)
+        return import_module(fallback)
     else:
         return None
