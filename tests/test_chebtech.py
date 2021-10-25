@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Unit-tests for pyfun/core/chebtech.py"""
-
-from __future__ import division
 
 import itertools
 import operator

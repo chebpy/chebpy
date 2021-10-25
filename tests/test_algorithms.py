@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Unit-tests for pyfun/utilities.py"""
-
-from __future__ import division
 
 import unittest
 import numpy as np

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
-# import fftw via pyfftw if the user has it installed, otherwise default to 
-# fftpack via numpy
+"""Import fftw via pyfftw if the user has it installed,
+otherwise default to fftpack via numpy"""
 
 from chebpy.core.importing import import_optional
 
