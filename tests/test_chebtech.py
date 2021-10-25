@@ -3,13 +3,15 @@
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
-from tests.utilities import (testfunctions, infnorm, scaled_tol,
+
+from .utilities import (testfunctions, infnorm, scaled_tol,
                              infNormLessThanTol)
 
 np.random.seed(0)

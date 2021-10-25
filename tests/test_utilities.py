@@ -1,6 +1,7 @@
 """Unit-tests for pyfun/core/utilities.py"""
 
 import unittest
+
 import numpy as np
 
 from chebpy import chebfun
@@ -11,7 +12,8 @@ from chebpy.core.utilities import (HTOL, Interval, Domain, compute_breakdata,
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     IntervalValues, InvalidDomain,
                                     SupportMismatch, NotSubdomain)
-from tests.utilities import infnorm
+
+from .utilities import infnorm
 
 
 np.random.seed(0)

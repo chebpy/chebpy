@@ -1,11 +1,11 @@
 import collections
+
 import numpy as np
 
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import cast_other
-from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
-                                    IntervalValues, InvalidDomain,
-                                    SupportMismatch, NotSubdomain)
+from .settings import userPrefs as prefs
+from .decorators import cast_other
+from .exceptions import (IntervalGap, IntervalOverlap, IntervalValues,
+                         InvalidDomain, SupportMismatch, NotSubdomain)
 
 
 def HTOL():

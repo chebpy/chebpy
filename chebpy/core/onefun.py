@@ -1,6 +1,6 @@
 import abc
 
-from chebpy.core.decorators import abstractclassmethod
+from .decorators import abstractclassmethod
 
 class Onefun(object):
     __metaclass__ = abc.ABCMeta

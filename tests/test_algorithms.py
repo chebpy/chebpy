@@ -1,13 +1,14 @@
 """Unit-tests for pyfun/utilities.py"""
 
 import unittest
+
 import numpy as np
 
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
 
-from tests.utilities import (testfunctions, scaled_tol, infNormLessThanTol,
+from .utilities import (testfunctions, scaled_tol, infNormLessThanTol,
                              infnorm)
 
 # aliases

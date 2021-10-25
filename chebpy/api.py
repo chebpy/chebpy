@@ -1,9 +1,9 @@
 """User-facing functions"""
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Domain
-from chebpy.core.settings import userPrefs as prefs
+from .core.bndfun import Bndfun
+from .core.chebfun import Chebfun
+from .core.utilities import Domain
+from .core.settings import userPrefs as prefs
 
 
 def chebfun(f=None, domain=None, n=None):

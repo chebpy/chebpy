@@ -1,6 +1,6 @@
 import abc
 
-from chebpy.core.decorators import abstractclassmethod
+from .decorators import abstractclassmethod
 
 class Fun(object):
 

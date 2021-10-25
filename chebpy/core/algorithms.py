@@ -1,10 +1,11 @@
 import warnings
+
 import numpy as np
 
-from chebpy.core.ffts import fft, ifft
-from chebpy.core.utilities import Interval, infnorm
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import preandpostprocess
+from .ffts import fft, ifft
+from .utilities import Interval, infnorm
+from .settings import userPrefs as prefs
+from .decorators import preandpostprocess
 
 # supress numpy division and multiply warnings
 np.seterr(divide='ignore', invalid='ignore')

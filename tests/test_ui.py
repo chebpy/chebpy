@@ -1,6 +1,8 @@
 import unittest
 import pickle
+
 import numpy as np
+
 from chebpy import chebfun, pwc
 from chebpy.core.settings import DefaultPrefs
 

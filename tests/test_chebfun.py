@@ -3,6 +3,7 @@
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
 from chebpy import chebfun
@@ -14,7 +15,7 @@ from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     InvalidDomain, BadFunLengthArgument)
 from chebpy.core.plotting import import_plt
 
-from tests.utilities import infnorm, testfunctions
+from .utilities import infnorm, testfunctions
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]

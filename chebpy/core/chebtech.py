@@ -1,15 +1,16 @@
 import abc
+
 import numpy as np
 
-from chebpy.core.smoothfun import Smoothfun
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import self_empty
-from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
-                                    vals2coeffs2, coeffs2vals2, chebpts2,
-                                    barywts2, rootsunit, newtonroots,
-                                    standard_chop)
-from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
-from chebpy.core.utilities import Interval, coerce_list
+from .smoothfun import Smoothfun
+from .settings import userPrefs as prefs
+from .decorators import self_empty
+from .algorithms import (bary, clenshaw, adaptive, coeffmult,
+                         vals2coeffs2, coeffs2vals2, chebpts2,
+                         barywts2, rootsunit, newtonroots,
+                         standard_chop)
+from .plotting import import_plt, plotfun, plotfuncoeffs
+from .utilities import Interval, coerce_list
 
 
 class Chebtech(Smoothfun):

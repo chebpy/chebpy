@@ -1,1 +1,1 @@
-from chebpy.api import chebfun, pwc
+from .api import chebfun, pwc

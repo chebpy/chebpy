@@ -3,6 +3,7 @@
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
 from chebpy.core.bndfun import Bndfun
@@ -12,7 +13,7 @@ from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
 
-from tests.utilities import testfunctions, infnorm
+from .utilities import testfunctions, infnorm
 
 # aliases
 pi = np.pi

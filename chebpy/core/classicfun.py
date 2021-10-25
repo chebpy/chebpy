@@ -1,13 +1,14 @@
 import abc
+
 import numpy as np
 
-from chebpy.core.fun import Fun
-from chebpy.core.chebtech import Chebtech2
-from chebpy.core.utilities import Interval
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import self_empty
-from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
-from chebpy.core.plotting import import_plt, plotfun
+from .fun import Fun
+from .chebtech import Chebtech2
+from .utilities import Interval
+from .settings import userPrefs as prefs
+from .decorators import self_empty
+from .exceptions import IntervalMismatch, NotSubinterval
+from .plotting import import_plt, plotfun
 
 
 techdict = {

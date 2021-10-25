@@ -1,4 +1,5 @@
 import functools
+
 import numpy as np
 
 # bespoke abstract class method decorator taken from:
