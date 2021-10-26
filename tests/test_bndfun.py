@@ -8,7 +8,7 @@ import numpy as np
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
@@ -20,7 +20,7 @@ pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 
 # NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class (although it
 # is not abstract) we will test the interface in the way Chebfun will interact

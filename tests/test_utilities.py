@@ -6,7 +6,7 @@ import numpy as np
 
 from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import (HTOL, Interval, Domain, compute_breakdata,
                                    check_funs)
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
@@ -17,7 +17,7 @@ from .utilities import infnorm
 
 
 np.random.seed(0)
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 HTOL = HTOL()
 
 

@@ -1,28 +1,32 @@
 import unittest
 
-import chebpy
+from chebpy import UserPreferences
+from chebpy.core.settings import _preferences
 
 def userPref(name):
-    from chebpy.core.settings import userPrefs
-    return getattr(userPrefs, name)
+    """Get the current preference value for name.
+    This is how chebpy core modules access these."""
+    return getattr(_preferences, name)
 
 class Settings(unittest.TestCase):
 
     def test_update_pref(self):
         eps_new = 1e-3
-        eps_old = chebpy.core.settings.userPrefs.eps
-        chebpy.core.settings.userPrefs.eps = eps_new
-        self.assertEqual(eps_new, userPref('eps'))
-        chebpy.core.settings.userPrefs.eps = eps_old  # we *must* change it back
+        eps_old = userPref('eps')
+        with UserPreferences() as prefs:
+            prefs.eps = eps_new
+            self.assertEqual(eps_new, userPref('eps'))
+        self.assertEqual(eps_old, userPref('eps'))
 
     def test_reset(self):
         def change(reset_named=False):
-            chebpy.core.settings.userPrefs.eps = 99
+            prefs = UserPreferences()
+            prefs.eps = 99
             if reset_named:
-                chebpy.core.settings.userPrefs.reset('eps')
+                prefs.reset('eps')
             else:
-                chebpy.core.settings.userPrefs.reset()
-        eps_bak = chebpy.core.settings.defaultPrefs.eps
+                prefs.reset()
+        eps_bak = userPref('eps')
         change(False)
         self.assertEqual(eps_bak, userPref('eps'))
         change(True)

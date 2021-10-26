@@ -9,7 +9,7 @@ import numpy as np
 from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     InvalidDomain, BadFunLengthArgument)
@@ -32,7 +32,7 @@ pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 
 # domain, test_tolerance
 chebfun_testdomains = [
