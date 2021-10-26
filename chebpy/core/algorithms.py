@@ -4,7 +4,7 @@ import numpy as np
 
 from .ffts import fft, ifft
 from .utilities import Interval, infnorm
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .decorators import preandpostprocess
 
 # supress numpy division and multiply warnings

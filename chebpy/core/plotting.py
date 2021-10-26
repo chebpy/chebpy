@@ -1,6 +1,6 @@
 import numpy as np
 
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .importing import import_optional
 
 

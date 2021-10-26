@@ -3,7 +3,7 @@ import operator
 import numpy as np
 
 from .bndfun import Bndfun
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .utilities import Domain, check_funs, generate_funs, compute_breakdata
 from .decorators import self_empty, float_argument, cast_arg_to_chebfun, cache
 from .exceptions import BadFunLengthArgument

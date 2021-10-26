@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .smoothfun import Smoothfun
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .decorators import self_empty
 from .algorithms import (bary, clenshaw, adaptive, coeffmult,
                          vals2coeffs2, coeffs2vals2, chebpts2,

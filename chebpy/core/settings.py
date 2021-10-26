@@ -1,34 +1,74 @@
 import numpy as np
 
 
-class DefaultPrefs:
-    pass
+class DefaultPreferences:
+    """Default preferences for chebpy."""
+
+    eps = np.finfo(float).eps
+    tech = "Chebtech2"
+    domain = np.array([-1., 1.])  #TODO: should this be .utilities.Domain?
+    N_plot = 2001
+    maxpow2 = 16
+    maxiter = 10
+    sortroots = False
+    mergeroots = True
+
+    @classmethod
+    def _defaults(cls):
+        """Returns all defined class attributes."""
+        return {k: v for k, v in cls.__dict__.items() if k[0] != "_"}
 
 
-class UserPrefs:
-    def __init__(self):
-        self.eps = np.finfo(float).eps
-        self.tech = "Chebtech2"
-        self.domain = np.array([-1., 1.])
-        self.N_plot = 2001
-        self.maxpow2 = 16
-        self.maxiter = 10
-        self.sortroots = False
-        self.mergeroots = True
+class ChebPreferences(DefaultPreferences):
+    """Preferences object used in chebpy."""
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            if hasattr(DefaultPreferences, k):
+                setattr(self, k, v)
+
     def reset(self, *names):
         """Reset default preferences.
         `.reset()` resets all preferences to the DefaultPrefs state
         `.reset(*names)` resets only the selected ones.
         This leaves additional user-added prefs untouched."""
         if len(names) == 0:
-            names = [k for k in DefaultPrefs.__dict__.keys() if k[0] != "_"]
+            names = DefaultPreferences._defaults()
         for name in names:
-            self.__setattr__(name, DefaultPrefs.__dict__[name])
+            if hasattr(DefaultPreferences, name):
+                setattr(self, getattr(DefaultPreferences, name))
 
-userPrefs = UserPrefs()
+    # Singleton
+    _instance = None  # persistent reference for the singleton object
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DefaultPreferences, cls).__new__(cls)
+        return cls._instance
 
-for name, val in userPrefs.__dict__.items():
-    if name[0] != "_":
-        setattr(DefaultPrefs, name, val)
+    # Context manager
+    _stash = []  # persistent stash for old prefs when entering context(s)
+    def __enter__(self):
+        self._stash.append({
+            k: getattr(self, k) for k in DefaultPreferences._defaults().keys()
+        })
+        return self._instance
 
-defaultPrefs = DefaultPrefs()
+    def __exit__(self, exc_type, exc_value, traceback):
+        for k, v in self._stash.pop().items():
+            setattr(self, k, v)
+
+
+_preferences = ChebPreferences()
+
+
+if __name__ == "__main__":
+
+    eps = _preferences.eps
+    with ChebPreferences() as p:
+        p.eps = 0.01
+        assert _preferences.eps == 0.01
+        with ChebPreferences() as p2:
+            p2.eps = 1e-10
+            assert _preferences.eps == 1e-10
+        assert _preferences.eps == 0.01
+    assert _preferences.eps == eps

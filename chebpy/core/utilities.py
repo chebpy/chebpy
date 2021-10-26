@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .decorators import cast_other
 from .exceptions import (IntervalGap, IntervalOverlap, IntervalValues,
                          InvalidDomain, SupportMismatch, NotSubdomain)

@@ -5,7 +5,7 @@ import numpy as np
 from .fun import Fun
 from .chebtech import Chebtech2
 from .utilities import Interval
-from .settings import userPrefs as prefs
+from .settings import _preferences as prefs
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
 from .plotting import import_plt, plotfun
@@ -26,7 +26,7 @@ class Classicfun(Fun, ABC):
         '''Adaptive initialisation of a Classicfun from a callable
         function f and a Interval object. The interval's interval has no
         relevance to the emptiness status of a Classicfun so we
-        arbitrarily set this to be DefaultPrefs.interval'''
+        arbitrarily set this to be DefaultPreferences.interval'''
         interval = Interval()
         onefun = techdict[prefs.tech].initempty(interval=interval)
         return cls(onefun, interval)
