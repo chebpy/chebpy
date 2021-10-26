@@ -3,7 +3,7 @@
 from .core.bndfun import Bndfun
 from .core.chebfun import Chebfun
 from .core.utilities import Domain
-from .core.settings import userPrefs as prefs
+from .core.settings import _preferences as prefs
 
 
 def chebfun(f=None, domain=None, n=None):

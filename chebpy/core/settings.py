@@ -22,11 +22,6 @@ class DefaultPreferences:
 class ChebPreferences(DefaultPreferences):
     """Preferences object used in chebpy."""
 
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            if hasattr(DefaultPreferences, k):
-                setattr(self, k, v)
-
     def reset(self, *names):
         """Reset default preferences.
         `.reset()` resets all preferences to the DefaultPrefs state
@@ -36,7 +31,7 @@ class ChebPreferences(DefaultPreferences):
             names = DefaultPreferences._defaults()
         for name in names:
             if hasattr(DefaultPreferences, name):
-                setattr(self, getattr(DefaultPreferences, name))
+                setattr(self, name, getattr(DefaultPreferences, name))
 
     # Singleton
     _instance = None  # persistent reference for the singleton object
@@ -58,17 +53,5 @@ class ChebPreferences(DefaultPreferences):
             setattr(self, k, v)
 
 
+# create the singleton object for easy import in sister modules
 _preferences = ChebPreferences()
-
-
-if __name__ == "__main__":
-
-    eps = _preferences.eps
-    with ChebPreferences() as p:
-        p.eps = 0.01
-        assert _preferences.eps == 0.01
-        with ChebPreferences() as p2:
-            p2.eps = 1e-10
-            assert _preferences.eps == 1e-10
-        assert _preferences.eps == 0.01
-    assert _preferences.eps == eps
