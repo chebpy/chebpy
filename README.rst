@@ -11,7 +11,7 @@ ChebPy - A Python implementation of Chebfun
 .. image:: https://img.shields.io/conda/dn/conda-forge/chebfun?label=conda%20downloads
     :target: https://anaconda.org/conda-forge/chebfun
 .. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/chebpy/chebpy/HEAD?filepath=docs%2Fnotebook-getting-started.ipynb
+    :target: https://mybinder.org/v2/gh/chebpy/chebpy/v0.4.3?filepath=docs%2Fnotebook-getting-started.ipynb
 
 |
 
