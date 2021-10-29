@@ -22,7 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           if test "${{ matrix.with-plot }}" -eq "1"; then
             pip install ".[plot]"
-          else:
+          else
             pip install .
           fi
           pip install nose
