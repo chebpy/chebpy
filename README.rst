@@ -2,12 +2,12 @@
 ChebPy - A Python implementation of Chebfun
 ================================================
 
-.. image:: https://travis-ci.org/chebpy/chebpy.svg?branch=master
-    :target: https://travis-ci.org/chebpy/chebpy
+.. image:: https://github.com/chebpy/chebpy/actions/workflows/unittest.yml/badge.svg
+    :target: https://github.com/chebpy/chebpy/actions/workflows/unittest.yml
 .. image:: https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master
     :target: https://coveralls.io/github/chebpy/chebpy?branch=master
-.. image:: https://img.shields.io/badge/python-%203.6,%203.7,%203.8-blue.svg?
-    :target: https://travis-ci.org/chebpy/chebpy
+.. image:: https://img.shields.io/badge/python-%203.7,%203.8-blue.svg?
+    :target: https://github.com/chebpy/chebpy
 .. image:: https://img.shields.io/conda/dn/conda-forge/chebfun?label=conda%20downloads
     :target: https://anaconda.org/conda-forge/chebfun
 .. image:: https://mybinder.org/badge_logo.svg
