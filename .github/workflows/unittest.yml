@@ -18,15 +18,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          # Install FFTW 3 library with Ubuntu package manager
           sudo apt install libfftw3-dev
+          # Update pip to latest version
           python -m pip install --upgrade pip
+          # Set optional features
+          OPTIONS=""
           if test "${{ matrix.matplotlib }}" -eq "plot"; then
-            pip install ".[plot]"
-          else  # noplot
-            pip install .
+            OPTIONS="${OPTIONS}, plot"
           fi
-          # install testing tools
-          pip install nose "coverage[toml]" coverage-lcov
+          # Install chebpy with test and other optional features
+          pip install ".[test${OPTIONS}]"
       - name: Run tests
         run: |
           nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
