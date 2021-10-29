@@ -100,6 +100,10 @@ class Fun(object):
         raise NotImplementedError
 
     @abc.abstractproperty
+    def iscomplex(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
     def size(self):
         raise NotImplementedError
 
@@ -116,6 +120,14 @@ class Fun(object):
     # -----------
     @abc.abstractmethod
     def copy(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def imag(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def real(self):
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -13,7 +13,7 @@ from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
                                     barywts2, rootsunit, newtonroots,
                                     standard_chop)
 from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
-from chebpy.core.utilities import Interval
+from chebpy.core.utilities import Interval, coerce_list
 
 
 class Chebtech(Smoothfun):
@@ -33,6 +33,8 @@ class Chebtech(Smoothfun):
         '''Initialise a Chebtech from a constant c'''
         if not np.isscalar(c):
             raise ValueError(c)
+        if isinstance(c, int):
+            c = float(c)
         return cls(np.array([c]), interval=interval)
 
     @classmethod
@@ -79,7 +81,7 @@ class Chebtech(Smoothfun):
 
     def __init__(self, coeffs, interval=None):
         interval = interval if interval is not None else prefs.domain
-        self._coeffs = np.array(coeffs, dtype=float)
+        self._coeffs = np.array(coeffs)
         self._interval = Interval(*interval)
 
     def __call__(self, x, how='clenshaw'):
@@ -129,6 +131,11 @@ class Chebtech(Smoothfun):
         return self.size == 0
 
     @property
+    def iscomplex(self):
+        '''Determine whether the underlying onefun is complex or real valued'''
+        return self._coeffs.dtype == complex
+
+    @property
     def isconst(self):
         '''Return True if the Chebtech represents a constant'''
         return self.size == 1
@@ -137,16 +144,21 @@ class Chebtech(Smoothfun):
     @self_empty(0.)
     def vscale(self):
         '''Estimate the vertical scale of a Chebtech'''
-        if self.isconst:
-            values = self.coeffs
-        else:
-            values = self.values()
-        vscale = abs(values).max()
-        return vscale
+        return np.abs(coerce_list((self.values()))).max()
 
     # -----------
     #  utilities
     # -----------
+    def copy(self):
+        '''Return a deep copy of the Chebtech'''
+        return self.__class__(self.coeffs.copy(), interval=self.interval.copy())
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__(np.imag(self.coeffs), self.interval)
+        else:
+            return self.initconst(0, interval=self.interval)
+
     def prolong(self, n):
         '''Return a Chebtech of length n, obtained either by truncating
         if n < self.size or zero-padding if n > self.size. In all cases a
@@ -163,13 +175,11 @@ class Chebtech(Smoothfun):
             out = self.copy()
         return out
 
-    def copy(self):
-        '''Return a deep copy of the Chebtech'''
-        return self.__class__(self.coeffs.copy(), interval=self.interval.copy())
-
-    def values(self):
-        '''Function values at Chebyshev points'''
-        return coeffs2vals2(self.coeffs)
+    def real(self):
+        if self.iscomplex:
+            return self.__class__(np.real(self.coeffs), self.interval)
+        else:
+            return self
 
     def simplify(self):
         '''Call standard_chop on the coefficients of self, returning a
@@ -186,6 +196,10 @@ class Chebtech(Smoothfun):
         # construct
         return self.__class__(cfs[:npts].copy(), interval=self.interval)
 
+    def values(self):
+        '''Function values at Chebyshev points'''
+        return coeffs2vals2(self.coeffs)
+
     # ---------
     #  algebra
     # ---------
@@ -193,7 +207,11 @@ class Chebtech(Smoothfun):
     def __add__(self, f):
         cls = self.__class__
         if np.isscalar(f):
-            cfs = self.coeffs.copy()
+            if np.iscomplexobj(f):
+                dtype = complex
+            else:
+                dtype = self.coeffs.dtype
+            cfs = np.array(self.coeffs, dtype=dtype)
             cfs[0] += f
             return cls(cfs, interval=self.interval)
         else:
@@ -211,7 +229,7 @@ class Chebtech(Smoothfun):
 
             # check for zero output
             eps = prefs.eps
-            tol = .2 * eps * max([f.vscale, g.vscale])
+            tol = .5 * eps * max([f.vscale, g.vscale])
             if all(abs(cfs)<tol):
                 return cls.initconst(0., interval=self.interval)
             else:
@@ -299,7 +317,7 @@ class Chebtech(Smoothfun):
         rts = newtonroots(self, rts)
         # fix problems with newton for roots that are numerically very close
         rts = np.clip(rts, -1, 1)  # if newton roots are just outside [-1,1]
-        rts = rts if not sort else np.sort(finalrts)
+        rts = rts if not sort else np.sort(rts)
         return rts
 
     # ----------
@@ -327,7 +345,7 @@ class Chebtech(Smoothfun):
         such that F(-1) = 0.'''
         n = self.size
         ak = np.append(self.coeffs, [0, 0])
-        bk = np.zeros(n+1)
+        bk = np.zeros(n+1, dtype=self.coeffs.dtype)
         rk = np.arange(2,n+1)
         bk[2:] = .5*(ak[1:n] - ak[3:]) / rk
         bk[1] = ak[0] - .5*ak[2]
@@ -346,7 +364,7 @@ class Chebtech(Smoothfun):
         else:
             n = self.size
             ak = self.coeffs
-            zk = np.zeros(n-1)
+            zk = np.zeros(n-1, dtype=self.coeffs.dtype)
             wk = 2*np.arange(1, n)
             vk = wk * ak[1:]
             zk[-1::-2] = vk[-1::-2].cumsum()

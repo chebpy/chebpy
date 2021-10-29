@@ -15,7 +15,7 @@ from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPrefs
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
-                                    BadDomainArgument, BadFunLengthArgument)
+                                    InvalidDomain, BadFunLengthArgument)
 from chebpy.core.plotting import import_plt
 
 from tests.utilities import infnorm, testfunctions
@@ -131,10 +131,13 @@ class Construction(unittest.TestCase):
 
     def test_initfun_adaptive_raises(self):
         initfun = Chebfun.initfun_adaptive
-        self.assertRaises(BadDomainArgument, initfun, self.f, [-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=0)
-        self.assertRaises(BadDomainArgument, initfun, self.f, domain=[])
+        self.assertRaises(InvalidDomain, initfun, self.f, [-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, domain=[-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, domain=0)
+
+    def test_initfun_adaptive_empty_domain(self):
+        f = Chebfun.initfun_adaptive(self.f, domain=[])
+        self.assertTrue(f.isempty)
 
     def test_initfun_fixedlen_continuous_domain(self):
         ff = Chebfun.initfun_fixedlen(self.f, 20, [-2,-1])
@@ -172,22 +175,28 @@ class Construction(unittest.TestCase):
 
     def test_initfun_fixedlen_raises(self):
         initfun = Chebfun.initfun_fixedlen
-        self.assertRaises(BadDomainArgument, initfun, self.f, 10, [-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[-2])
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=0)
-        self.assertRaises(BadDomainArgument, initfun, self.f, n=10, domain=[])
+        self.assertRaises(InvalidDomain, initfun, self.f, 10, [-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, n=10, domain=[-2])
+        self.assertRaises(InvalidDomain, initfun, self.f, n=10, domain=0)
         self.assertRaises(BadFunLengthArgument, initfun, self.f, [30,40], [-1,1])
-        self.assertRaises(TypeError, initfun, self.f, None, [-1,1])
+        self.assertRaises(TypeError, initfun, self.f, [], [-2,-1,0])
+
+    def test_initfun_fixedlen_empty_domain(self):
+        f = Chebfun.initfun_fixedlen(self.f, n=10, domain=[])
+        self.assertTrue(f.isempty)
 
     def test_initfun_fixedlen_succeeds(self):
-        self.assertTrue(Chebfun.initfun_fixedlen(self.f, [], [-2,-1,0]).isempty)
-        # check that providing a vector with None elements calls the
+        # check providing a vector with None elements calls the
         # Tech adaptive constructor
-        g0 = Chebfun.initfun_adaptive(self.f, [-2,-1,0])
-        g1 = Chebfun.initfun_fixedlen(self.f, [None,None], [-2,-1,0])
-        g2 = Chebfun.initfun_fixedlen(self.f, [None,40], [-2,-1,0])
-        for fun1, fun2 in zip(g1,g0):
-            self.assertEqual(sum(fun1.coeffs-fun2.coeffs), 0)
+        dom = [-2, -1, 0]
+        g0 = Chebfun.initfun_adaptive(self.f, dom)
+        g1 = Chebfun.initfun_fixedlen(self.f, [None, None], dom)
+        g2 = Chebfun.initfun_fixedlen(self.f, [None, 40], dom)
+        g3 = Chebfun.initfun_fixedlen(self.f, None, dom)
+        for funA, funB in zip(g1, g0):
+            self.assertEqual(sum(funA.coeffs-funB.coeffs), 0)
+        for funA, funB in zip(g3, g0):
+            self.assertEqual(sum(funA.coeffs-funB.coeffs), 0)
         self.assertEqual(sum(g2.funs[0].coeffs-g0.funs[0].coeffs), 0)
 
 
@@ -310,6 +319,7 @@ class ClassUsage(unittest.TestCase):
             self.assertLessEqual(infnorm(x(pts)-pts), tol)
 
     def test_restrict_(self):
+        '''Tests the ._restrict operator'''
         # test a variety of domains with breaks
         doms = [(-4,4), (-4,0,4), (-2,-1, 0.3, 1, 2.5)]
         for dom in doms:
@@ -362,6 +372,25 @@ class ClassUsage(unittest.TestCase):
 
     def test_restrict_empty(self):
         self.assertTrue(self.f0.restrict([-1,1]).isempty)
+
+    def test_translate(self):
+        c = -1.5
+        g1 = self.f1.translate(c)
+        g2 = self.f2.translate(c)
+        # check domains match
+        self.assertEqual(self.f1.domain+c, g1.domain)
+        self.assertEqual(self.f2.domain+c, g2.domain)
+        # check fun lengths match
+        self.assertEqual(self.f1.funs.size, g1.funs.size)
+        self.assertEqual(self.f2.funs.size, g2.funs.size)
+        # check coefficients match on each fun
+        for f1k, g1k in zip(self.f1, g1):
+            self.assertLessEqual(infnorm(f1k.coeffs-g1k.coeffs), tol)
+        for f2k, g2k in zip(self.f2, g2):
+            self.assertLessEqual(infnorm(f2k.coeffs-g2k.coeffs), tol)
+
+    def test_translate_empty(self):
+        self.assertTrue(self.f0.translate(3))
 
 class Algebra(unittest.TestCase):
 
@@ -606,7 +635,7 @@ powtestdomains = [
 # add operator.pow tests
 for (f, namef), (g, nameg) in powtestfuns:
     for dom, tol in powtestdomains:
-        _testfun_ = binaryOpTester(f, g, operator.pow, dom, 2*tol)
+        _testfun_ = binaryOpTester(f, g, operator.pow, dom, 3*tol)
         _testfun_.__name__ = \
             "test_{}_{}_{}_[{:.1f},..,{:.1f}]".format(
                 'pow', namef, nameg, *dom)
@@ -805,6 +834,51 @@ class Evaluation(unittest.TestCase):
         self.assertLessEqual(infnorm(f(x3)-ff3(x3)), 5e1*eps)
 
 
+class Complex(unittest.TestCase):
+
+    def setUp(self):
+        self.z = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi*1j*x), [-1, 1])
+
+    def test_init_empty(self):
+        Chebfun.initempty()
+
+    def test_roots(self):
+        r0 = self.z.roots()
+        r1 = (self.z-1).roots()
+        r2 = (self.z-1j).roots()
+        r3 = (self.z+1).roots()
+        r4 = (self.z+1j).roots()
+        self.assertEqual(r0.size, 0)
+        self.assertTrue(np.allclose(r1, [0]))
+        self.assertTrue(np.allclose(r2, [.5]))
+        self.assertTrue(np.allclose(r3, [-1, 1]))
+        self.assertTrue(np.allclose(r4, [-.5]))
+
+    def test_rho_ellipse_construction(self):
+        zz = 1.2 * self.z
+        e = .5 * (zz + 1/zz)
+        self.assertAlmostEqual(e(1)-e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(-1), 0, places=14)
+        self.assertAlmostEqual(e(0)+e(1), 0, places=14)
+
+    def test_calculus(self):
+        self.assertTrue(np.allclose([self.z.sum()], [0]))
+        self.assertTrue((self.z.cumsum().diff()-self.z).isconst)
+        self.assertTrue((self.z-self.z.cumsum().diff()).isconst)
+
+    def test_real_imag(self):
+        # check definition of real and imaginary
+        zreal = self.z.real()
+        zimag = self.z.imag()
+        np.testing.assert_equal(zreal.funs[0].coeffs, np.real(self.z.funs[0].coeffs))
+        np.testing.assert_equal(zimag.funs[0].coeffs, np.imag(self.z.funs[0].coeffs))
+        # check real part of real chebtech is the same chebtech
+        self.assertTrue(zreal.real()==zreal)
+        # check imaginary part of real chebtech is the zero chebtech
+        self.assertTrue(zreal.imag().isconst)
+        self.assertTrue(zreal.imag().funs[0].coeffs[0]==0)
+
+
 class Calculus(unittest.TestCase):
 
     def setUp(self):
@@ -920,9 +994,11 @@ class Plotting(unittest.TestCase):
 
     def setUp(self):
         f = lambda x: sin(4*x) + exp(cos(14*x)) - 1.4
+        u = lambda x: np.exp(2*np.pi*1j*x)
         self.f1 = Chebfun.initfun_adaptive(f, [-1,1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3,0,1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
+        self.f4 = Chebfun.initfun_adaptive(u, [-1, 1])
 
     def test_plot(self):
         plt = import_plt()
@@ -930,6 +1006,15 @@ class Plotting(unittest.TestCase):
             for fun in [self.f1, self.f2, self.f3]:
                 fig, ax = plt.subplots()
                 fun.plot(ax=ax)
+
+    def test_plot_complex(self):
+        plt = import_plt()
+        if plt:
+            fig, ax = plt.subplots()
+            # plot Bernstein ellipses
+            joukowsky = lambda z: .5*(z+1/z)
+            for rho in np.arange(1.1, 2, 0.1):
+                (np.exp(1j*.5*np.pi)*joukowsky(rho*self.f4)).plot(ax=ax)
 
     def test_plotcoeffs(self):
         plt = import_plt()

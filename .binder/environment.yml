@@ -1,0 +1,13 @@
+name: chebpy-binder
+channels:
+  - conda-forge
+dependencies:
+  # specify the Python version
+  - python=3.8
+  # install chebpy via conda-forge
+  - chebfun=0.4.3
+  # additional modules for convenience
+  - scipy
+  - pandas
+  - matplotlib
+  - seaborn

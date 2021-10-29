@@ -1,71 +1,59 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
 
 import operator
 import numpy as np
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.utilities import (Interval, Domain, check_funs,
-                                   generate_funs, compute_breakdata)
+from chebpy.core.utilities import (Domain, check_funs, generate_funs,
+                                   compute_breakdata)
 from chebpy.core.decorators import (self_empty, float_argument,
                                     cast_arg_to_chebfun, cache)
-from chebpy.core.exceptions import BadDomainArgument, BadFunLengthArgument
+from chebpy.core.exceptions import BadFunLengthArgument
 from chebpy.core.plotting import import_plt, plotfun
 
 
-class Chebfun(object):
+class Chebfun:
+
+    def __init__(self, funs):
+        self.funs = check_funs(funs)
+        self.breakdata = compute_breakdata(self.funs)
+        self.transposed = False
 
     @classmethod
     def initempty(cls):
-        return cls(np.array([]))
-
-    @classmethod
-    def initconst(cls, c, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initconst, [c])
-        return cls(funs)
+        return cls([])
 
     @classmethod
     def initidentity(cls, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initidentity)
+        return cls(generate_funs(domain, Bndfun.initidentity))
+
+    @classmethod
+    def initconst(cls, c, domain=None):
+        return cls(generate_funs(domain, Bndfun.initconst, {'c': c}))
+
+    @classmethod
+    def initfun_adaptive(cls, f, domain=None):
+        return cls(generate_funs(domain, Bndfun.initfun_adaptive, {'f': f}))
+
+    @classmethod
+    def initfun_fixedlen(cls, f, n, domain=None):
+        nn = np.array(n)
+        if nn.size < 2:
+            funs = generate_funs(domain, Bndfun.initfun_fixedlen, {'f': f, 'n': n})
+        else:
+            domain = Domain(domain if domain is not None else prefs.domain)
+            if not nn.size == domain.size - 1: raise BadFunLengthArgument
+            funs = []
+            for interval, length in zip(domain.intervals, nn):
+                funs.append(Bndfun.initfun_fixedlen(f, interval, length))
         return cls(funs)
 
     @classmethod
     def initfun(cls, f, domain=None, n=None):
-        domain = domain if domain is not None else prefs.domain
-        if n:
-            return Chebfun.initfun_fixedlen(f, n, domain)
+        if n is None:
+            return cls.initfun_adaptive(f, domain)
         else:
-            return Chebfun.initfun_adaptive(f, domain)
-
-    @classmethod
-    def initfun_adaptive(cls, f, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        funs = generate_funs(domain, Bndfun.initfun_adaptive, [f])
-        return cls(funs)
-
-    @classmethod
-    def initfun_fixedlen(cls, f, n, domain=None):
-        domain = domain if domain is not None else prefs.domain
-        domain = np.array(domain)
-        nn = np.array(n)
-        if domain.size < 2:
-            raise BadDomainArgument
-        if nn.size == 1:
-            nn = nn * np.ones(domain.size-1)
-        elif nn.size > 1:
-            if nn.size != domain.size - 1:
-                raise BadFunLengthArgument
-        funs = np.array([])
-        intervals = zip(domain[:-1], domain[1:])
-        for interval, length in zip(intervals, nn):
-            interval = Interval(*interval)
-            fun = Bndfun.initfun_fixedlen(f, interval, length)
-            funs = np.append(funs, fun)
-        return cls(funs)
+            return cls.initfun_fixedlen(f, n, domain)
 
     # --------------------
     #  operator overloads
@@ -78,7 +66,8 @@ class Chebfun(object):
     def __call__(self, x):
 
         # initialise output
-        out = np.full(x.size, np.nan)
+        dtype = complex if self.iscomplex else float
+        out = np.full(x.size, np.nan, dtype=dtype)
 
         # evaluate a fun when x is an interior point
         for fun in self:
@@ -87,19 +76,14 @@ class Chebfun(object):
 
         # evaluate the breakpoint data for x at a breakpoint
         breakpoints = self.breakpoints
-        for breakpoint in breakpoints:
-            out[x==breakpoint] = self.breakdata[breakpoint]
+        for break_point in breakpoints:
+            out[x==break_point] = self.breakdata[break_point]
 
         # first and last funs used to evaluate outside of the chebfun domain
         lpts, rpts = x < breakpoints[0], x > breakpoints[-1]
         out[lpts] = self.funs[0](x[lpts])
         out[rpts] = self.funs[-1](x[rpts])
         return out
-
-    def __init__(self, funs):
-        self.funs = check_funs(funs)
-        self.breakdata = compute_breakdata(self.funs)
-        self.transposed = False
 
     def __iter__(self):
         return self.funs.__iter__()
@@ -235,19 +219,26 @@ class Chebfun(object):
     @property
     @self_empty(np.array([]))
     def domain(self):
-        '''Construct and return a Domain object corresponding to self'''
+        '''Construct and return a Domain object corresponding to self.
+        '''
         return Domain.from_chebfun(self)
 
     @property
     @self_empty(Domain([]))
     def support(self):
-        '''Return an array containing the first and last breakpoints'''
-        return Domain(self.breakpoints[[0,-1]])
+        '''Return an array containing the first and last breakpoints.
+        '''
+        return self.domain.support
 
     @property
     @self_empty(0.)
     def hscale(self):
         return np.float(np.abs(self.support).max())
+
+    @property
+    @self_empty(False)
+    def iscomplex(self):
+        return any(fun.iscomplex for fun in self)
 
     @property
     @self_empty(False)
@@ -268,35 +259,47 @@ class Chebfun(object):
     @property
     @self_empty()
     def x(self):
-        '''Return a Chebfun representing the identity the support of self'''
+        '''Identity function on the support of self.
+        '''
         return self.__class__.initidentity(self.support)
 
     # -----------
     #  utilities
-    # -----------
+    # ----------
+
+    def imag(self):
+        if self.iscomplex:
+            return self.__class__([fun.imag() for fun in self])
+        else:
+            return self.initconst(0, domain=self.domain)
+
+    def real(self):
+        if self.iscomplex:
+            return self.__class__([fun.real() for fun in self])
+        else:
+            return self
+
     def copy(self):
         return self.__class__([fun.copy() for fun in self])
 
     @self_empty()
     def _restrict(self, subinterval):
-        '''Restrict a chebfun to a subinterval, without simplifying'''
+        '''Restrict a chebfun to a subinterval, without simplifying.
+        '''
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
-    @self_empty()
-    def simplify(self):
-        '''Simplify each fun in the chebfun'''
-        return self.__class__([fun.simplify() for fun in self])
-
     def restrict(self, subinterval):
-        '''Restrict a chebfun to a subinterval'''
+        '''Restrict a chebfun to a subinterval.
+        '''
         return self._restrict(subinterval).simplify()
 
     @cache
     @self_empty(np.array([]))
     def roots(self, merge=None):
         '''Compute the roots of a Chebfun, i.e., the set of values x for which
-        f(x) = 0.'''
+        f(x) = 0.
+        '''
         merge = merge if merge is not None else prefs.mergeroots
         allrts = []
         prvrts = np.array([])
@@ -311,6 +314,15 @@ class Chebfun(object):
             allrts.append(rts)
             prvrts = rts
         return np.concatenate([x for x in allrts])
+
+    @self_empty()
+    def simplify(self):
+        '''Simplify each fun in the chebfun'''
+        return self.__class__([fun.simplify() for fun in self])
+
+    def translate(self, c):
+        '''Translate a chebfun by c, i.e., return f(x-c)'''
+        return self.__class__([x.translate(c) for x in self])
 
     # ----------
     #  calculus
@@ -388,14 +400,14 @@ class Chebfun(object):
 
 plt = import_plt()
 if plt:
-    def plot(self, ax=None, **kwargs):
-        return plotfun(self, self.support, ax=ax, **kwargs)
+    def plot(self, ax=None, **kwds):
+        return plotfun(self, self.support, ax=ax, **kwds)
     setattr(Chebfun, 'plot', plot)
 
-    def plotcoeffs(self, ax=None, **kwargs):
+    def plotcoeffs(self, ax=None, **kwds):
         ax = ax or plt.gca()
         for fun in self:
-            fun.plotcoeffs(ax=ax, **kwargs)
+            fun.plotcoeffs(ax=ax, **kwds)
         return ax
     setattr(Chebfun, 'plotcoeffs', plotcoeffs)
 

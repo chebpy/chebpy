@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
-
 import collections
 import numpy as np
 
@@ -9,8 +5,8 @@ from chebpy.core.settings import userPrefs as prefs
 from chebpy.core.decorators import cast_other
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     IntervalValues, InvalidDomain,
-                                    SupportMismatch, NotSubdomain,
-                                    BadDomainArgument)
+                                    SupportMismatch, NotSubdomain)
+
 
 def HTOL():
     return 5 * prefs.eps
@@ -37,12 +33,20 @@ class Interval(np.ndarray):
     def __new__(cls, a=-1., b=1.):
         if a >= b:
             raise IntervalValues
-        self = np.asarray((a,b), dtype=float).view(cls)
-        self.formap = lambda y: .5*b*(y+1.) + .5*a*(1.-y)
-        self.invmap = lambda x: (2.*x-a-b) / (b-a)
-        self.drvmap = lambda y: 0.*y + .5*(b-a)
-        return self
+        return np.asarray((a,b), dtype=float).view(cls)
 
+    def formap(self, y):
+        a, b = self
+        return .5*b*(y+1.) + .5*a*(1.-y)
+
+    def invmap(self, x):
+        a, b = self
+        return (2.*x-a-b) / (b-a)
+
+    def drvmap(self, y):
+        a, b = self
+        return 0.*y + .5*(b-a)
+      
     def __eq__(self, other):
         (a,b), (x,y) = self, other
         return (a==x) & (y==b)
@@ -237,20 +241,22 @@ def compute_breakdata(funs):
         return collections.OrderedDict(zip(xout, yout))
 
 
-def generate_funs(domain, bndfun_constructor, arglist=[]):
+def generate_funs(domain, bndfun_constructor, kwds={}):
     """Method used by several of the Chebfun classmethod constructors to
     generate a collection of funs."""
-    domain = np.array(domain)
-    if domain.size < 2:
-        raise BadDomainArgument
-    funs = np.array([])
-    for interval in zip(domain[:-1], domain[1:]):
-        interval = Interval(*interval)
-        args = arglist + [interval]
-        fun = bndfun_constructor(*args)
-        funs = np.append(funs, fun)
+    domain = Domain(domain if domain is not None else prefs.domain)
+    funs = []
+    for interval in domain.intervals:
+        kwds = {**kwds, **{'interval': interval}}
+        funs.append(bndfun_constructor(**kwds))
     return funs
 
 
 def infnorm(vals):
     return np.linalg.norm(vals, np.inf)
+
+
+def coerce_list(x):
+    if not isinstance(x, collections.Iterable) or isinstance(x, str):
+        x = [x]
+    return x

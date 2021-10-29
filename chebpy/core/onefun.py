@@ -125,7 +125,15 @@ class Onefun(object):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def imag(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def prolong(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def real(self):
         raise NotImplementedError
 
     @abc.abstractmethod
