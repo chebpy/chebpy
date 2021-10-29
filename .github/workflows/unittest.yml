@@ -28,4 +28,4 @@ jobs:
           pip install nose
       - name: Run tests
         run: |
-          nosetests -v --where=tests/
+          nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
