@@ -5,7 +5,7 @@ dependencies:
   # specify the Python version
   - python=3.8
   # install chebpy via conda-forge
-  - chebfun
+  - chebfun=0.4.3
   # additional modules for convenience
   - scipy
   - pandas
