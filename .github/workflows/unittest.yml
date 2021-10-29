@@ -25,7 +25,12 @@ jobs:
           else  # noplot
             pip install .
           fi
+          pip install "coverage[toml]"
           pip install nose
       - name: Run tests
         run: |
           nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
