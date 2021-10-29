@@ -26,11 +26,11 @@ jobs:
             pip install .
           fi
           # install testing tools
-          pip install nose "coverage[toml]" coveragepy-lcov
+          pip install nose "coverage[toml]" coverage-lcov
       - name: Run tests
         run: |
           nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
-          coveragepy-lcov --data_file_path .coverage --output_file_path lcov.info
+          coverage-lcov --data_file_path .coverage --output_file_path lcov.info
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
