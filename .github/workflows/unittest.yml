@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           # Set optional features
           OPTIONS=""
-          if test "${{ matrix.matplotlib }}" -eq "plot"; then
+          if test "${{ matrix.matplotlib }}" == "plot"; then
             OPTIONS="${OPTIONS}, plot"
           fi
           # Install chebpy with test and other optional features
