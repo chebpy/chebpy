@@ -25,7 +25,14 @@ jobs:
           else  # noplot
             pip install .
           fi
-          pip install nose
+          # install testing tools
+          pip install nose "coverage[toml]" coverage-lcov
       - name: Run tests
         run: |
-          nosetests -v --where=tests/
+          nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
+          coverage-lcov --data_file_path .coverage --output_file_path lcov.info
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./lcov.info

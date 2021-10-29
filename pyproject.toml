@@ -4,3 +4,20 @@ requires = [
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+# Code coverage
+[tool.coverage]
+
+# check for branch coverage
+run.branch = true
+
+# include the line numbers for missed lines
+report.show_missing = true
+
+# which lines to skip in coverage test
+report.exclude_lines = [
+    # the default pragma
+    "pragma: no cover",
+    # we don't want to test this, usually abc methods
+    "raise NotImplementedError",
+]
