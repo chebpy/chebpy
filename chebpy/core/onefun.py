@@ -163,14 +163,3 @@ class Onefun(ABC):
     @abstractmethod
     def diff(self):
         raise NotImplementedError
-
-    # -------------
-    #   plotting
-    # -------------
-    @abstractmethod
-    def plot(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def plotcoeffs(self):
-        raise NotImplementedError

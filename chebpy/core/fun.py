@@ -163,14 +163,3 @@ class Fun(ABC):
     @abstractmethod
     def sum(self):
         raise NotImplementedError
-
-    # ----------
-    #  plotting
-    # ----------
-    @abstractmethod
-    def plot(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def plotcoeffs(self):
-        raise NotImplementedError
