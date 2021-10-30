@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
 __version__ = "0.4.3"
 
-from chebpy.api import *
+from .api import chebfun, pwc
+from .core.settings import ChebPreferences as UserPreferences

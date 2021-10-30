@@ -1,8 +1,7 @@
+from abc import ABC, abstractmethod
 
-import abc
 
-
-class ChebpyBaseException(Exception):
+class ChebpyBaseException(Exception, ABC):
 
     def __init__(self, *args):
         if args:
@@ -13,7 +12,8 @@ class ChebpyBaseException(Exception):
     def __str__(self):
         return self.message
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def default_message(self):
         raise NotImplementedError
 

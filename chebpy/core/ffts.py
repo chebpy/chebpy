@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
+"""Import fftw via pyfftw if the user has it installed,
+otherwise default to fftpack via numpy"""
 
-# import fftw via pyfftw if the user has it installed, otherwise default to 
-# fftpack via numpy
-
-from chebpy.core.importing import import_optional
+from .importing import import_optional
 
 
 # import the requested FFT module

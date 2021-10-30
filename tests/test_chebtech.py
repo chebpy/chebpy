@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
-
-"""Unit-tests for pyfun/core/chebtech.py"""
-
-from __future__ import division
+"""Unit-tests for chebpy/core/chebtech.py"""
 
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
-from tests.utilities import (testfunctions, infnorm, scaled_tol,
+
+from .utilities import (testfunctions, infnorm, scaled_tol,
                              infNormLessThanTol)
 
 np.random.seed(0)
@@ -23,7 +21,7 @@ pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 _vals2coeffs = Chebtech2._vals2coeffs
 _coeffs2vals = Chebtech2._coeffs2vals
 
@@ -233,6 +231,8 @@ for k, args in enumerate(vscales):
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
 
+plt = import_plt()
+
 class Plotting(unittest.TestCase):
     """Unit-tests for Chebtech2 plotting methods"""
 
@@ -243,27 +243,24 @@ class Plotting(unittest.TestCase):
         self.f1 = Chebtech2.initfun_adaptive(f)
         self.f2 = Chebtech2.initfun_adaptive(u)
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plot(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            self.f0.plot(ax=ax)
+        fig, ax = plt.subplots()
+        self.f0.plot(ax=ax)
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plot_complex(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            # plot Bernstein ellipses
-            joukowsky = lambda z: .5*(z+1/z)
-            for rho in np.arange(1.1, 2, 0.1):
-                joukowsky(rho*self.f2).plot(ax=ax)
+        fig, ax = plt.subplots()
+        # plot Bernstein ellipses
+        joukowsky = lambda z: .5*(z+1/z)
+        for rho in np.arange(1.1, 2, 0.1):
+            joukowsky(rho*self.f2).plot(ax=ax)
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plotcoeffs(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            self.f0.plotcoeffs(ax=ax)
-            self.f1.plotcoeffs(ax=ax, color="r")
+        fig, ax = plt.subplots()
+        self.f0.plotcoeffs(ax=ax)
+        self.f1.plotcoeffs(ax=ax, color="r")
 
 
 class Calculus(unittest.TestCase):

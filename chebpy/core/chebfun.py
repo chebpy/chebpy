@@ -1,15 +1,13 @@
-
 import operator
+
 import numpy as np
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.utilities import (Domain, check_funs, generate_funs,
-                                   compute_breakdata)
-from chebpy.core.decorators import (self_empty, float_argument,
-                                    cast_arg_to_chebfun, cache)
-from chebpy.core.exceptions import BadFunLengthArgument
-from chebpy.core.plotting import import_plt, plotfun
+from .bndfun import Bndfun
+from .settings import _preferences as prefs
+from .utilities import Domain, check_funs, generate_funs, compute_breakdata
+from .decorators import self_empty, float_argument, cast_arg_to_chebfun, cache
+from .exceptions import BadFunLengthArgument
+from .plotting import import_plt, plotfun
 
 
 class Chebfun:

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
+from abc import ABC
 
-from __future__ import division
+from .onefun import Onefun
 
-import abc
-
-from chebpy.core.onefun import Onefun
-
-class Smoothfun(Onefun):
-    __metaclass__ = abc.ABCMeta
+class Smoothfun(Onefun, ABC):
+    pass

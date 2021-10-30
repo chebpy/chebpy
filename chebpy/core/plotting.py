@@ -1,7 +1,7 @@
 import numpy as np
 
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.importing import import_optional
+from .settings import _preferences as prefs
+from .importing import import_optional
 
 
 def import_plt():

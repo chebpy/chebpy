@@ -1,24 +1,21 @@
-# -*- coding: utf-8 -*-
-
-"""Unit-tests for pyfun/core/chebfun.py"""
-
-from __future__ import division
+"""Unit-tests for chebpy/core/chebfun.py"""
 
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
 from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (IntervalGap, IntervalOverlap,
                                     InvalidDomain, BadFunLengthArgument)
 from chebpy.core.plotting import import_plt
 
-from tests.utilities import infnorm, testfunctions
+from .utilities import infnorm, testfunctions
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]
@@ -35,7 +32,7 @@ pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 
 # domain, test_tolerance
 chebfun_testdomains = [
@@ -990,6 +987,8 @@ class Roots(unittest.TestCase):
         self.assertTrue(hasattr(ff, '_cache'))
         self.assertTrue(ff.roots.__name__ in ff._cache.keys())
 
+plt = import_plt()
+
 class Plotting(unittest.TestCase):
 
     def setUp(self):
@@ -1000,28 +999,25 @@ class Plotting(unittest.TestCase):
         self.f3 = Chebfun.initfun_adaptive(f, [-2,-0.3,1.2])
         self.f4 = Chebfun.initfun_adaptive(u, [-1, 1])
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plot(self):
-        plt = import_plt()
-        if plt:
-            for fun in [self.f1, self.f2, self.f3]:
-                fig, ax = plt.subplots()
-                fun.plot(ax=ax)
-
-    def test_plot_complex(self):
-        plt = import_plt()
-        if plt:
+        for fun in [self.f1, self.f2, self.f3]:
             fig, ax = plt.subplots()
-            # plot Bernstein ellipses
-            joukowsky = lambda z: .5*(z+1/z)
-            for rho in np.arange(1.1, 2, 0.1):
-                (np.exp(1j*.5*np.pi)*joukowsky(rho*self.f4)).plot(ax=ax)
+            fun.plot(ax=ax)
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
+    def test_plot_complex(self):
+        fig, ax = plt.subplots()
+        # plot Bernstein ellipses
+        joukowsky = lambda z: .5*(z+1/z)
+        for rho in np.arange(1.1, 2, 0.1):
+            (np.exp(1j*.5*np.pi)*joukowsky(rho*self.f4)).plot(ax=ax)
+
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plotcoeffs(self):
-        plt = import_plt()
-        if plt:
-            for fun in [self.f1, self.f2, self.f3]:
-                fig, ax = plt.subplots()
-                fun.plotcoeffs(ax=ax)
+        for fun in [self.f1, self.f2, self.f3]:
+            fig, ax = plt.subplots()
+            fun.plotcoeffs(ax=ax)
 
 
 class PrivateMethods(unittest.TestCase):

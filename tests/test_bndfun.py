@@ -1,29 +1,26 @@
-# -*- coding: utf-8 -*-
-
-"""Unit-tests for pyfun/core/bndfun.py"""
-
-from __future__ import division
+"""Unit-tests for chebpy/core/bndfun.py"""
 
 import itertools
 import operator
 import unittest
+
 import numpy as np
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
 
-from tests.utilities import testfunctions, infnorm
+from .utilities import testfunctions, infnorm
 
 # aliases
 pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 
 # NOTE: since (Fun/ClassicFun/)Bndfun is not a user-facing class (although it
 # is not abstract) we will test the interface in the way Chebfun will interact
@@ -170,6 +167,8 @@ for k, args in enumerate(vscales):
     setattr(ClassUsage, _testfun_.__name__, _testfun_)
 
 
+plt = import_plt()
+
 class Plotting(unittest.TestCase):
     """Unit-tests for Bndfun plotting methods"""
 
@@ -181,27 +180,24 @@ class Plotting(unittest.TestCase):
         self.f1 = Bndfun.initfun_adaptive(f, subinterval)
         self.f2 = Bndfun.initfun_adaptive(u, Interval(-1, 1))
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plot(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
+        fig, ax = plt.subplots()
+        self.f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plot_complex(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            # plot Bernstein ellipses
-            joukowsky = lambda z: .5*(z+1/z)
-            for rho in np.arange(1.1, 2, 0.1):
-                (np.exp(1j*.25*np.pi)*joukowsky(rho*self.f2)).plot(ax=ax)
+        fig, ax = plt.subplots()
+        # plot Bernstein ellipses
+        joukowsky = lambda z: .5*(z+1/z)
+        for rho in np.arange(1.1, 2, 0.1):
+            (np.exp(1j*.25*np.pi)*joukowsky(rho*self.f2)).plot(ax=ax)
 
+    @unittest.skipIf(plt is None, "matplotlib not installed")
     def test_plotcoeffs(self):
-        plt = import_plt()
-        if plt:
-            fig, ax = plt.subplots()
-            self.f0.plotcoeffs(ax=ax)
-            self.f1.plotcoeffs(ax=ax, color="r")
+        fig, ax = plt.subplots()
+        self.f0.plotcoeffs(ax=ax)
+        self.f1.plotcoeffs(ax=ax, color="r")
 
 
 

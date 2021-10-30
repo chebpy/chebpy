@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-
 """Unit-tests for pyfun/utilities.py"""
 
-from __future__ import division
-
 import unittest
+
 import numpy as np
 
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
 
-from tests.utilities import (testfunctions, scaled_tol, infNormLessThanTol,
+from .utilities import (testfunctions, scaled_tol, infNormLessThanTol,
                              infnorm)
 
 # aliases
@@ -19,7 +16,7 @@ pi = np.pi
 sin = np.sin
 cos = np.cos
 exp = np.exp
-eps = DefaultPrefs.eps
+eps = DefaultPreferences.eps
 
 np.random.seed(0)
 

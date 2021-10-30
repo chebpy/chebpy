@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import unittest
 import pickle
+
 import numpy as np
+
 from chebpy import chebfun, pwc
-from chebpy.core.settings import DefaultPrefs
+from chebpy.core.settings import DefaultPreferences
 
 class Constructors(unittest.TestCase):
 
@@ -20,9 +20,9 @@ class Constructors(unittest.TestCase):
         f4 = chebfun(np.sin, d, n)
         
         # check domains
-        self.assertTrue(f1.domain==DefaultPrefs.domain)
+        self.assertTrue(f1.domain==DefaultPreferences.domain)
         self.assertTrue(f2.domain==d)
-        self.assertTrue(f3.domain==DefaultPrefs.domain)
+        self.assertTrue(f3.domain==DefaultPreferences.domain)
         self.assertTrue(f4.domain==d)
         
         # check lengths of f3 and f4
@@ -38,9 +38,9 @@ class Constructors(unittest.TestCase):
         f4 = chebfun('a', d, n)
         
         # check domains
-        self.assertTrue(f1.domain==DefaultPrefs.domain)
+        self.assertTrue(f1.domain==DefaultPreferences.domain)
         self.assertTrue(f2.domain==d)
-        self.assertTrue(f3.domain==DefaultPrefs.domain)
+        self.assertTrue(f3.domain==DefaultPreferences.domain)
         self.assertTrue(f4.domain==d)
         
         # check lengths of f3 and f4
@@ -55,8 +55,8 @@ class Constructors(unittest.TestCase):
         f4 = chebfun('2.72', d)
         
         # check domains
-        self.assertTrue(f1.domain==DefaultPrefs.domain)
-        self.assertTrue(f2.domain==DefaultPrefs.domain)
+        self.assertTrue(f1.domain==DefaultPreferences.domain)
+        self.assertTrue(f2.domain==DefaultPreferences.domain)
         self.assertTrue(f3.domain==d)
         self.assertTrue(f4.domain==d)
         

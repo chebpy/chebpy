@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
+from abc import ABC
 
-from __future__ import division
-
-import abc
 import numpy as np
 
-from chebpy.core.fun import Fun
-from chebpy.core.chebtech import Chebtech2
-from chebpy.core.utilities import Interval
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import self_empty
-from chebpy.core.exceptions import IntervalMismatch, NotSubinterval
-from chebpy.core.plotting import import_plt, plotfun
+from .fun import Fun
+from .chebtech import Chebtech2
+from .utilities import Interval
+from .settings import _preferences as prefs
+from .decorators import self_empty
+from .exceptions import IntervalMismatch, NotSubinterval
+from .plotting import import_plt, plotfun
 
 
 techdict = {
@@ -19,9 +16,7 @@ techdict = {
 }
 
 
-class Classicfun(Fun):
-
-    __metaclass__ = abc.ABCMeta
+class Classicfun(Fun, ABC):
 
     # --------------------------
     #  alternative constructors
@@ -31,7 +26,7 @@ class Classicfun(Fun):
         '''Adaptive initialisation of a Classicfun from a callable
         function f and a Interval object. The interval's interval has no
         relevance to the emptiness status of a Classicfun so we
-        arbitrarily set this to be DefaultPrefs.interval'''
+        arbitrarily set this to be DefaultPreferences.interval'''
         interval = Interval()
         onefun = techdict[prefs.tech].initempty(interval=interval)
         return cls(onefun, interval)

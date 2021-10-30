@@ -1,17 +1,7 @@
-# -*- coding: utf-8 -*-
+from functools import wraps
 
-from __future__ import division
-
-import functools
 import numpy as np
 
-# bespoke abstract class method decorator taken from:
-# http://stackoverflow.com/questions/11217878/python-2-7-combine-abc-abstractmethod-and-classmethod
-class abstractclassmethod(classmethod):
-    __isabstractmethod__ = True
-    def __init__(self, callable):
-        callable.__isabstractmethod__ = True
-        super(abstractclassmethod, self).__init__(callable)
 
 def cache(f):
     '''Object method output caching mechanism. Particularly useful for speeding
@@ -19,7 +9,8 @@ def cache(f):
     as .roots(). Cached computations are stored in a dictionary called _cache
     which is bound to self using keys corresponding to the method name.
     Can be used in principle on arbitrary objects.'''
-    @functools.wraps(f)
+    #TODO: look into replacing this with one of the functools cache decorators
+    @wraps(f)
     def wrapper(self):
         try:
             # f has been executed previously
@@ -34,13 +25,13 @@ def cache(f):
         return out
     return wrapper
 
-# Factory method to produce a decorator that checks whether the object
-# whose classmethod is being wrapped is empty, returning the object if
-# so, but returning the supplied resultif if not. (Used in chebtech.py)
-# TODO: add unit test for this
 def self_empty(resultif=None):
+    '''Factory method to produce a decorator that checks whether the object
+    whose classmethod is being wrapped is empty, returning the object if
+    so, but returning the supplied resultif if not. (Used in chebtech.py)'''
+    # TODO: add unit test for this
     def decorator(f):
-        @functools.wraps(f)
+        @wraps(f)
         def wrapper(self, *args, **kwargs):
             if self.isempty:
                 if resultif is not None:
@@ -53,9 +44,9 @@ def self_empty(resultif=None):
     return decorator
 
 
-# pre- and post-processing tasks common to bary and clenshaw
 def preandpostprocess(f):
-    @functools.wraps(f)
+    '''Pre- and post-processing tasks common to bary and clenshaw'''
+    @wraps(f)
     def thewrapper(*args, **kwargs):
         xx, akfk = args[:2]
         # are any of the first two arguments empty arrays?
@@ -79,10 +70,10 @@ def preandpostprocess(f):
             return out[0] if np.isscalar(xx) else out
     return thewrapper
 
-# Chebfun classmethod wrapper for __call__: ensure that we provide
-# float output for float input and array output otherwise
 def float_argument(f):
-    @functools.wraps(f)
+    '''Chebfun classmethod wrapper for __call__: ensure that we provide
+    float output for float input and array output otherwise'''
+    @wraps(f)
     def thewrapper(self, *args, **kwargs):
         x = args[0]
         xx = np.array([x]) if np.isscalar(x) else np.array(x)
@@ -98,10 +89,10 @@ def float_argument(f):
         return out[0] if np.isscalar(x) else out
     return thewrapper
 
-# attempt to cast the first argument to chebfun if is not so already. The only
-# castable type at this point is a numeric type
 def cast_arg_to_chebfun(f):
-    @functools.wraps(f)
+    '''Attempt to cast the first argument to chebfun if is not so already.
+    The only castable type at this point is a numeric type'''
+    @wraps(f)
     def wrapper(self, *args, **kwargs):
         other = args[0]
         if not isinstance(other, self.__class__):
@@ -114,7 +105,7 @@ def cast_arg_to_chebfun(f):
 def cast_other(f):
     """Generic wrapper to be applied to binary operator type class methods and
     whose purpose is to cast the second positional argument to the type self"""
-    @functools.wraps(f)
+    @wraps(f)
     def wrapper(self, *args, **kwargs):
         cls   = self.__class__
         other = args[0]

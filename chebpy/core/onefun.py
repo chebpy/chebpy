@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
+from abc import ABC, abstractmethod, abstractclassmethod
 
-from __future__ import division
-
-import abc
-
-from chebpy.core.decorators import abstractclassmethod
-
-class Onefun(object):
-    __metaclass__ = abc.ABCMeta
+class Onefun(ABC):
 
     # --------------------------
     #  alternative constructors
@@ -43,136 +36,130 @@ class Onefun(object):
     # -------------------
     #  "private" methods
     # -------------------
-    @abc.abstractmethod
+    @abstractmethod
     def __call__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __repr__(self):
         raise NotImplementedError
 
     # ----------------
     #    algebra
     # ----------------
-    @abc.abstractmethod
+    @abstractmethod
     def __add__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __mul__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __neg__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __pos__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __pow__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __radd__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __rmul__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __rsub__(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __sub__(self):
         raise NotImplementedError
 
     # ---------------
     #   properties
     # ---------------
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def coeffs(self):
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def isconst(self):
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def isempty(self):
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def size(self):
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def vscale(self):
         raise NotImplementedError
 
     # ---------------
     #   utilities
     # ---------------
-    @abc.abstractmethod
+    @abstractmethod
     def copy(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def imag(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def prolong(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def real(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def simplify(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def values(self):
         raise NotImplementedError
 
     # --------------
     #  rootfinding
     # --------------
-    @abc.abstractmethod
+    @abstractmethod
     def roots(self):
         raise NotImplementedError
 
     # -------------
     #   calculus
     # -------------
-    @abc.abstractmethod
+    @abstractmethod
     def sum(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def cumsum(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def diff(self):
-        raise NotImplementedError
-
-    # -------------
-    #   plotting
-    # -------------
-    @abc.abstractmethod
-    def plot(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def plotcoeffs(self):
         raise NotImplementedError

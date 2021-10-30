@@ -1,22 +1,19 @@
-# -*- coding: utf-8 -*-
+from abc import ABC, abstractmethod
 
-from __future__ import division
-
-import abc
 import numpy as np
 
-from chebpy.core.smoothfun import Smoothfun
-from chebpy.core.settings import userPrefs as prefs
-from chebpy.core.decorators import self_empty
-from chebpy.core.algorithms import (bary, clenshaw, adaptive, coeffmult,
-                                    vals2coeffs2, coeffs2vals2, chebpts2,
-                                    barywts2, rootsunit, newtonroots,
-                                    standard_chop)
-from chebpy.core.plotting import import_plt, plotfun, plotfuncoeffs
-from chebpy.core.utilities import Interval, coerce_list
+from .smoothfun import Smoothfun
+from .settings import _preferences as prefs
+from .decorators import self_empty
+from .algorithms import (bary, clenshaw, adaptive, coeffmult,
+                         vals2coeffs2, coeffs2vals2, chebpts2,
+                         barywts2, rootsunit, newtonroots,
+                         standard_chop)
+from .plotting import import_plt, plotfun, plotfuncoeffs
+from .utilities import Interval, coerce_list
 
 
-class Chebtech(Smoothfun):
+class Chebtech(Smoothfun, ABC):
     '''Abstract base class serving as the template for Chebtech1 and
     Chebtech2 subclasses. 
 
@@ -26,7 +23,6 @@ class Chebtech(Smoothfun):
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
     '''
-    __metaclass__ = abc.ABCMeta
     
     @classmethod
     def initconst(cls, c, *, interval=None):
@@ -376,19 +372,19 @@ class Chebtech(Smoothfun):
     # ---------------------------------
     #  subclasses must implement these
     # ---------------------------------
-    @abc.abstractmethod
+    @abstractmethod
     def _chebpts():
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def _barywts():
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def _vals2coeffs():
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def _coeffs2vals():
         raise NotImplementedError
 
