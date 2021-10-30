@@ -3,6 +3,7 @@ name: Unit testing
 on: [push, pull_request]
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -33,8 +34,20 @@ jobs:
         run: |
           nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
           coverage-lcov --data_file_path .coverage --output_file_path lcov.info
-      - name: Coveralls
+      - name: Coveralls Parallel
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./lcov.info
+          flag-name: run-py${{ matrix.python-version }}-${{ matrix.matplotlib }}
+          parallel: true
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
