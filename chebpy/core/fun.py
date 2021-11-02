@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractclassmethod
 
+
 class Fun(ABC):
 
     # --------------------------

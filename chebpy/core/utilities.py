@@ -5,8 +5,14 @@ import numpy as np
 
 from .settings import _preferences as prefs
 from .decorators import cast_other
-from .exceptions import (IntervalGap, IntervalOverlap, IntervalValues,
-                         InvalidDomain, SupportMismatch, NotSubdomain)
+from .exceptions import (
+    IntervalGap,
+    IntervalOverlap,
+    IntervalValues,
+    InvalidDomain,
+    SupportMismatch,
+    NotSubdomain,
+)
 
 
 def HTOL():
@@ -31,47 +37,47 @@ class Interval(np.ndarray):
     Currently only implemented for finite a and b.
     """
 
-    def __new__(cls, a=-1., b=1.):
+    def __new__(cls, a=-1.0, b=1.0):
         if a >= b:
             raise IntervalValues
-        return np.asarray((a,b), dtype=float).view(cls)
+        return np.asarray((a, b), dtype=float).view(cls)
 
     def formap(self, y):
         a, b = self
-        return .5*b*(y+1.) + .5*a*(1.-y)
+        return 0.5 * b * (y + 1.0) + 0.5 * a * (1.0 - y)
 
     def invmap(self, x):
         a, b = self
-        return (2.*x-a-b) / (b-a)
+        return (2.0 * x - a - b) / (b - a)
 
     def drvmap(self, y):
         a, b = self
-        return 0.*y + .5*(b-a)
-      
+        return 0.0 * y + 0.5 * (b - a)
+
     def __eq__(self, other):
-        (a,b), (x,y) = self, other
-        return (a==x) & (y==b)
+        (a, b), (x, y) = self, other
+        return (a == x) & (y == b)
 
     def __ne__(self, other):
-        return not self==other
+        return not self == other
 
     def __call__(self, y):
         return self.formap(y)
 
     def __contains__(self, other):
-        (a,b), (x,y) = self, other
-        return (a<=x) & (y<=b)
+        (a, b), (x, y) = self, other
+        return (a <= x) & (y <= b)
 
     def isinterior(self, x):
-        a,b = self
-        return np.logical_and(a<x, x<b)
+        a, b = self
+        return np.logical_and(a < x, x < b)
 
     @property
     def hscale(self):
         a, b = self
         h = max(infnorm(self), 1)
-        hF = b - a             # if interval == domain: scale hscale back to 1
-        hscale = max(h/hF, 1)  #                  else: hscale < 1
+        hF = b - a  # if interval == domain: scale hscale back to 1
+        hscale = max(h / hF, 1)  #                  else: hscale < 1
         return hscale
 
 
@@ -81,7 +87,7 @@ def _merge_duplicates(arr, tols):
     # TODO: pathological cases may make this break since this method works by
     # using consecutive differences. Might be better to take an average
     # (median?), rather than the left-hand value.
-    idx = np.append(np.abs(np.diff(arr))>tols[:-1], True)
+    idx = np.append(np.abs(np.diff(arr)) > tols[:-1], True)
     return arr[idx]
 
 
@@ -92,7 +98,7 @@ class Domain(np.ndarray):
         bpts = np.asarray(breakpoints, dtype=float)
         if bpts.size == 0:
             return bpts.view(cls)
-        elif bpts.size < 2 or np.any(np.diff(bpts)<=0):
+        elif bpts.size < 2 or np.any(np.diff(bpts) <= 0):
             raise InvalidDomain
         else:
             return bpts.view(cls)
@@ -100,11 +106,11 @@ class Domain(np.ndarray):
     def __contains__(self, other):
         """Checks whether one domain object is a subodomain of another (to
         within a tolerance)"""
-        a,b = self.support
-        x,y = other.support
-        bounds = np.array([1-HTOL(), 1+HTOL()])
-        lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
-        return (lbnd<=x) & (y<=rbnd)
+        a, b = self.support
+        x, y = other.support
+        bounds = np.array([1 - HTOL(), 1 + HTOL()])
+        lbnd, rbnd = np.min(a * bounds), np.max(b * bounds)
+        return (lbnd <= x) & (y <= rbnd)
 
     @classmethod
     def from_chebfun(cls, chebfun):
@@ -115,21 +121,21 @@ class Domain(np.ndarray):
     def intervals(self):
         """Iterate across adajacent pairs of breakpoints, yielding an interval
         object."""
-        for a,b in zip(self[:-1], self[1:]):
-            yield Interval(a,b)
+        for a, b in zip(self[:-1], self[1:]):
+            yield Interval(a, b)
 
     @property
     def support(self):
         """First and last breakpoints"""
-        return self[[0,-1]]
+        return self[[0, -1]]
 
     @cast_other
     def union(self, other):
         """Union of two domain objects with an initial check that the support
         of each object matches"""
-        dspt = np.abs(self.support-other.support)
-        htol = np.maximum(HTOL(), HTOL()*np.abs(self.support))
-        if np.any(dspt>htol):
+        dspt = np.abs(self.support - other.support)
+        htol = np.maximum(HTOL(), HTOL() * np.abs(self.support))
+        if np.any(dspt > htol):
             raise SupportMismatch
         return self.merge(other)
 
@@ -138,7 +144,7 @@ class Domain(np.ndarray):
         the same support"""
         all_bpts = np.append(self, other)
         new_bpts = np.unique(all_bpts)
-        mergetol = np.maximum(HTOL(), HTOL()*np.abs(new_bpts))
+        mergetol = np.maximum(HTOL(), HTOL() * np.abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
@@ -149,23 +155,23 @@ class Domain(np.ndarray):
         if other not in self:
             raise NotSubdomain
         dom = self.merge(other)
-        a,b = other.support
-        bounds = np.array([1-HTOL(), 1+HTOL()])
-        lbnd, rbnd = np.min(a*bounds), np.max(b*bounds)
-        new = dom[(lbnd<=dom)&(dom<=rbnd)]
+        a, b = other.support
+        bounds = np.array([1 - HTOL(), 1 + HTOL()])
+        lbnd, rbnd = np.min(a * bounds), np.max(b * bounds)
+        new = dom[(lbnd <= dom) & (dom <= rbnd)]
         return self.__class__(new)
 
     def breakpoints_in(self, other):
         """Return a Boolean array of size equal to self where True indicates
         that the breakpoint is in other to within the specified tolerance"""
         out = np.empty(self.size, dtype=bool)
-        window = np.array([1-HTOL(), 1+HTOL()])
+        window = np.array([1 - HTOL(), 1 + HTOL()])
         # TODO: is there way to vectorise this?
         for idx, bpt in enumerate(self):
-            lbnd, rbnd = np.sort(bpt*window)
+            lbnd, rbnd = np.sort(bpt * window)
             lbnd = -HTOL() if np.abs(lbnd) < HTOL() else lbnd
             rbnd = +HTOL() if np.abs(rbnd) < HTOL() else rbnd
-            isin = (lbnd<=other) & (other<=rbnd)
+            isin = (lbnd <= other) & (other <= rbnd)
             out[idx] = np.any(isin)
         return out
 
@@ -175,12 +181,12 @@ class Domain(np.ndarray):
         if self.size != other.size:
             return False
         else:
-            dbpt = np.abs(self-other)
-            htol = np.maximum(HTOL(), HTOL()*np.abs(self))
-            return bool(np.all(dbpt<=htol)) # cast back to bool
+            dbpt = np.abs(self - other)
+            htol = np.maximum(HTOL(), HTOL() * np.abs(self))
+            return bool(np.all(dbpt <= htol))  # cast back to bool
 
     def __ne__(self, other):
-        return not self==other
+        return not self == other
 
 
 def _sortindex(intervals):
@@ -198,9 +204,9 @@ def _sortindex(intervals):
     srt = subintervals[idx]
     x = srt.flatten()[1:-1]
     d = x[1::2] - x[::2]
-    if (d<0).any():
+    if (d < 0).any():
         raise IntervalOverlap
-    if (d>0).any():
+    if (d > 0).any():
         raise IntervalGap
 
     return idx
@@ -235,8 +241,8 @@ def compute_breakdata(funs):
         xl, xr = points[0], points[-1]
         yl, yr = values[0], values[-1]
         xx, yy = points[1:-1], values[1:-1]
-        x = .5 * (xx[::2] + xx[1::2])
-        y = .5 * (yy[::2] + yy[1::2])
+        x = 0.5 * (xx[::2] + xx[1::2])
+        y = 0.5 * (yy[::2] + yy[1::2])
         xout = np.append(np.append(xl, x), xr)
         yout = np.append(np.append(yl, y), yr)
         return OrderedDict(zip(xout, yout))
@@ -248,7 +254,7 @@ def generate_funs(domain, bndfun_constructor, kwds={}):
     domain = Domain(domain if domain is not None else prefs.domain)
     funs = []
     for interval in domain.intervals:
-        kwds = {**kwds, **{'interval': interval}}
+        kwds = {**kwds, **{"interval": interval}}
         funs.append(bndfun_constructor(**kwds))
     return funs
 

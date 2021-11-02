@@ -32,7 +32,7 @@ def chebfun(f=None, domain=None, n=None):
         raise ValueError(f)
 
 
-def pwc(domain=[-1,0,1], values=[0,1]):
+def pwc(domain=[-1, 0, 1], values=[0, 1]):
     """Initialise a piecewise-constant Chebfun"""
     funs = []
     intervals = [x for x in Domain(domain).intervals]

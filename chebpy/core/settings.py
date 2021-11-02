@@ -6,7 +6,7 @@ class DefaultPreferences:
 
     eps = np.finfo(float).eps
     tech = "Chebtech2"
-    domain = np.array([-1., 1.])  #TODO: should this be .utilities.Domain?
+    domain = np.array([-1.0, 1.0])  # TODO: should this be .utilities.Domain?
     N_plot = 2001
     maxpow2 = 16
     maxiter = 10
@@ -35,6 +35,7 @@ class ChebPreferences(DefaultPreferences):
 
     # Singleton
     _instance = None  # persistent reference for the singleton object
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DefaultPreferences, cls).__new__(cls)
@@ -42,10 +43,11 @@ class ChebPreferences(DefaultPreferences):
 
     # Context manager
     _stash = []  # persistent stash for old prefs when entering context(s)
+
     def __enter__(self):
-        self._stash.append({
-            k: getattr(self, k) for k in DefaultPreferences._defaults().keys()
-        })
+        self._stash.append(
+            {k: getattr(self, k) for k in DefaultPreferences._defaults().keys()}
+        )
         return self._instance
 
     def __exit__(self, exc_type, exc_value, traceback):

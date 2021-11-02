@@ -9,7 +9,7 @@ def import_plt():
     No fallback option exists, because the plot* functions
     are not added if module import return None.
     """
-    return import_optional('matplotlib.pyplot', 'MPL')
+    return import_optional("matplotlib.pyplot", "MPL")
 
 
 def plotfun(fun, support, ax=None, N=None, **kwds):
@@ -19,8 +19,8 @@ def plotfun(fun, support, ax=None, N=None, **kwds):
     ff = fun(xx)
     if fun.iscomplex:
         ax.plot(np.real(ff), np.imag(ff), **kwds)
-        ax.set_xlabel(kwds.pop('ylabel', 'real'))
-        ax.set_ylabel(kwds.pop('xlabel', 'imag'))
+        ax.set_xlabel(kwds.pop("ylabel", "real"))
+        ax.set_ylabel(kwds.pop("xlabel", "imag"))
     else:
         ax.plot(xx, ff, **kwds)
     return ax
@@ -28,7 +28,7 @@ def plotfun(fun, support, ax=None, N=None, **kwds):
 
 def plotfuncoeffs(abscoeffs, ax=None, **kwds):
     ax = ax or import_plt().gca()
-    ax.set_ylabel(kwds.pop('xlabel', 'coefficient magnitude'))
-    ax.set_xlabel(kwds.pop('ylabel', 'polynomial degree'))
-    ax.semilogy(abscoeffs, '.', **kwds)
+    ax.set_ylabel(kwds.pop("xlabel", "coefficient magnitude"))
+    ax.set_xlabel(kwds.pop("ylabel", "polynomial degree"))
+    ax.semilogy(abscoeffs, ".", **kwds)
     return ax
