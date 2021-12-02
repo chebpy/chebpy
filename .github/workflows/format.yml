@@ -1,0 +1,18 @@
+name: Check code format
+
+on: [push, pull_request]
+
+jobs:
+
+  black-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Black
+        run: pip install black
+      - name: Run black --check
+        run: black --check .
