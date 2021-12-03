@@ -21,3 +21,8 @@ report.exclude_lines = [
     # we don't want to test this, usually abc methods
     "raise NotImplementedError",
 ]
+
+# Black style
+[tool.black]
+
+target-version = ['py37']
