@@ -619,6 +619,7 @@ class Algebra(unittest.TestCase):
 
 binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 
+
 # add tests for the binary operators
 def binaryOpTester(f, g, subinterval, binop):
     ff = Bndfun.initfun_adaptive(f, subinterval)
@@ -678,6 +679,7 @@ for (f, namef), (g, nameg) in powtestfuns:
 
 unaryops = (operator.pos, operator.neg)
 
+
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, subinterval):
     ff = Bndfun.initfun_adaptive(f, subinterval)
@@ -730,6 +732,7 @@ ufuncs = (
     np.tanh,
     np.sqrt,
 )
+
 
 # empty-case tests
 def ufuncEmptyCaseTester(ufunc):

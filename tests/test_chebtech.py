@@ -24,6 +24,7 @@ eps = DefaultPreferences.eps
 _vals2coeffs = Chebtech2._vals2coeffs
 _coeffs2vals = Chebtech2._coeffs2vals
 
+
 # ------------------------
 class ChebyshevPoints(unittest.TestCase):
     """Unit-tests for Chebtech2"""
@@ -106,6 +107,7 @@ for k, (a, b, tol) in enumerate(chebpts2_testlist):
     _testfun_ = infNormLessThanTol(a, b, tol)
     _testfun_.__name__ = "test_chebpts_{:02}".format(k + 1)
     setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
+
 
 # check the output is of the correct length, the endpoint values are -1
 # and 1, respectively, and that the sequence is monotonically increasing
@@ -718,6 +720,7 @@ for (f, nf, namef), (g, ng, nameg) in powtestfuns:
     _testfun_ = binaryOpTester(f, g, operator.pow, nf, ng)
     _testfun_.__name__ = "test_{}_{}_{}".format("pow", namef, nameg)
     setattr(Algebra, _testfun_.__name__, _testfun_)
+
 
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):

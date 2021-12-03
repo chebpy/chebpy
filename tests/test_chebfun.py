@@ -710,6 +710,7 @@ ufuncs = (
     np.sqrt,
 )
 
+
 # empty-case tests
 def ufuncEmptyCaseTester(ufunc):
     def tester(self):
@@ -1320,6 +1321,7 @@ domainBreakOp_args = [
     (sin, cos, [-1, 1], eps),
     (cos, np.abs, [-1, 0, 1], eps),
 ]
+
 
 # add tests for maximum, minimum
 def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
