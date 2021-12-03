@@ -170,11 +170,8 @@ class Chebfun:
         simplify step, since at the Tech-level these operations are are defined
         such that there is no change in the number of coefficients.
         """
-        try:
-            if f.isempty:
-                return f
-        except:
-            pass
+        if hasattr(f, "isempty"):
+            return f
         if np.isscalar(f):
             chbfn1 = self
             chbfn2 = f * np.ones(self.funs.size)

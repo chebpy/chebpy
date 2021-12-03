@@ -87,9 +87,7 @@ def float_argument(f):
         xx = np.array([x]) if np.isscalar(x) else np.array(x)
         # discern between the array(0.1) and array([0.1]) cases
         if xx.size == 1:
-            try:
-                xx[0]
-            except:
+            if xx.ndim == 0:
                 xx = np.array([xx])
         args = list(args)
         args[0] = xx
