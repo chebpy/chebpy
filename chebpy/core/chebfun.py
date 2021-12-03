@@ -101,12 +101,13 @@ class Chebfun:
     def __rtruediv__(self, c):
         # Executed when truediv(f, self) fails, which is to say whenever c
         # is not a Chebfun. We proceeed on the assumption f is a scalar.
-        constfun = lambda x: 0.0 * x + c
-        newfuns = []
-        for fun in self:
-            quotnt = lambda x: constfun(x) / fun(x)
-            newfun = fun.initfun_adaptive(quotnt, fun.interval)
-            newfuns.append(newfun)
+        def constfun(cheb, const):
+            return 0.0 * cheb + const
+
+        newfuns = [
+            fun.initfun_adaptive(lambda x: constfun(x, c) / fun(x), fun.interval)
+            for fun in self
+        ]
         return self.__class__(newfuns)
 
     @self_empty("chebfun<empty>")
