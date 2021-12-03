@@ -170,7 +170,7 @@ class Chebfun:
         simplify step, since at the Tech-level these operations are are defined
         such that there is no change in the number of coefficients.
         """
-        if hasattr(f, "isempty"):
+        if hasattr(f, "isempty") and f.isempty:
             return f
         if np.isscalar(f):
             chbfn1 = self
