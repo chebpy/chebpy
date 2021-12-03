@@ -77,7 +77,7 @@ class Interval(np.ndarray):
         a, b = self
         h = max(infnorm(self), 1)
         hF = b - a  # if interval == domain: scale hscale back to 1
-        hscale = max(h / hF, 1)  #                  else: hscale < 1
+        hscale = max(h / hF, 1)  # else: hscale < 1
         return hscale
 
 
