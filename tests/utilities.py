@@ -20,6 +20,10 @@ def infNormLessThanTol(a, b, tol):
     return asserter
 
 
+def joukowsky(z):
+    return 0.5 * (z + 1 / z)
+
+
 # test functions
 testfunctions = []
 fun_details = [

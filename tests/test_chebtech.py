@@ -11,7 +11,7 @@ from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
 
-from .utilities import testfunctions, infnorm, scaled_tol, infNormLessThanTol
+from .utilities import testfunctions, infnorm, scaled_tol, infNormLessThanTol, joukowsky
 
 np.random.seed(0)
 
@@ -255,8 +255,12 @@ class Plotting(unittest.TestCase):
     """Unit-tests for Chebtech2 plotting methods"""
 
     def setUp(self):
-        f = lambda x: sin(3 * x) + 5e-1 * cos(30 * x)
-        u = lambda x: np.exp(2 * np.pi * 1j * x)
+        def f(x):
+            return sin(3 * x) + 5e-1 * cos(30 * x)
+
+        def u(x):
+            return np.exp(2 * np.pi * 1j * x)
+
         self.f0 = Chebtech2.initfun_fixedlen(f, 100)
         self.f1 = Chebtech2.initfun_adaptive(f)
         self.f2 = Chebtech2.initfun_adaptive(u)
@@ -270,7 +274,6 @@ class Plotting(unittest.TestCase):
     def test_plot_complex(self):
         fig, ax = plt.subplots()
         # plot Bernstein ellipses
-        joukowsky = lambda z: 0.5 * (z + 1 / z)
         for rho in np.arange(1.1, 2, 0.1):
             joukowsky(rho * self.f2).plot(ax=ax)
 
@@ -542,7 +545,8 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                f = lambda x: const + fun(x)
+                def f(x):
+                    return const + fun(x)
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
                 f1 = const + techfun
                 f2 = techfun + const
@@ -573,9 +577,13 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const - fun(x)
+
+                def g(x):
+                    return fun(x) - const
+
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                f = lambda x: const - fun(x)
-                g = lambda x: fun(x) - const
                 ff = const - techfun
                 gg = techfun - const
                 tol = 5e1 * eps * abs(const)
@@ -596,9 +604,13 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const * fun(x)
+
+                def g(x):
+                    return fun(x) * const
+
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                f = lambda x: const * fun(x)
-                g = lambda x: fun(x) * const
                 ff = const * techfun
                 gg = techfun * const
                 tol = 5e1 * eps * abs(const)
@@ -625,14 +637,18 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const / fun(x)
+
+                def g(x):
+                    return fun(x) / const
+
                 tol = eps * abs(const)
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                g = lambda x: fun(x) / const
                 gg = techfun / const
                 self.assertLessEqual(infnorm(g(xx) - gg(xx)), 2 * gg.size * tol)
                 # don't do the following test for functions with roots
                 if not hasRoots:
-                    f = lambda x: const / fun(x)
                     ff = const / techfun
                     self.assertLessEqual(infnorm(f(xx) - ff(xx)), 3 * ff.size * tol)
 
@@ -658,8 +674,10 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
+                def f(x):
+                    return fun(x) ** c
+
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                f = lambda x: fun(x) ** c
                 ff = techfun ** c
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
@@ -668,8 +686,10 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
+                def g(x):
+                    return c ** fun(x)
+
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                g = lambda x: c ** fun(x)
                 gg = c ** techfun
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
@@ -679,7 +699,9 @@ class Algebra(unittest.TestCase):
 def binaryOpTester(f, g, binop, nf, ng):
     ff = Chebtech2.initfun_fixedlen(f, nf)
     gg = Chebtech2.initfun_fixedlen(g, ng)
-    FG = lambda x: binop(f(x), g(x))
+
+    def FG(x):
+        return binop(f(x), g(x))
     fg = binop(ff, gg)
 
     def tester(self):
@@ -725,7 +747,9 @@ for (f, nf, namef), (g, ng, nameg) in powtestfuns:
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, nf):
     ff = Chebtech2.initfun_fixedlen(f, nf)
-    gg = lambda x: unaryop(f(x))
+
+    def gg(x):
+        return unaryop(f(x))
     GG = unaryop(ff)
 
     def tester(self):

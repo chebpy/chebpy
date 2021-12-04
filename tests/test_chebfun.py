@@ -19,7 +19,7 @@ from chebpy.core.exceptions import (
 )
 from chebpy.core.plotting import import_plt
 
-from .utilities import infnorm, testfunctions
+from .utilities import infnorm, testfunctions, joukowsky
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]
@@ -49,8 +49,7 @@ chebfun_testdomains = [
 
 class Construction(unittest.TestCase):
     def setUp(self):
-        f = lambda x: exp(x)
-        self.f = f
+        self.f = lambda x: exp(x)
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
         self.fun2 = Bndfun.initfun_adaptive(f, Interval(-0.5, 0.5))
@@ -420,11 +419,12 @@ class Algebra(unittest.TestCase):
     def test__add__radd__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+                def g(x):
+                    return c + f(x)
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: c + f(x)
                     gg1 = c + ff
                     gg2 = ff + c
                     vscl = ff.vscale
@@ -449,11 +449,12 @@ class Algebra(unittest.TestCase):
     def test__sub__rsub__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+                def g(x):
+                    return c - f(x)
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: c - f(x)
                     gg1 = c - ff
                     gg2 = ff - c
                     vscl = ff.vscale
@@ -478,11 +479,12 @@ class Algebra(unittest.TestCase):
     def test__mul__rmul__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+                def g(x):
+                    return c * f(x)
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: c * f(x)
                     gg1 = c * ff
                     gg2 = ff * c
                     vscl = ff.vscale
@@ -507,11 +509,15 @@ class Algebra(unittest.TestCase):
     def test_truediv_constant(self):
         for (f, _, hasRoots) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+                def g(x):
+                    return f(x) / c
+
+                def h(x):
+                    return c / f(x)
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: f(x) / c
                     gg = ff / c
                     vscl = gg.vscale
                     hscl = gg.hscale
@@ -520,7 +526,6 @@ class Algebra(unittest.TestCase):
                     self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
                     # don't do the following test for functions with roots
                     if not hasRoots:
-                        h = lambda x: c / f(x)
                         hh = c / ff
                         vscl = hh.vscale
                         hscl = hh.hscale
@@ -548,11 +553,12 @@ class Algebra(unittest.TestCase):
     def test_pow_constant(self):
         for ((_, _), (f, _)) in powtestfuns:
             for c in (1, 2, 3):
+                def g(x):
+                    return f(x) ** c
                 for dom, _ in powtestdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: f(x) ** c
                     gg = ff ** c
                     vscl = gg.vscale
                     hscl = gg.hscale
@@ -564,11 +570,12 @@ class Algebra(unittest.TestCase):
     def test_rpow_constant(self):
         for ((_, _), (f, _)) in powtestfuns:
             for c in (1, 2, 3):
+                def g(x):
+                    return c ** f(x)
                 for dom, _ in powtestdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    g = lambda x: c ** f(x)
                     gg = c ** ff
                     vscl = gg.vscale
                     hscl = gg.hscale
@@ -584,7 +591,9 @@ def binaryOpTester(f, g, binop, dom, tol):
     n, m = 3, 8
     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, n + 1))
     gg = Chebfun.initfun_adaptive(g, np.linspace(a, b, m + 1))
-    FG = lambda x: binop(f(x), g(x))
+
+    def FG(x):
+        return binop(f(x), g(x))
     fg = binop(ff, gg)
 
     def tester(self):
@@ -647,7 +656,9 @@ def unaryOpTester(f, unaryop, dom, tol):
     a, b = dom
     xx = np.linspace(a, b, 1001)
     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 9))
-    GG = lambda x: unaryop(f(x))
+
+    def GG(x):
+        return unaryop(f(x))
     gg = unaryop(ff)
 
     def tester(self):
@@ -722,12 +733,21 @@ for ufunc in ufuncs:
 # add ufunc tests:
 #     (ufunc, [([fun1, interval1], tol1), ([fun2, interval2], tol2), ... ])
 
-uf1 = lambda x: x
-uf1.__name__ = "x"
-uf2 = lambda x: sin(x - 0.5)
-uf2.__name__ = "sin(x-.5)"
-uf3 = lambda x: sin(25 * x - 1)
-uf3.__name__ = "sin(25*x-1)"
+
+def uf1(x):
+    """ uf1.__name__ = "x" """
+    return x
+
+
+def uf2(x):
+    """ uf2.__name__ = "sin(x-.5)" """
+    return sin(x - 0.5)
+
+
+def uf3(x):
+    """ uf3.__name__ = "sin(25*x-1)" """
+    return sin(25 * x - 1)
+
 
 ufunc_test_params = [
     (
@@ -970,7 +990,9 @@ ufunc_test_params = [
 def ufuncTester(ufunc, f, interval, tol):
     a, b = interval
     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
-    gg = lambda x: ufunc(f(x))
+
+    def gg(x):
+        return ufunc(f(x))
     GG = getattr(ff, ufunc.__name__)()
 
     def tester(self):
@@ -1042,7 +1064,8 @@ class Evaluation(unittest.TestCase):
         self.assertTrue(np.isfinite(self.f2(x)).all())
 
     def test__call__general_evaluation(self):
-        f = lambda x: sin(4 * x) + exp(cos(14 * x)) - 1.4
+        def f(x):
+            return sin(4 * x) + exp(cos(14 * x)) - 1.4
         npts = 50000
         dom1 = [-1, 1]
         dom2 = [-1, 0, 1]
@@ -1104,8 +1127,12 @@ class Complex(unittest.TestCase):
 
 class Calculus(unittest.TestCase):
     def setUp(self):
-        f = lambda x: sin(4 * x - 1.4)
-        g = lambda x: exp(x)
+        def f(x):
+            return sin(4 * x - 1.4)
+
+        def g(x):
+            return exp(x)
+
         self.df = lambda x: 4 * cos(4 * x - 1.4)
         self.If = lambda x: -0.25 * cos(4 * x - 1.4)
         self.f1 = Chebfun.initfun_adaptive(f, [-1, 1])
@@ -1221,8 +1248,12 @@ plt = import_plt()
 
 class Plotting(unittest.TestCase):
     def setUp(self):
-        f = lambda x: sin(4 * x) + exp(cos(14 * x)) - 1.4
-        u = lambda x: np.exp(2 * np.pi * 1j * x)
+        def f(x):
+            return sin(4 * x) + exp(cos(14 * x)) - 1.4
+
+        def u(x):
+            return np.exp(2 * np.pi * 1j * x)
+
         self.f1 = Chebfun.initfun_adaptive(f, [-1, 1])
         self.f2 = Chebfun.initfun_adaptive(f, [-3, 0, 1])
         self.f3 = Chebfun.initfun_adaptive(f, [-2, -0.3, 1.2])
@@ -1238,7 +1269,6 @@ class Plotting(unittest.TestCase):
     def test_plot_complex(self):
         fig, ax = plt.subplots()
         # plot Bernstein ellipses
-        joukowsky = lambda z: 0.5 * (z + 1 / z)
         for rho in np.arange(1.1, 2, 0.1):
             (np.exp(1j * 0.5 * np.pi) * joukowsky(rho * self.f4)).plot(ax=ax)
 
@@ -1251,7 +1281,8 @@ class Plotting(unittest.TestCase):
 
 class PrivateMethods(unittest.TestCase):
     def setUp(self):
-        f = lambda x: sin(x - 0.1)
+        def f(x):
+            return sin(x - 0.1)
         self.f1 = Chebfun.initfun_adaptive(f, [-2, 0, 3])
         self.f2 = Chebfun.initfun_adaptive(f, np.linspace(-2, 3, 5))
 
@@ -1297,7 +1328,9 @@ class DomainBreakingOps(unittest.TestCase):
         y = chebfun(2, x.domain)
         g = (x ** y).maximum(1.5)
         t = np.linspace(-2, 3, 2001)
-        f = lambda x: np.maximum(x ** 2, 1.5)
+
+        def f(x):
+            return np.maximum(x ** 2, 1.5)
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
     def test_minimum_multipiece(self):
@@ -1305,7 +1338,9 @@ class DomainBreakingOps(unittest.TestCase):
         y = chebfun(2, x.domain)
         g = (x ** y).minimum(1.5)
         t = np.linspace(-2, 3, 2001)
-        f = lambda x: np.minimum(x ** 2, 1.5)
+
+        def f(x):
+            return np.minimum(x ** 2, 1.5)
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
 

@@ -13,7 +13,7 @@ from chebpy.core.utilities import Interval
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
 
-from .utilities import testfunctions, infnorm
+from .utilities import testfunctions, infnorm, joukowsky
 
 # aliases
 pi = np.pi
@@ -33,10 +33,9 @@ class ClassUsage(unittest.TestCase):
     """Unit-tests for miscelaneous Bndfun class usage"""
 
     def setUp(self):
-        f = lambda x: sin(30 * x)
         subinterval = Interval(-2, 3)
-        self.f = f
-        self.ff = Bndfun.initfun_adaptive(f, subinterval)
+        self.f = lambda x: sin(30 * x)
+        self.ff = Bndfun.initfun_adaptive(self.f, subinterval)
         self.xx = subinterval(np.linspace(-1, 1, 100))
         self.emptyfun = Bndfun(Chebtech2.initempty(), subinterval)
         self.constfun = Bndfun(Chebtech2.initconst(1.0), subinterval)
@@ -182,8 +181,12 @@ class Plotting(unittest.TestCase):
     """Unit-tests for Bndfun plotting methods"""
 
     def setUp(self):
-        f = lambda x: sin(1 * x) + 5e-1 * cos(10 * x) + 5e-3 * sin(100 * x)
-        u = lambda x: np.exp(2 * np.pi * 1j * x)
+        def f(x):
+            return sin(1 * x) + 5e-1 * cos(10 * x) + 5e-3 * sin(100 * x)
+
+        def u(x):
+            return np.exp(2 * np.pi * 1j * x)
+
         subinterval = Interval(-6, 10)
         self.f0 = Bndfun.initfun_fixedlen(f, subinterval, 1000)
         self.f1 = Bndfun.initfun_adaptive(f, subinterval)
@@ -198,7 +201,6 @@ class Plotting(unittest.TestCase):
     def test_plot_complex(self):
         fig, ax = plt.subplots()
         # plot Bernstein ellipses
-        joukowsky = lambda z: 0.5 * (z + 1 / z)
         for rho in np.arange(1.1, 2, 0.1):
             (np.exp(1j * 0.25 * np.pi) * joukowsky(rho * self.f2)).plot(ax=ax)
 
@@ -487,7 +489,8 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
-                f = lambda x: const + fun(x)
+                def f(x):
+                    return const + fun(x)
                 bndfun = Bndfun.initfun_adaptive(fun, subinterval)
                 f1 = const + bndfun
                 f2 = bndfun + const
@@ -511,9 +514,13 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const - fun(x)
+
+                def g(x):
+                    return fun(x) - const
+
                 bndfun = Bndfun.initfun_adaptive(fun, subinterval)
-                f = lambda x: const - fun(x)
-                g = lambda x: fun(x) - const
                 ff = const - bndfun
                 gg = bndfun - const
                 tol = 5e1 * eps * abs(const)
@@ -536,9 +543,13 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const * fun(x)
+
+                def g(x):
+                    return fun(x) * const
+
                 bndfun = Bndfun.initfun_adaptive(fun, subinterval)
-                f = lambda x: const * fun(x)
-                g = lambda x: fun(x) * const
                 ff = const * bndfun
                 gg = bndfun * const
                 tol = 4e1 * eps * abs(const)
@@ -564,15 +575,19 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+                def f(x):
+                    return const / fun(x)
+
+                def g(x):
+                    return fun(x) / const
+
                 hscl = abs(subinterval).max()
                 tol = hscl * eps * abs(const)
                 bndfun = Bndfun.initfun_adaptive(fun, subinterval)
-                g = lambda x: fun(x) / const
                 gg = bndfun / const
                 self.assertLessEqual(infnorm(g(xx) - gg(xx)), 3 * gg.size * tol)
                 # don't do the following test for functions with roots
                 if not hasRoots:
-                    f = lambda x: const / fun(x)
                     ff = const / bndfun
                     self.assertLessEqual(infnorm(f(xx) - ff(xx)), 2 * ff.size * tol)
 
@@ -600,7 +615,8 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for func in (np.sin, np.exp, np.cos):
             for c in (1, 2):
-                f = lambda x: func(x) ** c
+                def f(x):
+                    return func(x) ** c
                 ff = Bndfun.initfun_adaptive(func, subinterval) ** c
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
@@ -611,7 +627,8 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for func in (np.sin, np.exp, np.cos):
             for c in (1, 2):
-                f = lambda x: c ** func(x)
+                def f(x):
+                    return c ** func(x)
                 ff = c ** Bndfun.initfun_adaptive(func, subinterval)
                 tol = 1e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
@@ -624,7 +641,9 @@ binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 def binaryOpTester(f, g, subinterval, binop):
     ff = Bndfun.initfun_adaptive(f, subinterval)
     gg = Bndfun.initfun_adaptive(g, subinterval)
-    FG = lambda x: binop(f(x), g(x))
+
+    def FG(x):
+        return binop(f(x), g(x))
     fg = binop(ff, gg)
 
     def tester(self):
@@ -683,7 +702,9 @@ unaryops = (operator.pos, operator.neg)
 # add tests for the unary operators
 def unaryOpTester(unaryop, f, subinterval):
     ff = Bndfun.initfun_adaptive(f, subinterval)
-    gg = lambda x: unaryop(f(x))
+
+    def gg(x):
+        return unaryop(f(x))
     GG = unaryop(ff)
 
     def tester(self):
@@ -751,12 +772,21 @@ for ufunc in ufuncs:
 # add ufunc tests:
 #     (ufunc, [([fun1, interval1], tol1), ([fun2, interval2], tol2), ... ])
 
-uf1 = lambda x: x
-uf1.__name__ = "x"
-uf2 = lambda x: sin(x - 0.5)
-uf2.__name__ = "sin(x-.5)"
-uf3 = lambda x: sin(25 * x - 1)
-uf3.__name__ = "sin(25*x-1)"
+
+def uf1(x):
+    """ uf1.__name__ = "x" """
+    return x
+
+
+def uf2(x):
+    """ uf2.__name__ = "sin(x-.5)" """
+    return sin(x - 0.5)
+
+
+def uf3(x):
+    """ uf3.__name__ = "sin(25*x-1)" """
+    return sin(25 * x - 1)
+
 
 ufunc_test_params = [
     (
@@ -986,7 +1016,9 @@ ufunc_test_params = [
 
 def ufuncTester(ufunc, f, interval, tol):
     ff = Bndfun.initfun_adaptive(f, interval)
-    gg = lambda x: ufunc(f(x))
+
+    def gg(x):
+        return ufunc(f(x))
     GG = getattr(ff, ufunc.__name__)()
 
     def tester(self):

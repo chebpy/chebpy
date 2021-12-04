@@ -328,7 +328,8 @@ class CheckFuns(unittest.TestCase):
     """Tests for the chebpy.core.utilities check_funs method"""
 
     def setUp(self):
-        f = lambda x: np.exp(x)
+        def f(x):
+            return np.exp(x)
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
         self.fun2 = Bndfun.initfun_adaptive(f, Interval(-0.5, 0.5))
@@ -365,7 +366,8 @@ class CheckFuns(unittest.TestCase):
 # tests for the chebpy.core.utilities compute_breakdata function
 class ComputeBreakdata(unittest.TestCase):
     def setUp(self):
-        f = lambda x: np.exp(x)
+        def f(x):
+            return np.exp(x)
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
 
