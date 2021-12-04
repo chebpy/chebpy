@@ -545,8 +545,10 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const + fun(x)
+
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
                 f1 = const + techfun
                 f2 = techfun + const
@@ -577,6 +579,7 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const - fun(x)
 
@@ -604,6 +607,7 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const * fun(x)
 
@@ -637,6 +641,7 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const / fun(x)
 
@@ -674,6 +679,7 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
+
                 def f(x):
                     return fun(x) ** c
 
@@ -686,6 +692,7 @@ class Algebra(unittest.TestCase):
         xx = self.xx
         for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
+
                 def g(x):
                     return c ** fun(x)
 
@@ -702,6 +709,7 @@ def binaryOpTester(f, g, binop, nf, ng):
 
     def FG(x):
         return binop(f(x), g(x))
+
     fg = binop(ff, gg)
 
     def tester(self):
@@ -750,6 +758,7 @@ def unaryOpTester(unaryop, f, nf):
 
     def gg(x):
         return unaryop(f(x))
+
     GG = unaryop(ff)
 
     def tester(self):

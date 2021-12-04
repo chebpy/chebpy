@@ -489,8 +489,10 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const + fun(x)
+
                 bndfun = Bndfun.initfun_adaptive(fun, subinterval)
                 f1 = const + bndfun
                 f2 = bndfun + const
@@ -514,6 +516,7 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const - fun(x)
 
@@ -543,6 +546,7 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, _) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const * fun(x)
 
@@ -575,6 +579,7 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for (fun, _, hasRoots) in testfunctions:
             for const in (-1, 1, 10, -1e5):
+
                 def f(x):
                     return const / fun(x)
 
@@ -615,8 +620,10 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for func in (np.sin, np.exp, np.cos):
             for c in (1, 2):
+
                 def f(x):
                     return func(x) ** c
+
                 ff = Bndfun.initfun_adaptive(func, subinterval) ** c
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
@@ -627,8 +634,10 @@ class Algebra(unittest.TestCase):
         xx = subinterval(self.yy)
         for func in (np.sin, np.exp, np.cos):
             for c in (1, 2):
+
                 def f(x):
                     return c ** func(x)
+
                 ff = c ** Bndfun.initfun_adaptive(func, subinterval)
                 tol = 1e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
@@ -644,6 +653,7 @@ def binaryOpTester(f, g, subinterval, binop):
 
     def FG(x):
         return binop(f(x), g(x))
+
     fg = binop(ff, gg)
 
     def tester(self):
@@ -705,6 +715,7 @@ def unaryOpTester(unaryop, f, subinterval):
 
     def gg(x):
         return unaryop(f(x))
+
     GG = unaryop(ff)
 
     def tester(self):
@@ -774,17 +785,17 @@ for ufunc in ufuncs:
 
 
 def uf1(x):
-    """ uf1.__name__ = "x" """
+    """uf1.__name__ = "x" """
     return x
 
 
 def uf2(x):
-    """ uf2.__name__ = "sin(x-.5)" """
+    """uf2.__name__ = "sin(x-.5)" """
     return sin(x - 0.5)
 
 
 def uf3(x):
-    """ uf3.__name__ = "sin(25*x-1)" """
+    """uf3.__name__ = "sin(25*x-1)" """
     return sin(25 * x - 1)
 
 
@@ -1019,6 +1030,7 @@ def ufuncTester(ufunc, f, interval, tol):
 
     def gg(x):
         return ufunc(f(x))
+
     GG = getattr(ff, ufunc.__name__)()
 
     def tester(self):

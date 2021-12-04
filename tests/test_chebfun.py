@@ -419,8 +419,10 @@ class Algebra(unittest.TestCase):
     def test__add__radd__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return c + f(x)
+
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -449,8 +451,10 @@ class Algebra(unittest.TestCase):
     def test__sub__rsub__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return c - f(x)
+
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -479,8 +483,10 @@ class Algebra(unittest.TestCase):
     def test__mul__rmul__constant(self):
         for (f, _, _) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return c * f(x)
+
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -509,11 +515,13 @@ class Algebra(unittest.TestCase):
     def test_truediv_constant(self):
         for (f, _, hasRoots) in testfunctions:
             for c in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return f(x) / c
 
                 def h(x):
                     return c / f(x)
+
                 for dom, _ in chebfun_testdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -553,8 +561,10 @@ class Algebra(unittest.TestCase):
     def test_pow_constant(self):
         for ((_, _), (f, _)) in powtestfuns:
             for c in (1, 2, 3):
+
                 def g(x):
                     return f(x) ** c
+
                 for dom, _ in powtestdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -570,8 +580,10 @@ class Algebra(unittest.TestCase):
     def test_rpow_constant(self):
         for ((_, _), (f, _)) in powtestfuns:
             for c in (1, 2, 3):
+
                 def g(x):
                     return c ** f(x)
+
                 for dom, _ in powtestdomains:
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
@@ -594,6 +606,7 @@ def binaryOpTester(f, g, binop, dom, tol):
 
     def FG(x):
         return binop(f(x), g(x))
+
     fg = binop(ff, gg)
 
     def tester(self):
@@ -659,6 +672,7 @@ def unaryOpTester(f, unaryop, dom, tol):
 
     def GG(x):
         return unaryop(f(x))
+
     gg = unaryop(ff)
 
     def tester(self):
@@ -735,17 +749,17 @@ for ufunc in ufuncs:
 
 
 def uf1(x):
-    """ uf1.__name__ = "x" """
+    """uf1.__name__ = "x" """
     return x
 
 
 def uf2(x):
-    """ uf2.__name__ = "sin(x-.5)" """
+    """uf2.__name__ = "sin(x-.5)" """
     return sin(x - 0.5)
 
 
 def uf3(x):
-    """ uf3.__name__ = "sin(25*x-1)" """
+    """uf3.__name__ = "sin(25*x-1)" """
     return sin(25 * x - 1)
 
 
@@ -993,6 +1007,7 @@ def ufuncTester(ufunc, f, interval, tol):
 
     def gg(x):
         return ufunc(f(x))
+
     GG = getattr(ff, ufunc.__name__)()
 
     def tester(self):
@@ -1066,6 +1081,7 @@ class Evaluation(unittest.TestCase):
     def test__call__general_evaluation(self):
         def f(x):
             return sin(4 * x) + exp(cos(14 * x)) - 1.4
+
         npts = 50000
         dom1 = [-1, 1]
         dom2 = [-1, 0, 1]
@@ -1283,6 +1299,7 @@ class PrivateMethods(unittest.TestCase):
     def setUp(self):
         def f(x):
             return sin(x - 0.1)
+
         self.f1 = Chebfun.initfun_adaptive(f, [-2, 0, 3])
         self.f2 = Chebfun.initfun_adaptive(f, np.linspace(-2, 3, 5))
 
@@ -1331,6 +1348,7 @@ class DomainBreakingOps(unittest.TestCase):
 
         def f(x):
             return np.maximum(x ** 2, 1.5)
+
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
     def test_minimum_multipiece(self):
@@ -1341,6 +1359,7 @@ class DomainBreakingOps(unittest.TestCase):
 
         def f(x):
             return np.minimum(x ** 2, 1.5)
+
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
 

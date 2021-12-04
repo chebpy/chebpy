@@ -143,6 +143,7 @@ class CoeffMult(unittest.TestCase):
     def test_coeffmult(self):
         def h(x):
             return self.f(x) * self.g(x)
+
         f, g = self.f, self.g
         fn, gn = self.fn, self.gn
         hn = fn + gn - 1

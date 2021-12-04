@@ -330,6 +330,7 @@ class CheckFuns(unittest.TestCase):
     def setUp(self):
         def f(x):
             return np.exp(x)
+
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
         self.fun2 = Bndfun.initfun_adaptive(f, Interval(-0.5, 0.5))
@@ -368,6 +369,7 @@ class ComputeBreakdata(unittest.TestCase):
     def setUp(self):
         def f(x):
             return np.exp(x)
+
         self.fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
         self.fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
 
