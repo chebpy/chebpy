@@ -28,8 +28,8 @@ def chebfun(f=None, domain=None, n=None):
     try:
         # chebfun(3.14, ... ), chebfun('3.14', ... )
         return Chebfun.initconst(float(f), domain)
-    except:
-        raise ValueError(f)
+    except (OverflowError, ValueError):
+        raise ValueError(f"Unable to construct const function from {{{f}}}")
 
 
 def pwc(domain=[-1, 0, 1], values=[0, 1]):

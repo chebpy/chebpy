@@ -49,16 +49,18 @@ class Classicfun(Fun, ABC):
     def initfun_adaptive(cls, f, interval):
         """Adaptive initialisation of a BndFun from a callable function f
         and a Interval object"""
-        uifunc = lambda y: f(interval(y))
-        onefun = techdict[prefs.tech].initfun(uifunc, interval=interval)
+        onefun = techdict[prefs.tech].initfun(
+            lambda y: f(interval(y)), interval=interval
+        )
         return cls(onefun, interval)
 
     @classmethod
     def initfun_fixedlen(cls, f, interval, n):
         """Fixed length initialisation of a BndFun from a callable
         function f and a Interval object"""
-        uifunc = lambda y: f(interval(y))
-        onefun = techdict[prefs.tech].initfun(uifunc, n, interval=interval)
+        onefun = techdict[prefs.tech].initfun(
+            lambda y: f(interval(y)), n, interval=interval
+        )
         return cls(onefun, interval)
 
     # -------------------
@@ -293,9 +295,7 @@ for methodname in methods_onefun_binary:
 def addUfunc(op):
     @self_empty()
     def method(self):
-        cls = self.__class__
-        fun = lambda x: op(self(x))
-        return cls.initfun_adaptive(fun, self.interval)
+        return self.__class__.initfun_adaptive(lambda x: op(self(x)), self.interval)
 
     name = op.__name__
     method.__name__ = name

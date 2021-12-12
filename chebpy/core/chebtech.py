@@ -250,8 +250,9 @@ class Chebtech(Smoothfun, ABC):
             # TODO: review with reference to __add__
             if f.isempty:
                 return f.copy()
-            divfun = lambda x: self(x) / f(x)
-            return cls.initfun_adaptive(divfun, interval=self.interval)
+            return cls.initfun_adaptive(
+                lambda x: self(x) / f(x), interval=self.interval
+            )
 
     __truediv__ = __div__
 
@@ -282,18 +283,25 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def __pow__(self, f):
-        if np.isscalar(f):
-            powfun = lambda x: np.power(self(x), f)
-        else:
-            powfun = lambda x: np.power(self(x), f(x))
-        return self.__class__.initfun_adaptive(powfun, interval=self.interval)
+        def powfun(fn, x):
+            if np.isscalar(fn):
+                return fn
+            else:
+                return fn(x)
+
+        return self.__class__.initfun_adaptive(
+            lambda x: np.power(self(x), powfun(f, x)), interval=self.interval
+        )
 
     def __rdiv__(self, f):
         # Executed when __div__(f, self) fails, which is to say whenever f
         # is not a Chebtech. We proceeed on the assumption f is a scalar.
-        constfun = lambda x: 0.0 * x + f
-        quotient = lambda x: constfun(x) / self(x)
-        return self.__class__.initfun_adaptive(quotient, interval=self.interval)
+        def constfun(x):
+            return 0.0 * x + f
+
+        return self.__class__.initfun_adaptive(
+            lambda x: constfun(x) / self(x), interval=self.interval
+        )
 
     __radd__ = __add__
 
@@ -302,8 +310,9 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def __rpow__(self, f):
-        powfun = lambda x: np.power(f, self(x))
-        return self.__class__.initfun_adaptive(powfun, interval=self.interval)
+        return self.__class__.initfun_adaptive(
+            lambda x: np.power(f, self(x)), interval=self.interval
+        )
 
     __rtruediv__ = __rdiv__
     __rmul__ = __mul__
