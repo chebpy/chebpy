@@ -217,7 +217,10 @@ def adaptive(cls, fun, hscale=1, maxpow2=None):
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2 ** k + 1
         points = cls._chebpts(n)
-        values = fun(points)
+        try:
+            values = fun(points)
+        except:  # needed when trying to sample wrapped C functions
+            values = np.vectorize(fun)(points)
         coeffs = cls._vals2coeffs(values)
         eps = prefs.eps
         tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
