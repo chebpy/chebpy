@@ -35,12 +35,12 @@ The figure above was generated with the following simple ChebPy code:
 
 .. code:: python
 
-        import chebpy
-		import numpy as np
-		import matplotlib.pyplot as plt
-		f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
-		g = chebfun(lambda x: np.exp(-(x-5)**2/10), [0, 10])
-		r = (f-g).roots()
-		ax = f.plot(); g.plot()
-		ax.plot(r, f(r), 'o')
-		plt.show()
+ import chebpy
+ import numpy as np
+ import matplotlib.pyplot as plt
+ f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
+ g = chebfun(lambda x: np.exp(-(x-5)**2/10), [0, 10])
+ r = (f-g).roots()
+ ax = f.plot(); g.plot()
+ ax.plot(r, f(r), 'o')
+ plt.show()
