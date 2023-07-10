@@ -229,7 +229,7 @@ class Chebfun:
     @property
     @self_empty(0.0)
     def hscale(self):
-        return np.float(np.abs(self.support).max())
+        return float(np.abs(self.support).max())
 
     @property
     @self_empty(False)

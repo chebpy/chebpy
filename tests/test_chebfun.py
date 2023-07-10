@@ -228,9 +228,9 @@ class Properties(unittest.TestCase):
         self.assertEqual(self.f2.domain, d2)
 
     def test_hscale(self):
-        self.assertIsInstance(self.f0.hscale, np.float)
-        self.assertIsInstance(self.f1.hscale, np.float)
-        self.assertIsInstance(self.f2.hscale, np.float)
+        self.assertIsInstance(self.f0.hscale, float)
+        self.assertIsInstance(self.f1.hscale, float)
+        self.assertIsInstance(self.f2.hscale, float)
         self.assertEqual(self.f0.hscale, 0)
         self.assertEqual(self.f1.hscale, 1)
         self.assertEqual(self.f2.hscale, 2)
