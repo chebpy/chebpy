@@ -348,7 +348,7 @@ class Chebtech(Smoothfun, ABC):
             ak = self.coeffs.copy()
             ak[1::2] = 0
             kk = np.arange(2, ak.size)
-            ii = np.append([2, 0], 2 / (1 - kk ** 2))
+            ii = np.append([2, 0], 2 / (1 - kk**2))
             out = (ak * ii).sum()
         return out
 
