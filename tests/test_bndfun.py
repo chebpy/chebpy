@@ -270,11 +270,11 @@ for k, (fun, n, integral, tol) in enumerate(def_integrals):
 indef_integrals = [
     # (function, indefinite integral, interval, tolerance)
     (lambda x: 0 * x + 1.0, lambda x: x, [-2, 3], eps),
-    (lambda x: x, lambda x: 1 / 2 * x ** 2, [-5, 0], 4 * eps),
-    (lambda x: x ** 2, lambda x: 1 / 3 * x ** 3, [1, 10], 2e2 * eps),
-    (lambda x: x ** 3, lambda x: 1 / 4 * x ** 4, [-1e-2, 4e-1], 2 * eps),
-    (lambda x: x ** 4, lambda x: 1 / 5 * x ** 5, [-3, -2], 3e2 * eps),
-    (lambda x: x ** 5, lambda x: 1 / 6 * x ** 6, [-1e-10, 1], 4 * eps),
+    (lambda x: x, lambda x: 1 / 2 * x**2, [-5, 0], 4 * eps),
+    (lambda x: x**2, lambda x: 1 / 3 * x**3, [1, 10], 2e2 * eps),
+    (lambda x: x**3, lambda x: 1 / 4 * x**4, [-1e-2, 4e-1], 2 * eps),
+    (lambda x: x**4, lambda x: 1 / 5 * x**5, [-3, -2], 3e2 * eps),
+    (lambda x: x**5, lambda x: 1 / 6 * x**6, [-1e-10, 1], 4 * eps),
     (lambda x: sin(x), lambda x: -cos(x), [-10, 22], 3e1 * eps),
     (lambda x: cos(3 * x), lambda x: 1.0 / 3 * sin(3 * x), [-3, 4], 2 * eps),
     (lambda x: exp(x), lambda x: exp(x), [-60, 1], 1e1 * eps),
@@ -308,10 +308,10 @@ derivatives = [
     #     (function, derivative, number of points, tolerance)
     (lambda x: 0 * x + 1.0, lambda x: 0 * x + 0, [-2, 3], eps),
     (lambda x: x, lambda x: 0 * x + 1, [-5, 0], 2e1 * eps),
-    (lambda x: x ** 2, lambda x: 2 * x, [1, 10], 2e2 * eps),
-    (lambda x: x ** 3, lambda x: 3 * x ** 2, [-1e-2, 4e-1], 3 * eps),
-    (lambda x: x ** 4, lambda x: 4 * x ** 3, [-3, -2], 1e3 * eps),
-    (lambda x: x ** 5, lambda x: 5 * x ** 4, [-1e-10, 1], 4e1 * eps),
+    (lambda x: x**2, lambda x: 2 * x, [1, 10], 2e2 * eps),
+    (lambda x: x**3, lambda x: 3 * x**2, [-1e-2, 4e-1], 3 * eps),
+    (lambda x: x**4, lambda x: 4 * x**3, [-3, -2], 1e3 * eps),
+    (lambda x: x**5, lambda x: 5 * x**4, [-1e-10, 1], 4e1 * eps),
     (lambda x: sin(x), lambda x: cos(x), [-10, 22], 5e2 * eps),
     (lambda x: cos(3 * x), lambda x: -3 * sin(3 * x), [-3, 4], 5e2 * eps),
     (lambda x: exp(x), lambda x: exp(x), [-60, 1], 2e2 * eps),
@@ -410,7 +410,7 @@ class Construction(unittest.TestCase):
         self.assertRaises(TypeError, Bndfun.initempty, [1.0])
 
     def test_identity_construction(self):
-        for (a, b) in [(-1, 1), (-10, -2), (-2.3, 1.24), (20, 2000)]:
+        for a, b in [(-1, 1), (-10, -2), (-2.3, 1.24), (20, 2000)]:
             itvl = Interval(a, b)
             ff = Bndfun.initidentity(itvl)
             self.assertEquals(ff.size, 2)
@@ -441,7 +441,7 @@ funs = []
 fun_details = [
     # (function, name for the test printouts,
     #  Matlab chebfun adaptive degree on [-2,3])
-    (lambda x: x ** 3 + x ** 2 + x + 1, "poly3(x)", [-2, 3], 4),
+    (lambda x: x**3 + x**2 + x + 1, "poly3(x)", [-2, 3], 4),
     (lambda x: exp(x), "exp(x)", [-2, 3], 20),
     (lambda x: sin(x), "sin(x)", [-2, 3], 20),
     (lambda x: cos(20 * x), "cos(20x)", [-2, 3], 90),
@@ -450,7 +450,6 @@ fun_details = [
 ]
 
 for k, (fun, name, interval, funlen) in enumerate(fun_details):
-
     fun.__name__ = name
     subinterval = Interval(*interval)
 
@@ -477,7 +476,7 @@ class Algebra(unittest.TestCase):
     #   and (Bndfun) + (empty Bndfun) = (empty Bndfun)
     def test__add__radd__empty(self):
         subinterval = Interval(-2, 3)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             chebtech = Bndfun.initfun_adaptive(fun, subinterval)
             self.assertTrue((self.emptyfun + chebtech).isempty)
             self.assertTrue((chebtech + self.emptyfun).isempty)
@@ -487,7 +486,7 @@ class Algebra(unittest.TestCase):
     def test__add__radd__constant(self):
         subinterval = Interval(-0.5, 0.9)
         xx = subinterval(self.yy)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -504,7 +503,7 @@ class Algebra(unittest.TestCase):
     #   and (Bndfun) - (empty Bndfun) = (empty Bndfun)
     def test__sub__rsub__empty(self):
         subinterval = Interval(-2, 3)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             chebtech = Bndfun.initfun_adaptive(fun, subinterval)
             self.assertTrue((self.emptyfun - chebtech).isempty)
             self.assertTrue((chebtech - self.emptyfun).isempty)
@@ -514,7 +513,7 @@ class Algebra(unittest.TestCase):
     def test__sub__rsub__constant(self):
         subinterval = Interval(-0.5, 0.9)
         xx = subinterval(self.yy)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -534,7 +533,7 @@ class Algebra(unittest.TestCase):
     #   and (Bndfun) * (empty Bndfun) = (empty Bndfun)
     def test__mul__rmul__empty(self):
         subinterval = Interval(-2, 3)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             chebtech = Bndfun.initfun_adaptive(fun, subinterval)
             self.assertTrue((self.emptyfun * chebtech).isempty)
             self.assertTrue((chebtech * self.emptyfun).isempty)
@@ -544,7 +543,7 @@ class Algebra(unittest.TestCase):
     def test__mul__rmul__constant(self):
         subinterval = Interval(-0.5, 0.9)
         xx = subinterval(self.yy)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -564,7 +563,7 @@ class Algebra(unittest.TestCase):
     #   and (Bndfun) / (empty Bndfun) = (empty Bndfun)
     def test_truediv_empty(self):
         subinterval = Interval(-2, 3)
-        for (fun, _, _) in testfunctions:
+        for fun, _, _ in testfunctions:
             bndfun = Bndfun.initfun_adaptive(fun, subinterval)
             self.assertTrue(operator.truediv(self.emptyfun, bndfun).isempty)
             self.assertTrue(operator.truediv(self.emptyfun, bndfun).isempty)
@@ -577,7 +576,7 @@ class Algebra(unittest.TestCase):
     def test_truediv_constant(self):
         subinterval = Interval(-0.5, 0.9)
         xx = subinterval(self.yy)
-        for (fun, _, hasRoots) in testfunctions:
+        for fun, _, hasRoots in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -607,12 +606,12 @@ class Algebra(unittest.TestCase):
     # check (empty Bndfun) ** c = (empty Bndfun)
     def test_pow_empty(self):
         for c in range(10):
-            self.assertTrue((self.emptyfun ** c).isempty)
+            self.assertTrue((self.emptyfun**c).isempty)
 
     # check c ** (empty Bndfun) = (empty Bndfun)
     def test_rpow_empty(self):
         for c in range(10):
-            self.assertTrue((c ** self.emptyfun).isempty)
+            self.assertTrue((c**self.emptyfun).isempty)
 
     # check the output of Bndfun ** constant
     def test_pow_const(self):
@@ -726,7 +725,7 @@ def unaryOpTester(unaryop, f, subinterval):
 
 
 for unaryop in unaryops:
-    for (f, _, _) in testfunctions:
+    for f, _, _ in testfunctions:
         subinterval = Interval(-0.5, 0.9)
         _testfun_ = unaryOpTester(unaryop, f, subinterval)
         _testfun_.__name__ = "test_{}_{}".format(unaryop.__name__, f.__name__)
@@ -1082,7 +1081,7 @@ def rootsTester(f, interval, roots, tol):
 
 rootstestfuns = (
     (lambda x: 3 * x + 2.0, [-2, 3], np.array([-2 / 3]), eps),
-    (lambda x: x ** 2 + 0.2 * x - 0.08, [-2, 5], np.array([-0.4, 0.2]), 3e1 * eps),
+    (lambda x: x**2 + 0.2 * x - 0.08, [-2, 5], np.array([-0.4, 0.2]), 3e1 * eps),
     (lambda x: sin(x), [-7, 7], pi * np.linspace(-2, 2, 5), 1e1 * eps),
     (lambda x: cos(2 * pi * x), [-20, 10], np.linspace(-19.75, 9.75, 60), 3e1 * eps),
     (lambda x: sin(100 * pi * x), [-0.5, 0.5], np.linspace(-0.5, 0.5, 101), eps),
