@@ -33,7 +33,7 @@ fun_details = [
     #  Matlab chebfun adaptive degree on [-1,1],
     #  Any roots on the real line?
     # )
-    (lambda x: x ** 3 + x ** 2 + x + 1.1, "poly3(x)", 4, True),
+    (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)", 4, True),
     (lambda x: np.exp(x), "exp(x)", 15, False),
     (lambda x: np.sin(x), "sin(x)", 14, True),
     (lambda x: 0.2 + 0.1 * np.sin(x), "(.2+.1*sin(x))", 14, False),
