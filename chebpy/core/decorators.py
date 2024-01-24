@@ -9,6 +9,7 @@ def cache(f):
     as .roots(). Cached computations are stored in a dictionary called _cache
     which is bound to self using keys corresponding to the method name.
     Can be used in principle on arbitrary objects."""
+
     # TODO: look into replacing this with one of the functools cache decorators
     @wraps(f)
     def wrapper(self):
@@ -31,6 +32,7 @@ def self_empty(resultif=None):
     """Factory method to produce a decorator that checks whether the object
     whose classmethod is being wrapped is empty, returning the object if
     so, but returning the supplied resultif if not. (Used in chebtech.py)"""
+
     # TODO: add unit test for this
     def decorator(f):
         @wraps(f)
