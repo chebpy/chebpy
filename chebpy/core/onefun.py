@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod, abstractclassmethod
 
 
 class Onefun(ABC):
-
     # --------------------------
     #  alternative constructors
     # --------------------------
