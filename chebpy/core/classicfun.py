@@ -17,7 +17,6 @@ techdict = {
 
 
 class Classicfun(Fun, ABC):
-
     # --------------------------
     #  alternative constructors
     # --------------------------
