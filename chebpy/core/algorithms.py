@@ -215,7 +215,7 @@ def adaptive(cls, fun, hscale=1, maxpow2=None):
     minpow2 = 4  # 17 points
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
-        n = 2 ** k + 1
+        n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
