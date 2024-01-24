@@ -62,7 +62,6 @@ class Chebfun:
     @self_empty(np.array([]))
     @float_argument
     def __call__(self, x):
-
         # initialise output
         dtype = complex if self.iscomplex else float
         out = np.full(x.size, np.nan, dtype=dtype)
@@ -138,7 +137,7 @@ class Chebfun:
 
     @cast_arg_to_chebfun
     def __rpow__(self, f):
-        return f ** self
+        return f**self
 
     def __truediv__(self, f):
         return self._apply_binop(f, operator.truediv)

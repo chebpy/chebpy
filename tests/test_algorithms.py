@@ -100,7 +100,6 @@ methods = [bary, clenshaw]
 
 
 def evalTester(method, fun, evalpts, chebpts):
-
     x = evalpts
     xk = chebpts
     fvals = fun(xk)
@@ -123,7 +122,7 @@ def evalTester(method, fun, evalpts, chebpts):
 
 
 for method in methods:
-    for (fun, _, _) in testfunctions:
+    for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 testfun = evalTester(method, fun, xx, chebpts)

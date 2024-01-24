@@ -77,7 +77,6 @@ def coeffs2vals2coeffsTester(n):
 
 
 for k, n in enumerate(2 ** np.arange(2, 18, 2) + 1):
-
     # vals2coeffs2vals
     _testfun_ = vals2coeffs2valsTester(n)
     _testfun_.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
@@ -383,11 +382,11 @@ for k, (fun, n, integral, tol) in enumerate(def_integrals):
 indef_integrals = [
     # (function, indefinite integral, number of points, tolerance)
     (lambda x: 0 * x + 1.0, lambda x: x, 1, eps),
-    (lambda x: x, lambda x: 1 / 2 * x ** 2, 2, 2 * eps),
-    (lambda x: x ** 2, lambda x: 1 / 3 * x ** 3, 3, 2 * eps),
-    (lambda x: x ** 3, lambda x: 1 / 4 * x ** 4, 4, 2 * eps),
-    (lambda x: x ** 4, lambda x: 1 / 5 * x ** 5, 5, 2 * eps),
-    (lambda x: x ** 5, lambda x: 1 / 6 * x ** 6, 6, 4 * eps),
+    (lambda x: x, lambda x: 1 / 2 * x**2, 2, 2 * eps),
+    (lambda x: x**2, lambda x: 1 / 3 * x**3, 3, 2 * eps),
+    (lambda x: x**3, lambda x: 1 / 4 * x**4, 4, 2 * eps),
+    (lambda x: x**4, lambda x: 1 / 5 * x**5, 5, 2 * eps),
+    (lambda x: x**5, lambda x: 1 / 6 * x**6, 6, 4 * eps),
     (lambda x: sin(x), lambda x: -cos(x), 16, 2 * eps),
     (lambda x: cos(3 * x), lambda x: 1.0 / 3 * sin(3 * x), 23, 2 * eps),
     (lambda x: exp(x), lambda x: exp(x), 16, 3 * eps),
@@ -420,10 +419,10 @@ derivatives = [
     # (function, derivative, number of points, tolerance)
     (lambda x: 0 * x + 1.0, lambda x: 0 * x + 0, 1, eps),
     (lambda x: x, lambda x: 0 * x + 1, 2, 2 * eps),
-    (lambda x: x ** 2, lambda x: 2 * x, 3, 2 * eps),
-    (lambda x: x ** 3, lambda x: 3 * x ** 2, 4, 2 * eps),
-    (lambda x: x ** 4, lambda x: 4 * x ** 3, 5, 3 * eps),
-    (lambda x: x ** 5, lambda x: 5 * x ** 4, 6, 4 * eps),
+    (lambda x: x**2, lambda x: 2 * x, 3, 2 * eps),
+    (lambda x: x**3, lambda x: 3 * x**2, 4, 2 * eps),
+    (lambda x: x**4, lambda x: 4 * x**3, 5, 3 * eps),
+    (lambda x: x**5, lambda x: 5 * x**4, 6, 4 * eps),
     (lambda x: sin(x), lambda x: cos(x), 16, 5e1 * eps),
     (lambda x: cos(3 * x), lambda x: -3 * sin(3 * x), 23, 5e2 * eps),
     (lambda x: exp(x), lambda x: exp(x), 16, 2e2 * eps),
@@ -510,8 +509,7 @@ def fixedlenTester(fun, n):
     return tester
 
 
-for (fun, funlen, _) in testfunctions:
-
+for fun, funlen, _ in testfunctions:
     # add the adaptive tests
     _testfun_ = adaptiveTester(fun, funlen)
     _testfun_.__name__ = "test_adaptive_{}".format(fun.__name__)
@@ -534,7 +532,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebtech) + (Chebtech) = (empty Chebtech)
     #   and (Chebtech) + (empty Chebtech) = (empty Chebtech)
     def test__add__radd__empty(self):
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun + chebtech).isempty)
             self.assertTrue((chebtech + self.emptyfun).isempty)
@@ -543,7 +541,7 @@ class Algebra(unittest.TestCase):
     #                 and (Chebtech + constant)
     def test__add__radd__constant(self):
         xx = self.xx
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -559,7 +557,7 @@ class Algebra(unittest.TestCase):
     # check the output of (Chebtech - Chebtech)
     def test__add__negself(self):
         xx = self.xx
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             chebzero = chebtech - chebtech
             self.assertTrue(chebzero.isconst)
@@ -568,7 +566,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebtech) - (Chebtech) = (empty Chebtech)
     #   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
     def test__sub__rsub__empty(self):
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun - chebtech).isempty)
             self.assertTrue((chebtech - self.emptyfun).isempty)
@@ -577,7 +575,7 @@ class Algebra(unittest.TestCase):
     #                 and Chebtech - constant
     def test__sub__rsub__constant(self):
         xx = self.xx
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -596,7 +594,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebtech) * (Chebtech) = (empty Chebtech)
     #   and (Chebtech) * (empty Chebtech) = (empty Chebtech)
     def test__mul__rmul__empty(self):
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue((self.emptyfun * chebtech).isempty)
             self.assertTrue((chebtech * self.emptyfun).isempty)
@@ -605,7 +603,7 @@ class Algebra(unittest.TestCase):
     #                 and Chebtech * constant
     def test__mul__rmul__constant(self):
         xx = self.xx
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -624,7 +622,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebtech) / (Chebtech) = (empty Chebtech)
     #   and (Chebtech) / (empty Chebtech) = (empty Chebtech)
     def test_truediv_empty(self):
-        for (fun, funlen, _) in testfunctions:
+        for fun, funlen, _ in testfunctions:
             chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
             self.assertTrue(operator.truediv(self.emptyfun, chebtech).isempty)
             self.assertTrue(operator.truediv(chebtech, self.emptyfun).isempty)
@@ -639,7 +637,7 @@ class Algebra(unittest.TestCase):
     # TODO: find a way to test truediv and  __truediv__ genuinely separately
     def test_truediv_constant(self):
         xx = self.xx
-        for (fun, funlen, hasRoots) in testfunctions:
+        for fun, funlen, hasRoots in testfunctions:
             for const in (-1, 1, 10, -1e5):
 
                 def f(x):
@@ -667,37 +665,37 @@ class Algebra(unittest.TestCase):
 
     def test_pow_empty(self):
         for c in range(10):
-            self.assertTrue((self.emptyfun ** c).isempty)
+            self.assertTrue((self.emptyfun**c).isempty)
 
     def test_rpow_empty(self):
         for c in range(10):
-            self.assertTrue((c ** self.emptyfun).isempty)
+            self.assertTrue((c**self.emptyfun).isempty)
 
     # check the output of Chebtech ** constant
     #                 and constant ** Chebtech
     def test_pow_const(self):
         xx = self.xx
-        for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
+        for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
 
                 def f(x):
                     return fun(x) ** c
 
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                ff = techfun ** c
+                ff = techfun**c
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
 
     def test_rpow_const(self):
         xx = self.xx
-        for (fun, funlen) in [(np.sin, 15), (np.exp, 15)]:
+        for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
             for c in (1, 2):
 
                 def g(x):
                     return c ** fun(x)
 
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                gg = c ** techfun
+                gg = c**techfun
                 tol = 2e1 * eps * abs(c)
                 self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
 
@@ -769,7 +767,7 @@ def unaryOpTester(unaryop, f, nf):
 
 unaryops = (operator.pos, operator.neg)
 for unaryop in unaryops:
-    for (f, nf, _) in testfunctions:
+    for f, nf, _ in testfunctions:
         _testfun_ = unaryOpTester(unaryop, f, nf)
         _testfun_.__name__ = "test_{}_{}".format(unaryop.__name__, f.__name__)
         setattr(Algebra, _testfun_.__name__, _testfun_)
@@ -800,8 +798,8 @@ def rootsTester(f, roots, tol):
 
 rootstestfuns = (
     (lambda x: 3 * x + 2.0, np.array([-2 / 3]), 1 * eps),
-    (lambda x: x ** 2, np.array([0.0, 0.0]), 1 * eps),
-    (lambda x: x ** 2 + 0.2 * x - 0.08, np.array([-0.4, 0.2]), 1 * eps),
+    (lambda x: x**2, np.array([0.0, 0.0]), 1 * eps),
+    (lambda x: x**2 + 0.2 * x - 0.08, np.array([-0.4, 0.2]), 1 * eps),
     (lambda x: sin(x), np.array([0]), 1 * eps),
     (lambda x: cos(2 * pi * x), np.array([-0.75, -0.25, 0.25, 0.75]), 1 * eps),
     (lambda x: sin(100 * pi * x), np.linspace(-1, 1, 201), 1 * eps),

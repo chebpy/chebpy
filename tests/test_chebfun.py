@@ -209,8 +209,8 @@ class Construction(unittest.TestCase):
 class Properties(unittest.TestCase):
     def setUp(self):
         self.f0 = Chebfun.initempty()
-        self.f1 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 1])
-        self.f2 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 0, 1, 2])
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
 
     def test_breakpoints(self):
         self.assertEqual(self.f0.breakpoints.size, 0)
@@ -266,8 +266,8 @@ class Properties(unittest.TestCase):
 class ClassUsage(unittest.TestCase):
     def setUp(self):
         self.f0 = Chebfun.initempty()
-        self.f1 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 1])
-        self.f2 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 0, 1, 2])
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
 
     def test__str__(self):
         _ = str(self.f0)
@@ -407,7 +407,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebfun) + (Chebfun) = (empty Chebfun)
     #   and (Chebfun) + (empty Chebfun) = (empty Chebfun)
     def test__add__radd__empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
@@ -417,7 +417,7 @@ class Algebra(unittest.TestCase):
     # check the output of (constant + Chebfun)
     #                 and (Chebfun + constant)
     def test__add__radd__constant(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for c in (-1, 1, 10, -1e5):
 
                 def g(x):
@@ -439,7 +439,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebfun) - (Chebfun) = (empty Chebfun)
     #   and (Chebfun) - (empty Chebfun) = (empty Chebfun)
     def test__sub__rsub__empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
@@ -449,7 +449,7 @@ class Algebra(unittest.TestCase):
     # check the output of (constant - Chebfun)
     #                 and (Chebfun - constant)
     def test__sub__rsub__constant(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for c in (-1, 1, 10, -1e5):
 
                 def g(x):
@@ -471,7 +471,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebfun) * (Chebfun) = (empty Chebfun)
     #   and (Chebfun) * (empty Chebfun) = (empty Chebfun)
     def test__mul__rmul__empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
@@ -481,7 +481,7 @@ class Algebra(unittest.TestCase):
     # check the output of (constant * Chebfun)
     #                 and (Chebfun * constant)
     def test__mul__rmul__constant(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for c in (-1, 1, 10, -1e5):
 
                 def g(x):
@@ -503,7 +503,7 @@ class Algebra(unittest.TestCase):
     # check (empty Chebfun) / (Chebfun) = (empty Chebfun)
     #   and (Chebfun) / (empty Chebfun) = (empty Chebfun)
     def test_truediv_empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
@@ -513,7 +513,7 @@ class Algebra(unittest.TestCase):
     # check the output of (constant / Chebfun)
     #                 and (Chebfun / constant)
     def test_truediv_constant(self):
-        for (f, _, hasRoots) in testfunctions:
+        for f, _, hasRoots in testfunctions:
             for c in (-1, 1, 10, -1e5):
 
                 def g(x):
@@ -543,23 +543,23 @@ class Algebra(unittest.TestCase):
 
     # check (empty Chebfun) ** (Chebfun) = (empty Chebfun)
     def test_pow_empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
-                self.assertTrue((self.emptyfun ** ff).isempty)
+                self.assertTrue((self.emptyfun**ff).isempty)
 
     # chec (Chebfun) ** (empty Chebfun) = (empty Chebfun)
     def test_rpow_empty(self):
-        for (f, _, _) in testfunctions:
+        for f, _, _ in testfunctions:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
-                self.assertTrue((ff ** self.emptyfun).isempty)
+                self.assertTrue((ff**self.emptyfun).isempty)
 
     # check the output of (Chebfun) ** (constant)
     def test_pow_constant(self):
-        for ((_, _), (f, _)) in powtestfuns:
+        for (_, _), (f, _) in powtestfuns:
             for c in (1, 2, 3):
 
                 def g(x):
@@ -569,7 +569,7 @@ class Algebra(unittest.TestCase):
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    gg = ff ** c
+                    gg = ff**c
                     vscl = gg.vscale
                     hscl = gg.hscale
                     lscl = max([fun.size for fun in gg])
@@ -578,7 +578,7 @@ class Algebra(unittest.TestCase):
 
     # check the output of (constant) ** (Chebfun)
     def test_rpow_constant(self):
-        for ((_, _), (f, _)) in powtestfuns:
+        for (_, _), (f, _) in powtestfuns:
             for c in (1, 2, 3):
 
                 def g(x):
@@ -588,7 +588,7 @@ class Algebra(unittest.TestCase):
                     a, b = dom
                     xx = np.linspace(a, b, 1001)
                     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 11))
-                    gg = c ** ff
+                    gg = c**ff
                     vscl = gg.vscale
                     hscl = gg.hscale
                     lscl = max([fun.size for fun in gg])
@@ -687,7 +687,7 @@ def unaryOpTester(f, unaryop, dom, tol):
 
 unaryops = (operator.pos, operator.neg)
 for unaryop in unaryops:
-    for (f, _, _) in testfunctions:
+    for f, _, _ in testfunctions:
         for dom, tol in chebfun_testdomains:
             _testfun_ = unaryOpTester(f, unaryop, dom, tol)
             _testfun_.__name__ = "test_{}_{}_[{:.0f},..,{:.0f}]".format(
@@ -1036,8 +1036,8 @@ for (
 class Evaluation(unittest.TestCase):
     def setUp(self):
         self.f0 = Chebfun.initempty()
-        self.f1 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 1])
-        self.f2 = Chebfun.initfun_adaptive(lambda x: x ** 2, [-1, 0, 1, 2])
+        self.f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+        self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
 
     def test__call__empty_chebfun(self):
         self.assertEqual(self.f0(np.linspace(-1, 1, 100)).size, 0)
@@ -1343,22 +1343,22 @@ class DomainBreakingOps(unittest.TestCase):
     def test_maximum_multipiece(self):
         x = chebfun("x", np.linspace(-2, 3, 11))
         y = chebfun(2, x.domain)
-        g = (x ** y).maximum(1.5)
+        g = (x**y).maximum(1.5)
         t = np.linspace(-2, 3, 2001)
 
         def f(x):
-            return np.maximum(x ** 2, 1.5)
+            return np.maximum(x**2, 1.5)
 
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
     def test_minimum_multipiece(self):
         x = chebfun("x", np.linspace(-2, 3, 11))
         y = chebfun(2, x.domain)
-        g = (x ** y).minimum(1.5)
+        g = (x**y).minimum(1.5)
         t = np.linspace(-2, 3, 2001)
 
         def f(x):
-            return np.minimum(x ** 2, 1.5)
+            return np.minimum(x**2, 1.5)
 
         self.assertLessEqual(infnorm(f(t) - g(t)), 1e1 * eps)
 
