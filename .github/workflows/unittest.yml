@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: ['3.8', '3.9']
         matplotlib: [noplot, plot]
     steps:
       - name: Check out repository
@@ -20,7 +20,8 @@ jobs:
       - name: Install dependencies
         run: |
           # Install FFTW 3 library with Ubuntu package manager
-          sudo apt install libfftw3-dev
+          sudo apt-get update
+          sudo apt-get install -y libfftw3-dev
           # Update pip to latest version
           python -m pip install --upgrade pip
           # Set optional features
