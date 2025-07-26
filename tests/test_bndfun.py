@@ -442,10 +442,7 @@ fun_details = [
     # (function, name for the test printouts,
     #  Matlab chebfun adaptive degree on [-2,3])
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)", [-2, 3], 4),
-    # The adaptive constructor may select 19 or 20 points depending on
-    # numeric differences across Python and NumPy versions.  Using 19
-    # here reflects the value produced under recent releases.
-    (lambda x: exp(x), "exp(x)", [-2, 3], 19),
+    (lambda x: exp(x), "exp(x)", [-2, 3], 20),
     (lambda x: sin(x), "sin(x)", [-2, 3], 20),
     (lambda x: cos(20 * x), "cos(20x)", [-2, 3], 90),
     (lambda x: 0.0 * x + 1.0, "constfun", [-2, 3], 1),
