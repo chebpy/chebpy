@@ -14,16 +14,16 @@ endif
 
 # Default values if not set in .env
 SOURCE_FOLDER ?= src
-TESTS_FOLDER ?= src/tests
+TESTS_FOLDER ?= tests
 MARIMO_FOLDER ?= book/marimo
 
 .DEFAULT_GOAL := help
 
-.PHONY: uv
+.PHONY: uv help
 
 ##@ Development Setup
 
-uv:
+uv: ## Install uv and uvx
 	@printf "$(BLUE)Creating virtual environment...$(RESET)\n"
 	@curl -LsSf https://astral.sh/uv/install.sh | sh
 
