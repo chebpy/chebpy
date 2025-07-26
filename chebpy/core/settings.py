@@ -45,9 +45,7 @@ class ChebPreferences(DefaultPreferences):
     _stash = []  # persistent stash for old prefs when entering context(s)
 
     def __enter__(self):
-        self._stash.append(
-            {k: getattr(self, k) for k in DefaultPreferences._defaults().keys()}
-        )
+        self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults().keys()})
         return self._instance
 
     def __exit__(self, exc_type, exc_value, traceback):
