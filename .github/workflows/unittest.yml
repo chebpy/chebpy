@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
         matplotlib: [noplot, plot]
     steps:
       - name: Check out repository
@@ -33,7 +33,7 @@ jobs:
           pip install ".[test${OPTIONS}]"
       - name: Run tests
         run: |
-          nosetests -v --where=tests/ --with-coverage --cover-package=chebpy
+          coverage run -m nose2 -v --start-dir tests
           coverage-lcov --data_file_path .coverage --output_file_path lcov.info
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@master
