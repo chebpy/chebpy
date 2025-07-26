@@ -30,13 +30,13 @@ class ChebyshevPoints(unittest.TestCase):
     """Unit-tests for Chebtech2"""
 
     def test_chebpts_0(self):
-        self.assertEquals(Chebtech2._chebpts(0).size, 0)
+        self.assertEqual(Chebtech2._chebpts(0).size, 0)
 
     def test_vals2coeffs_empty(self):
-        self.assertEquals(_vals2coeffs(np.array([])).size, 0)
+        self.assertEqual(_vals2coeffs(np.array([])).size, 0)
 
     def test_coeffs2vals_empty(self):
-        self.assertEquals(_coeffs2vals(np.array([])).size, 0)
+        self.assertEqual(_coeffs2vals(np.array([])).size, 0)
 
     # check we are returned the array for an array of size 1
     def test_vals2coeffs_size1(self):
@@ -113,9 +113,9 @@ for k, (a, b, tol) in enumerate(chebpts2_testlist):
 def chebptsLenTester(k):
     def asserter(self):
         pts = Chebtech2._chebpts(k)
-        self.assertEquals(pts.size, k)
-        self.assertEquals(pts[0], -1.0)
-        self.assertEquals(pts[-1], 1.0)
+        self.assertEqual(pts.size, k)
+        self.assertEqual(pts[0], -1.0)
+        self.assertEqual(pts[-1], 1.0)
         self.assertTrue(np.all(np.diff(pts)) > 0)
 
     return asserter
@@ -160,9 +160,9 @@ class ClassUsage(unittest.TestCase):
     # check the size() method is working properly
     def test_size(self):
         cfs = np.random.rand(10)
-        self.assertEquals(Chebtech2(np.array([])).size, 0)
-        self.assertEquals(Chebtech2(np.array([1.0])).size, 1)
-        self.assertEquals(Chebtech2(cfs).size, cfs.size)
+        self.assertEqual(Chebtech2(np.array([])).size, 0)
+        self.assertEqual(Chebtech2(np.array([1.0])).size, 1)
+        self.assertEqual(Chebtech2(cfs).size, cfs.size)
 
     # test the different permutations of self(xx, ..)
     def test_call(self):
@@ -187,19 +187,19 @@ class ClassUsage(unittest.TestCase):
 
     def test_prolong(self):
         for k in [0, 1, 20, self.ff.size, 200]:
-            self.assertEquals(self.ff.prolong(k).size, k)
+            self.assertEqual(self.ff.prolong(k).size, k)
 
     def test_vscale_empty(self):
         gg = Chebtech2(np.array([]))
-        self.assertEquals(gg.vscale, 0.0)
+        self.assertEqual(gg.vscale, 0.0)
 
     def test_copy(self):
         ff = self.ff
         gg = self.ff.copy()
-        self.assertEquals(ff, ff)
-        self.assertEquals(gg, gg)
-        self.assertNotEquals(ff, gg)
-        self.assertEquals(infnorm(ff.coeffs - gg.coeffs), 0)
+        self.assertEqual(ff, ff)
+        self.assertEqual(gg, gg)
+        self.assertNotEqual(ff, gg)
+        self.assertEqual(infnorm(ff.coeffs - gg.coeffs), 0)
 
     def test_simplify(self):
         gg = self.ff.simplify()
@@ -477,14 +477,14 @@ class Construction(unittest.TestCase):
 
     def test_const_construction(self):
         ff = Chebtech2.initconst(1.0)
-        self.assertEquals(ff.size, 1)
+        self.assertEqual(ff.size, 1)
         self.assertTrue(ff.isconst)
         self.assertFalse(ff.isempty)
         self.assertRaises(ValueError, Chebtech2.initconst, [1.0])
 
     def test_empty_construction(self):
         ff = Chebtech2.initempty()
-        self.assertEquals(ff.size, 0)
+        self.assertEqual(ff.size, 0)
         self.assertFalse(ff.isconst)
         self.assertTrue(ff.isempty)
         self.assertRaises(TypeError, Chebtech2.initempty, [1.0])
@@ -504,7 +504,7 @@ def fixedlenTester(fun, n):
     ff = Chebtech2.initfun_fixedlen(fun, n)
 
     def tester(self):
-        self.assertEquals(ff.size, n)
+        self.assertEqual(ff.size, n)
 
     return tester
 
@@ -776,13 +776,13 @@ for unaryop in unaryops:
 class Roots(unittest.TestCase):
     def test_empty(self):
         ff = Chebtech2.initempty()
-        self.assertEquals(ff.roots().size, 0)
+        self.assertEqual(ff.roots().size, 0)
 
     def test_const(self):
         ff = Chebtech2.initconst(0.0)
         gg = Chebtech2.initconst(2.0)
-        self.assertEquals(ff.roots().size, 0)
-        self.assertEquals(gg.roots().size, 0)
+        self.assertEqual(ff.roots().size, 0)
+        self.assertEqual(gg.roots().size, 0)
 
 
 # add tests for roots
