@@ -284,17 +284,17 @@ class ClassUsage(unittest.TestCase):
         f1_copy = self.f1.copy()
         f2_copy = self.f2.copy()
         self.assertTrue(f0_copy.isempty)
-        self.assertEquals(f1_copy.funs.size, 1)
+        self.assertEqual(f1_copy.funs.size, 1)
         for k in range(self.f1.funs.size):
             fun = self.f1.funs[k]
             funcopy = f1_copy.funs[k]
             self.assertNotEqual(fun, funcopy)
-            self.assertEquals(sum(fun.coeffs - funcopy.coeffs), 0)
+            self.assertEqual(sum(fun.coeffs - funcopy.coeffs), 0)
         for k in range(self.f2.funs.size):
             fun = self.f2.funs[k]
             funcopy = f2_copy.funs[k]
             self.assertNotEqual(fun, funcopy)
-            self.assertEquals(sum(fun.coeffs - funcopy.coeffs), 0)
+            self.assertEqual(sum(fun.coeffs - funcopy.coeffs), 0)
 
     def test__iter__(self):
         for f in [self.f0, self.f1, self.f2]:
@@ -347,7 +347,7 @@ class ClassUsage(unittest.TestCase):
         dom = np.linspace(-2, 1.5, 13)
         f = chebfun(cos, dom, 70).simplify()
         g = chebfun(cos, dom)
-        self.assertEquals(f.domain, g.domain)
+        self.assertEqual(f.domain, g.domain)
         for n, fun in enumerate(f):
             # we allow one degree of freedom difference
             # TODO: check this
@@ -362,7 +362,7 @@ class ClassUsage(unittest.TestCase):
         dom3 = dom1.merge(dom2).restrict(dom2)
         f = chebfun(cos, dom1).restrict(dom2)
         g = chebfun(cos, dom3)
-        self.assertEquals(f.domain, g.domain)
+        self.assertEqual(f.domain, g.domain)
         for n, fun in enumerate(f):
             # we allow two degrees of freedom difference either way
             # TODO: once standard chop is fixed, may be able to reduce 4 to 0

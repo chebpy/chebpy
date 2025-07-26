@@ -40,20 +40,20 @@ class Evaluation(unittest.TestCase):
     # two arguments are themselves empty arrays
     def test_bary__empty(self):
         null = (None, None)
-        self.assertEquals(bary(np.array([]), np.array([]), *null).size, 0)
-        self.assertEquals(bary(np.array([0.1]), np.array([]), *null).size, 0)
-        self.assertEquals(bary(np.array([]), np.array([0.1]), *null).size, 0)
-        self.assertEquals(bary(self.pts, np.array([]), *null).size, 0)
-        self.assertEquals(bary(np.array([]), self.pts, *null).size, 0)
-        self.assertNotEquals(bary(np.array([0.1]), np.array([0.1]), *null).size, 0)
+        self.assertEqual(bary(np.array([]), np.array([]), *null).size, 0)
+        self.assertEqual(bary(np.array([0.1]), np.array([]), *null).size, 0)
+        self.assertEqual(bary(np.array([]), np.array([0.1]), *null).size, 0)
+        self.assertEqual(bary(self.pts, np.array([]), *null).size, 0)
+        self.assertEqual(bary(np.array([]), self.pts, *null).size, 0)
+        self.assertNotEqual(bary(np.array([0.1]), np.array([0.1]), *null).size, 0)
 
     def test_clenshaw__empty(self):
-        self.assertEquals(clenshaw(np.array([]), np.array([])).size, 0)
-        self.assertEquals(clenshaw(np.array([]), np.array([1.0])).size, 0)
-        self.assertEquals(clenshaw(np.array([1.0]), np.array([])).size, 0)
-        self.assertEquals(clenshaw(self.pts, np.array([])).size, 0)
-        self.assertEquals(clenshaw(np.array([]), self.pts).size, 0)
-        self.assertNotEquals(clenshaw(np.array([0.1]), np.array([0.1])).size, 0)
+        self.assertEqual(clenshaw(np.array([]), np.array([])).size, 0)
+        self.assertEqual(clenshaw(np.array([]), np.array([1.0])).size, 0)
+        self.assertEqual(clenshaw(np.array([1.0]), np.array([])).size, 0)
+        self.assertEqual(clenshaw(self.pts, np.array([])).size, 0)
+        self.assertEqual(clenshaw(np.array([]), self.pts).size, 0)
+        self.assertNotEqual(clenshaw(np.array([0.1]), np.array([0.1])).size, 0)
 
     # check that scalars get evaluated to scalars (not arrays)
     def test_clenshaw__scalar_input(self):
@@ -91,7 +91,7 @@ class Evaluation(unittest.TestCase):
             for xx in evalpts:
                 fb = ff(xx, "bary")
                 fc = ff(xx, "clenshaw")
-                self.assertEquals(type(fb), type(fc))
+                self.assertEqual(type(fb), type(fc))
 
 
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
