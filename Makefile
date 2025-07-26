@@ -19,13 +19,23 @@ MARIMO_FOLDER ?= book/marimo
 
 .DEFAULT_GOAL := help
 
-.PHONY: uv help
+.PHONY: help uv fmt lint
 
 ##@ Development Setup
 
 uv: ## Install uv and uvx
 	@printf "$(BLUE)Creating virtual environment...$(RESET)\n"
 	@curl -LsSf https://astral.sh/uv/install.sh | sh
+
+##@ Code Quality
+
+fmt: uv ## Run code formatters only
+	@printf "$(BLUE)Running formatters...$(RESET)\n"
+	@uvx ruff format $(SOURCE_FOLDER)
+
+lint: uv ## Run linters only
+	@printf "$(BLUE)Running linters...$(RESET)\n"
+	@uvx pre-commit run --all-files
 
 ##@ Help
 
