@@ -100,10 +100,10 @@ class TestInterval(unittest.TestCase):
         x3 = np.linspace(3, 4, npts)
         x4 = np.linspace(5, 6, npts)
         interval = Interval(-2, 3)
-        self.assertEquals(interval.isinterior(x1).sum(), npts - 2)
-        self.assertEquals(interval.isinterior(x2).sum(), 0)
-        self.assertEquals(interval.isinterior(x3).sum(), 0)
-        self.assertEquals(interval.isinterior(x4).sum(), 0)
+        self.assertEqual(interval.isinterior(x1).sum(), npts - 2)
+        self.assertEqual(interval.isinterior(x2).sum(), 0)
+        self.assertEqual(interval.isinterior(x3).sum(), 0)
+        self.assertEqual(interval.isinterior(x4).sum(), 0)
 
 
 # tests for usage of the Domain class
