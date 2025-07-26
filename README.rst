@@ -12,10 +12,6 @@ ChebPy - A Python implementation of Chebfun
     :target: https://anaconda.org/conda-forge/chebfun
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
-.. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/chebpy/chebpy/v0.4.3?filepath=docs%2Fnotebook-getting-started.ipynb
-
-|
 
 
 Numerical computing with Chebyshev series approximations in Python.
