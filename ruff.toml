@@ -55,7 +55,7 @@ target-version = "py312"
 # N: pep8-naming - Check PEP 8 naming conventions
 # W: pycodestyle warnings - PEP 8 style guide warnings
 # UP: pyupgrade - Upgrade syntax for newer Python
-select = ["D", "E", "F", "I", "N", "W", "UP"]
+select = ["D", "E", "F", "I", "N", "W", "UP", "PD"]
 
 [lint.pydocstyle]
 convention = "google"
