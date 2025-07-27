@@ -8,6 +8,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.22",
+    # note that pyfftw==0.13.1 is no longer supported
     "pyfftw==0.15.0"
 ]
 
@@ -16,9 +17,9 @@ repository = "https://github.com/chebpy/chebpy"
 
 [project.optional-dependencies]
 dev = [
-    "pytest-cov>=6.0.0",
-    "pytest>=8.3.3",
-    "pre-commit>=4.0.1"
+    "pytest-cov>=6.2.1",
+    "pytest>=8.4.1",
+    "pre-commit>=4.2.0"
 ]
 
 [build-system]

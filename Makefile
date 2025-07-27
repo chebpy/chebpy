@@ -50,3 +50,34 @@ help: ## Display this help message
 	@printf "$(BOLD)Targets:$(RESET)\n"
 	@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 
+check: lint test ## Run all checks (lint and test)
+	@printf "$(GREEN)All checks passed!$(RESET)\n"
+
+##@ Testing
+
+test: install ## Run all tests
+	@printf "$(BLUE)Running tests...$(RESET)\n"
+	@uv run pytest $(TESTS_FOLDER) --cov=$(SOURCE_FOLDER) --cov-report=term
+
+##@ Building
+
+build: install ## Build the package
+	@printf "$(BLUE)Building package...$(RESET)\n"
+	@uv pip install hatch
+	@uv run hatch build
+
+##@ Documentation
+
+docs: install ## Build documentation
+	@printf "$(BLUE)Building documentation...$(RESET)\n"
+	@uv pip install pdoc
+	@{ \
+		uv run pdoc -o pdoc $(SOURCE_FOLDER); \
+		if command -v xdg-open >/dev/null 2>&1; then \
+			xdg-open "pdoc/index.html"; \
+		elif command -v open >/dev/null 2>&1; then \
+			open "pdoc/index.html"; \
+		else \
+			echo "Documentation generated. Open pdoc/index.html manually"; \
+		fi; \
+	}
