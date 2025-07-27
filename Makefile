@@ -1,6 +1,3 @@
-# This file is part of the tschm/.config-templates repository
-# (https://github.com/tschm/.config-templates).
-#
 # Colors for pretty output
 BLUE := \033[36m
 BOLD := \033[1m
@@ -19,7 +16,7 @@ MARIMO_FOLDER ?= book/marimo
 
 .DEFAULT_GOAL := help
 
-.PHONY: help uv fmt lint
+.PHONY: help uv install fmt lint check test build docs clean
 
 ##@ Development Setup
 
@@ -42,6 +39,9 @@ lint: uv ## Run linters only
 	@printf "$(BLUE)Running linters...$(RESET)\n"
 	@uvx pre-commit run --all-files
 
+check: fmt lint test ## Run all checks (lint and test)
+	@printf "$(GREEN)All checks passed!$(RESET)\n"
+
 ##@ Help
 
 help: ## Display this help message
@@ -49,9 +49,6 @@ help: ## Display this help message
 	@printf "  make $(BLUE)<target>$(RESET)\n\n"
 	@printf "$(BOLD)Targets:$(RESET)\n"
 	@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
-
-check: lint test ## Run all checks (lint and test)
-	@printf "$(GREEN)All checks passed!$(RESET)\n"
 
 ##@ Testing
 
@@ -81,3 +78,13 @@ docs: install ## Build documentation
 			echo "Documentation generated. Open pdoc/index.html manually"; \
 		fi; \
 	}
+
+##@ Cleanup
+
+clean: ## Clean generated files and directories
+	@printf "$(BLUE)Cleaning project...$(RESET)\n"
+	@git clean -d -X -f
+	@rm -rf dist build *.egg-info .coverage .pytest_cache
+	@printf "$(BLUE)Removing local branches with no remote counterpart...$(RESET)\n"
+	@git fetch -p
+	@git branch -vv | grep ': gone]' | awk '{print $$1}' | xargs -r git branch -D
