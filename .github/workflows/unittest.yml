@@ -12,11 +12,13 @@ jobs:
         matplotlib: [noplot, plot]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           # Install FFTW 3 library with Ubuntu package manager
@@ -31,24 +33,26 @@ jobs:
           fi
           # Install chebpy with test and other optional features
           pip install ".[test${OPTIONS}]"
+          pip install coverage coverage-lcov
+
       - name: Run tests
         run: |
           coverage run -m nose2 -v --start-dir tests
           coverage-lcov --data_file_path .coverage --output_file_path lcov.info
-      - name: Coveralls Parallel
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./lcov.info
-          flag-name: run-py${{ matrix.python-version }}-${{ matrix.matplotlib }}
-          parallel: true
+      #- name: Coveralls Parallel
+      #  uses: coverallsapp/github-action@master
+      #  with:
+      #    github-token: ${{ secrets.GITHUB_TOKEN }}
+      #    path-to-lcov: ./lcov.info
+      #    flag-name: run-py${{ matrix.python-version }}-${{ matrix.matplotlib }}
+      #    parallel: true
 
-  finish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+  #finish:
+  #  needs: build
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #  - name: Coveralls Finished
+  #    uses: coverallsapp/github-action@master
+  #    with:
+  #      github-token: ${{ secrets.GITHUB_TOKEN }}
+  #      parallel-finished: true
