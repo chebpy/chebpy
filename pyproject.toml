@@ -7,12 +7,11 @@ readme = "README.rst"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.0",
-    # note that pyfftw==0.13.1 is no longer supported
-    #"pyfftw==0.15.0"
 ]
 
 [project.urls]
 repository = "https://github.com/chebpy/chebpy"
+homepage = "https://chebpy.github.io/chebpy/"
 
 [project.optional-dependencies]
 dev = [
@@ -32,12 +31,9 @@ packages = ["chebpy"]
 [tool.hatch.build]
 include = [
     "LICENSE.rst",    # Ensure the LICENSE file is included in your package
-    "README.md",
+    "README.rst",
     "chebpy"
 ]
-
-[tool.deptry.per_rule_ignores]
-DEP002 = ["pyfftw"]
 
 [tool.deptry]
 # see https://deptry.com/usage/#pep-621-dev-dependency-groups
