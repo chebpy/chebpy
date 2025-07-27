@@ -1,5 +1,0 @@
-nose2
-numpy ~> 1.22
-py>=3.7
-pyfftw==0.13.1
-wheel ~> 0.38.1
