@@ -7,9 +7,9 @@ authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.22",
+    "numpy>=2.0",
     # note that pyfftw==0.13.1 is no longer supported
-    "pyfftw==0.15.0"
+    #"pyfftw==0.15.0"
 ]
 
 [project.urls]
