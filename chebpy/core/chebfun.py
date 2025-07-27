@@ -103,10 +103,7 @@ class Chebfun:
         def constfun(cheb, const):
             return 0.0 * cheb + const
 
-        newfuns = [
-            fun.initfun_adaptive(lambda x: constfun(x, c) / fun(x), fun.interval)
-            for fun in self
-        ]
+        newfuns = [fun.initfun_adaptive(lambda x: constfun(x, c) / fun(x), fun.interval) for fun in self]
         return self.__class__(newfuns)
 
     @self_empty("chebfun<empty>")
@@ -125,11 +122,7 @@ class Chebfun:
             row = tmplat.format(xl, xr, fun.size, fl, fr)
             rowdta += row
         btmrow = "vertical scale = {:3.2g}".format(self.vscale)
-        btmxtr = (
-            ""
-            if numpcs == 1
-            else "    total length = {}".format(sum([f.size for f in self]))
-        )
+        btmxtr = "" if numpcs == 1 else "    total length = {}".format(sum([f.size for f in self]))
         return header + toprow + rowdta + btmrow + btmxtr
 
     def __rsub__(self, f):
@@ -149,9 +142,7 @@ class Chebfun:
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
-        out = "<chebfun-{},{},{}>\n".format(
-            rowcol, self.funs.size, sum([f.size for f in self])
-        )
+        out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, sum([f.size for f in self]))
         return out
 
     def __sub__(self, f):

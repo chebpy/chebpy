@@ -226,10 +226,7 @@ def adaptive(cls, fun, hscale=1, maxpow2=None):
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warnings.warn(
-                "The {} constructor did not converge: "
-                "using {} points".format(cls.__name__, n)
-            )
+            warnings.warn("The {} constructor did not converge: using {} points".format(cls.__name__, n))
             break
     return coeffs
 

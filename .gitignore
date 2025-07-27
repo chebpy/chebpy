@@ -36,3 +36,4 @@ lcov.info
 *.pyc
 .idea/
 docs/_*
+pdoc
