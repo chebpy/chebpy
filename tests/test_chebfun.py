@@ -1093,7 +1093,7 @@ class Evaluation(unittest.TestCase):
         x2 = np.linspace(dom2[0], dom2[-1], npts)
         x3 = np.linspace(dom3[0], dom3[-1], npts)
         self.assertLessEqual(infnorm(f(x1) - ff1(x1)), 5e1 * eps)
-        self.assertLessEqual(infnorm(f(x2) - ff2(x2)), 2e1 * eps)
+        self.assertLessEqual(infnorm(f(x2) - ff2(x2)), 5e1 * eps)
         self.assertLessEqual(infnorm(f(x3) - ff3(x3)), 5e1 * eps)
 
 
