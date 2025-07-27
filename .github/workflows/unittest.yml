@@ -33,11 +33,13 @@ jobs:
           fi
           # Install chebpy with test and other optional features
           pip install ".[test${OPTIONS}]"
-          pip install coverage nose2
+          pip install nose2
 
       - name: Run tests
         run: |
-          coverage run -m nose2 -v --start-dir tests
+          nose2 -v --start-dir tests
+
+      #coverage run -m nose2 -v --start-dir tests
       # coverage-lcov --data_file_path .coverage --output_file_path lcov.info
       #- name: Coveralls Parallel
       #  uses: coverallsapp/github-action@master
