@@ -288,7 +288,7 @@ def indefiniteIntegralTester(fun, ifn, interval, tol):
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     gg = Bndfun.initfun_fixedlen(ifn, subinterval, ff.size + 1)
     coeffs = gg.coeffs
-    coeffs[0] = coeffs[0] - ifn(np.array([interval[0]]))
+    coeffs[0] = coeffs[0] - ifn(np.array([interval[0]]))[0]
 
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs - coeffs)
