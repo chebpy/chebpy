@@ -172,12 +172,12 @@ class Construction(unittest.TestCase):
         self.assertEqual(ff.funs.size, 2)
         a, b, c = ff.breakdata.keys()
         fa, fb, fc = ff.breakdata.values()
-        self.assertEqual(a, -2)
-        self.assertEqual(b, 0)
-        self.assertEqual(c, 1)
-        self.assertLessEqual(abs(fa - self.f(-2)), 3 * eps)
-        self.assertLessEqual(abs(fb - self.f(0)), 3 * eps)
-        self.assertLessEqual(abs(fc - self.f(1)), 6 * eps)
+        self.assertEqual(a, -2.0)
+        self.assertEqual(b, 0.0)
+        self.assertEqual(c, 1.0)
+        self.assertLessEqual(abs(fa - self.f(-2.0)), 3 * eps)
+        self.assertLessEqual(abs(fb - self.f(0.0)), 3 * eps)
+        self.assertLessEqual(abs(fc - self.f(1.0)), 6 * eps)
 
     def test_initfun_fixedlen_raises(self):
         initfun = Chebfun.initfun_fixedlen
