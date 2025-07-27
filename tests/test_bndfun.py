@@ -424,7 +424,9 @@ def adaptiveTester(fun, subinterval, funlen):
     ff = Bndfun.initfun_adaptive(fun, subinterval)
 
     def tester(self):
-        self.assertTrue(ff.size in {19, 20})
+        print(funlen, ff.size)
+        assert ff.size in {funlen -1, funlen}, "size of ff: {}".format(ff.size)
+        #assert ff.size in {19, 20}, "size of ff: {}".format(ff.size)
 
     return tester
 
