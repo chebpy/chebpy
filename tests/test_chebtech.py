@@ -398,7 +398,7 @@ def indefiniteIntegralTester(fun, dfn, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(dfn, n + 1)
     coeffs = gg.coeffs
-    coeffs[0] = coeffs[0] - dfn(np.array([-1]))
+    coeffs[0] = coeffs[0] - dfn(np.array([-1]))[0]
 
     def tester(self):
         absdiff = infnorm(ff.cumsum().coeffs - coeffs)
