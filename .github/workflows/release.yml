@@ -51,8 +51,6 @@ jobs:
     name: Build with Hatch
     runs-on: ubuntu-latest
     needs: tag
-    outputs:
-      built: ${{ steps.set_output.outputs.built }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -85,11 +83,6 @@ jobs:
         with:
           name: dist
           path: dist/
-
-      - name: Set build output
-        id: set_output
-        run: |
-          echo "built=${{ steps.check_file.outputs.exists }}" >> $GITHUB_OUTPUT
 
 
   release:
