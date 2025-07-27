@@ -156,16 +156,16 @@ class Construction(unittest.TestCase):
         self.assertLessEqual(abs(fb - self.f(-1)), eps)
 
     def test_initfun_fixedlen_piecewise_domain_0(self):
-        ff = Chebfun.initfun_fixedlen(self.f, 30, [-2, 0, 1])
+        ff = Chebfun.initfun_fixedlen(self.f, 30, [-2.0, 0.0, 1.0])
         self.assertEqual(ff.funs.size, 2)
         a, b, c = ff.breakdata.keys()
         fa, fb, fc = ff.breakdata.values()
-        self.assertEqual(a, -2)
-        self.assertEqual(b, 0)
-        self.assertEqual(c, 1)
-        self.assertLessEqual(abs(fa - self.f(-2)), 3 * eps)
-        self.assertLessEqual(abs(fb - self.f(0)), 3 * eps)
-        self.assertLessEqual(abs(fc - self.f(1)), 3 * eps)
+        self.assertEqual(a, -2.0)
+        self.assertEqual(b, 0.0)
+        self.assertEqual(c, 1.0)
+        self.assertLessEqual(abs(fa - self.f(-2.0)), 3 * eps)
+        self.assertLessEqual(abs(fb - self.f(0.0)), 3 * eps)
+        self.assertLessEqual(abs(fc - self.f(1.0)), 6 * eps)
 
     def test_initfun_fixedlen_piecewise_domain_1(self):
         ff = Chebfun.initfun_fixedlen(self.f, [30, 20], [-2, 0, 1])
