@@ -2,16 +2,12 @@
 ChebPy - A Python implementation of Chebfun
 ================================================
 
-.. image:: https://github.com/chebpy/chebpy/actions/workflows/unittest.yml/badge.svg
-    :target: https://github.com/chebpy/chebpy/actions/workflows/unittest.yml
+.. image:: https://github.com/chebpy/chebpy/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/chebpy/chebpy/actions/workflows/ci.yml
 .. image:: https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master
     :target: https://coveralls.io/github/chebpy/chebpy?branch=master
-.. image:: https://img.shields.io/badge/python-%203.8_--%203.13-blue.svg?
+.. image:: https://img.shields.io/badge/python-%203.10_--%203.13-blue.svg?
     :target: https://github.com/chebpy/chebpy/actions/workflows/unittest.yml
-.. image:: https://img.shields.io/conda/dn/conda-forge/chebfun?label=conda%20downloads
-    :target: https://anaconda.org/conda-forge/chebfun
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
 
 .. image:: https://github.com/codespaces/badge.svg
     :target: https://codespaces.new/chebpy/chebpy
