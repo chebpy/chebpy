@@ -27,6 +27,11 @@ uv: ## Install uv and uvx
 	@printf "$(BLUE)Creating virtual environment...$(RESET)\n"
 	@curl -LsSf https://astral.sh/uv/install.sh | sh
 
+install: uv ## Install all dependencies using uv
+	@printf "$(BLUE)Installing dependencies...$(RESET)\n"
+	@uv venv --clear --python 3.12
+	@uv sync --all-extras --frozen
+
 ##@ Code Quality
 
 fmt: uv ## Run code formatters only
