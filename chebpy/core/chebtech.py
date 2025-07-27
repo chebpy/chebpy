@@ -250,9 +250,7 @@ class Chebtech(Smoothfun, ABC):
             # TODO: review with reference to __add__
             if f.isempty:
                 return f.copy()
-            return cls.initfun_adaptive(
-                lambda x: self(x) / f(x), interval=self.interval
-            )
+            return cls.initfun_adaptive(lambda x: self(x) / f(x), interval=self.interval)
 
     __truediv__ = __div__
 
@@ -289,9 +287,7 @@ class Chebtech(Smoothfun, ABC):
             else:
                 return fn(x)
 
-        return self.__class__.initfun_adaptive(
-            lambda x: np.power(self(x), powfun(f, x)), interval=self.interval
-        )
+        return self.__class__.initfun_adaptive(lambda x: np.power(self(x), powfun(f, x)), interval=self.interval)
 
     def __rdiv__(self, f):
         # Executed when __div__(f, self) fails, which is to say whenever f
@@ -299,9 +295,7 @@ class Chebtech(Smoothfun, ABC):
         def constfun(x):
             return 0.0 * x + f
 
-        return self.__class__.initfun_adaptive(
-            lambda x: constfun(x) / self(x), interval=self.interval
-        )
+        return self.__class__.initfun_adaptive(lambda x: constfun(x) / self(x), interval=self.interval)
 
     __radd__ = __add__
 
@@ -310,9 +304,7 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def __rpow__(self, f):
-        return self.__class__.initfun_adaptive(
-            lambda x: np.power(f, self(x)), interval=self.interval
-        )
+        return self.__class__.initfun_adaptive(lambda x: np.power(f, self(x)), interval=self.interval)
 
     __rtruediv__ = __rdiv__
     __rmul__ = __mul__

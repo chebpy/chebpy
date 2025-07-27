@@ -31,20 +31,14 @@ IntervalOverlap = type(
 IntervalGap = type(
     "IntervalGap",
     (ChebpyBaseException,),
-    {
-        "default_message": "The supplied Interval objects do not form a complete "
-        "partition of the approximation interval"
-    },
+    {"default_message": "The supplied Interval objects do not form a complete partition of the approximation interval"},
 )
 
 
 IntervalMismatch = type(
     "IntervalMismatch",
     (ChebpyBaseException,),
-    {
-        "default_message": "This operation can only be performed for Fun objects "
-        "defined on identical intervals"
-    },
+    {"default_message": "This operation can only be performed for Fun objects defined on identical intervals"},
 )
 
 
@@ -58,10 +52,7 @@ NotSubinterval = type(
 IntervalValues = type(
     "IntervalValues",
     (ChebpyBaseException,),
-    {
-        "default_message": "The defining values of a Interval object must be "
-        "strictly increasing"
-    },
+    {"default_message": "The defining values of a Interval object must be strictly increasing"},
 )
 
 
@@ -95,10 +86,7 @@ NotSubdomain = type(
 SupportMismatch = type(
     "SupportMismatch",
     (ChebpyBaseException,),
-    {
-        "default_message": "Both objects are required to be supported on the "
-        "same interval"
-    },
+    {"default_message": "Both objects are required to be supported on the same interval"},
 )
 
 

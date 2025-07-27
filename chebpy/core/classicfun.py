@@ -39,27 +39,21 @@ class Classicfun(Fun, ABC):
     @classmethod
     def initidentity(cls, interval):
         """Classicfun representation of f(x) = x on the supplied interval"""
-        onefun = techdict[prefs.tech].initvalues(
-            np.asarray(interval), interval=interval
-        )
+        onefun = techdict[prefs.tech].initvalues(np.asarray(interval), interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initfun_adaptive(cls, f, interval):
         """Adaptive initialisation of a BndFun from a callable function f
         and a Interval object"""
-        onefun = techdict[prefs.tech].initfun(
-            lambda y: f(interval(y)), interval=interval
-        )
+        onefun = techdict[prefs.tech].initfun(lambda y: f(interval(y)), interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initfun_fixedlen(cls, f, interval, n):
         """Fixed length initialisation of a BndFun from a callable
         function f and a Interval object"""
-        onefun = techdict[prefs.tech].initfun(
-            lambda y: f(interval(y)), n, interval=interval
-        )
+        onefun = techdict[prefs.tech].initfun(lambda y: f(interval(y)), n, interval=interval)
         return cls(onefun, interval)
 
     # -------------------
@@ -76,9 +70,7 @@ class Classicfun(Fun, ABC):
         self._interval = interval
 
     def __repr__(self):
-        out = "{0}([{2}, {3}], {1})".format(
-            self.__class__.__name__, self.size, *self.support
-        )
+        out = "{0}([{2}, {3}], {1})".format(self.__class__.__name__, self.size, *self.support)
         return out
 
     # ------------

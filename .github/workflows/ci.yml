@@ -1,0 +1,40 @@
+# Workflow: Continuous Integration
+# Purpose: This workflow runs tests on multiple Python versions to ensure
+#          compatibility and code quality across different environments.
+#
+# Trigger: This workflow runs on every push
+#
+# Components:
+#   - 🧪 Run tests on multiple Python versions
+#   - 🔄 Matrix strategy for testing on different environments
+
+name: "CI"
+
+on:
+- push
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.repository != 'tschm/.config-templates'
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # mongo container action only supported on Linux
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ '3.10', '3.11', '3.12', '3.13' ]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.3.06
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: tschm/cradle/actions/test@v0.3.06
+        with:
+          tests-folder: tests
