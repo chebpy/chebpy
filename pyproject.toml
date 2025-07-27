@@ -1,28 +1,43 @@
+[project]
+name = 'chebpy'
+version = "0.0.0"
+description = "A Python implementation of Chebfun"
+# Please add authors and correct the email...
+authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.22",
+    "pyfftw==0.15.0"
+]
+
+[project.urls]
+repository = "https://github.com/chebpy/chebpy"
+
+[project.optional-dependencies]
+dev = [
+    "pytest-cov>=6.0.0",
+    "pytest>=8.3.3",
+    "pre-commit>=4.0.1"
+]
+
 [build-system]
-requires = [
-    "setuptools",
-    "wheel",
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-# Code coverage
-[tool.coverage]
+[tool.hatch.build.targets.wheel]
+packages = ["chebpy"]
 
-# check for branch coverage
-run.branch = true
-
-# include the line numbers for missed lines
-report.show_missing = true
-
-# which lines to skip in coverage test
-report.exclude_lines = [
-    # the default pragma
-    "pragma: no cover",
-    # we don't want to test this, usually abc methods
-    "raise NotImplementedError",
+[tool.hatch.build]
+include = [
+    "LICENSE.rst",    # Ensure the LICENSE file is included in your package
+    "README.md",
+    "chebpy"
 ]
 
-# Black style
-[tool.black]
+[tool.deptry.per_rule_ignores]
+DEP002 = ["pyfftw"]
 
-target-version = ['py37']
+[tool.deptry]
+# see https://deptry.com/usage/#pep-621-dev-dependency-groups
+pep621_dev_dependency_groups = ["dev"]
