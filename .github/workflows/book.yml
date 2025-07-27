@@ -1,0 +1,106 @@
+# Workflow: Book
+# Purpose: This workflow builds and deploys comprehensive documentation for the project.
+#          It combines API documentation, test coverage reports, test results, and
+#          interactive notebooks into a single GitHub Pages site.
+#
+# Trigger: This workflow runs on every push to the main branch
+#
+# Components:
+#   - 📚 Parse .env file for configuration
+#   - 📓 Process Marimo notebooks
+#   - 📖 Generate API documentation with pdoc
+#   - 🧪 Run tests and generate coverage reports
+#   - 🚀 Deploy combined documentation to GitHub Pages
+
+name: "BOOK"
+
+on:
+  push:
+    branches:
+      - main
+
+
+jobs:
+  parse-env:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
+      tests-folder: ${{ steps.export.outputs.TESTS_FOLDER }}
+      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
+      title: ${{ steps.export.outputs.TITLE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse .env and export variables
+        id: export
+        run: |
+          set -a
+          source .env
+          echo "SOURCE_FOLDER=$SOURCE_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "TESTS_FOLDER=$TESTS_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "TITLE=$TITLE" >> "$GITHUB_OUTPUT"
+          set +a
+        shell: bash
+
+  marimo:
+    runs-on: "ubuntu-latest"
+    needs: parse-env
+    permissions:
+      contents: read
+    steps:
+      - uses: jebel-quant/marimushka@v0.1.4
+        with:
+          notebooks: ${{ needs.parse-env.outputs.marimo-folder }}
+
+  pdoc:
+    runs-on: "ubuntu-latest"
+    needs: parse-env
+    permissions:
+      contents: read
+    steps:
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.3.05
+
+      - uses: tschm/cradle/actions/pdoc@v0.3.05
+        with:
+          source-folder: ${{ needs.parse-env.outputs.source-folder }}
+
+  test:
+    runs-on: "ubuntu-latest"
+    needs: parse-env
+    permissions:
+      contents: read
+    steps:
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.3.06
+
+      - uses: tschm/cradle/actions/coverage@v0.3.06
+        with:
+          tests-folder: ${{ needs.parse-env.outputs.tests-folder }}
+          source-folder: ${{ needs.parse-env.outputs.source-folder }}
+
+  book:
+    runs-on: "ubuntu-latest"
+    needs: [test, pdoc, marimo, parse-env]
+
+    environment:
+      name: github-pages  # 👈 this is the critical missing piece
+
+    permissions:
+      pages: write            # Permission to deploy to Pages
+      id-token: write         # Permission to verify deployment origin
+
+    steps:
+      - uses: tschm/cradle/actions/book@v0.3.05
+        with:
+          title: ${{ needs.parse-env.outputs.title }}
+          links: |
+            {
+              "API": "./pdoc/index.html",
+              "Coverage": "./tests/html-coverage/index.html",
+              "Test Report": "./tests/html-report/report.html",
+              "Notebooks": "./marimushka/index.html"
+            }

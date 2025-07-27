@@ -1,0 +1,46 @@
+# Workflow: Deptry
+# Purpose: This workflow identifies missing and obsolete dependencies in the project.
+#          It helps maintain a clean dependency tree by detecting unused packages and
+#          implicit dependencies that should be explicitly declared.
+name: "DEPTRY"
+
+# Trigger: This workflow runs on every push and on pull requests to the main branch
+on:
+  push:
+  pull_request:
+    # Only run on pull requests targeting the main branch
+    branches: [ main ]
+
+# Permissions: Only read access to repository contents is needed
+permissions:
+    contents: read
+
+jobs:
+  parse-env:
+    runs-on: ubuntu-latest
+    outputs:
+      source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse .env and export variables
+        id: export
+        run: |
+          set -a
+          source .env
+          echo "SOURCE_FOLDER=$SOURCE_FOLDER" >> "$GITHUB_OUTPUT"
+          set +a
+        shell: bash
+
+  # Job: Dependencies
+  # Purpose: Checks the project's dependency health using deptry
+  Analysis:
+    if: github.repository != 'tschm/.config-templates'
+    runs-on: ubuntu-latest
+    needs: parse-env
+
+    steps:
+      - name: Run deptry
+        uses: tschm/cradle/actions/deptry@v0.3.06
+        with:
+          source-folder: ${{ needs.parse-env.outputs.source-folder }}
