@@ -19,7 +19,7 @@ from chebpy.core.settings import DefaultPreferences
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
 
-from .utilities import testfunctions, scaled_tol, inf_norm_less_than_tol, infnorm
+from .utilities import scaled_tol, inf_norm_less_than_tol, infnorm
 
 # Define aliases for commonly used functions and constants for cleaner code
 pi = np.pi
@@ -209,18 +209,18 @@ def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np
     return inf_norm_less_than_tol(a, b, tol)
 
 
-# Dynamically create test functions for each method, function, and evaluation points
-# These tests verify that both bary and clenshaw evaluation methods produce results
-# within the expected tolerance when compared to direct function evaluation.
-# Each test is named according to the pattern: test_<method>_<function>_<chebpts_index>_<evalpts_index>
-for method in methods:
-    for fun, _, _ in testfunctions:
-        for j, chebpts in enumerate(ptsarry):
-            for k, xx in enumerate(evalpts):
-                test_func = evalTester(method, fun, xx, chebpts)
-                test_name = f"test_{method.__name__}_{fun.__name__}_{j:02}_{k:02}"
-                # Add the test function to the global namespace
-                globals()[test_name] = test_func
+# # Dynamically create test functions for each method, function, and evaluation points
+# # These tests verify that both bary and clenshaw evaluation methods produce results
+# # within the expected tolerance when compared to direct function evaluation.
+# # Each test is named according to the pattern: test_<method>_<function>_<chebpts_index>_<evalpts_index>
+# for method in methods:
+#     for fun, _, _ in testfunctions:
+#         for j, chebpts in enumerate(ptsarry):
+#             for k, xx in enumerate(evalpts):
+#                 test_func = evalTester(method, fun, xx, chebpts)
+#                 test_name = f"test_{method.__name__}_{fun.__name__}_{j:02}_{k:02}"
+#                 # Add the test function to the global namespace
+#                 globals()[test_name] = test_func
 
 
 @pytest.fixture

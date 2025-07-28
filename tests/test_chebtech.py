@@ -11,7 +11,7 @@ from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.plotting import import_plt
 
-from .utilities import testfunctions, infnorm, scaled_tol, infNormLessThanTol, joukowsky
+from .utilities import testfunctions, infnorm, scaled_tol, inf_norm_less_than_tol, joukowsky
 
 np.random.seed(0)
 
@@ -103,7 +103,7 @@ chebpts2_testlist = (
     ),
 )
 for k, (a, b, tol) in enumerate(chebpts2_testlist):
-    _testfun_ = infNormLessThanTol(a, b, tol)
+    _testfun_ = inf_norm_less_than_tol(a, b, tol)
     _testfun_.__name__ = "test_chebpts_{:02}".format(k + 1)
     setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
 

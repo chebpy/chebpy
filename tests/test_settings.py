@@ -4,9 +4,6 @@ This module contains tests for the UserPreferences class and its functionality,
 including updating preferences with a context manager and resetting preferences
 to their default values.
 """
-
-import pytest
-
 from chebpy import UserPreferences
 from chebpy.core.settings import _preferences
 
