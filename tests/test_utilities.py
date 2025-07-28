@@ -7,13 +7,11 @@ The tests verify that these utilities handle various input types correctly and p
 expected results for both normal and edge cases.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import HTOL, Interval, Domain, compute_breakdata, check_funs
 from chebpy.core.exceptions import (
     IntervalGap,
     IntervalOverlap,
@@ -22,7 +20,8 @@ from chebpy.core.exceptions import (
     SupportMismatch,
     NotSubdomain,
 )
-
+from chebpy.core.settings import DefaultPreferences
+from chebpy.core.utilities import HTOL, Interval, Domain, compute_breakdata, check_funs
 
 np.random.seed(0)
 eps = DefaultPreferences.eps
@@ -133,26 +132,6 @@ def test__contains__(interval_fixtures):
     assert not (i4 not in i1)
     assert i1 not in i3
     assert i1 not in i4
-
-# Interval objects used to have tolerance-sensitive definitions of __eq__ and
-# __contains__, though these were removed in the commit following
-# 9eaf1c5e0674dab1a676d04a02ceda329beec2ea.
-#    def test__eq__close(self):
-#        tol = .8*HTOL
-#        i4 = Interval(-2,5)
-#        i5 = Interval(-2*(1+tol),5*(1-tol))
-#        i6 = Interval(-2*(1+2*tol),5*(1-2*tol))
-#        self.assertEqual(i4,i5)
-#        self.assertNotEqual(i4,i6)
-
-#    def test__contains__close(self):
-#        tol = .8*HTOL
-#        i1 = Interval(-1,2)
-#        i2 = Interval(-1-tol,2+2*tol)
-#        i3 = Interval(-1-2*tol,2+4*tol)
-#        self.assertTrue(i1 in i2)
-#        self.assertTrue(i2 in i1)
-#        self.assertFalse(i3 in i1)
 
 def test_maps():
     """Test forward and inverse mapping functions of Interval objects.
