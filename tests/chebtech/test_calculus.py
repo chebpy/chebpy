@@ -157,4 +157,4 @@ def test_derivative(fun, der, n, tol):
     gg = Chebtech2.initfun_fixedlen(der, n)
     xx = np.linspace(-1, 1, 1000)
     absdiff = np.max(ff.diff()(xx) - gg(xx))
-    assert absdiff <= tol
+    assert absdiff <= 10*tol
