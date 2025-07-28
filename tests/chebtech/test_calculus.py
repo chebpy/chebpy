@@ -11,19 +11,6 @@ from chebpy.core.chebtech import Chebtech2
 from .conftest import pi, sin, cos, exp, eps
 
 
-@pytest.fixture
-def emptyfun():
-    """Create an empty Chebtech2 function for testing.
-
-    This fixture creates an empty Chebtech2 object that can be used
-    to test the behavior of calculus operations on empty functions.
-
-    Returns:
-        Chebtech2: An empty Chebtech2 object
-    """
-    return Chebtech2(np.array([]))
-
-
 # tests for the correct results in the empty cases
 def test_sum_empty(emptyfun):
     """Test sum method on an empty Chebtech2 object.
