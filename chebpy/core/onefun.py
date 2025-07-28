@@ -1,35 +1,42 @@
-from abc import ABC, abstractmethod, abstractclassmethod
+from abc import ABC, abstractmethod
 
 
 class Onefun(ABC):
     # --------------------------
     #  alternative constructors
     # --------------------------
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initconst(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initempty(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initidentity(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initfun(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initfun_adaptive(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initfun_fixedlen(cls):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def initvalues(cls):
         raise NotImplementedError
 
