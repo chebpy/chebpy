@@ -1,4 +1,14 @@
-"""Unit-tests for pyfun/utilities.py"""
+"""Unit-tests for chebpy/core/algorithms.py.
+
+This module contains tests for the algorithm functions in the chebpy library,
+including barycentric interpolation (bary), Clenshaw evaluation (clenshaw),
+and coefficient multiplication (coeffmult).
+
+The tests verify that these algorithms handle various input types correctly,
+including empty arrays, scalar inputs, and arrays of different sizes. They also
+check that the algorithms produce results within expected tolerance of the
+true values.
+"""
 
 import pytest
 from typing import Any, Callable, List, Tuple, Union
@@ -11,7 +21,7 @@ from chebpy.core.algorithms import bary, clenshaw, coeffmult
 
 from .utilities import testfunctions, scaled_tol, inf_norm_less_than_tol, infnorm
 
-# aliases
+# Define aliases for commonly used functions and constants for cleaner code
 pi = np.pi
 sin = np.sin
 cos = np.cos
@@ -20,8 +30,10 @@ eps = DefaultPreferences.eps
 
 np.random.seed(0)
 
-# turn off 'divide' and 'invalid' Runtimewarnings: these are invoked in the
-# barycentric formula and the warned-of behaviour is actually required
+# Turn off 'divide' and 'invalid' RuntimeWarnings
+# These warnings are expected and required for the barycentric formula,
+# which involves division operations that can produce inf/NaN values
+# that are later handled correctly by the algorithm
 np.seterr(divide="ignore", invalid="ignore")
 
 
@@ -147,8 +159,13 @@ def test_bary_clenshaw_consistency() -> None:
             assert type(fb) == type(fc)
 
 
+# Define evaluation points of increasing density for testing algorithm accuracy
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
+
+# Define arrays of Chebyshev points for interpolation
 ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
+
+# List of evaluation methods to test
 methods = [bary, clenshaw]
 
 
@@ -193,6 +210,9 @@ def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np
 
 
 # Dynamically create test functions for each method, function, and evaluation points
+# These tests verify that both bary and clenshaw evaluation methods produce results
+# within the expected tolerance when compared to direct function evaluation.
+# Each test is named according to the pattern: test_<method>_<function>_<chebpts_index>_<evalpts_index>
 for method in methods:
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):

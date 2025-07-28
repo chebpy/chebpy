@@ -1,5 +1,4 @@
 import pickle
-from typing import Any, List
 
 import numpy as np
 import pytest
@@ -91,30 +90,13 @@ def test_pwc() -> None:
         assert fun.coeffs[0] == val
 
 
-@pytest.fixture
-def pickled_chebfun() -> dict[str, Any]:
-    """Create a fixture for testing pickling of chebfun objects.
-
-    Returns
-    -------
-    dict[str, Any]
-        Dictionary containing original and pickled/unpickled chebfun objects
-    """
+def test_evaluate() -> None:
+    """Test that pickled/unpickled chebfun objects evaluate correctly."""
     f0 = chebfun(np.sin, [-2, 0, 1])
     f1 = pickle.loads(pickle.dumps(f0))
-    return {"f0": f0, "f1": f1}
 
-
-def test_evaluate(pickled_chebfun: dict[str, Any]) -> None:
-    """Test that pickled/unpickled chebfun objects evaluate correctly.
-
-    Parameters
-    ----------
-    pickled_chebfun : dict[str, Any]
-        Dictionary containing original and pickled/unpickled chebfun objects
-    """
     x = -1
-    assert pickled_chebfun["f0"](x) == pickled_chebfun["f1"](x)
+    assert f0(x) == f1(x)
 
 
 # TODO: implement test for equality once objects can be compared

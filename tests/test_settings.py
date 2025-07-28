@@ -1,3 +1,10 @@
+"""Unit-tests for chebpy/core/settings.py.
+
+This module contains tests for the UserPreferences class and its functionality,
+including updating preferences with a context manager and resetting preferences
+to their default values.
+"""
+
 import pytest
 
 from chebpy import UserPreferences
@@ -9,21 +16,23 @@ def userPref(name: str) -> float:
 
     This is how chebpy core modules access these.
 
-    Parameters
-    ----------
-    name : str
-        Name of the preference to retrieve
+    Args:
+        name: Name of the preference to retrieve.
 
-    Returns
-    -------
-    float
-        Current value of the preference
+    Returns:
+        Current value of the preference.
     """
     return getattr(_preferences, name)
 
 
 def test_update_pref() -> None:
-    """Test updating preferences with context manager."""
+    """Test updating preferences with context manager.
+
+    This test verifies that:
+    1. Preferences can be updated within a context manager
+    2. The updated values are accessible during the context
+    3. The original values are restored after the context exits
+    """
     eps_new = 1e-3
     eps_old = userPref("eps")
     with UserPreferences() as prefs:
@@ -33,14 +42,19 @@ def test_update_pref() -> None:
 
 
 def test_reset() -> None:
-    """Test resetting preferences."""
+    """Test resetting preferences.
+
+    This test verifies that:
+    1. Preferences can be reset to their default values
+    2. Both global reset and named reset functionality work correctly
+    3. After reset, preferences return to their original values
+    """
     def change(reset_named: bool = False) -> None:
         """Helper function to change and reset preferences.
 
-        Parameters
-        ----------
-        reset_named : bool, optional
-            Whether to reset a specific preference or all preferences, by default False
+        Args:
+            reset_named: Whether to reset a specific preference or all preferences.
+                Defaults to False.
         """
         prefs = UserPreferences()
         prefs.eps = 99
