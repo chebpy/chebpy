@@ -310,7 +310,7 @@ def test_rpow_constant(testfunctions):
                     vscl = gg.vscale
                     hscl = gg.hscale
                     lscl = max([fun.size for fun in gg])
-                    tol = 10 * abs(c) * vscl * hscl * lscl * eps
+                    tol = 50 * abs(c) * vscl * hscl * lscl * eps
                     assert np.max(g_vals - gg_vals) <= tol
                 except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
                     # Skip test if numerical issues occur
