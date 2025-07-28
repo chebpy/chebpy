@@ -34,17 +34,21 @@ eps = DefaultPreferences.eps
 
 
 @pytest.fixture(scope="session", autouse=True)
-def testfunctions():
-    # Collection of test functions used throughout the test suite.
-    #
-    # Each function is represented as a tuple containing:
-    # 1. The function itself
-    # 2. A name for the function (used in test printouts)
-    # 3. The Matlab chebfun adaptive degree on [-1,1]
-    # 4. A boolean indicating whether the function has roots on the real line
-    #
-    # These functions are used to test various aspects of the chebpy library,
-    # particularly the approximation and evaluation capabilities.
+def testfunctions() -> list:
+    """Create a collection of test functions used throughout the test suite.
+
+    Each function is represented as a tuple containing:
+    1. The function itself
+    2. A name for the function (used in test printouts)
+    3. The Matlab chebfun adaptive degree on [-1,1]
+    4. A boolean indicating whether the function has roots on the real line
+
+    These functions are used to test various aspects of the chebpy library,
+    particularly the approximation and evaluation capabilities.
+
+    Returns:
+        list: List of tuples, each containing a test function and its metadata.
+    """
 
     test_functions = []
     fun_details = [
@@ -70,7 +74,7 @@ def testfunctions():
     return test_functions
 
 
-def scaled_tol(n):
+def scaled_tol(n: int) -> float:
     """Calculate a scaled tolerance based on the size of the input.
 
     This function returns a tolerance that increases with the size of the input,

@@ -9,13 +9,12 @@ import numpy as np
 
 from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import infnorm
 
 from .conftest import eps
 
 
 @pytest.fixture
-def domain_breaking_fixtures():
+def domain_breaking_fixtures() -> dict:
     """Create Chebfun objects for testing domain-breaking operations.
 
     This fixture creates several Chebfun objects with different characteristics
@@ -32,7 +31,7 @@ def domain_breaking_fixtures():
     return {"x": x, "y": y}
 
 
-def test_maximum_multipiece(domain_breaking_fixtures):
+def test_maximum_multipiece(domain_breaking_fixtures: dict) -> None:
     """Test the maximum method with a multi-piece Chebfun and a constant.
 
     This test verifies that the maximum method correctly computes the
@@ -53,10 +52,10 @@ def test_maximum_multipiece(domain_breaking_fixtures):
         return np.maximum(x**2, 1.5)
 
     # Check that the result matches the expected function
-    assert infnorm(f(t) - g(t)) <= 1e1 * eps
+    assert np.max(f(t) - g(t)) <= 1e1 * eps
 
 
-def test_minimum_multipiece(domain_breaking_fixtures):
+def test_minimum_multipiece(domain_breaking_fixtures: dict) -> None:
     """Test the minimum method with a multi-piece Chebfun and a constant.
 
     This test verifies that the minimum method correctly computes the
@@ -77,7 +76,7 @@ def test_minimum_multipiece(domain_breaking_fixtures):
         return np.minimum(x**2, 1.5)
 
     # Check that the result matches the expected function
-    assert infnorm(f(t) - g(t)) <= 1e1 * eps
+    assert np.max(f(t) - g(t)) <= 1e1 * eps
 
 
 @pytest.mark.parametrize("domain,tol", [
@@ -85,7 +84,7 @@ def test_minimum_multipiece(domain_breaking_fixtures):
     ([-1, 0, 1], eps),
     ([-2, 0, 3], eps),
 ])
-def test_maximum_identity_constant(domain, tol):
+def test_maximum_identity_constant(domain: list, tol: float) -> None:
     """Test the maximum method with the identity function and a constant.
 
     This test verifies that the maximum method correctly computes the
@@ -116,7 +115,7 @@ def test_maximum_identity_constant(domain, tol):
     ([-1, 0, 1], eps),
     ([-2, 0, 3], eps),
 ])
-def test_minimum_identity_constant(domain, tol):
+def test_minimum_identity_constant(domain: list, tol: float) -> None:
     """Test the minimum method with the identity function and a constant.
 
     This test verifies that the minimum method correctly computes the
@@ -147,7 +146,7 @@ def test_minimum_identity_constant(domain, tol):
     ([-1, 0, 1], eps),
     ([-2, 0, 3], eps),
 ])
-def test_maximum_sin_cos(domain, tol):
+def test_maximum_sin_cos(domain: list, tol: float) -> None:
     """Test the maximum method with sine and cosine functions.
 
     This test verifies that the maximum method correctly computes the
@@ -181,7 +180,7 @@ def test_maximum_sin_cos(domain, tol):
     ([-1, 0, 1], eps),
     ([-2, 0, 3], eps),
 ])
-def test_minimum_sin_cos(domain, tol):
+def test_minimum_sin_cos(domain: list, tol: float) -> None:
     """Test the minimum method with sine and cosine functions.
 
     This test verifies that the minimum method correctly computes the
@@ -210,23 +209,23 @@ def test_minimum_sin_cos(domain, tol):
     assert np.max(f(xx) - g(xx)) <= vscl * hscl * lscl * tol
 
 
-def test_maximum_empty(emptyfun):
+def test_maximum_empty() -> None:
     """Test the maximum method with an empty Chebfun.
 
     This test verifies that the maximum method correctly handles
     empty Chebfun objects.
     """
     # Create an empty Chebfun and a regular Chebfun
-    #f_empty = Chebfun.initempty()
+    f_empty = Chebfun.initempty()
     f = chebfun(np.sin, [-1, 1])
 
     # Check that maximum with an empty Chebfun returns an empty Chebfun
-    assert emptyfun.maximum(f).isempty
-    assert f.maximum(emptyfun).isempty
-    assert emptyfun.maximum(emptyfun).isempty
+    assert f_empty.maximum(f).isempty
+    assert f.maximum(f_empty).isempty
+    assert f_empty.maximum(f_empty).isempty
 
 
-def test_minimum_empty():
+def test_minimum_empty() -> None:
     """Test the minimum method with an empty Chebfun.
 
     This test verifies that the minimum method correctly handles

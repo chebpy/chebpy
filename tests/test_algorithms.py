@@ -160,7 +160,7 @@ ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
 methods = [bary, clenshaw]
 
 
-def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np.ndarray) -> Callable:
+def _evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np.ndarray) -> bool:
     """Create a test function for evaluating methods.
 
     Parameters
@@ -176,8 +176,8 @@ def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np
 
     Returns
     -------
-    Callable
-        Test function
+    bool
+        True if the method's output is within tolerance of the expected result
     """
     x = evalpts
     xk = chebpts
@@ -200,19 +200,41 @@ def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np
     return np.max(a-b) < tol #inf_norm_less_than_tol(a, b, tol)
 
 
-def test_bary(testfunctions):
+def test_bary(testfunctions: list) -> None:
+    """Test barycentric interpolation algorithm.
+
+    This test verifies that the barycentric interpolation algorithm (bary)
+    correctly evaluates various test functions at different sets of points.
+    It checks that the interpolated values are within tolerance of the true values.
+
+    Parameters
+    ----------
+    testfunctions : list
+        List of test functions to evaluate
+    """
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 print(f"Testing bary {fun.__name__}")
-                assert evalTester(bary, fun, xx, chebpts)
+                assert _evalTester(bary, fun, xx, chebpts)
 
-def test_clenshaw(testfunctions):
+def test_clenshaw(testfunctions: list) -> None:
+    """Test Clenshaw evaluation algorithm.
+
+    This test verifies that the Clenshaw evaluation algorithm (clenshaw)
+    correctly evaluates various test functions at different sets of points.
+    It checks that the evaluated values are within tolerance of the true values.
+
+    Parameters
+    ----------
+    testfunctions : list
+        List of test functions to evaluate
+    """
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 print(f"Testing clenshaw {fun.__name__}")
-                assert evalTester(clenshaw, fun, xx, chebpts)
+                assert _evalTester(clenshaw, fun, xx, chebpts)
 
 
 @pytest.fixture

@@ -202,25 +202,25 @@ def test_truediv_constant(random_points, testfunctions):
             assert np.max(g(xx) - gg(xx)) <= tol
 
             # Test division of constant by function (may have issues with division by zero)
-            try:
-                ff = const / techfun
-                # Evaluate both functions
-                f_vals = f(xx)
-                ff_vals = ff(xx)
+            #try:
+            ff = const / techfun
+            # Evaluate both functions
+            f_vals = f(xx)
+            ff_vals = ff(xx)
 
-                # Skip test if there are any NaN values
-                if np.any(np.isnan(f_vals)) or np.any(np.isnan(ff_vals)):
-                    continue
-
-                # Skip test if function values are too close to zero
-                error = np.max(np.abs(f_vals - ff_vals))
-                if error > 1e3:
-                    continue
-
-                assert error <= tol
-            except (RuntimeWarning, ValueError, ZeroDivisionError, FloatingPointError):
-                # Skip test if division by zero or other numerical issues
+            # Skip test if there are any NaN values
+            if np.any(np.isnan(f_vals)) or np.any(np.isnan(ff_vals)):
                 continue
+
+            # Skip test if function values are too close to zero
+            error = np.max(np.abs(f_vals - ff_vals))
+            if error > 1e3:
+                continue
+
+            assert error <= tol
+            #except (RuntimeWarning, ValueError, ZeroDivisionError, FloatingPointError):
+            #    # Skip test if division by zero or other numerical issues
+            #    continue
 
 
 def test__pos__empty(emptyfun):

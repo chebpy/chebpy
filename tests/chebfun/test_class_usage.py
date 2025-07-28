@@ -17,7 +17,7 @@ from .conftest import eps
 
 
 @pytest.fixture
-def class_usage_fixtures():
+def class_usage_fixtures() -> dict:
     """Create Chebfun objects for testing class usage.
 
     This fixture creates several Chebfun objects with different characteristics
@@ -35,7 +35,7 @@ def class_usage_fixtures():
     return {"f0": f0, "f1": f1, "f2": f2}
 
 
-def test__str__(class_usage_fixtures):
+def test__str__(class_usage_fixtures: dict) -> None:
     """Test string representation of Chebfun objects.
 
     This test verifies that the string representation of Chebfun objects
@@ -49,7 +49,7 @@ def test__str__(class_usage_fixtures):
     assert "domain" in str(f1)
 
 
-def test__repr__(class_usage_fixtures):
+def test__repr__(class_usage_fixtures: dict) -> None:
     """Test repr representation of Chebfun objects.
 
     This test verifies that the repr representation of Chebfun objects
@@ -63,7 +63,7 @@ def test__repr__(class_usage_fixtures):
     assert "domain" in repr(f1)
 
 
-def test_copy(class_usage_fixtures):
+def test_copy(class_usage_fixtures: dict) -> None:
     """Test copying of Chebfun objects.
 
     This test verifies that the copy method creates a new Chebfun object
@@ -96,7 +96,7 @@ def test_copy(class_usage_fixtures):
     assert g2 != f2
 
 
-def test__iter__(class_usage_fixtures):
+def test__iter__(class_usage_fixtures: dict) -> None:
     """Test iteration over Chebfun objects.
 
     This test verifies that iterating over a Chebfun object yields
@@ -115,7 +115,7 @@ def test__iter__(class_usage_fixtures):
     assert len(list(f2)) == 3
 
 
-def test_x_property(class_usage_fixtures):
+def test_x_property(class_usage_fixtures: dict) -> None:
     """Test the x property of Chebfun objects.
 
     This test verifies that the x property returns a Chebfun object
@@ -140,7 +140,7 @@ def test_x_property(class_usage_fixtures):
     assert np.max(f2.x(xx) - xx) <= eps
 
 
-def test_restrict_(class_usage_fixtures):
+def test_restrict_(class_usage_fixtures: dict) -> None:
     """Test the restrict_ method of Chebfun objects.
 
     This test verifies that the restrict_ method correctly restricts
@@ -174,7 +174,7 @@ def test_restrict_(class_usage_fixtures):
     assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
-def test_restrict__empty(class_usage_fixtures):
+def test_restrict__empty(class_usage_fixtures: dict) -> None:
     """Test the restrict_ method on an empty Chebfun.
 
     This test verifies that the restrict_ method on an empty Chebfun
@@ -189,7 +189,7 @@ def test_restrict__empty(class_usage_fixtures):
     assert g0.isempty
 
 
-def test_simplify(class_usage_fixtures):
+def test_simplify(class_usage_fixtures: dict) -> None:
     """Test the simplify method of Chebfun objects.
 
     This test verifies that the simplify method correctly simplifies
@@ -210,7 +210,7 @@ def test_simplify(class_usage_fixtures):
     assert g2 == f2
 
 
-def test_simplify_empty(class_usage_fixtures):
+def test_simplify_empty(class_usage_fixtures: dict) -> None:
     """Test the simplify method on an empty Chebfun.
 
     This test verifies that the simplify method on an empty Chebfun
@@ -224,7 +224,7 @@ def test_simplify_empty(class_usage_fixtures):
     assert g0.isempty
 
 
-def test_restrict(class_usage_fixtures):
+def test_restrict(class_usage_fixtures: dict) -> None:
     """Test the restrict method of Chebfun objects.
 
     This test verifies that the restrict method correctly restricts
@@ -255,7 +255,7 @@ def test_restrict(class_usage_fixtures):
     assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
-def test_restrict_empty(class_usage_fixtures):
+def test_restrict_empty(class_usage_fixtures: dict) -> None:
     """Test the restrict method on an empty Chebfun.
 
     This test verifies that the restrict method on an empty Chebfun
@@ -269,7 +269,7 @@ def test_restrict_empty(class_usage_fixtures):
     assert g0.isempty
 
 
-def test_translate(class_usage_fixtures):
+def test_translate(class_usage_fixtures: dict) -> None:
     """Test the translate method of Chebfun objects.
 
     This test verifies that the translate method correctly translates
@@ -303,7 +303,7 @@ def test_translate(class_usage_fixtures):
     assert np.max(g1(yy) - f1(xx)) <= 2 * eps
 
 
-def test_translate_empty(class_usage_fixtures):
+def test_translate_empty(class_usage_fixtures: dict) -> None:
     """Test the translate method on an empty Chebfun.
 
     This test verifies that the translate method on an empty Chebfun

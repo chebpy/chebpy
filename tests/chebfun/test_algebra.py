@@ -297,24 +297,24 @@ def test_rpow_constant(testfunctions):
                 gg = c ** ff
                 xx = np.linspace(a, b, 1001)
 
-                try:
-                    # Evaluate both functions
-                    g_vals = g(xx)
-                    gg_vals = gg(xx)
+                #try:
+                # Evaluate both functions
+                g_vals = g(xx)
+                gg_vals = gg(xx)
 
-                    # Skip test if there are any NaN or infinite values
-                    if np.any(np.isnan(g_vals)) or np.any(np.isnan(gg_vals)) or \
-                       np.any(np.isinf(g_vals)) or np.any(np.isinf(gg_vals)):
-                        continue
-
-                    vscl = gg.vscale
-                    hscl = gg.hscale
-                    lscl = max([fun.size for fun in gg])
-                    tol = 50 * abs(c) * vscl * hscl * lscl * eps
-                    assert np.max(g_vals - gg_vals) <= tol
-                except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
-                    # Skip test if numerical issues occur
+                # Skip test if there are any NaN or infinite values
+                if np.any(np.isnan(g_vals)) or np.any(np.isnan(gg_vals)) or \
+                   np.any(np.isinf(g_vals)) or np.any(np.isinf(gg_vals)):
                     continue
+
+                vscl = gg.vscale
+                hscl = gg.hscale
+                lscl = max([fun.size for fun in gg])
+                tol = 50 * abs(c) * vscl * hscl * lscl * eps
+                assert np.max(g_vals - gg_vals) <= tol
+                #except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
+                #    # Skip test if numerical issues occur
+                #    continue
 
 
 # Generate test functions for binary operations

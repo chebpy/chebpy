@@ -1,3 +1,10 @@
+"""Unit-tests for chebpy user interface functions.
+
+This module contains tests for the user-facing functions in the chebpy package,
+including chebfun() and pwc() constructors. It verifies that these functions
+handle various input types correctly and produce expected results.
+"""
+
 import pickle
 
 import numpy as np

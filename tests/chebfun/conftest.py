@@ -17,13 +17,15 @@ from chebpy.core.utilities import Interval
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]
-try:
-    # in Python 2 we need to test div separately
-    binops.append(operator.div)
-    div_binops = (operator.div, operator.truediv)
-except AttributeError:
-    # Python 3
-    div_binops = (operator.truediv,)
+
+#try:
+#    # in Python 2 we need to test div separately
+#    binops.append(operator.div)
+#    div_binops = (operator.div, operator.truediv)
+#except AttributeError:
+#    # Python 3
+#    div_binops = (operator.truediv,)
+div_binops = (operator.truediv,)
 
 # aliases
 pi = np.pi
@@ -41,7 +43,7 @@ chebfun_testdomains = [
 ]
 
 @pytest.fixture
-def emptyfun():
+def emptyfun() -> Chebfun:
     """Create an empty Chebfun function for testing.
 
     This fixture creates an empty Chebfun object that can be used
@@ -52,7 +54,7 @@ def emptyfun():
     """
     return Chebfun.initempty()
 
-def binaryOpTester(f, g, binop, dom, tol):
+def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: float) -> callable:
     """Test binary operations between two Chebfun objects.
 
     This function creates Chebfun objects from the given functions and tests
@@ -93,20 +95,20 @@ def binaryOpTester(f, g, binop, dom, tol):
         if binop == operator.mul and abs(b - a) > 10:
             extra_factor = 100
 
-        try:
-            # Evaluate both functions
-            fg_vals = fg(xx)
-            FG_vals = FG(xx)
+        #try:
+        # Evaluate both functions
+        fg_vals = fg(xx)
+        FG_vals = FG(xx)
 
-            # Skip test if there are any NaN or infinite values
-            if np.any(np.isnan(fg_vals)) or np.any(np.isnan(FG_vals)) or \
-               np.any(np.isinf(fg_vals)) or np.any(np.isinf(FG_vals)):
-                pytest.skip("NaN or infinite values encountered")
+        # Skip test if there are any NaN or infinite values
+        #if np.any(np.isnan(fg_vals)) or np.any(np.isnan(FG_vals)) or \
+        #   np.any(np.isinf(fg_vals)) or np.any(np.isinf(FG_vals)):
+        #    pytest.skip("NaN or infinite values encountered")
 
-            assert np.max(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
-        except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
-            # Skip test if numerical issues occur
-            pytest.skip("Numerical issues encountered")
+        assert np.max(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
+        #except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
+        #    # Skip test if numerical issues occur
+        #    pytest.skip("Numerical issues encountered")
 
     return tester
 
@@ -226,37 +228,37 @@ def ufuncTester(ufunc, f, interval, tol):
 
     return tester
 
-def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
-    """Test domain-breaking operations on Chebfun objects.
-
-    This function creates Chebfun objects from the given functions and tests
-    that the domain-breaking operation between them produces the expected
-    result within a specified tolerance.
-
-    Args:
-        domainBreakOp (callable): The domain-breaking operation to test
-        f (callable): First function
-        g (callable or float): Second function or constant
-        dom (list): Domain for the functions
-        tol (float): Tolerance for the comparison
-
-    Returns:
-        callable: A test function that can be used with pytest
-    """
-    xx = np.linspace(dom[0], dom[-1], 1001)
-    ff = chebfun(f, dom)
-    gg = chebfun(g, dom)
-    # convert constant g to to callable
-    if isinstance(g, (int, float)):
-        ffgg = domainBreakOp(f(xx), g)
-    else:
-        ffgg = domainBreakOp(f(xx), g(xx))
-    fg = getattr(ff, domainBreakOp.__name__)(gg)
-
-    def tester():
-        vscl = max([ff.vscale, gg.vscale])
-        hscl = max([ff.hscale, gg.hscale])
-        lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
-        assert np.max(fg(xx) - ffgg) <= vscl * hscl * lscl * tol
-
-    return tester
+# def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
+#     """Test domain-breaking operations on Chebfun objects.
+#
+#     This function creates Chebfun objects from the given functions and tests
+#     that the domain-breaking operation between them produces the expected
+#     result within a specified tolerance.
+#
+#     Args:
+#         domainBreakOp (callable): The domain-breaking operation to test
+#         f (callable): First function
+#         g (callable or float): Second function or constant
+#         dom (list): Domain for the functions
+#         tol (float): Tolerance for the comparison
+#
+#     Returns:
+#         callable: A test function that can be used with pytest
+#     """
+#     xx = np.linspace(dom[0], dom[-1], 1001)
+#     ff = chebfun(f, dom)
+#     gg = chebfun(g, dom)
+#     # convert constant g to to callable
+#     if isinstance(g, (int, float)):
+#         ffgg = domainBreakOp(f(xx), g)
+#     else:
+#         ffgg = domainBreakOp(f(xx), g(xx))
+#     fg = getattr(ff, domainBreakOp.__name__)(gg)
+#
+#     def tester():
+#         vscl = max([ff.vscale, gg.vscale])
+#         hscl = max([ff.hscale, gg.hscale])
+#         lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
+#         assert np.max(fg(xx) - ffgg) <= vscl * hscl * lscl * tol
+#
+#     return tester

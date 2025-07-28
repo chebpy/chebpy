@@ -8,7 +8,7 @@ from chebpy import UserPreferences
 from chebpy.core.settings import _preferences
 
 
-def userPref(name: str) -> float:
+def _userPref(name: str) -> float:
     """Get the current preference value for name.
 
     This is how chebpy core modules access these.
@@ -31,11 +31,11 @@ def test_update_pref() -> None:
     3. The original values are restored after the context exits
     """
     eps_new = 1e-3
-    eps_old = userPref("eps")
+    eps_old = _userPref("eps")
     with UserPreferences() as prefs:
         prefs.eps = eps_new
-        assert eps_new == userPref("eps")
-    assert eps_old == userPref("eps")
+        assert eps_new == _userPref("eps")
+    assert eps_old == _userPref("eps")
 
 
 def test_reset() -> None:
@@ -60,8 +60,8 @@ def test_reset() -> None:
         else:
             prefs.reset()
 
-    eps_bak = userPref("eps")
+    eps_bak = _userPref("eps")
     change(False)
-    assert eps_bak == userPref("eps")
+    assert eps_bak == _userPref("eps")
     change(True)
-    assert eps_bak == userPref("eps")
+    assert eps_bak == _userPref("eps")
