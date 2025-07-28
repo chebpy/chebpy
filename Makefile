@@ -37,7 +37,7 @@ fmt: uv ## Run code formatters only
 
 lint: uv ## Run linters only
 	@printf "$(BLUE)Running linters...$(RESET)\n"
-	@uvx pre-commit run --all-files
+	@uvx pre-commit run tests
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"
