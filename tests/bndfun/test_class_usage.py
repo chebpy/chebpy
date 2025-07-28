@@ -1,36 +1,30 @@
-"""Unit-tests for miscelaneous Bndfun class usage"""
+"""Unit-tests for miscelaneous Bndfun class usage."""
 
-import pytest
 import numpy as np
+import pytest
 
+from chebpy.core.algorithms import standard_chop
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
-from chebpy.core.algorithms import standard_chop
 
-from .conftest import pi, sin, cos, exp, eps
-
-
+from .conftest import cos, eps, exp, pi, sin
 
 
 @pytest.fixture
 def class_usage_fixtures():
     """Create fixtures for testing Bndfun class usage."""
     subinterval = Interval(-2, 3)
-    f = lambda x: sin(30 * x)
+
+    def f(x):
+        return sin(30 * x)
+
     ff = Bndfun.initfun_adaptive(f, subinterval)
     xx = subinterval(np.linspace(-1, 1, 100))
     emptyfun = Bndfun(Chebtech2.initempty(), subinterval)
     constfun = Bndfun(Chebtech2.initconst(1.0), subinterval)
 
-    return {
-        "f": f,
-        "ff": ff,
-        "xx": xx,
-        "emptyfun": emptyfun,
-        "constfun": constfun,
-        "subinterval": subinterval
-    }
+    return {"f": f, "ff": ff, "xx": xx, "emptyfun": emptyfun, "constfun": constfun, "subinterval": subinterval}
 
 
 def test_isempty_True(class_usage_fixtures):
@@ -165,7 +159,7 @@ def test_simplify(class_usage_fixtures):
     ff = Bndfun.initfun_fixedlen(f, interval, 1000)
     gg = ff.simplify()
     assert gg.size == standard_chop(ff.onefun.coeffs)
-    assert np.max(ff.coeffs[:gg.size] - gg.coeffs) == 0
+    assert np.max(ff.coeffs[: gg.size] - gg.coeffs) == 0
     assert ff.interval == gg.interval
 
 
@@ -175,9 +169,7 @@ def test_translate(class_usage_fixtures):
     c = -1
     shifted_interval = ff.interval + c
     gg = ff.translate(c)
-    hh = Bndfun.initfun_fixedlen(
-        lambda x: ff(x - c), shifted_interval, gg.size
-    )
+    hh = Bndfun.initfun_fixedlen(lambda x: ff(x - c), shifted_interval, gg.size)
     yk = shifted_interval(np.linspace(-1, 1, 100))
     assert gg.interval == hh.interval
     assert np.max(gg.coeffs - hh.coeffs) <= 2e1 * eps

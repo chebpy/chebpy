@@ -5,13 +5,12 @@ including empty Chebfun objects, point evaluation, singleton arrays,
 breakpoints, and points outside the interval of definition.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import eps, sin, exp, cos
+from .conftest import cos, eps, exp, sin
 
 
 @pytest.fixture
@@ -138,6 +137,7 @@ def test__call__general_evaluation():
     of points and that the results are accurate within a specified tolerance.
     It tests evaluation on continuous and piecewise domains.
     """
+
     def f(x):
         return sin(4 * x) + exp(cos(14 * x)) - 1.4
 

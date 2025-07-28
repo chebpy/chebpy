@@ -1,7 +1,7 @@
-"""Unit-tests for Bndfun calculus operations"""
+"""Unit-tests for Bndfun calculus operations."""
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
@@ -22,10 +22,7 @@ def calculus_fixtures():
     emptyfun = Bndfun(Chebtech2.initempty(), Interval())
     yy = np.linspace(-1, 1, 2000)
 
-    return {
-        "emptyfun": emptyfun,
-        "yy": yy
-    }
+    return {"emptyfun": emptyfun, "yy": yy}
 
 
 def test_sum_empty(calculus_fixtures):
@@ -51,7 +48,7 @@ def test_diff_empty(calculus_fixtures):
 # --------------------------------------
 def_integrals = [
     # (function, interval, integral, tolerance)
-    (lambda x: sin(x), [-2, 2], 0.0, 2   * eps),
+    (lambda x: sin(x), [-2, 2], 0.0, 2 * eps),
     (lambda x: sin(4 * pi * x), [-0.1, 0.7], 0.088970317927147, 1e1 * eps),
     (lambda x: cos(x), [-100, 203], 0.426944059057085, 5e2 * eps),
     (lambda x: cos(4 * pi * x), [-1e-1, -1e-3], 0.074682699182803, 2 * eps),

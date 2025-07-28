@@ -1,11 +1,12 @@
-"""Unit-tests for Bndfun roots functionality"""
+"""Unit-tests for Bndfun roots functionality."""
 
 import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
-from .conftest import pi, sin, cos, eps
+
+from .conftest import cos, eps, pi, sin
 
 
 def test_empty():

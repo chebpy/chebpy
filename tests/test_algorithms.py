@@ -10,14 +10,16 @@ check that the algorithms produce results within expected tolerance of the
 true values.
 """
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import pytest
 
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
 from chebpy.core.chebtech import Chebtech2
-from .conftest import cos, exp, eps, scaled_tol
+
+from .conftest import cos, eps, exp, scaled_tol
 
 np.random.seed(0)
 
@@ -32,7 +34,7 @@ np.seterr(divide="ignore", invalid="ignore")
 def evaluation_fixtures() -> dict[str, Any]:
     """Create fixtures for testing evaluation algorithms.
 
-    Returns
+    Returns:
     -------
     dict[str, Any]
         Dictionary containing test fixtures for evaluation
@@ -174,7 +176,7 @@ def _evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: n
     chebpts : np.ndarray
         Chebyshev points
 
-    Returns
+    Returns:
     -------
     bool
         True if the method's output is within tolerance of the expected result
@@ -197,7 +199,7 @@ def _evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: n
     n = evalpts.size
     tol = tol_multiplier * scaled_tol(n)
 
-    return np.max(a-b) < tol #inf_norm_less_than_tol(a, b, tol)
+    return np.max(a - b) < tol  # inf_norm_less_than_tol(a, b, tol)
 
 
 def test_bary(testfunctions: list) -> None:
@@ -217,6 +219,7 @@ def test_bary(testfunctions: list) -> None:
             for k, xx in enumerate(evalpts):
                 print(f"Testing bary {fun.__name__}")
                 assert _evalTester(bary, fun, xx, chebpts)
+
 
 def test_clenshaw(testfunctions: list) -> None:
     """Test Clenshaw evaluation algorithm.
@@ -241,13 +244,18 @@ def test_clenshaw(testfunctions: list) -> None:
 def coeffmult_fixtures() -> dict[str, Any]:
     """Create fixtures for testing coefficient multiplication.
 
-    Returns
+    Returns:
     -------
     dict[str, Any]
         Dictionary containing test fixtures for coefficient multiplication
     """
-    f = lambda x: exp(x)
-    g = lambda x: cos(x)
+
+    def f(x):
+        return exp(x)
+
+    def g(x):
+        return cos(x)
+
     fn = 15
     gn = 15
     return {"f": f, "g": g, "fn": fn, "gn": gn}

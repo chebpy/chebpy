@@ -4,11 +4,12 @@ This module contains tests for the UserPreferences class and its functionality,
 including updating preferences with a context manager and resetting preferences
 to their default values.
 """
+
 from chebpy import UserPreferences
 from chebpy.core.settings import _preferences
 
 
-def _userPref(name: str) -> float:
+def _user_pref(name: str) -> float:
     """Get the current preference value for name.
 
     This is how chebpy core modules access these.
@@ -31,11 +32,11 @@ def test_update_pref() -> None:
     3. The original values are restored after the context exits
     """
     eps_new = 1e-3
-    eps_old = _userPref("eps")
+    eps_old = _user_pref("eps")
     with UserPreferences() as prefs:
         prefs.eps = eps_new
-        assert eps_new == _userPref("eps")
-    assert eps_old == _userPref("eps")
+        assert eps_new == _user_pref("eps")
+    assert eps_old == _user_pref("eps")
 
 
 def test_reset() -> None:
@@ -46,6 +47,7 @@ def test_reset() -> None:
     2. Both global reset and named reset functionality work correctly
     3. After reset, preferences return to their original values
     """
+
     def change(reset_named: bool = False) -> None:
         """Helper function to change and reset preferences.
 
@@ -60,8 +62,8 @@ def test_reset() -> None:
         else:
             prefs.reset()
 
-    eps_bak = _userPref("eps")
+    eps_bak = _user_pref("eps")
     change(False)
-    assert eps_bak == _userPref("eps")
+    assert eps_bak == _user_pref("eps")
     change(True)
-    assert eps_bak == _userPref("eps")
+    assert eps_bak == _user_pref("eps")

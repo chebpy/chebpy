@@ -3,17 +3,15 @@
 This module contains tests for the algebraic operations of Chebfun,
 including addition, subtraction, multiplication, division, and powers.
 """
+
 import itertools
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import (
-    eps, binops, div_binops, binaryOpTester, unaryOpTester,
-    chebfun_testdomains
-)
+from .conftest import binaryOpTester, binops, chebfun_testdomains, div_binops, eps, unaryOpTester
 
 
 # tests for empty function operations
@@ -70,6 +68,7 @@ def test__add__radd__constant(testfunctions):
         for dom, _ in chebfun_testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return const + fun(x)
 
@@ -112,6 +111,7 @@ def test__sub__rsub__constant(testfunctions):
         for dom, _ in chebfun_testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return const - fun(x)
 
@@ -158,6 +158,7 @@ def test__mul__rmul__constant(testfunctions):
         for dom, _ in chebfun_testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
+
                 def g(x):
                     return const * fun(x)
 
@@ -208,6 +209,7 @@ def test_truediv_constant(testfunctions):
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 for const in (-1, 1, 10, -1e5):
+
                     def g(x):
                         return fun(x) / const
 
@@ -236,9 +238,9 @@ def test_pow_empty(emptyfun):
         emptyfun: Fixture providing an empty Chebfun object
     """
     for const in (-1, 0, 1, 2):
-        assert (emptyfun ** const).isempty
+        assert (emptyfun**const).isempty
     for const in (-1.0, 0.0, 1.0, 2.0):
-        assert (emptyfun ** const).isempty
+        assert (emptyfun**const).isempty
 
 
 def test_rpow_empty(emptyfun):
@@ -251,9 +253,9 @@ def test_rpow_empty(emptyfun):
         emptyfun: Fixture providing an empty Chebfun object
     """
     for const in (-1, 0, 1, 2):
-        assert (const ** emptyfun).isempty
+        assert (const**emptyfun).isempty
     for const in (-1.0, 0.0, 1.0, 2.0):
-        assert (const ** emptyfun).isempty
+        assert (const**emptyfun).isempty
 
 
 def test_pow_constant(testfunctions):
@@ -267,11 +269,12 @@ def test_pow_constant(testfunctions):
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 for c in (-1, 1, 2, 0.5):
+
                     def g(x):
                         return fun(x) ** c
 
                     ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
-                    gg = ff ** c
+                    gg = ff**c
                     xx = np.linspace(a, b, 1001)
                     vscl = gg.vscale
                     hscl = gg.hscale
@@ -290,21 +293,26 @@ def test_rpow_constant(testfunctions):
         for dom, _ in chebfun_testdomains:
             a, b = dom
             for c in (0.5, 1, 2, np.e):
+
                 def g(x):
                     return c ** fun(x)
 
                 ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
-                gg = c ** ff
+                gg = c**ff
                 xx = np.linspace(a, b, 1001)
 
-                #try:
+                # try:
                 # Evaluate both functions
                 g_vals = g(xx)
                 gg_vals = gg(xx)
 
                 # Skip test if there are any NaN or infinite values
-                if np.any(np.isnan(g_vals)) or np.any(np.isnan(gg_vals)) or \
-                   np.any(np.isinf(g_vals)) or np.any(np.isinf(gg_vals)):
+                if (
+                    np.any(np.isnan(g_vals))
+                    or np.any(np.isnan(gg_vals))
+                    or np.any(np.isinf(g_vals))
+                    or np.any(np.isinf(gg_vals))
+                ):
                     continue
 
                 vscl = gg.vscale
@@ -312,7 +320,7 @@ def test_rpow_constant(testfunctions):
                 lscl = max([fun.size for fun in gg])
                 tol = 50 * abs(c) * vscl * hscl * lscl * eps
                 assert np.max(g_vals - gg_vals) <= tol
-                #except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
+                # except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
                 #    # Skip test if numerical issues occur
                 #    continue
 

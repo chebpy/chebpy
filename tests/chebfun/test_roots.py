@@ -4,13 +4,12 @@ This module contains tests for finding the roots of Chebfun objects,
 including empty, constant, and various polynomial and trigonometric functions.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Interval
 
-from .conftest import eps, sin, cos, pi
+from .conftest import cos, pi, sin
 
 
 @pytest.fixture
@@ -77,7 +76,7 @@ def test_roots_cos(roots_fixtures):
     f2 = roots_fixtures["f2"]
     roots = f2.roots()
     assert roots.size == 1
-    assert abs(roots[0] - pi/2) < 1e-10  # cos(pi/2) = 0
+    assert abs(roots[0] - pi / 2) < 1e-10  # cos(pi/2) = 0
 
 
 def test_roots_quadratic(roots_fixtures):
@@ -108,9 +107,9 @@ def test_roots_cubic(roots_fixtures):
     f4 = roots_fixtures["f4"]
     roots = f4.roots()
     assert roots.size == 3
-    assert abs(roots[0] + 1) < 1e-10    # x = -1
-    assert abs(roots[1]) < 1e-10        # x = 0
-    assert abs(roots[2] - 1) < 1e-10    # x = 1
+    assert abs(roots[0] + 1) < 1e-10  # x = -1
+    assert abs(roots[1]) < 1e-10  # x = 0
+    assert abs(roots[2] - 1) < 1e-10  # x = 1
 
 
 def test_roots_const():
@@ -137,7 +136,7 @@ def test_roots_multiple_intervals():
     """
     # Create a Chebfun with sin(2*pi*x) on a domain with multiple breakpoints
     # This function has roots at x = 0, 0.5, 1, 1.5, etc.
-    f = Chebfun.initfun_adaptive(lambda x: sin(2*pi*x), [-1, 0, 1])
+    f = Chebfun.initfun_adaptive(lambda x: sin(2 * pi * x), [-1, 0, 1])
 
     # Find the roots
     roots = f.roots()
@@ -161,7 +160,7 @@ def test_roots_high_frequency():
     all roots of a high-frequency function.
     """
     # Create a Chebfun for sin(10*pi*x) which has 20 roots in [-1, 1]
-    f = Chebfun.initfun_adaptive(lambda x: sin(10*pi*x), [-1, 1])
+    f = Chebfun.initfun_adaptive(lambda x: sin(10 * pi * x), [-1, 1])
 
     # Find the roots
     roots = f.roots()

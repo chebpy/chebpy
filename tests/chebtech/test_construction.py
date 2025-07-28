@@ -4,10 +4,11 @@ This module contains tests for the various ways to construct Chebtech2 objects,
 including from values, coefficients, constants, and functions.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebtech import Chebtech2
+
 from .conftest import eps
 
 
@@ -90,6 +91,7 @@ def test_empty_construction():
 # Ensure reproducibility
 np.random.seed(0)
 
+
 # Test adaptive function construction
 def test_adaptive_construction(testfunctions):
     """Test adaptive construction of Chebtech2 objects.
@@ -99,9 +101,9 @@ def test_adaptive_construction(testfunctions):
     bounds relative to the reference function length.
 
     Args:
-        fun: Function to construct Chebtech2 from
-        funlen: Expected function length
-        _: Unused parameter (kept for compatibility with testfunctions)
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for fun, funlen, _ in testfunctions:
         ff = Chebtech2.initfun_adaptive(fun)
@@ -118,9 +120,9 @@ def test_fixedlen_construction(testfunctions, n):
     from various test functions have exactly the specified size.
 
     Args:
-        fun: Function to construct Chebtech2 from
-        funlen: Expected function length (unused in this test)
-        _: Unused parameter (kept for compatibility with testfunctions)
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length (unused in this test), and _ is an unused parameter.
         n: Fixed length to use for construction
     """
     for fun, _, _ in testfunctions:

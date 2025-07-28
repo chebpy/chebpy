@@ -4,11 +4,12 @@ This module contains tests for the calculus operations of Chebtech2,
 including sum, cumsum, and diff methods.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebtech import Chebtech2
-from .conftest import pi, sin, cos, exp, eps
+
+from .conftest import cos, eps, exp, pi, sin
 
 
 # tests for the correct results in the empty cases
@@ -96,7 +97,7 @@ indef_integrals = [
     (lambda x: sin(x), lambda x: -cos(x), 15, 2 * eps),
     (lambda x: cos(x), lambda x: sin(x), 15, 2 * eps),
     (lambda x: exp(x), lambda x: exp(x), 15, 5 * eps),
-    (lambda x: x ** 3, lambda x: 0.25 * x ** 4, 16, 10 * eps),
+    (lambda x: x**3, lambda x: 0.25 * x**4, 16, 10 * eps),
     (lambda x: 0 * x + 1, lambda x: x, 1, 3.0),
     (lambda x: 0 * x, lambda x: 0 * x, 1, eps),
 ]
@@ -132,7 +133,7 @@ derivatives = [
     (lambda x: sin(x), lambda x: cos(x), 15, 30 * eps),
     (lambda x: cos(x), lambda x: -sin(x), 15, 30 * eps),
     (lambda x: exp(x), lambda x: exp(x), 15, 200 * eps),
-    (lambda x: x ** 3, lambda x: 3 * x ** 2, 16, 30 * eps),
+    (lambda x: x**3, lambda x: 3 * x**2, 16, 30 * eps),
     (lambda x: 0 * x + 1, lambda x: 0 * x, 1, eps),
     (lambda x: 0 * x, lambda x: 0 * x, 1, eps),
 ]
@@ -157,4 +158,4 @@ def test_derivative(fun, der, n, tol):
     gg = Chebtech2.initfun_fixedlen(der, n)
     xx = np.linspace(-1, 1, 1000)
     absdiff = np.max(ff.diff()(xx) - gg(xx))
-    assert absdiff <= 10*tol
+    assert absdiff <= 10 * tol

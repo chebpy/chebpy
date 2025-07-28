@@ -1,4 +1,4 @@
-"""Unit-tests for Bndfun algebraic operations"""
+"""Unit-tests for Bndfun algebraic operations."""
 
 import operator
 
@@ -7,6 +7,7 @@ import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
+
 from .conftest import eps
 
 # Binary operators to test
@@ -50,6 +51,7 @@ def test__add__radd__constant(testfunctions):
     xx = subinterval(yy)
     for fun, _, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const + fun(x)
 
@@ -77,6 +79,7 @@ def test__sub__rsub__constant(testfunctions):
     xx = subinterval(yy)
     for fun, _, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const - fun(x)
 
@@ -107,6 +110,7 @@ def test__mul__rmul__constant(testfunctions):
     xx = subinterval(yy)
     for fun, _, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const * fun(x)
 
@@ -140,6 +144,7 @@ def test_truediv_constant(testfunctions):
     xx = subinterval(yy)
     for fun, _, hasRoots in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const / fun(x)
 
@@ -176,6 +181,7 @@ def test_pow_const():
     xx = subinterval(yy)
     for func in (np.sin, np.exp, np.cos):
         for c in (1, 2):
+
             def f(x):
                 return func(x) ** c
 
@@ -191,6 +197,7 @@ def test_rpow_const():
     xx = subinterval(yy)
     for func in (np.sin, np.exp, np.cos):
         for c in (1, 2):
+
             def f(x):
                 return c ** func(x)
 
@@ -217,12 +224,8 @@ def binary_op_test(f, g, subinterval, binop, yy):
 
 
 # Test binary operations between Bndfun objects
-subintervals = [
-    Interval(-0.5, 0.9),
-    Interval(-1.2, 1.3),
-    Interval(-2.2, -1.9),
-    Interval(0.4, 1.3)
-]
+subintervals = [Interval(-0.5, 0.9), Interval(-1.2, 1.3), Interval(-2.2, -1.9), Interval(0.4, 1.3)]
+
 
 # # Generate test cases for binary operations
 # binary_test_cases = []
@@ -235,22 +238,15 @@ subintervals = [
 #             binary_test_cases.append((f, g, subinterval, binop))
 #
 @pytest.mark.parametrize("subinterval", subintervals)
-@pytest.mark.parametrize("f, g", [
-    (np.exp, np.sin),
-    (np.exp, lambda x: 2 - x),
-    (lambda x: 2 - x, np.exp)]
-                        )
+@pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
 def test_binary_operations(f, g, subinterval, binop=operator.pow):
     """Test binary operations between Bndfun objects."""
     yy = np.linspace(-1, 1, 1000)
     binary_op_test(f, g, subinterval, binop, yy)
 
+
 @pytest.mark.parametrize("subinterval", subintervals)
-@pytest.mark.parametrize("f, g", [
-    (np.exp, np.sin),
-    (np.exp, lambda x: 2 - x),
-    (lambda x: 2 - x, np.exp)]
-                        )
+@pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
 def test_pow_operations(f, g, subinterval, binop=operator.pow):
     """Test power operations between Bndfun objects."""
     yy = np.linspace(-1, 1, 1000)

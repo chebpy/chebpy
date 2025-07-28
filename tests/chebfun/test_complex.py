@@ -4,8 +4,8 @@ This module contains tests for complex Chebfun operations,
 including roots, rho ellipse construction, calculus, and real/imag methods.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
 

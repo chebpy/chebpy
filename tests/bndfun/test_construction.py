@@ -1,14 +1,13 @@
-"""Unit-tests for construction of Bndfun objects"""
+"""Unit-tests for construction of Bndfun objects."""
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
-from .conftest import sin, cos, exp, eps
-
+from .conftest import cos, eps, exp, sin
 
 
 def test_onefun_construction():

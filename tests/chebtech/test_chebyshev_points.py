@@ -4,10 +4,11 @@ This module contains tests for the Chebyshev points functionality in Chebtech2,
 including the _chebpts method and the vals2coeffs and coeffs2vals transformations.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebtech import Chebtech2
+
 from .conftest import eps, scaled_tol
 
 # aliases
@@ -60,6 +61,7 @@ def test_coeffs2vals_size1():
         ak = np.array([k])
         assert np.max(_coeffs2vals(ak) - ak) <= eps
 
+
 # TODO: further checks for chepbts
 
 
@@ -103,6 +105,8 @@ def test_coeffs2vals2coeffs(n):
     values = _coeffs2vals(coeffs)
     _coeffs_ = _vals2coeffs(values)
     assert np.max(coeffs - _coeffs_) <= scaled_tol(n)
+
+
 # ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
@@ -159,4 +163,6 @@ def test_chebpts_properties(k):
     assert pts[0] == -1.0
     assert pts[-1] == 1.0
     assert np.all(np.diff(pts) > 0)
+
+
 # ------------------------------------------------------------------------

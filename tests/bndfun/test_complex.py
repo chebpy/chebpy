@@ -1,7 +1,7 @@
-"""Unit-tests for Bndfun complex operations"""
+"""Unit-tests for Bndfun complex operations."""
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
@@ -10,13 +10,9 @@ from chebpy.core.utilities import Interval
 @pytest.fixture
 def complex_fixtures():
     """Create fixtures for testing Bndfun complex operations."""
-    z = Bndfun.initfun_adaptive(
-        lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1)
-    )
+    z = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
 
-    return {
-        "z": z
-    }
+    return {"z": z}
 
 
 def test_init_empty():

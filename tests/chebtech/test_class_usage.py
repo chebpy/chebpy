@@ -4,13 +4,13 @@ This module contains tests for various aspects of the Chebtech2 class,
 including emptiness, constantness, size, calling, prolongation, vscale, and copying.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import standard_chop
-from .conftest import pi, sin, cos, exp, eps
+from chebpy.core.chebtech import Chebtech2
 
+from .conftest import cos, eps, exp, pi, sin
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def test_isempty_False():
     """
     f = Chebtech2(np.array([1.0]))
     assert not f.isempty
-    assert not f.isempty is True
+    assert f.isempty is not True
 
 
 # tests for constantness of Chebtech2 objects
@@ -74,7 +74,7 @@ def test_isconst_False():
     """
     f = Chebtech2(np.array([]))
     assert not f.isconst
-    assert not f.isconst is True
+    assert f.isconst is not True
 
 
 # check the size() method is working properly

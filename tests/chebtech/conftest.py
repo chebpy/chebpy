@@ -8,8 +8,8 @@ helper functions for testing algebraic operations.
 import numpy as np
 import pytest
 
-from chebpy.core.settings import DefaultPreferences
 from chebpy.core.chebtech import Chebtech2
+from chebpy.core.settings import DefaultPreferences
 
 # aliases
 eps = DefaultPreferences.eps
@@ -18,8 +18,9 @@ sin = np.sin
 cos = np.cos
 exp = np.exp
 
+
 @pytest.fixture
-def emptyfun():
+def emptyfun() -> Chebtech2:
     """Create an empty Chebtech2 function for testing.
 
     This fixture creates an empty Chebtech2 object that can be used
@@ -32,7 +33,7 @@ def emptyfun():
 
 
 @pytest.fixture
-def random_points():
+def random_points() -> np.ndarray:
     """Create an array of random points in [-1, 1] for testing.
 
     This fixture creates an array of 1000 random points in the interval [-1, 1]
@@ -44,7 +45,8 @@ def random_points():
     np.random.seed(0)  # Ensure reproducibility
     return -1 + 2 * np.random.rand(1000)
 
-def binary_op_tester(f, g, binop, nf, ng):
+
+def binary_op_tester(f: callable, g: callable, binop: callable, nf: int, ng: int) -> tuple:
     """Test binary operations between two Chebtech objects.
 
     This function creates Chebtech2 objects from the given functions and tests
@@ -77,7 +79,7 @@ def binary_op_tester(f, g, binop, nf, ng):
     return ff, gg, fg, FG, xx, tol
 
 
-def unary_op_tester(unaryop, f, nf):
+def unary_op_tester(unaryop: callable, f: callable, nf: int) -> tuple:
     """Test unary operations on a Chebtech object.
 
     This function creates a Chebtech2 object from the given function and tests
@@ -106,7 +108,8 @@ def unary_op_tester(unaryop, f, nf):
 
     return ff, GG, gg, xx, tol
 
-def scaled_tol(n):
+
+def scaled_tol(n: int) -> float:
     """Calculate a scaled tolerance based on the size of the input.
 
     This function returns a tolerance that increases with the size of the input,

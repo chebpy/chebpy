@@ -4,13 +4,15 @@ This module contains tests for the algebraic operations of Chebtech2,
 including addition, subtraction, multiplication, division, and powers.
 """
 
-import operator
 import itertools
-import pytest
-import numpy as np
+import operator
 
-from chebpy.core.settings import DefaultPreferences
+import numpy as np
+import pytest
+
 from chebpy.core.chebtech import Chebtech2
+from chebpy.core.settings import DefaultPreferences
+
 from .conftest import binary_op_tester, unary_op_tester
 
 # aliases
@@ -27,6 +29,9 @@ def test__add__radd__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for fun, funlen, _ in testfunctions:
         chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
@@ -43,10 +48,14 @@ def test__add__radd__constant(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const + fun(x)
 
@@ -66,6 +75,9 @@ def test__add__negself(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
@@ -83,6 +95,9 @@ def test__sub__rsub__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for fun, funlen, _ in testfunctions:
         chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
@@ -98,10 +113,14 @@ def test__sub__rsub__constant(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const - fun(x)
 
@@ -125,6 +144,9 @@ def test__mul__rmul__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for fun, funlen, _ in testfunctions:
         chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
@@ -140,10 +162,14 @@ def test__mul__rmul__constant(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const * fun(x)
 
@@ -166,6 +192,9 @@ def test_truediv_empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for fun, funlen, _ in testfunctions:
         chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
@@ -184,10 +213,14 @@ def test_truediv_constant(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
         for const in (-1, 1, 10, -1e5):
+
             def f(x):
                 return const / fun(x)
 
@@ -202,7 +235,7 @@ def test_truediv_constant(random_points, testfunctions):
             assert np.max(g(xx) - gg(xx)) <= tol
 
             # Test division of constant by function (may have issues with division by zero)
-            #try:
+            # try:
             ff = const / techfun
             # Evaluate both functions
             f_vals = f(xx)
@@ -218,7 +251,7 @@ def test_truediv_constant(random_points, testfunctions):
                 continue
 
             assert error <= tol
-            #except (RuntimeWarning, ValueError, ZeroDivisionError, FloatingPointError):
+            # except (RuntimeWarning, ValueError, ZeroDivisionError, FloatingPointError):
             #    # Skip test if division by zero or other numerical issues
             #    continue
 
@@ -256,8 +289,8 @@ def test_pow_empty(emptyfun):
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
     """
-    assert (emptyfun ** 1).isempty
-    assert (emptyfun ** 2).isempty
+    assert (emptyfun**1).isempty
+    assert (emptyfun**2).isempty
 
 
 def test_rpow_empty(emptyfun):
@@ -269,8 +302,8 @@ def test_rpow_empty(emptyfun):
     Args:
         emptyfun: Fixture providing an empty Chebtech2 object
     """
-    assert (2 ** emptyfun).isempty
-    assert (np.e ** emptyfun).isempty
+    assert (2**emptyfun).isempty
+    assert (np.e**emptyfun).isempty
 
 
 def test_pow_const(random_points, testfunctions):
@@ -281,16 +314,20 @@ def test_pow_const(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, hasRoots) where fun is the function to test, funlen is the expected
+            function length, and hasRoots indicates whether the function has roots on the real line.
     """
     xx = random_points
     for fun, funlen, hasRoots in testfunctions:
         if not hasRoots:
             for const in (-1, 1, 2, 0.5):
+
                 def f(x):
                     return fun(x) ** const
 
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                ff = techfun ** const
+                ff = techfun**const
                 tol = 1e2 * eps
                 assert np.max(f(xx) - ff(xx)) <= tol
 
@@ -303,15 +340,19 @@ def test_rpow_const(random_points, testfunctions):
 
     Args:
         random_points: Fixture providing random points for evaluation
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     xx = random_points
     for fun, funlen, _ in testfunctions:
         for const in (0.5, 1, 2, np.e):
+
             def g(x):
                 return const ** fun(x)
 
             techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-            gg = const ** techfun
+            gg = const**techfun
             tol = 3e3 * eps
             assert np.max(g(xx) - gg(xx)) <= tol
 
@@ -330,7 +371,6 @@ def test_binary_operations(binop, testfunctions):
         nf: Number of points for the first function
         ng: Number of points for the second function
     """
-
     for tf1, tf2 in itertools.product(testfunctions, testfunctions):
         f, nf, _ = tf1
         g, ng, hasRootsG = tf2

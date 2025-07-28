@@ -1,13 +1,14 @@
-"""Unit-tests for Bndfun plotting methods"""
+"""Unit-tests for Bndfun plotting methods."""
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.utilities import Interval
 from chebpy.core.plotting import import_plt
+from chebpy.core.utilities import Interval
 
-from .conftest import sin, cos
+from .conftest import cos, sin
+
 
 def _joukowsky(z):
     """Apply the Joukowsky transformation to z.
@@ -23,9 +24,11 @@ def _joukowsky(z):
     """
     return 0.5 * (z + 1 / z)
 
+
 @pytest.fixture
 def plotting_fixtures():
     """Create fixtures for testing Bndfun plotting methods."""
+
     def f(x):
         return sin(1 * x) + 5e-1 * cos(10 * x) + 5e-3 * sin(100 * x)
 
@@ -37,11 +40,7 @@ def plotting_fixtures():
     f1 = Bndfun.initfun_adaptive(f, subinterval)
     f2 = Bndfun.initfun_adaptive(u, Interval(-1, 1))
 
-    return {
-        "f0": f0,
-        "f1": f1,
-        "f2": f2
-    }
+    return {"f0": f0, "f1": f1, "f2": f2}
 
 
 plt = import_plt()

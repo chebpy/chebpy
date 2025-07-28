@@ -4,14 +4,12 @@ This module contains tests for the ufunc operations of Chebfun,
 including absolute, trigonometric, exponential, and logarithmic functions.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
-from .conftest import (
-    eps, ufuncEmptyCaseTester, ufuncTester,
-    uf1, uf2, uf3
-)
+
+from .conftest import eps, uf1, uf2, uf3, ufuncEmptyCaseTester, ufuncTester
 
 
 @pytest.fixture
@@ -40,7 +38,7 @@ def test_abs_absolute_alias(ufuncs_fixtures):
     Args:
         ufuncs_fixtures: Fixture providing test objects.
     """
-    emptyfun = ufuncs_fixtures["emptyfun"]
+    ufuncs_fixtures["emptyfun"]
     assert Chebfun.abs == Chebfun.absolute
 
 
@@ -221,8 +219,9 @@ def test_ufuncs(ufunc, test_cases, ufuncs_fixtures):
         ufuncs_fixtures: Fixture providing test objects.
     """
     yy = ufuncs_fixtures["yy"]
-    for ([f, intvl], tol) in test_cases:
+    for [f, intvl], tol in test_cases:
         from chebpy.core.utilities import Interval
+
         interval = Interval(*intvl)
         test_func = ufuncTester(ufunc, f, interval, tol)
         test_func(yy)

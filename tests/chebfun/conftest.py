@@ -10,19 +10,17 @@ import operator
 import numpy as np
 import pytest
 
-from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import Interval
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]
 
-#try:
+# try:
 #    # in Python 2 we need to test div separately
 #    binops.append(operator.div)
 #    div_binops = (operator.div, operator.truediv)
-#except AttributeError:
+# except AttributeError:
 #    # Python 3
 #    div_binops = (operator.truediv,)
 div_binops = (operator.truediv,)
@@ -42,6 +40,7 @@ chebfun_testdomains = [
     ([-5, 9], 35 * eps),
 ]
 
+
 @pytest.fixture
 def emptyfun() -> Chebfun:
     """Create an empty Chebfun function for testing.
@@ -53,6 +52,7 @@ def emptyfun() -> Chebfun:
         Chebfun: An empty Chebfun object
     """
     return Chebfun.initempty()
+
 
 def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: float) -> callable:
     """Test binary operations between two Chebfun objects.
@@ -95,24 +95,25 @@ def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: fl
         if binop == operator.mul and abs(b - a) > 10:
             extra_factor = 100
 
-        #try:
+        # try:
         # Evaluate both functions
         fg_vals = fg(xx)
         FG_vals = FG(xx)
 
         # Skip test if there are any NaN or infinite values
-        #if np.any(np.isnan(fg_vals)) or np.any(np.isnan(FG_vals)) or \
+        # if np.any(np.isnan(fg_vals)) or np.any(np.isnan(FG_vals)) or \
         #   np.any(np.isinf(fg_vals)) or np.any(np.isinf(FG_vals)):
         #    pytest.skip("NaN or infinite values encountered")
 
         assert np.max(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
-        #except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
+        # except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
         #    # Skip test if numerical issues occur
         #    pytest.skip("Numerical issues encountered")
 
     return tester
 
-def unaryOpTester(f, unaryop, dom, tol):
+
+def unaryOpTester(f: callable, unaryop: callable, dom: list, tol: float) -> callable:
     """Test unary operations on a Chebfun object.
 
     This function creates a Chebfun object from the given function and tests
@@ -146,7 +147,8 @@ def unaryOpTester(f, unaryop, dom, tol):
 
     return tester
 
-def ufuncEmptyCaseTester(ufunc):
+
+def ufuncEmptyCaseTester(ufunc: callable) -> callable:
     """Test ufunc operations on empty Chebfun objects.
 
     This function tests that applying a ufunc to an empty Chebfun object
@@ -158,12 +160,14 @@ def ufuncEmptyCaseTester(ufunc):
     Returns:
         callable: A test function that can be used with pytest
     """
+
     def tester(emptyfun):
         assert getattr(emptyfun, ufunc.__name__)().isempty
 
     return tester
 
-def uf1(x):
+
+def uf1(x: float) -> float:
     """Identity function.
 
     Args:
@@ -174,7 +178,8 @@ def uf1(x):
     """
     return x
 
-def uf2(x):
+
+def uf2(x: float) -> float:
     """Sine function with offset.
 
     Args:
@@ -185,7 +190,8 @@ def uf2(x):
     """
     return sin(x - 0.5)
 
-def uf3(x):
+
+def uf3(x: float) -> float:
     """Sine function with scaling and offset.
 
     Args:
@@ -196,7 +202,8 @@ def uf3(x):
     """
     return sin(25 * x - 1)
 
-def ufuncTester(ufunc, f, interval, tol):
+
+def ufuncTester(ufunc: callable, f: callable, interval: list, tol: float) -> callable:
     """Test ufunc operations on Chebfun objects.
 
     This function creates a Chebfun object from the given function and tests
@@ -227,6 +234,7 @@ def ufuncTester(ufunc, f, interval, tol):
         assert np.max(gg(xx) - GG(xx)) <= vscl * lscl * tol
 
     return tester
+
 
 # def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
 #     """Test domain-breaking operations on Chebfun objects.

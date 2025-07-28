@@ -1,11 +1,12 @@
-"""Unit-tests for Bndfun numpy ufunc overloads"""
+"""Unit-tests for Bndfun numpy ufunc overloads."""
 
 import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
-from .conftest import sin, eps
+
+from .conftest import eps, sin
 
 
 @pytest.fixture
@@ -14,10 +15,7 @@ def ufuncs_fixtures():
     yy = np.linspace(-1, 1, 1000)
     emptyfun = Bndfun.initempty()
 
-    return {
-        "yy": yy,
-        "emptyfun": emptyfun
-    }
+    return {"yy": yy, "emptyfun": emptyfun}
 
 
 # Define utility functions for testing

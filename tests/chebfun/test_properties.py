@@ -4,14 +4,11 @@ This module contains tests for the various properties of Chebfun objects,
 including breakpoints, domain, hscale, isempty, isconst, support, and vscale.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
-
-from .conftest import eps
 
 
 @pytest.fixture

@@ -13,14 +13,16 @@ Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
     making it suitable for headless CI environments.
 """
+
 import os
+
 import matplotlib
 import numpy as np
 import pytest
 
 from chebpy.core.settings import DefaultPreferences
 
-if os.environ.get("CI") == "true":   # pragma: no cover
+if os.environ.get("CI") == "true":  # pragma: no cover
     matplotlib.use("Agg")
 
 # aliases
@@ -29,8 +31,6 @@ sin = np.sin
 cos = np.cos
 exp = np.exp
 eps = DefaultPreferences.eps
-
-
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -49,7 +49,6 @@ def testfunctions() -> list:
     Returns:
         list: List of tuples, each containing a test function and its metadata.
     """
-
     test_functions = []
     fun_details = [
         # (
@@ -58,7 +57,7 @@ def testfunctions() -> list:
         #  Matlab chebfun adaptive degree on [-1,1],
         #  Any roots on the real line?
         # )
-        (lambda x: x ** 3 + x ** 2 + x + 1.1, "poly3(x)", 4, True),
+        (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)", 4, True),
         (lambda x: np.exp(x), "exp(x)", 15, False),
         (lambda x: np.sin(x), "sin(x)", 14, True),
         (lambda x: 0.2 + 0.1 * np.sin(x), "(.2+.1*sin(x))", 14, False),

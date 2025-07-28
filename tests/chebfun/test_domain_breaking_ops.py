@@ -4,8 +4,8 @@ This module contains tests for operations that can break the domain of a Chebfun
 such as maximum and minimum functions.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
@@ -79,11 +79,14 @@ def test_minimum_multipiece(domain_breaking_fixtures: dict) -> None:
     assert np.max(f(t) - g(t)) <= 1e1 * eps
 
 
-@pytest.mark.parametrize("domain,tol", [
-    ([-1, 1], eps),
-    ([-1, 0, 1], eps),
-    ([-2, 0, 3], eps),
-])
+@pytest.mark.parametrize(
+    "domain,tol",
+    [
+        ([-1, 1], eps),
+        ([-1, 0, 1], eps),
+        ([-2, 0, 3], eps),
+    ],
+)
 def test_maximum_identity_constant(domain: list, tol: float) -> None:
     """Test the maximum method with the identity function and a constant.
 
@@ -110,11 +113,14 @@ def test_maximum_identity_constant(domain: list, tol: float) -> None:
     assert np.max(f(xx) - g(xx)) <= tol
 
 
-@pytest.mark.parametrize("domain,tol", [
-    ([-1, 1], eps),
-    ([-1, 0, 1], eps),
-    ([-2, 0, 3], eps),
-])
+@pytest.mark.parametrize(
+    "domain,tol",
+    [
+        ([-1, 1], eps),
+        ([-1, 0, 1], eps),
+        ([-2, 0, 3], eps),
+    ],
+)
 def test_minimum_identity_constant(domain: list, tol: float) -> None:
     """Test the minimum method with the identity function and a constant.
 
@@ -141,11 +147,14 @@ def test_minimum_identity_constant(domain: list, tol: float) -> None:
     assert np.max(f(xx) - g(xx)) <= tol
 
 
-@pytest.mark.parametrize("domain,tol", [
-    ([-1, 1], eps),
-    ([-1, 0, 1], eps),
-    ([-2, 0, 3], eps),
-])
+@pytest.mark.parametrize(
+    "domain,tol",
+    [
+        ([-1, 1], eps),
+        ([-1, 0, 1], eps),
+        ([-2, 0, 3], eps),
+    ],
+)
 def test_maximum_sin_cos(domain: list, tol: float) -> None:
     """Test the maximum method with sine and cosine functions.
 
@@ -175,11 +184,14 @@ def test_maximum_sin_cos(domain: list, tol: float) -> None:
     assert np.max(f(xx) - g(xx)) <= vscl * hscl * lscl * tol
 
 
-@pytest.mark.parametrize("domain,tol", [
-    ([-1, 1], eps),
-    ([-1, 0, 1], eps),
-    ([-2, 0, 3], eps),
-])
+@pytest.mark.parametrize(
+    "domain,tol",
+    [
+        ([-1, 1], eps),
+        ([-1, 0, 1], eps),
+        ([-2, 0, 3], eps),
+    ],
+)
 def test_minimum_sin_cos(domain: list, tol: float) -> None:
     """Test the minimum method with sine and cosine functions.
 

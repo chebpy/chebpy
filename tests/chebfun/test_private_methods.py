@@ -4,8 +4,8 @@ This module contains tests for the private methods of Chebfun objects,
 particularly the _break method which is used to modify the domain of a Chebfun.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
@@ -25,6 +25,7 @@ def private_methods_fixtures():
             f1: Chebfun representing sin(x-0.1) on domain [-2, 0, 3]
             f2: Chebfun representing sin(x-0.1) on domain with 5 breakpoints
     """
+
     def f(x):
         return np.sin(x - 0.1)
 
@@ -157,7 +158,7 @@ def test_break_with_tolerance():
 
     # If f_new is not empty, check that the function values are preserved
     assert f_new.isempty
-    #if not f_new.isempty:
+    # if not f_new.isempty:
     #    xx = np.linspace(-1, 1, 1000)
     #    error = np.max(np.abs(f(xx) - f_new(xx)))
     #    assert error <= 3 * eps

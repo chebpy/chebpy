@@ -4,19 +4,18 @@ This module contains tests for the various ways to construct Chebfun objects,
 including from functions, constants, and identity functions.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from chebpy import chebfun
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import (
+    BadFunLengthArgument,
     IntervalGap,
     IntervalOverlap,
     InvalidDomain,
-    BadFunLengthArgument,
 )
+from chebpy.core.utilities import Interval
 
 from .conftest import eps, exp
 
@@ -39,7 +38,10 @@ def construction_fixtures():
             funs_c: Array of functions with a gap between intervals
             funs_d: Another array with a gap between intervals
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     fun0 = Bndfun.initfun_adaptive(f, Interval(-1, 0))
     fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
     fun2 = Bndfun.initfun_adaptive(f, Interval(-0.5, 0.5))
@@ -59,7 +61,7 @@ def construction_fixtures():
         "funs_a": funs_a,
         "funs_b": funs_b,
         "funs_c": funs_c,
-        "funs_d": funs_d
+        "funs_d": funs_d,
     }
 
 
@@ -177,7 +179,10 @@ def test_initfun_adaptive_continuous_domain():
     It checks that the resulting Chebfun has the expected number of pieces
     and evaluates to the correct values.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     ff = Chebfun.initfun_adaptive(f, [-2, -1])
     assert ff.funs.size == 1
     xx = np.linspace(-2, -1, 1001)
@@ -192,7 +197,10 @@ def test_initfun_adaptive_piecewise_domain():
     It checks that the resulting Chebfun has the expected number of pieces
     and evaluates to the correct values.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     ff = Chebfun.initfun_adaptive(f, [-2, -1, 0, 1, 2])
     assert ff.funs.size == 4
     xx = np.linspace(-2, 2, 1001)
@@ -205,7 +213,10 @@ def test_initfun_adaptive_raises():
     This test verifies that attempting to adaptively initialize a Chebfun
     with invalid arguments raises the appropriate exceptions.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     with pytest.raises(InvalidDomain):
         Chebfun.initfun_adaptive(f, [-2])
     with pytest.raises(InvalidDomain):
@@ -220,7 +231,10 @@ def test_initfun_adaptive_empty_domain():
     This test verifies that adaptively initializing a Chebfun
     with an empty domain returns an empty Chebfun.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     cheb = Chebfun.initfun_adaptive(f, domain=[])
     assert cheb.isempty
 
@@ -233,7 +247,10 @@ def test_initfun_fixedlen_continuous_domain():
     It checks that the resulting Chebfun has the expected number of pieces
     and evaluates to the correct values.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     ff = Chebfun.initfun_fixedlen(f, 20, [-2, -1])
     assert ff.funs.size == 1
     xx = np.linspace(-2, -1, 1001)
@@ -248,7 +265,10 @@ def test_initfun_fixedlen_piecewise_domain_0():
     It checks that the resulting Chebfun has the expected number of pieces
     and each piece has the specified length.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     ff = Chebfun.initfun_fixedlen(f, 30, [-2.0, 0.0, 1.0])
     assert ff.funs.size == 2
     xx = np.linspace(-2, 1, 1001)
@@ -263,7 +283,10 @@ def test_initfun_fixedlen_piecewise_domain_1():
     It checks that the resulting Chebfun has the expected number of pieces
     and each piece has the specified length.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     ff = Chebfun.initfun_fixedlen(f, [30, 20], [-2, 0, 1])
     assert ff.funs.size == 2
     xx = np.linspace(-2, 1, 1001)
@@ -276,7 +299,10 @@ def test_initfun_fixedlen_raises():
     This test verifies that attempting to initialize a Chebfun with a fixed
     length using invalid arguments raises the appropriate exceptions.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     initfun = Chebfun.initfun_fixedlen
     with pytest.raises(InvalidDomain):
         initfun(f, 10, [-2])
@@ -296,7 +322,10 @@ def test_initfun_fixedlen_empty_domain():
     This test verifies that initializing a Chebfun with a fixed
     length using an empty domain returns an empty Chebfun.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     cheb = Chebfun.initfun_fixedlen(f, n=10, domain=[])
     assert cheb.isempty
 
@@ -308,7 +337,10 @@ def test_initfun_fixedlen_succeeds():
     length using various valid arguments, including None values which should
     trigger adaptive construction.
     """
-    f = lambda x: exp(x)
+
+    def f(x):
+        return exp(x)
+
     # check providing a vector with None elements calls the
     # Tech adaptive constructor
     dom = [-2, -1, 0]

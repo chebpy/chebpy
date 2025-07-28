@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import pi, sin, cos, eps
+from .conftest import cos, eps, pi, sin
 
 
 def test_empty(emptyfun):
@@ -46,6 +46,7 @@ rootstestfuns = [
 
 # Ensure reproducibility
 np.random.seed(0)
+
 
 @pytest.mark.parametrize("f, roots", rootstestfuns)
 def test_roots(f, roots, tol=eps):

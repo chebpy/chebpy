@@ -4,12 +4,12 @@ This module contains tests for the calculus operations of Chebfun,
 including sum, diff, cumsum, and dot product.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import eps, sin, exp
+from .conftest import exp, sin
 
 
 @pytest.fixture
@@ -27,6 +27,7 @@ def calculus_fixtures():
             f3: Chebfun representing x^2
             f4: Chebfun representing x^3
     """
+
     def f(x):
         return sin(4 * x - 1.4)
 
@@ -76,11 +77,11 @@ def test_diff(calculus_fixtures):
     # Derivative of x^2 is 2x
     df3 = f3.diff()
     xx = np.linspace(-1, 1, 100)
-    assert np.max(np.abs(df3(xx) - 2*xx)) < 1e-10
+    assert np.max(np.abs(df3(xx) - 2 * xx)) < 1e-10
 
     # Derivative of x^3 is 3x^2
     df4 = f4.diff()
-    assert np.max(np.abs(df4(xx) - 3*xx**2)) < 1e-10
+    assert np.max(np.abs(df4(xx) - 3 * xx**2)) < 1e-10
 
 
 def test_cumsum(calculus_fixtures):
@@ -157,7 +158,7 @@ def test_dot(calculus_fixtures):
     assert abs(f3.dot(f4)) < 1e-10
 
     # Inner product of x^2 and x^2 over [-1, 1] is 2/5
-    assert abs(f3.dot(f3) - 2/5) < 1e-10
+    assert abs(f3.dot(f3) - 2 / 5) < 1e-10
 
 
 def test_dot_commute(calculus_fixtures):

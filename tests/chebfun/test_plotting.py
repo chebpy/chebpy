@@ -4,13 +4,14 @@ This module contains tests for the plotting functionality of Chebfun,
 including plot and plotcoeffs methods for both real and complex functions.
 """
 
-import pytest
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import sin, cos, exp
+from .conftest import cos, exp, sin
+
 
 def _joukowsky(z):
     """Apply the Joukowsky transformation to z.
@@ -25,6 +26,7 @@ def _joukowsky(z):
         complex or numpy.ndarray: Result of the Joukowsky transformation.
     """
     return 0.5 * (z + 1 / z)
+
 
 @pytest.fixture
 def plotting_fixtures():
@@ -82,8 +84,8 @@ def test_plot_multiple(plotting_fixtures):
 
     fig, ax = plt.subplots()
     f1.plot(ax=ax)
-    f2.plot(ax=ax, color='r')
-    f3.plot(ax=ax, color='g')
+    f2.plot(ax=ax, color="r")
+    f3.plot(ax=ax, color="g")
     plt.close(fig)
 
 
@@ -154,7 +156,7 @@ def test_plotcoeffs_multiple(plotting_fixtures):
 
     fig, ax = plt.subplots()
     f1.plotcoeffs(ax=ax)
-    f2.plotcoeffs(ax=ax, color='r')
+    f2.plotcoeffs(ax=ax, color="r")
     plt.close(fig)
 
 
@@ -171,7 +173,7 @@ def test_plot_with_options(plotting_fixtures):
     f1 = plotting_fixtures["f1"]
 
     fig, ax = plt.subplots()
-    f1.plot(ax=ax, color='r', linestyle='--', linewidth=2, marker='o', markersize=5)
+    f1.plot(ax=ax, color="r", linestyle="--", linewidth=2, marker="o", markersize=5)
     plt.close(fig)
 
 
@@ -188,7 +190,7 @@ def test_plotcoeffs_with_options(plotting_fixtures):
     f1 = plotting_fixtures["f1"]
 
     fig, ax = plt.subplots()
-    f1.plotcoeffs(ax=ax, color='g', marker='s', markersize=8, linestyle='-.')
+    f1.plotcoeffs(ax=ax, color="g", marker="s", markersize=8, linestyle="-.")
     plt.close(fig)
 
 
@@ -203,8 +205,8 @@ def test_plot_multipiece(plotting_fixtures):
     Args:
         plotting_fixtures: Fixture providing test Chebfun objects.
     """
-    f1 = plotting_fixtures["f1"]
-    f2 = plotting_fixtures["f2"]
+    plotting_fixtures["f1"]
+    plotting_fixtures["f2"]
 
     # Create a multi-piece Chebfun by breaking f1 at multiple points
     domain = np.linspace(-1, 1, 5)

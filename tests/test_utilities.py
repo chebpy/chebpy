@@ -17,11 +17,11 @@ from chebpy.core.exceptions import (
     IntervalOverlap,
     IntervalValues,
     InvalidDomain,
-    SupportMismatch,
     NotSubdomain,
+    SupportMismatch,
 )
 from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import HTOL, Interval, Domain, compute_breakdata, check_funs
+from chebpy.core.utilities import HTOL, Domain, Interval, check_funs, compute_breakdata
 
 np.random.seed(0)
 eps = DefaultPreferences.eps
@@ -49,6 +49,7 @@ def interval_fixtures():
     i4 = Interval(-1, 2)
     return {"i1": i1, "i2": i2, "i3": i3, "i4": i4}
 
+
 def test_init():
     """Test initialization of Interval objects.
 
@@ -58,6 +59,7 @@ def test_init():
     """
     Interval(-1, 1)
     assert (np.asarray(Interval()) == np.array([-1, 1])).all()
+
 
 def test_init_disallow():
     """Test that invalid interval endpoints are rejected.
@@ -70,6 +72,7 @@ def test_init_disallow():
         Interval(2, 0)
     with pytest.raises(IntervalValues):
         Interval(0, 0)
+
 
 def test__eq__(interval_fixtures):
     """Test equality comparison of Interval objects.
@@ -89,6 +92,7 @@ def test__eq__(interval_fixtures):
     assert not (i3 == i1)
     assert not (i2 == i3)
 
+
 def test__ne__(interval_fixtures):
     """Test inequality comparison of Interval objects.
 
@@ -106,6 +110,7 @@ def test__ne__(interval_fixtures):
     assert not (i2 != i1)
     assert i3 != i1
     assert i2 != i3
+
 
 def test__contains__(interval_fixtures):
     """Test containment operations of Interval objects.
@@ -125,13 +130,9 @@ def test__contains__(interval_fixtures):
     assert i1 in i2
     assert i3 in i1
     assert i4 in i1
-    assert not (i1 in i3)
-    assert not (i1 in i4)
-    assert not (i1 not in i2)
-    assert not (i3 not in i1)
-    assert not (i4 not in i1)
     assert i1 not in i3
     assert i1 not in i4
+
 
 def test_maps():
     """Test forward and inverse mapping functions of Interval objects.
@@ -148,6 +149,7 @@ def test_maps():
     interval = Interval(-2, 3)
     vals = interval.invmap(interval(yy)) - yy
     assert np.max(vals) <= eps
+
 
 def test_isinterior():
     """Test the isinterior method of Interval objects.
@@ -189,6 +191,7 @@ def test_domain_init():
     Domain(np.array([-2, 0, 1]))
     Domain(np.linspace(-10, 10, 51))
 
+
 def test_domain_init_disallow():
     """Test that invalid domain inputs are rejected.
 
@@ -206,6 +209,7 @@ def test_domain_init_disallow():
         Domain([-1, 0, 0])
     with pytest.raises(ValueError):
         Domain(["a", "b"])
+
 
 def test_domain_iter():
     """Test iteration over Domain objects.
@@ -229,6 +233,7 @@ def test_domain_iter():
     assert all([x == y for x, y in zip(dom_b, res_b)])
     assert all([x == y for x, y in zip(dom_c, res_c)])
 
+
 def test_domain_intervals():
     """Test the intervals property of Domain objects.
 
@@ -247,15 +252,10 @@ def test_domain_intervals():
     res_a = [(-2, 1)]
     res_b = [(-2, 0), (0, 1)]
     res_c = [(-1, 0), (0, 1), (1, 2)]
-    assert all(
-        [itvl == Interval(a, b) for itvl, (a, b) in zip(dom_a.intervals, res_a)]
-    )
-    assert all(
-        [itvl == Interval(a, b) for itvl, (a, b) in zip(dom_b.intervals, res_b)]
-    )
-    assert all(
-        [itvl == Interval(a, b) for itvl, (a, b) in zip(dom_c.intervals, res_c)]
-    )
+    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_a.intervals, res_a)])
+    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_b.intervals, res_b)])
+    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_c.intervals, res_c)])
+
 
 def test_domain_contains():
     """Test the containment operator for Domain objects.
@@ -281,9 +281,10 @@ def test_domain_contains():
     assert d2 in d3
     assert d2 in d4
     assert d4 in d2
-    assert not (d1 in d2)
-    assert not (d3 in d1)
-    assert not (d3 in d2)
+    assert d1 not in d2
+    assert d3 not in d1
+    assert d3 not in d2
+
 
 def test_domain_contains_close():
     """Test tolerance-sensitive containment behavior of Domain objects.
@@ -302,7 +303,8 @@ def test_domain_contains_close():
     d3 = Domain([-1 - 2 * tol, 2 + 4 * tol])
     assert d1 in d2
     assert d2 in d1
-    assert not (d3 in d1)
+    assert d3 not in d1
+
 
 def test_domain_eq():
     """Test equality comparison of Domain objects.
@@ -320,6 +322,7 @@ def test_domain_eq():
     assert d1 == d2
     assert d1 != d3
 
+
 def test_domain_eq_result_type():
     """Test the return type of Domain equality comparison.
 
@@ -332,6 +335,7 @@ def test_domain_eq_result_type():
     d3 = Domain([-1, 1])
     assert isinstance(d1 == d2, bool)
     assert isinstance(d1 == d3, bool)
+
 
 def test_domain_eq_close():
     """Test tolerance-sensitive equality comparison of Domain objects.
@@ -359,6 +363,7 @@ def test_domain_eq_close():
     assert d4 == d5
     assert d4 != d6
 
+
 def test_domain_ne():
     """Test inequality comparison of Domain objects.
 
@@ -375,6 +380,7 @@ def test_domain_ne():
     assert not (d1 != d2)
     assert d1 != d3
 
+
 def test_domain_ne_result_type():
     """Test the return type of Domain inequality comparison.
 
@@ -387,6 +393,7 @@ def test_domain_ne_result_type():
     d3 = Domain([-1, 1])
     assert isinstance(d1 != d2, bool)
     assert isinstance(d1 != d3, bool)
+
 
 def test_domain_from_chebfun():
     """Test creating a Domain from a Chebfun object.
@@ -401,6 +408,7 @@ def test_domain_from_chebfun():
     """
     ff = chebfun(lambda x: np.cos(x), np.linspace(-10, 10, 11))
     Domain.from_chebfun(ff)
+
 
 def test_domain_breakpoints_in():
     """Test the breakpoints_in method of Domain objects.
@@ -438,6 +446,7 @@ def test_domain_breakpoints_in():
     assert not d1.breakpoints_in(Domain([-5, 5])).any()
     assert not d2.breakpoints_in(Domain([-5, 5])).any()
 
+
 def test_domain_breakpoints_in_close():
     """Test tolerance-sensitive behavior of the breakpoints_in method.
 
@@ -457,6 +466,7 @@ def test_domain_breakpoints_in_close():
     assert not result[0]
     assert result[1]
     assert result[2]
+
 
 def test_domain_support():
     """Test the support property of Domain objects.
@@ -478,6 +488,7 @@ def test_domain_support():
     assert np.all(dom_b.support.view(np.ndarray) == [-2, 1])
     assert np.all(dom_c.support.view(np.ndarray) == [-10, 10])
 
+
 def test_domain_size():
     """Test the size property of Domain objects.
 
@@ -495,6 +506,7 @@ def test_domain_size():
     assert dom_a.size == 2
     assert dom_b.size == 3
     assert dom_c.size == 51
+
 
 def test_domain_restrict():
     """Test the restrict method of Domain objects.
@@ -524,6 +536,7 @@ def test_domain_restrict():
     dom_d = Domain(np.linspace(-0.4, 0.4, 2))
     assert dom_c.restrict(dom_d) == Domain([-0.4, -0.2, 0, 0.2, 0.4])
 
+
 def test_domain_restrict_raises():
     """Test that restrict method raises appropriate exceptions.
 
@@ -544,6 +557,7 @@ def test_domain_restrict_raises():
     with pytest.raises(NotSubdomain):
         dom_b.restrict(dom_c)
 
+
 def test_domain_merge():
     """Test the merge method of Domain objects.
 
@@ -560,6 +574,7 @@ def test_domain_merge():
     dom_a = Domain([-2, -1, 0, 1])
     dom_b = Domain([-1.5, -0.5, 0.5])
     assert dom_b.merge(dom_a) == Domain([-2, -1.5, -1, -0.5, 0, 0.5, 1])
+
 
 def test_domain_union():
     """Test the union method of Domain objects.
@@ -582,6 +597,7 @@ def test_domain_union():
     assert dom_a.union(dom_b) == Domain([-2, -1, 0, 1, 2])
     assert dom_b.union(dom_a) == Domain([-2, -1, 0, 1, 2])
 
+
 def test_domain_union_close():
     """Test tolerance-sensitive union operation of Domain objects.
 
@@ -598,6 +614,7 @@ def test_domain_union_close():
     dom_c = Domain([-2 - 2 * tol, -1 + tol, 1 + tol, 2 + 2 * tol])
     assert dom_a.union(dom_c) == Domain([-2, -1, 0, 1, 2])
     assert dom_c.union(dom_a) == Domain([-2, -1, 0, 1, 2])
+
 
 def test_domain_union_raises():
     """Test that union method raises appropriate exceptions.
@@ -620,6 +637,7 @@ def test_domain_union_raises():
 
 """Tests for the chebpy.core.utilities check_funs method"""
 
+
 @pytest.fixture
 def check_funs_fixtures():
     """Create Bndfun objects for testing check_funs function.
@@ -638,6 +656,7 @@ def check_funs_fixtures():
             funs_c: Array of functions with a gap between intervals
             funs_d: Another array with a gap between intervals
     """
+
     def f(x):
         return np.exp(x)
 
@@ -660,8 +679,9 @@ def check_funs_fixtures():
         "funs_a": funs_a,
         "funs_b": funs_b,
         "funs_c": funs_c,
-        "funs_d": funs_d
+        "funs_d": funs_d,
     }
+
 
 def test_check_funs_verify_empty():
     """Test check_funs function with empty input.
@@ -671,6 +691,7 @@ def test_check_funs_verify_empty():
     """
     funs = check_funs(np.array([]))
     assert funs.size == 0
+
 
 def test_check_funs_verify_contiguous(check_funs_fixtures):
     """Test check_funs function with contiguous functions.
@@ -688,6 +709,7 @@ def test_check_funs_verify_contiguous(check_funs_fixtures):
     assert funs[0] == fun0
     assert funs[1] == fun1
 
+
 def test_check_funs_verify_sort(check_funs_fixtures):
     """Test sorting behavior of check_funs function.
 
@@ -703,6 +725,7 @@ def test_check_funs_verify_sort(check_funs_fixtures):
     funs = check_funs(np.array([fun1, fun0]))
     assert funs[0] == fun0
     assert funs[1] == fun1
+
 
 def test_check_funs_verify_overlapping(check_funs_fixtures):
     """Test check_funs function with overlapping intervals.
@@ -720,6 +743,7 @@ def test_check_funs_verify_overlapping(check_funs_fixtures):
         check_funs(funs_a)
     with pytest.raises(IntervalOverlap):
         check_funs(funs_b)
+
 
 def test_check_funs_verify_gap(check_funs_fixtures):
     """Test check_funs function with non-contiguous intervals.
@@ -754,6 +778,7 @@ def compute_breakdata_fixtures():
             fun0: Bndfun object for exp(x) on interval [-1, 0]
             fun1: Bndfun object for exp(x) on interval [0, 1]
     """
+
     def f(x):
         return np.exp(x)
 
@@ -761,6 +786,7 @@ def compute_breakdata_fixtures():
     fun1 = Bndfun.initfun_adaptive(f, Interval(0, 1))
 
     return {"fun0": fun0, "fun1": fun1}
+
 
 def test_compute_breakdata_empty():
     """Test compute_breakdata function with empty input.
@@ -771,6 +797,7 @@ def test_compute_breakdata_empty():
     breaks = compute_breakdata(np.array([]))
     # list(...) for Python 2/3 compatibility
     assert np.array(list(breaks.items())).size == 0
+
 
 def test_compute_breakdata_1(compute_breakdata_fixtures):
     """Test compute_breakdata function with a single function.
@@ -788,6 +815,7 @@ def test_compute_breakdata_1(compute_breakdata_fixtures):
     x, y = list(breaks.keys()), list(breaks.values())
     assert np.max(x - np.array([-1, 0])) <= eps
     assert np.max(y - np.array([np.exp(-1), np.exp(0)])) <= 2 * eps
+
 
 def test_compute_breakdata_2(compute_breakdata_fixtures):
     """Test compute_breakdata function with multiple functions.

@@ -5,13 +5,11 @@ including string representation, copying, iteration, the x property,
 restriction, simplification, and translation.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Domain, Interval
-from chebpy.core.exceptions import NotSubdomain
+from chebpy.core.utilities import Domain
 
 from .conftest import eps
 

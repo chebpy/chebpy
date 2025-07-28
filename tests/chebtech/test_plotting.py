@@ -4,12 +4,14 @@ This module contains tests for the plotting functionality of Chebtech2,
 including plot and plotcoeffs methods for both real and complex functions.
 """
 
-import pytest
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pytest
 
 from chebpy.core.chebtech import Chebtech2
-from .conftest import sin, cos
+
+from .conftest import cos, sin
+
 
 def _joukowsky(z):
     """Apply the Joukowsky transformation to z.
@@ -24,6 +26,7 @@ def _joukowsky(z):
         complex or numpy.ndarray: Result of the Joukowsky transformation.
     """
     return 0.5 * (z + 1 / z)
+
 
 @pytest.fixture
 def plotting_fixtures():
@@ -40,6 +43,7 @@ def plotting_fixtures():
             f1: Adaptive Chebtech2 for the same real function
             f2: Adaptive Chebtech2 for a complex function
     """
+
     def f(x):
         return sin(3 * x) + 5e-1 * cos(30 * x)
 

@@ -18,7 +18,15 @@ sin = np.sin
 cos = np.cos
 exp = np.exp
 
+
 @pytest.fixture
-def emptyfun():
-    """Create an empty Bndfun function for testing."""
+def emptyfun() -> Bndfun:
+    """Create an empty Bndfun function for testing.
+
+    This fixture creates an empty Bndfun object that can be used
+    to test the behavior of algebraic operations on empty functions.
+
+    Returns:
+        Bndfun: An empty Bndfun object
+    """
     return Bndfun.initempty()
