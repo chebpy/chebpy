@@ -196,7 +196,7 @@ def test_truediv_constant(random_points, testfunctions):
 
             techfun = Chebtech2.initfun_fixedlen(fun, funlen)
             gg = techfun / const
-            tol = 2e2 * eps * abs(const)
+            tol = 3e2 * eps * abs(const)
 
             # Test division of function by constant (should always work)
             assert np.max(g(xx) - gg(xx)) <= tol

@@ -16,19 +16,6 @@ from .conftest import (
 )
 
 
-@pytest.fixture
-def emptyfun():
-    """Create an empty Chebfun function for testing.
-
-    This fixture creates an empty Chebfun object that can be used
-    to test the behavior of algebraic operations on empty functions.
-
-    Returns:
-        Chebfun: An empty Chebfun object
-    """
-    return Chebfun.initempty()
-
-
 # tests for empty function operations
 def test__pos__empty(emptyfun):
     """Test unary positive operator on empty Chebfun objects.
