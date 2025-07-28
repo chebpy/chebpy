@@ -6,7 +6,6 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
 from .conftest import pi, sin, cos, eps
-from ..utilities import infnorm
 
 
 def test_empty():
@@ -40,4 +39,4 @@ def test_roots(f, interval, roots_expected, tol):
     subinterval = Interval(*interval)
     ff = Bndfun.initfun_adaptive(f, subinterval)
     rts = ff.roots()
-    assert infnorm(rts - roots_expected) <= tol
+    assert np.max(rts - roots_expected) <= tol

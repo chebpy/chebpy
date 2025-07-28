@@ -13,7 +13,7 @@ from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain, Interval
 from chebpy.core.exceptions import NotSubdomain
 
-from .conftest import eps, infnorm
+from .conftest import eps
 
 
 @pytest.fixture
@@ -133,11 +133,11 @@ def test_x_property(class_usage_fixtures):
 
     # check continuous case
     xx = np.linspace(-1, 1, 100)
-    assert infnorm(f1.x(xx) - xx) <= eps
+    assert np.max(f1.x(xx) - xx) <= eps
 
     # check piecewise case
     xx = np.linspace(-1, 2, 100)
-    assert infnorm(f2.x(xx) - xx) <= eps
+    assert np.max(f2.x(xx) - xx) <= eps
 
 
 def test_restrict_(class_usage_fixtures):
@@ -157,21 +157,21 @@ def test_restrict_(class_usage_fixtures):
     g1.restrict_([-0.5, 0.5])
     assert g1.domain == Domain([-0.5, 0.5])
     xx = np.linspace(-0.5, 0.5, 100)
-    assert infnorm(g1(xx) - f1(xx)) <= 5 * eps
+    assert np.max(g1(xx) - f1(xx)) <= 2 * eps
 
     # check piecewise case
     g2 = f2.copy()
     g2.restrict_([-0.5, 1.5])
     assert g2.domain == Domain([-0.5, 0, 1, 1.5])
     xx = np.linspace(-0.5, 1.5, 100)
-    assert infnorm(g2(xx) - f2(xx)) <= 5 * eps
+    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
     # check with a domain that has more breakpoints
     g2 = f2.copy()
     g2.restrict_([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     assert g2.domain == Domain([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     xx = np.linspace(-0.8, 1.8, 100)
-    assert infnorm(g2(xx) - f2(xx)) <= 5 * eps
+    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
 def test_restrict__empty(class_usage_fixtures):
@@ -240,19 +240,19 @@ def test_restrict(class_usage_fixtures):
     g1 = f1.restrict([-0.5, 0.5])
     assert g1.domain == Domain([-0.5, 0.5])
     xx = np.linspace(-0.5, 0.5, 100)
-    assert infnorm(g1(xx) - f1(xx)) <= 5 * eps
+    assert np.max(g1(xx) - f1(xx)) <= 2 * eps
 
     # check piecewise case
     g2 = f2.restrict([-0.5, 1.5])
     assert g2.domain == Domain([-0.5, 0, 1, 1.5])
     xx = np.linspace(-0.5, 1.5, 100)
-    assert infnorm(g2(xx) - f2(xx)) <= 5 * eps
+    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
     # check with a domain that has more breakpoints
     g2 = f2.restrict([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     assert g2.domain == Domain([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     xx = np.linspace(-0.8, 1.8, 100)
-    assert infnorm(g2(xx) - f2(xx)) <= 5 * eps
+    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
 def test_restrict_empty(class_usage_fixtures):
@@ -286,21 +286,21 @@ def test_translate(class_usage_fixtures):
     assert g1.domain == Domain([0, 2])
     xx = np.linspace(-1, 1, 100)
     yy = xx + 1
-    assert infnorm(g1(yy) - f1(xx)) <= 2 * eps
+    assert np.max(g1(yy) - f1(xx)) <= 2 * eps
 
     # check piecewise case
     g2 = f2.translate(1)
     assert g2.domain == Domain([0, 1, 2, 3])
     xx = np.linspace(-1, 2, 100)
     yy = xx + 1
-    assert infnorm(g2(yy) - f2(xx)) <= 2 * eps
+    assert np.max(g2(yy) - f2(xx)) <= 2 * eps
 
     # check with a negative translation
     g1 = f1.translate(-1)
     assert g1.domain == Domain([-2, 0])
     xx = np.linspace(-1, 1, 100)
     yy = xx - 1
-    assert infnorm(g1(yy) - f1(xx)) <= 2 * eps
+    assert np.max(g1(yy) - f1(xx)) <= 2 * eps
 
 
 def test_translate_empty(class_usage_fixtures):

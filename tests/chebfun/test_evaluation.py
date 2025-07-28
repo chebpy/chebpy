@@ -11,7 +11,7 @@ import numpy as np
 from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import eps, sin, exp, cos, infnorm
+from .conftest import eps, sin, exp, cos
 
 
 @pytest.fixture
@@ -151,6 +151,6 @@ def test__call__general_evaluation():
     x1 = np.linspace(dom1[0], dom1[-1], npts)
     x2 = np.linspace(dom2[0], dom2[-1], npts)
     x3 = np.linspace(dom3[0], dom3[-1], npts)
-    assert infnorm(f(x1) - ff1(x1)) <= 5e1 * eps
-    assert infnorm(f(x2) - ff2(x2)) <= 5e1 * eps
-    assert infnorm(f(x3) - ff3(x3)) <= 5e1 * eps
+    assert np.max(f(x1) - ff1(x1)) <= 5e1 * eps
+    assert np.max(f(x2) - ff2(x2)) <= 5e1 * eps
+    assert np.max(f(x3) - ff3(x3)) <= 5e1 * eps

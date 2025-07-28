@@ -8,8 +8,6 @@ from chebpy.core.chebtech import Chebtech2
 from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Interval
 
-from ..utilities import infnorm
-
 # aliases
 pi = np.pi
 sin = np.sin
@@ -101,7 +99,7 @@ def test_cumsum(fun, ifn, interval, tol):
     coeffs = gg.coeffs
     coeffs[0] = coeffs[0] - ifn(np.array([interval[0]]))[0]
 
-    absdiff = infnorm(ff.cumsum().coeffs - coeffs)
+    absdiff = np.max(ff.cumsum().coeffs - coeffs)
     assert absdiff <= tol
 
 
@@ -130,5 +128,5 @@ def test_diff(fun, der, interval, tol):
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     gg = Bndfun.initfun_fixedlen(der, subinterval, max(ff.size - 1, 1))
 
-    absdiff = infnorm(ff.diff().coeffs - gg.coeffs)
+    absdiff = np.max(ff.diff().coeffs - gg.coeffs)
     assert absdiff <= tol

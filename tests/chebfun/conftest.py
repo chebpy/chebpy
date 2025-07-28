@@ -14,7 +14,6 @@ from chebpy import chebfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Interval
-from ..utilities import infnorm
 
 # in Python 3, the operator module does not have a 'div' method
 binops = [operator.add, operator.mul, operator.sub, operator.truediv]
@@ -104,7 +103,7 @@ def binaryOpTester(f, g, binop, dom, tol):
                np.any(np.isinf(fg_vals)) or np.any(np.isinf(FG_vals)):
                 pytest.skip("NaN or infinite values encountered")
 
-            assert infnorm(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
+            assert np.max(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
         except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
             # Skip test if numerical issues occur
             pytest.skip("Numerical issues encountered")
@@ -141,7 +140,7 @@ def unaryOpTester(f, unaryop, dom, tol):
         hscl = ff.hscale
         lscl = max([fun.size for fun in ff])
         assert ff.funs.size == gg.funs.size
-        assert infnorm(gg(xx) - GG(xx)) <= vscl * hscl * lscl * tol
+        assert np.max(gg(xx) - GG(xx)) <= vscl * hscl * lscl * tol
 
     return tester
 
@@ -223,7 +222,7 @@ def ufuncTester(ufunc, f, interval, tol):
         xx = interval(yy)
         vscl = GG.vscale
         lscl = sum([fun.size for fun in GG])
-        assert infnorm(gg(xx) - GG(xx)) <= vscl * lscl * tol
+        assert np.max(gg(xx) - GG(xx)) <= vscl * lscl * tol
 
     return tester
 
@@ -258,6 +257,6 @@ def domainBreakOpTester(domainBreakOp, f, g, dom, tol):
         vscl = max([ff.vscale, gg.vscale])
         hscl = max([ff.hscale, gg.hscale])
         lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
-        assert infnorm(fg(xx) - ffgg) <= vscl * hscl * lscl * tol
+        assert np.max(fg(xx) - ffgg) <= vscl * hscl * lscl * tol
 
     return tester

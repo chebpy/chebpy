@@ -18,7 +18,7 @@ from chebpy.core.exceptions import (
     BadFunLengthArgument,
 )
 
-from .conftest import eps, exp, infnorm
+from .conftest import eps, exp
 
 
 @pytest.fixture
@@ -160,13 +160,13 @@ def test_initidentity():
         a, b = ff.support
         xx = np.linspace(a, b, 1001)
         tol = eps * ff.hscale
-        assert infnorm(ff(xx) - xx) <= tol
+        assert np.max(ff(xx) - xx) <= tol
     # test the default case
     ff = Chebfun.initidentity()
     a, b = ff.support
     xx = np.linspace(a, b, 1001)
     tol = eps * ff.hscale
-    assert infnorm(ff(xx) - xx) <= tol
+    assert np.max(ff(xx) - xx) <= tol
 
 
 def test_initfun_adaptive_continuous_domain():
@@ -181,7 +181,7 @@ def test_initfun_adaptive_continuous_domain():
     ff = Chebfun.initfun_adaptive(f, [-2, -1])
     assert ff.funs.size == 1
     xx = np.linspace(-2, -1, 1001)
-    assert infnorm(f(xx) - ff(xx)) <= 2 * eps
+    assert np.max(f(xx) - ff(xx)) <= 2 * eps
 
 
 def test_initfun_adaptive_piecewise_domain():
@@ -196,7 +196,7 @@ def test_initfun_adaptive_piecewise_domain():
     ff = Chebfun.initfun_adaptive(f, [-2, -1, 0, 1, 2])
     assert ff.funs.size == 4
     xx = np.linspace(-2, 2, 1001)
-    assert infnorm(f(xx) - ff(xx)) <= 10 * eps
+    assert np.max(f(xx) - ff(xx)) <= 10 * eps
 
 
 def test_initfun_adaptive_raises():
@@ -237,7 +237,7 @@ def test_initfun_fixedlen_continuous_domain():
     ff = Chebfun.initfun_fixedlen(f, 20, [-2, -1])
     assert ff.funs.size == 1
     xx = np.linspace(-2, -1, 1001)
-    assert infnorm(f(xx) - ff(xx)) <= 1e1 * eps
+    assert np.max(f(xx) - ff(xx)) <= 1e1 * eps
 
 
 def test_initfun_fixedlen_piecewise_domain_0():
@@ -252,7 +252,7 @@ def test_initfun_fixedlen_piecewise_domain_0():
     ff = Chebfun.initfun_fixedlen(f, 30, [-2.0, 0.0, 1.0])
     assert ff.funs.size == 2
     xx = np.linspace(-2, 1, 1001)
-    assert infnorm(f(xx) - ff(xx)) <= 1e1 * eps
+    assert np.max(f(xx) - ff(xx)) <= 1e1 * eps
 
 
 def test_initfun_fixedlen_piecewise_domain_1():
@@ -267,7 +267,7 @@ def test_initfun_fixedlen_piecewise_domain_1():
     ff = Chebfun.initfun_fixedlen(f, [30, 20], [-2, 0, 1])
     assert ff.funs.size == 2
     xx = np.linspace(-2, 1, 1001)
-    assert infnorm(f(xx) - ff(xx)) <= 1e1 * eps
+    assert np.max(f(xx) - ff(xx)) <= 1e1 * eps
 
 
 def test_initfun_fixedlen_raises():

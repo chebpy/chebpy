@@ -10,23 +10,14 @@ check that the algorithms produce results within expected tolerance of the
 true values.
 """
 
-import pytest
 from typing import Any, Callable
 
 import numpy as np
+import pytest
 
-from chebpy.core.settings import DefaultPreferences
-from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
-
-from .utilities import scaled_tol, inf_norm_less_than_tol, infnorm, testfunctions
-
-# Define aliases for commonly used functions and constants for cleaner code
-pi = np.pi
-sin = np.sin
-cos = np.cos
-exp = np.exp
-eps = DefaultPreferences.eps
+from chebpy.core.chebtech import Chebtech2
+from .conftest import cos, exp, eps, scaled_tol
 
 np.random.seed(0)
 
@@ -206,21 +197,22 @@ def evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np
     n = evalpts.size
     tol = tol_multiplier * scaled_tol(n)
 
-    return inf_norm_less_than_tol(a, b, tol)
+    return np.max(a-b) < tol #inf_norm_less_than_tol(a, b, tol)
 
 
-# Dynamically create test functions for each method, function, and evaluation points
-# These tests verify that both bary and clenshaw evaluation methods produce results
-# within the expected tolerance when compared to direct function evaluation.
-# Each test is named according to the pattern: test_<method>_<function>_<chebpts_index>_<evalpts_index>
-for method in methods:
+def test_bary(testfunctions):
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
-                test_func = evalTester(method, fun, xx, chebpts)
-                test_name = f"test_{method.__name__}_{fun.__name__}_{j:02}_{k:02}"
-                # Add the test function to the global namespace
-                globals()[test_name] = test_func
+                print(f"Testing bary {fun.__name__}")
+                assert evalTester(bary, fun, xx, chebpts)
+
+def test_clenshaw(testfunctions):
+    for fun, _, _ in testfunctions:
+        for j, chebpts in enumerate(ptsarry):
+            for k, xx in enumerate(evalpts):
+                print(f"Testing clenshaw {fun.__name__}")
+                assert evalTester(clenshaw, fun, xx, chebpts)
 
 
 @pytest.fixture
@@ -260,4 +252,4 @@ def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
     gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
     hc = coeffmult(fc, gc)
     HC = Chebtech2.initfun(h, hn).coeffs
-    assert infnorm(hc - HC) <= 2e1 * eps
+    assert np.max(hc - HC) <= 2e1 * eps

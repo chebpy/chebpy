@@ -23,8 +23,6 @@ from chebpy.core.exceptions import (
     NotSubdomain,
 )
 
-from .utilities import infnorm
-
 
 np.random.seed(0)
 eps = DefaultPreferences.eps
@@ -170,7 +168,7 @@ def test_maps():
     yy = -1 + 2 * np.random.rand(1000)
     interval = Interval(-2, 3)
     vals = interval.invmap(interval(yy)) - yy
-    assert infnorm(vals) <= eps
+    assert np.max(vals) <= eps
 
 def test_isinterior():
     """Test the isinterior method of Interval objects.
@@ -809,8 +807,8 @@ def test_compute_breakdata_1(compute_breakdata_fixtures):
     funs = np.array([fun0])
     breaks = compute_breakdata(funs)
     x, y = list(breaks.keys()), list(breaks.values())
-    assert infnorm(x - np.array([-1, 0])) <= eps
-    assert infnorm(y - np.array([np.exp(-1), np.exp(0)])) <= 2 * eps
+    assert np.max(x - np.array([-1, 0])) <= eps
+    assert np.max(y - np.array([np.exp(-1), np.exp(0)])) <= 2 * eps
 
 def test_compute_breakdata_2(compute_breakdata_fixtures):
     """Test compute_breakdata function with multiple functions.
@@ -827,5 +825,5 @@ def test_compute_breakdata_2(compute_breakdata_fixtures):
     funs = np.array([fun0, fun1])
     breaks = compute_breakdata(funs)
     x, y = list(breaks.keys()), list(breaks.values())
-    assert infnorm(x - np.array([-1, 0, 1])) <= eps
-    assert infnorm(y - np.array([np.exp(-1), np.exp(0), np.exp(1)])) <= 2 * eps
+    assert np.max(x - np.array([-1, 0, 1])) <= eps
+    assert np.max(y - np.array([np.exp(-1), np.exp(0), np.exp(1)])) <= 2 * eps

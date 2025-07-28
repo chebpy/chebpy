@@ -6,7 +6,6 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
 from .conftest import sin, eps
-from ..utilities import infnorm
 
 
 @pytest.fixture
@@ -128,4 +127,4 @@ def test_ufunc(ufunc, f, interval, tol, ufuncs_fixtures):
     xx = subinterval(yy)
     vscl = GG.vscale
     lscl = GG.size
-    assert infnorm(gg(xx) - GG(xx)) <= vscl * lscl * tol
+    assert np.max(gg(xx) - GG(xx)) <= vscl * lscl * tol

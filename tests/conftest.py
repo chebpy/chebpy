@@ -18,8 +18,20 @@ import matplotlib
 import numpy as np
 import pytest
 
-if os.environ.get("CI") == "true":
+from chebpy.core.settings import DefaultPreferences
+
+if os.environ.get("CI") == "true":   # pragma: no cover
     matplotlib.use("Agg")
+
+# aliases
+pi = np.pi
+sin = np.sin
+cos = np.cos
+exp = np.exp
+eps = DefaultPreferences.eps
+
+
+
 
 @pytest.fixture(scope="session", autouse=True)
 def testfunctions():
@@ -33,7 +45,6 @@ def testfunctions():
     #
     # These functions are used to test various aspects of the chebpy library,
     # particularly the approximation and evaluation capabilities.
-
 
     test_functions = []
     fun_details = [
@@ -58,5 +69,18 @@ def testfunctions():
 
     return test_functions
 
-# TODO: check these lengths against Chebfun
-# TODO: more examples
+
+def scaled_tol(n):
+    """Calculate a scaled tolerance based on the size of the input.
+
+    This function returns a tolerance that increases with the size of the input,
+    which is useful for tests where the expected error grows with problem size.
+
+    Args:
+        n (int): Size parameter, typically the length of an array.
+
+    Returns:
+        float: Scaled tolerance value.
+    """
+    tol = 5e1 * eps if n < 20 else np.log(n) ** 2.5 * eps
+    return tol

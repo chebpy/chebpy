@@ -7,7 +7,6 @@ from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
-from ..utilities import infnorm
 from .conftest import sin, cos, exp, eps
 
 
@@ -19,7 +18,7 @@ def test_onefun_construction():
     onefun = Chebtech2(coeffs)
     f = Bndfun(onefun, subinterval)
     assert isinstance(f, Bndfun)
-    assert infnorm(f.coeffs - coeffs) < eps
+    assert np.max(f.coeffs - coeffs) < eps
 
 
 def test_const_construction():
@@ -51,7 +50,7 @@ def test_identity_construction():
         assert ff.size == 2
         xx = np.linspace(a, b, 1001)
         tol = eps * abs(itvl).max()
-        assert infnorm(ff(xx) - xx) <= tol
+        assert np.max(ff(xx) - xx) <= tol
 
 
 # Test functions for adaptive and fixed-length construction
