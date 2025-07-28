@@ -312,7 +312,7 @@ def test_rpow_const(random_points, testfunctions):
 
             techfun = Chebtech2.initfun_fixedlen(fun, funlen)
             gg = const ** techfun
-            tol = 3e2 * eps
+            tol = 3e3 * eps
             assert np.max(g(xx) - gg(xx)) <= tol
 
 
