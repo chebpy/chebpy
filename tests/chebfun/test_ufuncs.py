@@ -9,11 +9,11 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import eps, uf1, uf2, uf3, ufuncEmptyCaseTester, ufuncTester
+from .conftest import eps, uf1, uf2, uf3, ufunc_empty_case_tester, ufunc_tester
 
 
 @pytest.fixture
-def ufuncs_fixtures():
+def ufuncs_fixtures(emptyfun):
     """Create fixtures for testing ufunc operations.
 
     This fixture creates an empty Chebfun object and an array of test points
@@ -24,7 +24,6 @@ def ufuncs_fixtures():
             emptyfun: Empty Chebfun object
             yy: Array of test points in [-1, 1]
     """
-    emptyfun = Chebfun.initempty()
     yy = np.linspace(-1, 1, 2000)
     return {"emptyfun": emptyfun, "yy": yy}
 
@@ -80,7 +79,7 @@ def test_empty_case(ufunc, ufuncs_fixtures):
         ufuncs_fixtures: Fixture providing test objects.
     """
     emptyfun = ufuncs_fixtures["emptyfun"]
-    test_func = ufuncEmptyCaseTester(ufunc)
+    test_func = ufunc_empty_case_tester(ufunc)
     test_func(emptyfun)
 
 
@@ -223,5 +222,5 @@ def test_ufuncs(ufunc, test_cases, ufuncs_fixtures):
         from chebpy.core.utilities import Interval
 
         interval = Interval(*intvl)
-        test_func = ufuncTester(ufunc, f, interval, tol)
+        test_func = ufunc_tester(ufunc, f, interval, tol)
         test_func(yy)

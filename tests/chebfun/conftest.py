@@ -54,7 +54,7 @@ def emptyfun() -> Chebfun:
     return Chebfun.initempty()
 
 
-def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: float) -> callable:
+def binary_op_tester(f: callable, g: callable, binop: callable, dom: list, tol: float) -> callable:
     """Test binary operations between two Chebfun objects.
 
     This function creates Chebfun objects from the given functions and tests
@@ -77,7 +77,7 @@ def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: fl
     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, n + 1))
     gg = Chebfun.initfun_adaptive(g, np.linspace(a, b, m + 1))
 
-    def FG(x):
+    def fg_expected(x):
         return binop(f(x), g(x))
 
     fg = binop(ff, gg)
@@ -98,14 +98,14 @@ def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: fl
         # try:
         # Evaluate both functions
         fg_vals = fg(xx)
-        FG_vals = FG(xx)
+        fg_expected_vals = fg_expected(xx)
 
         # Skip test if there are any NaN or infinite values
-        # if np.any(np.isnan(fg_vals)) or np.any(np.isnan(FG_vals)) or \
-        #   np.any(np.isinf(fg_vals)) or np.any(np.isinf(FG_vals)):
+        # if np.any(np.isnan(fg_vals)) or np.any(np.isnan(fg_expected_vals)) or \
+        #   np.any(np.isinf(fg_vals)) or np.any(np.isinf(fg_expected_vals)):
         #    pytest.skip("NaN or infinite values encountered")
 
-        assert np.max(fg_vals - FG_vals) <= extra_factor * vscl * hscl * lscl * tol
+        assert np.max(fg_vals - fg_expected_vals) <= extra_factor * vscl * hscl * lscl * tol
         # except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
         #    # Skip test if numerical issues occur
         #    pytest.skip("Numerical issues encountered")
@@ -113,7 +113,7 @@ def binaryOpTester(f: callable, g: callable, binop: callable, dom: list, tol: fl
     return tester
 
 
-def unaryOpTester(f: callable, unaryop: callable, dom: list, tol: float) -> callable:
+def unary_op_tester(f: callable, unaryop: callable, dom: list, tol: float) -> callable:
     """Test unary operations on a Chebfun object.
 
     This function creates a Chebfun object from the given function and tests
@@ -133,7 +133,7 @@ def unaryOpTester(f: callable, unaryop: callable, dom: list, tol: float) -> call
     xx = np.linspace(a, b, 1001)
     ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 9))
 
-    def GG(x):
+    def gg_expected(x):
         return unaryop(f(x))
 
     gg = unaryop(ff)
@@ -143,12 +143,12 @@ def unaryOpTester(f: callable, unaryop: callable, dom: list, tol: float) -> call
         hscl = ff.hscale
         lscl = max([fun.size for fun in ff])
         assert ff.funs.size == gg.funs.size
-        assert np.max(gg(xx) - GG(xx)) <= vscl * hscl * lscl * tol
+        assert np.max(gg(xx) - gg_expected(xx)) <= vscl * hscl * lscl * tol
 
     return tester
 
 
-def ufuncEmptyCaseTester(ufunc: callable) -> callable:
+def ufunc_empty_case_tester(ufunc: callable) -> callable:
     """Test ufunc operations on empty Chebfun objects.
 
     This function tests that applying a ufunc to an empty Chebfun object
@@ -203,7 +203,7 @@ def uf3(x: float) -> float:
     return sin(25 * x - 1)
 
 
-def ufuncTester(ufunc: callable, f: callable, interval: list, tol: float) -> callable:
+def ufunc_tester(ufunc: callable, f: callable, interval: list, tol: float) -> callable:
     """Test ufunc operations on Chebfun objects.
 
     This function creates a Chebfun object from the given function and tests
@@ -225,13 +225,13 @@ def ufuncTester(ufunc: callable, f: callable, interval: list, tol: float) -> cal
     def gg(x):
         return ufunc(f(x))
 
-    GG = getattr(ff, ufunc.__name__)()
+    gg_result = getattr(ff, ufunc.__name__)()
 
     def tester(yy):
         xx = interval(yy)
-        vscl = GG.vscale
-        lscl = sum([fun.size for fun in GG])
-        assert np.max(gg(xx) - GG(xx)) <= vscl * lscl * tol
+        vscl = gg_result.vscale
+        lscl = sum([fun.size for fun in gg_result])
+        assert np.max(gg(xx) - gg_result(xx)) <= vscl * lscl * tol
 
     return tester
 

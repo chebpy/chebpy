@@ -149,7 +149,9 @@ def test_bary_clenshaw_consistency() -> None:
         for xx in evalpts:
             fb = ff(xx, "bary")
             fc = ff(xx, "clenshaw")
-            assert type(fb) == type(fc)
+            assert isinstance(fb, type(fc))
+
+            #assert type(fb) == type(fc)
 
 
 # Define evaluation points of increasing density for testing algorithm accuracy
@@ -162,7 +164,7 @@ ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
 methods = [bary, clenshaw]
 
 
-def _evalTester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np.ndarray) -> bool:
+def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np.ndarray) -> bool:
     """Create a test function for evaluating methods.
 
     Parameters
@@ -218,7 +220,7 @@ def test_bary(testfunctions: list) -> None:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 print(f"Testing bary {fun.__name__}")
-                assert _evalTester(bary, fun, xx, chebpts)
+                assert _eval_tester(bary, fun, xx, chebpts)
 
 
 def test_clenshaw(testfunctions: list) -> None:
@@ -237,7 +239,7 @@ def test_clenshaw(testfunctions: list) -> None:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
                 print(f"Testing clenshaw {fun.__name__}")
-                assert _evalTester(clenshaw, fun, xx, chebpts)
+                assert _eval_tester(clenshaw, fun, xx, chebpts)
 
 
 @pytest.fixture
@@ -281,5 +283,5 @@ def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
     fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs
     gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
     hc = coeffmult(fc, gc)
-    HC = Chebtech2.initfun(h, hn).coeffs
-    assert np.max(hc - HC) <= 2e1 * eps
+    hx = Chebtech2.initfun(h, hn).coeffs
+    assert np.max(hc - hx) <= 2e1 * eps

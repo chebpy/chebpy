@@ -32,7 +32,7 @@ def chebtech_fixture():
 
 
 # tests for emptiness of Chebtech2 objects
-def test_isempty_True():
+def test_isempty_true():
     """Test that empty Chebtech2 objects report isempty=True.
 
     This test verifies that a Chebtech2 object created with an empty array
@@ -43,7 +43,7 @@ def test_isempty_True():
     assert not (not f.isempty)
 
 
-def test_isempty_False():
+def test_isempty_false():
     """Test that non-empty Chebtech2 objects report isempty=False.
 
     This test verifies that a Chebtech2 object created with a non-empty array
@@ -55,7 +55,7 @@ def test_isempty_False():
 
 
 # tests for constantness of Chebtech2 objects
-def test_isconst_True():
+def test_isconst_true():
     """Test that constant Chebtech2 objects report isconst=True.
 
     This test verifies that a Chebtech2 object representing a constant function
@@ -66,7 +66,7 @@ def test_isconst_True():
     assert not (not f.isconst)
 
 
-def test_isconst_False():
+def test_isconst_false():
     """Test that non-constant Chebtech2 objects report isconst=False.
 
     This test verifies that a Chebtech2 object that doesn't represent a constant function

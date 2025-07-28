@@ -120,9 +120,9 @@ def test_ufunc(ufunc, f, interval, tol, ufuncs_fixtures):
     def gg(x):
         return ufunc(f(x))
 
-    GG = getattr(ff, ufunc.__name__)()
+    gg_result = getattr(ff, ufunc.__name__)()
 
     xx = subinterval(yy)
-    vscl = GG.vscale
-    lscl = GG.size
-    assert np.max(gg(xx) - GG(xx)) <= vscl * lscl * tol
+    vscl = gg_result.vscale
+    lscl = gg_result.size
+    assert np.max(gg(xx) - gg_result(xx)) <= vscl * lscl * tol

@@ -350,10 +350,10 @@ def test_initfun_fixedlen_succeeds():
     g3 = Chebfun.initfun_fixedlen(f, None, dom)
 
     # Check that g1 and g3 have the same coefficients as g0
-    for funA, funB in zip(g1, g0):
-        assert np.sum(funA.coeffs - funB.coeffs) == 0
-    for funA, funB in zip(g3, g0):
-        assert np.sum(funA.coeffs - funB.coeffs) == 0
+    for fun_a, fun_b in zip(g1, g0):
+        assert np.sum(fun_a.coeffs - fun_b.coeffs) == 0
+    for fun_a, fun_b in zip(g3, g0):
+        assert np.sum(fun_a.coeffs - fun_b.coeffs) == 0
 
     # Check that the first piece of g2 has the same coefficients as the first piece of g0
     assert np.sum(g2.funs[0].coeffs - g0.funs[0].coeffs) == 0

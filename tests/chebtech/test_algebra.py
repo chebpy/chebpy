@@ -315,12 +315,12 @@ def test_pow_const(random_points, testfunctions):
     Args:
         random_points: Fixture providing random points for evaluation
         testfunctions: List of test functions, each represented as a tuple containing
-            (fun, funlen, hasRoots) where fun is the function to test, funlen is the expected
-            function length, and hasRoots indicates whether the function has roots on the real line.
+            (fun, funlen, has_roots) where fun is the function to test, funlen is the expected
+            function length, and has_roots indicates whether the function has roots on the real line.
     """
     xx = random_points
-    for fun, funlen, hasRoots in testfunctions:
-        if not hasRoots:
+    for fun, funlen, has_roots in testfunctions:
+        if not has_roots:
             for const in (-1, 1, 2, 0.5):
 
                 def f(x):
@@ -368,17 +368,18 @@ def test_binary_operations(binop, testfunctions):
 
     Args:
         binop: Binary operator function (e.g., operator.add)
-        nf: Number of points for the first function
-        ng: Number of points for the second function
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for tf1, tf2 in itertools.product(testfunctions, testfunctions):
         f, nf, _ = tf1
-        g, ng, hasRootsG = tf2
-        if binop is operator.truediv and ((g.__name__ == "zerofun") or hasRootsG):
+        g, ng, has_roots_g = tf2
+        if binop is operator.truediv and ((g.__name__ == "zerofun") or has_roots_g):
             continue
 
-        ff, gg, fg, FG, xx, tol = binary_op_tester(f, g, binop, nf, ng)
-        absdiff = np.max(fg(xx) - FG(xx))
+        ff, gg, fg, fg_expected, xx, tol = binary_op_tester(f, g, binop, nf, ng)
+        absdiff = np.max(fg(xx) - fg_expected(xx))
         assert absdiff <= tol
 
 
@@ -392,10 +393,11 @@ def test_unary_operations(unaryop, testfunctions):
 
     Args:
         unaryop: Unary operator function (e.g., operator.neg)
-        f: Function to test
-        nf: Number of points for the function
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, funlen, _) where fun is the function to test, funlen is the expected
+            function length, and _ is an unused parameter.
     """
     for f, nf, _ in testfunctions:
-        ff, GG, gg, xx, tol = unary_op_tester(unaryop, f, nf)
-        absdiff = np.max(GG(xx) - gg(xx))
+        ff, gg_result, gg, xx, tol = unary_op_tester(unaryop, f, nf)
+        absdiff = np.max(gg_result(xx) - gg(xx))
         assert absdiff <= tol

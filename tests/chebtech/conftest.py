@@ -67,7 +67,7 @@ def binary_op_tester(f: callable, g: callable, binop: callable, nf: int, ng: int
     gg = Chebtech2.initfun_fixedlen(g, ng)
     xx = np.linspace(-1, 1, 1000)
 
-    def FG(x):
+    def fg_expected(x):
         return binop(f(x), g(x))
 
     fg = binop(ff, gg)
@@ -76,7 +76,7 @@ def binary_op_tester(f: callable, g: callable, binop: callable, nf: int, ng: int
     lscl = max([ff.size, gg.size, fg.size])
     tol = 5e1 * eps * lscl * vscl
 
-    return ff, gg, fg, FG, xx, tol
+    return ff, gg, fg, fg_expected, xx, tol
 
 
 def unary_op_tester(unaryop: callable, f: callable, nf: int) -> tuple:
@@ -100,13 +100,13 @@ def unary_op_tester(unaryop: callable, f: callable, nf: int) -> tuple:
     def gg(x):
         return unaryop(f(x))
 
-    GG = unaryop(ff)
+    gg_result = unaryop(ff)
 
-    vscl = max([ff.vscale, GG.vscale])
-    lscl = max([ff.size, GG.size])
+    vscl = max([ff.vscale, gg_result.vscale])
+    lscl = max([ff.size, gg_result.size])
     tol = 5e1 * eps * lscl * vscl
 
-    return ff, GG, gg, xx, tol
+    return ff, gg_result, gg, xx, tol
 
 
 def scaled_tol(n: int) -> float:

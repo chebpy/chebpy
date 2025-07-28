@@ -27,29 +27,45 @@ def class_usage_fixtures():
     return {"f": f, "ff": ff, "xx": xx, "emptyfun": emptyfun, "constfun": constfun, "subinterval": subinterval}
 
 
-def test_isempty_True(class_usage_fixtures):
-    """Test that emptyfun.isempty is True."""
+def test_isempty_true(class_usage_fixtures):
+    """Test that emptyfun.isempty is True.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     emptyfun = class_usage_fixtures["emptyfun"]
     assert emptyfun.isempty
     assert not (not emptyfun.isempty)
 
 
-def test_isempty_False(class_usage_fixtures):
-    """Test that constfun.isempty is False."""
+def test_isempty_false(class_usage_fixtures):
+    """Test that constfun.isempty is False.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     constfun = class_usage_fixtures["constfun"]
     assert not constfun.isempty
     assert constfun.isempty is False
 
 
-def test_isconst_True(class_usage_fixtures):
-    """Test that constfun.isconst is True."""
+def test_isconst_true(class_usage_fixtures):
+    """Test that constfun.isconst is True.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     constfun = class_usage_fixtures["constfun"]
     assert constfun.isconst
     assert not (not constfun.isconst)
 
 
-def test_isconst_False(class_usage_fixtures):
-    """Test that emptyfun.isconst is False."""
+def test_isconst_false(class_usage_fixtures):
+    """Test that emptyfun.isconst is False.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     emptyfun = class_usage_fixtures["emptyfun"]
     assert not emptyfun.isconst
     assert emptyfun.isconst is False
@@ -68,7 +84,11 @@ def test_size():
 
 
 def test_support(class_usage_fixtures):
-    """Test the support property of Bndfun."""
+    """Test the support property of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     a, b = ff.support
     assert a == -2
@@ -76,7 +96,11 @@ def test_support(class_usage_fixtures):
 
 
 def test_endvalues(class_usage_fixtures):
-    """Test the endvalues property of Bndfun."""
+    """Test the endvalues property of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     f = class_usage_fixtures["f"]
     a, b = ff.support
@@ -86,14 +110,22 @@ def test_endvalues(class_usage_fixtures):
 
 
 def test_call(class_usage_fixtures):
-    """Test calling a Bndfun object."""
+    """Test calling a Bndfun object.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
     ff(xx)
 
 
 def test_call_bary(class_usage_fixtures):
-    """Test calling a Bndfun object with bary method."""
+    """Test calling a Bndfun object with bary method.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
     ff(xx, "bary")
@@ -101,7 +133,11 @@ def test_call_bary(class_usage_fixtures):
 
 
 def test_call_clenshaw(class_usage_fixtures):
-    """Test calling a Bndfun object with clenshaw method."""
+    """Test calling a Bndfun object with clenshaw method.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
     ff(xx, "clenshaw")
@@ -109,7 +145,11 @@ def test_call_clenshaw(class_usage_fixtures):
 
 
 def test_call_bary_vs_clenshaw(class_usage_fixtures):
-    """Test that bary and clenshaw methods give similar results."""
+    """Test that bary and clenshaw methods give similar results.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
     b = ff(xx, "clenshaw")
@@ -118,7 +158,11 @@ def test_call_bary_vs_clenshaw(class_usage_fixtures):
 
 
 def test_call_raises(class_usage_fixtures):
-    """Test that calling with invalid method raises ValueError."""
+    """Test that calling with invalid method raises ValueError.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
     with pytest.raises(ValueError):
@@ -128,13 +172,21 @@ def test_call_raises(class_usage_fixtures):
 
 
 def test_vscale_empty(class_usage_fixtures):
-    """Test the vscale property of an empty Bndfun."""
+    """Test the vscale property of an empty Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     emptyfun = class_usage_fixtures["emptyfun"]
     assert emptyfun.vscale == 0.0
 
 
 def test_copy(class_usage_fixtures):
-    """Test the copy method of Bndfun."""
+    """Test the copy method of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     gg = ff.copy()
     assert ff == ff
@@ -144,7 +196,11 @@ def test_copy(class_usage_fixtures):
 
 
 def test_restrict(class_usage_fixtures):
-    """Test the restrict method of Bndfun."""
+    """Test the restrict method of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     i1 = Interval(-1, 1)
     gg = ff.restrict(i1)
@@ -153,7 +209,11 @@ def test_restrict(class_usage_fixtures):
 
 
 def test_simplify(class_usage_fixtures):
-    """Test the simplify method of Bndfun."""
+    """Test the simplify method of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     f = class_usage_fixtures["f"]
     interval = Interval(-2, 1)
     ff = Bndfun.initfun_fixedlen(f, interval, 1000)
@@ -164,7 +224,11 @@ def test_simplify(class_usage_fixtures):
 
 
 def test_translate(class_usage_fixtures):
-    """Test the translate method of Bndfun."""
+    """Test the translate method of Bndfun.
+
+    Args:
+        class_usage_fixtures: Fixture providing test Bndfun objects.
+    """
     ff = class_usage_fixtures["ff"]
     c = -1
     shifted_interval = ff.interval + c
@@ -194,7 +258,13 @@ vscales = [
 
 @pytest.mark.parametrize("fun, interval, vscale", vscales)
 def test_vscale(fun, interval, vscale):
-    """Test the vscale property of Bndfun."""
+    """Test the vscale property of Bndfun.
+
+    Args:
+        fun: Function to test.
+        interval: Domain interval for the function.
+        vscale: Expected vertical scale of the function.
+    """
     subinterval = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     absdiff = abs(ff.vscale - vscale)

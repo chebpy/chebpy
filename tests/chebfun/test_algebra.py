@@ -11,7 +11,7 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import binaryOpTester, binops, chebfun_testdomains, div_binops, eps, unaryOpTester
+from .conftest import binary_op_tester, binops, chebfun_testdomains, div_binops, eps, unary_op_tester
 
 
 # tests for empty function operations
@@ -48,6 +48,8 @@ def test__add__radd__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
         for dom, _ in chebfun_testdomains:
@@ -92,6 +94,8 @@ def test__sub__rsub__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
         for dom, _ in chebfun_testdomains:
@@ -139,6 +143,8 @@ def test__mul__rmul__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
         for dom, _ in chebfun_testdomains:
@@ -185,6 +191,8 @@ def test_truediv_empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testfunctions: List of test functions, each represented as a tuple containing
+            (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
         for dom, _ in chebfun_testdomains:
@@ -204,8 +212,8 @@ def test_truediv_constant(testfunctions):
     This test verifies that dividing a constant by a Chebfun object
     (and vice versa) produces the expected result within a specified tolerance.
     """
-    for fun, _, hasRoots in testfunctions:
-        if not hasRoots:
+    for fun, _, has_roots in testfunctions:
+        if not has_roots:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 for const in (-1, 1, 10, -1e5):
@@ -264,8 +272,8 @@ def test_pow_constant(testfunctions):
     This test verifies that raising a Chebfun object to a constant power
     produces the expected result within a specified tolerance.
     """
-    for fun, _, hasRoots in testfunctions:
-        if not hasRoots:
+    for fun, _, has_roots in testfunctions:
+        if not has_roots:
             for dom, _ in chebfun_testdomains:
                 a, b = dom
                 for c in (-1, 1, 2, 0.5):
@@ -338,20 +346,18 @@ def test_binary_operations(binop, dom, tol, testfunctions):
 
     Args:
         binop: Binary operator function (e.g., operator.add)
-        f: First function
-        g: Second function
         dom: Domain for the functions
         tol: Tolerance for the comparison
-        denomHasRoots: Whether the second function has roots (for division tests)
+        testfunctions: List of test functions to evaluate
     """
     for f, g in itertools.product(testfunctions, testfunctions):
-        f, _, rootsF = f
-        g, _, rootsG = g
+        f, _, roots_f = f
+        g, _, roots_g = g
 
-        if binop in div_binops and rootsG:
+        if binop in div_binops and roots_g:
             pytest.skip("Skipping division test with denominator that has roots")
 
-        test_func = binaryOpTester(f, g, binop, dom, 10 * tol)
+        test_func = binary_op_tester(f, g, binop, dom, 10 * tol)
         test_func()
 
 
@@ -369,7 +375,8 @@ def test_unary_operations(unaryop, dom, tol, testfunctions):
         unaryop: Unary operator function (e.g., lambda x: -x)
         dom: Domain for the function
         tol: Tolerance for the comparison
+        testfunctions: List of test functions to evaluate
     """
     for f, _, _ in testfunctions:
-        test_func = unaryOpTester(f, unaryop, dom, tol)
+        test_func = unary_op_tester(f, unaryop, dom, tol)
         test_func()

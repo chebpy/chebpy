@@ -67,7 +67,14 @@ fun_details = [
 
 @pytest.mark.parametrize("fun, name, interval, funlen", fun_details)
 def test_adaptive(fun, name, interval, funlen):
-    """Test adaptive construction of Bndfun."""
+    """Test adaptive construction of Bndfun.
+
+    Args:
+        fun: Function to test.
+        name: Name of the function for test printouts.
+        interval: Domain interval for the function.
+        funlen: Expected function length (number of coefficients).
+    """
     subinterval = Interval(*interval)
     ff = Bndfun.initfun_adaptive(fun, subinterval)
     assert ff.size in {funlen - 1, funlen}
@@ -75,7 +82,14 @@ def test_adaptive(fun, name, interval, funlen):
 
 @pytest.mark.parametrize("fun, name, interval, _", fun_details)
 def test_fixedlen(fun, name, interval, _):
-    """Test fixed-length construction of Bndfun."""
+    """Test fixed-length construction of Bndfun.
+
+    Args:
+        fun: Function to test.
+        name: Name of the function for test printouts.
+        interval: Domain interval for the function.
+        _: Unused parameter (kept for compatibility with fun_details).
+    """
     subinterval = Interval(*interval)
     n = 100
     ff = Bndfun.initfun_fixedlen(fun, subinterval, n)

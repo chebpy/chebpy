@@ -142,7 +142,7 @@ def test_truediv_constant(testfunctions):
     yy = np.linspace(-1, 1, 1000)
     subinterval = Interval(-0.5, 0.9)
     xx = subinterval(yy)
-    for fun, _, hasRoots in testfunctions:
+    for fun, _, has_roots in testfunctions:
         for const in (-1, 1, 10, -1e5):
 
             def f(x):
@@ -157,7 +157,7 @@ def test_truediv_constant(testfunctions):
             gg = bndfun / const
             assert np.max(g(xx) - gg(xx)) <= 3 * gg.size * tol
             # don't do the following test for functions with roots
-            if not hasRoots:
+            if not has_roots:
                 ff = const / bndfun
                 assert np.max(f(xx) - ff(xx)) <= 2 * ff.size * tol
 
@@ -212,7 +212,7 @@ def binary_op_test(f, g, subinterval, binop, yy):
     ff = Bndfun.initfun_adaptive(f, subinterval)
     gg = Bndfun.initfun_adaptive(g, subinterval)
 
-    def FG(x):
+    def fg_expected(x):
         return binop(f(x), g(x))
 
     fg = binop(ff, gg)
@@ -220,7 +220,7 @@ def binary_op_test(f, g, subinterval, binop, yy):
     vscl = max([ff.vscale, gg.vscale])
     lscl = max([ff.size, gg.size])
     xx = subinterval(yy)
-    assert np.max(fg(xx) - FG(xx)) <= 6 * vscl * lscl * eps
+    assert np.max(fg(xx) - fg_expected(xx)) <= 6 * vscl * lscl * eps
 
 
 # Test binary operations between Bndfun objects
@@ -261,10 +261,10 @@ def unary_op_test(unaryop, f, subinterval, yy):
     def gg(x):
         return unaryop(f(x))
 
-    GG = unaryop(ff)
+    gg_result = unaryop(ff)
 
     xx = subinterval(yy)
-    assert np.max(gg(xx) - GG(xx)) <= 4e1 * eps
+    assert np.max(gg(xx) - gg_result(xx)) <= 4e1 * eps
 
 
 @pytest.mark.parametrize("unaryop", [operator.pos, operator.neg])
