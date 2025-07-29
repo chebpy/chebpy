@@ -1,4 +1,7 @@
-__version__ = "0.4.3.3"
+import importlib.metadata
 
 from .api import chebfun, pwc
 from .core.settings import ChebPreferences as UserPreferences
+
+__version__ = importlib.metadata.version("chebfun")
+
