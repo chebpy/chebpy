@@ -1,3 +1,18 @@
+"""Plotting utilities for visualizing functions and their properties.
+
+This module provides functions for plotting functions, their coefficients, and
+other visualizations useful for understanding function approximations. It uses
+matplotlib for the actual plotting, but is designed to gracefully handle cases
+where matplotlib is not available.
+
+The main functions are:
+- plotfun: Plot a function over a specified interval
+- plotfuncoeffs: Plot the coefficients of a function on a semilogy scale
+
+These functions are typically used by higher-level classes like Chebfun and
+Chebtech to provide plotting capabilities.
+"""
+
 import numpy as np
 
 from .importing import import_optional

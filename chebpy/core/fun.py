@@ -1,3 +1,15 @@
+"""Abstract base class for functions defined on arbitrary intervals.
+
+This module provides the Fun abstract base class, which defines the interface for
+all function representations on arbitrary intervals in ChebPy. It specifies the
+methods and properties that concrete function classes must implement.
+
+The Fun class serves as the foundation for the function class hierarchy in ChebPy,
+with concrete implementations like Bndfun and Classicfun inheriting from it.
+It defines a comprehensive interface for working with function representations,
+including algebraic operations, calculus operations, and utility functions.
+"""
+
 from abc import ABC, abstractmethod
 
 

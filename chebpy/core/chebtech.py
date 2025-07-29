@@ -95,8 +95,10 @@ class Chebtech(Smoothfun, ABC):
 
     @classmethod
     def initfun_adaptive(cls, fun, *, interval=None):
-        """Initialise a Chebtech from the callable fun utilising the adaptive
-        constructor to determine the number of degrees of freedom parameter.
+        """Initialise a Chebtech from the callable fun utilising the adaptive constructor.
+
+        This constructor uses an adaptive algorithm to determine the appropriate
+        number of degrees of freedom needed to represent the function.
         """
         interval = interval if interval is not None else prefs.domain
         interval = Interval(*interval)
