@@ -10,7 +10,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # Default values if not set in .env
-SOURCE_FOLDER ?= src
+SOURCE_FOLDER ?= chebpy
 TESTS_FOLDER ?= tests
 MARIMO_FOLDER ?= book/marimo
 
