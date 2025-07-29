@@ -325,9 +325,9 @@ def coeffmult(fc: np.ndarray, gc: np.ndarray) -> np.ndarray:
     Note:
         The input series must have the same length.
     """
-    Fc = np.append(2.0 * fc[:1], (fc[1:], fc[:0:-1]))
-    Gc = np.append(2.0 * gc[:1], (gc[1:], gc[:0:-1]))
-    ak = ifft(fft(Fc) * fft(Gc))
+    fc_extended = np.append(2.0 * fc[:1], (fc[1:], fc[:0:-1]))
+    gc_extended = np.append(2.0 * gc[:1], (gc[1:], gc[:0:-1]))
+    ak = ifft(fft(fc_extended) * fft(gc_extended))
     ak = np.append(ak[:1], ak[1:] + ak[:0:-1]) * 0.25
     ak = ak[: fc.size]
     inputcfs = np.append(fc, gc)

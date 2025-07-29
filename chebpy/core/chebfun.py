@@ -1,3 +1,14 @@
+"""Implementation of the Chebfun class for piecewise function approximation.
+
+This module provides the Chebfun class, which is the main user-facing class in the
+ChebPy package. It represents functions using piecewise polynomial approximations
+on arbitrary intervals, allowing for operations such as integration, differentiation,
+root-finding, and more.
+
+The Chebfun class is inspired by the MATLAB package of the same name and provides
+similar functionality for working with functions rather than numbers.
+"""
+
 import operator
 
 import numpy as np
@@ -11,6 +22,28 @@ from .utilities import Domain, check_funs, compute_breakdata, generate_funs
 
 
 class Chebfun:
+    """Main class for representing and manipulating functions in ChebPy.
+
+    The Chebfun class represents functions using piecewise polynomial approximations
+    on arbitrary intervals. It provides a comprehensive set of operations for working
+    with these function representations, including:
+
+    - Function evaluation at arbitrary points
+    - Algebraic operations (addition, multiplication, etc.)
+    - Calculus operations (differentiation, integration, etc.)
+    - Rootfinding
+    - Plotting
+
+    Chebfun objects can be created from callable functions, constant values, or
+    directly from function pieces. The class supports both adaptive and fixed-length
+    approximations, allowing for efficient representation of functions with varying
+    complexity across different intervals.
+
+    Attributes:
+        funs (numpy.ndarray): Array of function pieces that make up the Chebfun.
+        breakdata (OrderedDict): Mapping of breakpoints to function values.
+        transposed (bool): Flag indicating if the Chebfun is transposed.
+    """
     def __init__(self, funs):
         """Initialize a Chebfun object.
 
@@ -646,8 +679,17 @@ class Chebfun:
     @cache
     @self_empty(np.array([]))
     def roots(self, merge=None):
-        """Compute the roots of a Chebfun, i.e., the set of values x for which
-        f(x) = 0.
+        """Compute the roots of a Chebfun.
+
+        This method finds the values x for which f(x) = 0, by computing the roots
+        of each piece of the Chebfun and combining them.
+
+        Args:
+            merge (bool, optional): Whether to merge roots at breakpoints. If None,
+                uses the value from preferences. Defaults to None.
+
+        Returns:
+            numpy.ndarray: Array of roots sorted in ascending order.
         """
         merge = merge if merge is not None else prefs.mergeroots
         allrts = []
