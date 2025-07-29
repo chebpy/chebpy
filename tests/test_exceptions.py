@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.exceptions import (
     BadFunLengthArgument,
-    ChebpyBaseException,
+    ChebpyBaseError,
     IntervalGap,
     IntervalMismatch,
     IntervalOverlap,
@@ -54,7 +54,7 @@ class TestExceptions:
         for exc_class in exceptions:
             # Test with default message
             exc = exc_class()
-            assert isinstance(exc, ChebpyBaseException)
+            assert isinstance(exc, ChebpyBaseError)
             assert isinstance(exc, Exception)
             assert exc.message == exc.default_message
             assert str(exc) == exc.default_message
@@ -71,7 +71,7 @@ class TestExceptions:
         # but we can create a concrete subclass and test that it raises NotImplementedError
         # when default_message is accessed
 
-        class TestException(ChebpyBaseException):
+        class TestException(ChebpyBaseError):
             pass
 
         # This should raise NotImplementedError when default_message is accessed

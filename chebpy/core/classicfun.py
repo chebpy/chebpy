@@ -465,6 +465,7 @@ def add_utility(methodname):
         and returns its result.
 
         Args:
+            self (Classicfun): The Classicfun object.
             *args: Variable length argument list to pass to the onefun method.
             **kwds: Arbitrary keyword arguments to pass to the onefun method.
 
@@ -513,6 +514,7 @@ def add_zero_arg_op(methodname):
         and wraps the result in a new Classicfun instance with the same interval.
 
         Args:
+            self (Classicfun): The Classicfun object.
             *args: Variable length argument list to pass to the onefun method.
             **kwds: Arbitrary keyword arguments to pass to the onefun method.
 
@@ -551,7 +553,7 @@ methods_onefun_binary = (
 )
 
 
-def addBinaryOp(methodname):
+def add_binary_op(methodname):
     """Add a binary operation method to the Classicfun class.
 
     This function creates a method that implements a binary operation between
@@ -577,6 +579,7 @@ def addBinaryOp(methodname):
         the result in a new Classicfun instance with the same interval.
 
         Args:
+            self (Classicfun): The Classicfun object.
             f (Classicfun or scalar): The second operand of the binary operation.
             *args: Variable length argument list to pass to the onefun method.
             **kwds: Arbitrary keyword arguments to pass to the onefun method.
@@ -608,14 +611,14 @@ def addBinaryOp(methodname):
 
 
 for methodname in methods_onefun_binary:
-    addBinaryOp(methodname)
+    add_binary_op(methodname)
 
 # ---------------------------
 #  numpy universal functions
 # ---------------------------
 
 
-def addUfunc(op):
+def add_ufunc(op):
     """Add a NumPy universal function method to the Classicfun class.
 
     This function creates a method that applies a NumPy universal function (ufunc)
@@ -671,4 +674,4 @@ ufuncs = (
 )
 
 for op in ufuncs:
-    addUfunc(op)
+    add_ufunc(op)

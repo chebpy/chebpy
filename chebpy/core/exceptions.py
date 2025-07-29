@@ -8,7 +8,7 @@ different error conditions related to intervals, domains, and function operation
 from abc import ABC, abstractmethod
 
 
-class ChebpyBaseException(Exception, ABC):
+class ChebpyBaseError(Exception, ABC):
     """Abstract base class for all ChebPy exceptions.
 
     This class serves as the base for all exception types in the ChebPy package.
@@ -62,7 +62,7 @@ class ChebpyBaseException(Exception, ABC):
 # Exception raised when two intervals overlap but should be disjoint
 IntervalOverlap = type(
     "IntervalOverlap",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "The supplied Interval objects overlap",
         "__doc__": """Exception raised when intervals overlap.
@@ -76,9 +76,10 @@ IntervalOverlap = type(
 # Exception raised when intervals have gaps between them
 IntervalGap = type(
     "IntervalGap",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
-        "default_message": "The supplied Interval objects do not form a complete partition of the approximation interval",
+        "default_message": "The supplied Interval objects do not form a complete partition "
+        "of the approximation interval",
         "__doc__": """Exception raised when intervals have gaps.
 
         This exception is raised when a collection of intervals does not
@@ -90,7 +91,7 @@ IntervalGap = type(
 # Exception raised when intervals don't match for an operation
 IntervalMismatch = type(
     "IntervalMismatch",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "This operation can only be performed for Fun objects defined on identical intervals",
         "__doc__": """Exception raised when intervals don't match.
@@ -104,7 +105,7 @@ IntervalMismatch = type(
 # Exception raised when an interval is not a subinterval of another
 NotSubinterval = type(
     "NotSubinterval",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "Not a subinterval",
         "__doc__": """Exception raised when an interval is not a subinterval.
@@ -118,7 +119,7 @@ NotSubinterval = type(
 # Exception raised when interval values are not strictly increasing
 IntervalValues = type(
     "IntervalValues",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "The defining values of a Interval object must be strictly increasing",
         "__doc__": """Exception raised when interval values are invalid.
@@ -137,7 +138,7 @@ IntervalValues = type(
 # Exception raised when a domain is invalid
 InvalidDomain = type(
     "InvalidDomain",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "Domain objects must be initialised from an iterable "
         "collection of at least two monotonically increasing "
@@ -153,7 +154,7 @@ InvalidDomain = type(
 # Exception raised when a domain is not a subdomain of another
 NotSubdomain = type(
     "NotSubdomain",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "The support of the target Domain object is required "
         "to define a subinterval of the support of the "
@@ -169,7 +170,7 @@ NotSubdomain = type(
 # Exception raised when supports don't match for an operation
 SupportMismatch = type(
     "SupportMismatch",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "Both objects are required to be supported on the same interval",
         "__doc__": """Exception raised when supports don't match.
@@ -183,7 +184,7 @@ SupportMismatch = type(
 # Exception raised when the length argument for a function is invalid
 BadFunLengthArgument = type(
     "BadFunLengthArgument",
-    (ChebpyBaseException,),
+    (ChebpyBaseError,),
     {
         "default_message": "The 'n' argument must be either a single numeric "
         "value, or iterable thereof posessing one fewer "

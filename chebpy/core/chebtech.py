@@ -567,6 +567,7 @@ if plt:
         """Plot the Chebtech on the interval [-1, 1].
 
         Args:
+            self (Chebtech): The Chebtech object to plot.
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
             **kwargs: Additional keyword arguments to pass to the plot function.
 
@@ -581,6 +582,7 @@ if plt:
         """Plot the absolute values of the Chebyshev coefficients.
 
         Args:
+            self (Chebtech): The Chebtech object whose coefficients to plot.
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
             **kwargs: Additional keyword arguments to pass to the plot function.
 
