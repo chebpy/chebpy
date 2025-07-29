@@ -1,3 +1,12 @@
+"""Decorator functions for the ChebPy package.
+
+This module provides various decorators used throughout the ChebPy package to
+implement common functionality such as caching, handling empty objects,
+pre- and post-processing of function inputs/outputs, and type conversion.
+These decorators help reduce code duplication and ensure consistent behavior
+across the package.
+"""
+
 from functools import wraps
 
 import numpy as np

@@ -1,5 +1,6 @@
-"""Import fftw via pyfftw if the user has it installed,
-otherwise default to fftpack via numpy.
+"""Import fftw via pyfftw if the user has it installed.
+
+Otherwise default to fftpack via numpy.
 """
 
 from .importing import import_optional
