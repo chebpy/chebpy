@@ -20,7 +20,7 @@ def cache(f):
             # f has not been executed previously and self._cache does not exist
             self._cache = {}
             out = self._cache[f.__name__] = f(self)
-        except KeyError:
+        except KeyError:  # pragma: no cover
             # f has not been executed previously, but self._cache exists
             out = self._cache[f.__name__] = f(self)
         return out

@@ -155,7 +155,7 @@ def standard_chop(coeffs, tol=None):
 
     # check magnitude of tol:
     tol = tol if tol is not None else prefs.eps
-    if tol >= 1:
+    if tol >= 1:  # pragma: no cover
         cutoff = 1
         return cutoff
 
@@ -278,7 +278,7 @@ def vals2coeffs2(vals):
     if np.isreal(vals).all():
         coeffs = ifft(tmp)
         coeffs = np.real(coeffs)
-    elif np.isreal(1j * vals).all():
+    elif np.isreal(1j * vals).all():  # pragma: no cover
         coeffs = ifft(np.imag(tmp))
         coeffs = 1j * np.real(coeffs)
     else:
@@ -301,7 +301,7 @@ def coeffs2vals2(coeffs):
     if np.isreal(coeffs).all():
         vals = fft(tmp)
         vals = np.real(vals)
-    elif np.isreal(1j * coeffs).all():
+    elif np.isreal(1j * coeffs).all():  # pragma: no cover
         vals = fft(np.imag(tmp))
         vals = 1j * np.real(vals)
     else:

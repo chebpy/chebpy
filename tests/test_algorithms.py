@@ -1,105 +1,188 @@
-"""Unit-tests for pyfun/utilities.py"""
+"""Unit-tests for chebpy/core/algorithms.py.
 
-import unittest
+This module contains tests for the algorithm functions in the chebpy library,
+including barycentric interpolation (bary), Clenshaw evaluation (clenshaw),
+and coefficient multiplication (coeffmult).
+
+The tests verify that these algorithms handle various input types correctly,
+including empty arrays, scalar inputs, and arrays of different sizes. They also
+check that the algorithms produce results within expected tolerance of the
+true values.
+"""
+
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
+import pytest
 
-from chebpy.core.settings import DefaultPreferences
-from chebpy.core.chebtech import Chebtech2
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
+from chebpy.core.chebtech import Chebtech2
 
-from .utilities import testfunctions, scaled_tol, infNormLessThanTol, infnorm
-
-# aliases
-pi = np.pi
-sin = np.sin
-cos = np.cos
-exp = np.exp
-eps = DefaultPreferences.eps
+from .utilities import cos, eps, exp, scaled_tol
 
 np.random.seed(0)
 
-# turn off 'divide' and 'invalid' Runtimewarnings: these are invoked in the
-# barycentric formula and the warned-of behaviour is actually required
+# Turn off 'divide' and 'invalid' RuntimeWarnings
+# These warnings are expected and required for the barycentric formula,
+# which involves division operations that can produce inf/NaN values
+# that are later handled correctly by the algorithm
 np.seterr(divide="ignore", invalid="ignore")
 
 
-class Evaluation(unittest.TestCase):
-    """Tests for the Barycentric formula and Clenshaw algorithm"""
+@pytest.fixture
+def evaluation_fixtures() -> dict[str, Any]:
+    """Create fixtures for testing evaluation algorithms.
 
-    def setUp(self):
-        npts = 15
-        self.xk = Chebtech2._chebpts(npts)
-        self.vk = Chebtech2._barywts(npts)
-        self.fk = np.random.rand(npts)
-        self.ak = np.random.rand(11)
-        self.xx = -1 + 2 * np.random.rand(9)
-        self.pts = -1 + 2 * np.random.rand(1001)
-
-    # check an empty array is returned whenever either or both of the first
-    # two arguments are themselves empty arrays
-    def test_bary__empty(self):
-        null = (None, None)
-        self.assertEqual(bary(np.array([]), np.array([]), *null).size, 0)
-        self.assertEqual(bary(np.array([0.1]), np.array([]), *null).size, 0)
-        self.assertEqual(bary(np.array([]), np.array([0.1]), *null).size, 0)
-        self.assertEqual(bary(self.pts, np.array([]), *null).size, 0)
-        self.assertEqual(bary(np.array([]), self.pts, *null).size, 0)
-        self.assertNotEqual(bary(np.array([0.1]), np.array([0.1]), *null).size, 0)
-
-    def test_clenshaw__empty(self):
-        self.assertEqual(clenshaw(np.array([]), np.array([])).size, 0)
-        self.assertEqual(clenshaw(np.array([]), np.array([1.0])).size, 0)
-        self.assertEqual(clenshaw(np.array([1.0]), np.array([])).size, 0)
-        self.assertEqual(clenshaw(self.pts, np.array([])).size, 0)
-        self.assertEqual(clenshaw(np.array([]), self.pts).size, 0)
-        self.assertNotEqual(clenshaw(np.array([0.1]), np.array([0.1])).size, 0)
-
-    # check that scalars get evaluated to scalars (not arrays)
-    def test_clenshaw__scalar_input(self):
-        for x in self.xx:
-            self.assertTrue(np.isscalar(clenshaw(x, self.ak)))
-        self.assertFalse(np.isscalar(clenshaw(xx, self.ak)))
-
-    def test_bary__scalar_input(self):
-        for x in self.xx:
-            self.assertTrue(np.isscalar(bary(x, self.fk, self.xk, self.vk)))
-        self.assertFalse(np.isscalar(bary(xx, self.fk, self.xk, self.vk)))
-
-    # Check that we always get float output for constant Chebtechs, even
-    # when passing in an integer input.
-    # TODO: Move these tests elsewhere?
-    def test_bary__float_output(self):
-        ff = Chebtech2.initconst(1)
-        gg = Chebtech2.initconst(1.0)
-        self.assertTrue(isinstance(ff(0, "bary"), float))
-        self.assertTrue(isinstance(gg(0, "bary"), float))
-
-    def test_clenshaw__float_output(self):
-        ff = Chebtech2.initconst(1)
-        gg = Chebtech2.initconst(1.0)
-        self.assertTrue(isinstance(ff(0, "clenshaw"), float))
-        self.assertTrue(isinstance(gg(0, "clenshaw"), float))
-
-    # Check that we get consistent output from bary and clenshaw
-    # TODO: Move these tests elsewhere?
-    def test_bary_clenshaw_consistency(self):
-        coeffs = np.random.rand(3)
-        evalpts = (0.5, np.array([]), np.array([0.5]), np.array([0.5, 0.6]))
-        for n in range(len(coeffs)):
-            ff = Chebtech2(coeffs[:n])
-            for xx in evalpts:
-                fb = ff(xx, "bary")
-                fc = ff(xx, "clenshaw")
-                self.assertEqual(type(fb), type(fc))
+    Returns:
+    -------
+    dict[str, Any]
+        Dictionary containing test fixtures for evaluation
+    """
+    npts = 15
+    xk = Chebtech2._chebpts(npts)
+    vk = Chebtech2._barywts(npts)
+    fk = np.random.rand(npts)
+    ak = np.random.rand(11)
+    xx = -1 + 2 * np.random.rand(9)
+    pts = -1 + 2 * np.random.rand(1001)
+    return {"xk": xk, "vk": vk, "fk": fk, "ak": ak, "xx": xx, "pts": pts}
 
 
+# check an empty array is returned whenever either or both of the first
+# two arguments are themselves empty arrays
+def test_bary_empty(evaluation_fixtures: dict[str, Any]) -> None:
+    """Test bary function with empty arrays.
+
+    Parameters
+    ----------
+    evaluation_fixtures : dict[str, Any]
+        Dictionary containing test fixtures
+    """
+    pts = evaluation_fixtures["pts"]
+    null = (None, None)
+    assert bary(np.array([]), np.array([]), *null).size == 0
+    assert bary(np.array([0.1]), np.array([]), *null).size == 0
+    assert bary(np.array([]), np.array([0.1]), *null).size == 0
+    assert bary(pts, np.array([]), *null).size == 0
+    assert bary(np.array([]), pts, *null).size == 0
+    assert bary(np.array([0.1]), np.array([0.1]), *null).size != 0
+
+
+def test_clenshaw_empty(evaluation_fixtures: dict[str, Any]) -> None:
+    """Test clenshaw function with empty arrays.
+
+    Parameters
+    ----------
+    evaluation_fixtures : dict[str, Any]
+        Dictionary containing test fixtures
+    """
+    pts = evaluation_fixtures["pts"]
+    assert clenshaw(np.array([]), np.array([])).size == 0
+    assert clenshaw(np.array([]), np.array([1.0])).size == 0
+    assert clenshaw(np.array([1.0]), np.array([])).size == 0
+    assert clenshaw(pts, np.array([])).size == 0
+    assert clenshaw(np.array([]), pts).size == 0
+    assert clenshaw(np.array([0.1]), np.array([0.1])).size != 0
+
+
+# check that scalars get evaluated to scalars (not arrays)
+def test_clenshaw_scalar_input(evaluation_fixtures: dict[str, Any]) -> None:
+    """Test clenshaw function with scalar inputs.
+
+    Parameters
+    ----------
+    evaluation_fixtures : dict[str, Any]
+        Dictionary containing test fixtures
+    """
+    xx = evaluation_fixtures["xx"]
+    ak = evaluation_fixtures["ak"]
+    for x in xx:
+        assert np.isscalar(clenshaw(x, ak))
+    assert not np.isscalar(clenshaw(xx, ak))
+
+
+def test_bary_scalar_input(evaluation_fixtures: dict[str, Any]) -> None:
+    """Test bary function with scalar inputs.
+
+    Parameters
+    ----------
+    evaluation_fixtures : dict[str, Any]
+        Dictionary containing test fixtures
+    """
+    xx = evaluation_fixtures["xx"]
+    fk = evaluation_fixtures["fk"]
+    xk = evaluation_fixtures["xk"]
+    vk = evaluation_fixtures["vk"]
+    for x in xx:
+        assert np.isscalar(bary(x, fk, xk, vk))
+    assert not np.isscalar(bary(xx, fk, xk, vk))
+
+
+# Check that we always get float output for constant Chebtechs, even
+# when passing in an integer input.
+# TODO: Move these tests elsewhere?
+def test_bary_float_output() -> None:
+    """Test that bary evaluation returns float output for constant Chebtechs."""
+    ff = Chebtech2.initconst(1)
+    gg = Chebtech2.initconst(1.0)
+    assert isinstance(ff(0, "bary"), float)
+    assert isinstance(gg(0, "bary"), float)
+
+
+def test_clenshaw_float_output() -> None:
+    """Test that clenshaw evaluation returns float output for constant Chebtechs."""
+    ff = Chebtech2.initconst(1)
+    gg = Chebtech2.initconst(1.0)
+    assert isinstance(ff(0, "clenshaw"), float)
+    assert isinstance(gg(0, "clenshaw"), float)
+
+
+# Check that we get consistent output from bary and clenshaw
+# TODO: Move these tests elsewhere?
+def test_bary_clenshaw_consistency() -> None:
+    """Test that bary and clenshaw return consistent output types."""
+    coeffs = np.random.rand(3)
+    evalpts = (0.5, np.array([]), np.array([0.5]), np.array([0.5, 0.6]))
+    for n in range(len(coeffs)):
+        ff = Chebtech2(coeffs[:n])
+        for xx in evalpts:
+            fb = ff(xx, "bary")
+            fc = ff(xx, "clenshaw")
+            assert isinstance(fb, type(fc))
+
+            #assert type(fb) == type(fc)
+
+
+# Define evaluation points of increasing density for testing algorithm accuracy
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
+
+# Define arrays of Chebyshev points for interpolation
 ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
+
+# List of evaluation methods to test
 methods = [bary, clenshaw]
 
 
-def evalTester(method, fun, evalpts, chebpts):
+def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: np.ndarray) -> bool:
+    """Create a test function for evaluating methods.
+
+    Parameters
+    ----------
+    method : Callable
+        The method to test (bary or clenshaw)
+    fun : Callable
+        The function to evaluate
+    evalpts : np.ndarray
+        Points to evaluate the function at
+    chebpts : np.ndarray
+        Chebyshev points
+
+    Returns:
+    -------
+    bool
+        True if the method's output is within tolerance of the expected result
+    """
     x = evalpts
     xk = chebpts
     fvals = fun(xk)
@@ -118,40 +201,87 @@ def evalTester(method, fun, evalpts, chebpts):
     n = evalpts.size
     tol = tol_multiplier * scaled_tol(n)
 
-    return infNormLessThanTol(a, b, tol)
+    return np.max(a - b) < tol  # inf_norm_less_than_tol(a, b, tol)
 
 
-for method in methods:
+def test_bary(testfunctions: list) -> None:
+    """Test barycentric interpolation algorithm.
+
+    This test verifies that the barycentric interpolation algorithm (bary)
+    correctly evaluates various test functions at different sets of points.
+    It checks that the interpolated values are within tolerance of the true values.
+
+    Parameters
+    ----------
+    testfunctions : list
+        List of test functions to evaluate
+    """
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
-                testfun = evalTester(method, fun, xx, chebpts)
-                testfun.__name__ = "test_{}_{}_{:02}_{:02}".format(
-                    method.__name__, fun.__name__, j, k
-                )
-                setattr(Evaluation, testfun.__name__, testfun)
+                print(f"Testing bary {fun.__name__}")
+                assert _eval_tester(bary, fun, xx, chebpts)
 
 
-class CoeffMult(unittest.TestCase):
-    def setUp(self):
-        self.f = lambda x: exp(x)
-        self.g = lambda x: cos(x)
-        self.fn = 15
-        self.gn = 15
+def test_clenshaw(testfunctions: list) -> None:
+    """Test Clenshaw evaluation algorithm.
 
-    def test_coeffmult(self):
-        def h(x):
-            return self.f(x) * self.g(x)
+    This test verifies that the Clenshaw evaluation algorithm (clenshaw)
+    correctly evaluates various test functions at different sets of points.
+    It checks that the evaluated values are within tolerance of the true values.
 
-        f, g = self.f, self.g
-        fn, gn = self.fn, self.gn
-        hn = fn + gn - 1
-        fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs
-        gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
-        hc = coeffmult(fc, gc)
-        HC = Chebtech2.initfun(h, hn).coeffs
-        self.assertLessEqual(infnorm(hc - HC), 2e1 * eps)
+    Parameters
+    ----------
+    testfunctions : list
+        List of test functions to evaluate
+    """
+    for fun, _, _ in testfunctions:
+        for j, chebpts in enumerate(ptsarry):
+            for k, xx in enumerate(evalpts):
+                print(f"Testing clenshaw {fun.__name__}")
+                assert _eval_tester(clenshaw, fun, xx, chebpts)
 
 
-# reset the testsfun variable so it doesn't get picked up by nose
-testfun = None
+@pytest.fixture
+def coeffmult_fixtures() -> dict[str, Any]:
+    """Create fixtures for testing coefficient multiplication.
+
+    Returns:
+    -------
+    dict[str, Any]
+        Dictionary containing test fixtures for coefficient multiplication
+    """
+
+    def f(x):
+        return exp(x)
+
+    def g(x):
+        return cos(x)
+
+    fn = 15
+    gn = 15
+    return {"f": f, "g": g, "fn": fn, "gn": gn}
+
+
+def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
+    """Test coefficient multiplication.
+
+    Parameters
+    ----------
+    coeffmult_fixtures : dict[str, Any]
+        Dictionary containing test fixtures
+    """
+    f = coeffmult_fixtures["f"]
+    g = coeffmult_fixtures["g"]
+    fn = coeffmult_fixtures["fn"]
+    gn = coeffmult_fixtures["gn"]
+
+    def h(x):
+        return f(x) * g(x)
+
+    hn = fn + gn - 1
+    fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs
+    gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
+    hc = coeffmult(fc, gc)
+    hx = Chebtech2.initfun(h, hn).coeffs
+    assert np.max(hc - hx) <= 2e1 * eps

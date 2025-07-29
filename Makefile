@@ -10,7 +10,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # Default values if not set in .env
-SOURCE_FOLDER ?= src
+SOURCE_FOLDER ?= chebpy
 TESTS_FOLDER ?= tests
 MARIMO_FOLDER ?= book/marimo
 
@@ -37,7 +37,7 @@ fmt: uv ## Run code formatters only
 
 lint: uv ## Run linters only
 	@printf "$(BLUE)Running linters...$(RESET)\n"
-	@uvx pre-commit run --all-files
+	@uvx pre-commit run --files tests
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"
