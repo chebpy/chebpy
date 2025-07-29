@@ -108,7 +108,7 @@ class Chebtech(Smoothfun, ABC):
         vk = self._barywts(fk.size)
         return bary(x, fk, xk, vk)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         out = "<{0}{{{1}}}>".format(self.__class__.__name__, self.size)
         return out
 
@@ -383,19 +383,19 @@ class Chebtech(Smoothfun, ABC):
     #  subclasses must implement these
     # ---------------------------------
     @abstractmethod
-    def _chebpts():
+    def _chebpts():  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _barywts():
+    def _barywts():  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _vals2coeffs():
+    def _vals2coeffs():  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _coeffs2vals():
+    def _coeffs2vals():  # pragma: no cover
         raise NotImplementedError
 
 
