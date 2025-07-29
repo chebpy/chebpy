@@ -8,7 +8,8 @@ def cache(f):
     up repeated execution of relatively expensive zero-argument operations such
     as .roots(). Cached computations are stored in a dictionary called _cache
     which is bound to self using keys corresponding to the method name.
-    Can be used in principle on arbitrary objects."""
+    Can be used in principle on arbitrary objects.
+    """
 
     # TODO: look into replacing this with one of the functools cache decorators
     @wraps(f)
@@ -31,7 +32,8 @@ def cache(f):
 def self_empty(resultif=None):
     """Factory method to produce a decorator that checks whether the object
     whose classmethod is being wrapped is empty, returning the object if
-    so, but returning the supplied resultif if not. (Used in chebtech.py)"""
+    so, but returning the supplied resultif if not. (Used in chebtech.py).
+    """
 
     # TODO: add unit test for this
     def decorator(f):
@@ -51,7 +53,7 @@ def self_empty(resultif=None):
 
 
 def preandpostprocess(f):
-    """Pre- and post-processing tasks common to bary and clenshaw"""
+    """Pre- and post-processing tasks common to bary and clenshaw."""
 
     @wraps(f)
     def thewrapper(*args, **kwargs):
@@ -81,7 +83,8 @@ def preandpostprocess(f):
 
 def float_argument(f):
     """Chebfun classmethod wrapper for __call__: ensure that we provide
-    float output for float input and array output otherwise"""
+    float output for float input and array output otherwise.
+    """
 
     @wraps(f)
     def thewrapper(self, *args, **kwargs):
@@ -101,7 +104,8 @@ def float_argument(f):
 
 def cast_arg_to_chebfun(f):
     """Attempt to cast the first argument to chebfun if is not so already.
-    The only castable type at this point is a numeric type"""
+    The only castable type at this point is a numeric type.
+    """
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):
@@ -117,7 +121,8 @@ def cast_arg_to_chebfun(f):
 
 def cast_other(f):
     """Generic wrapper to be applied to binary operator type class methods and
-    whose purpose is to cast the second positional argument to the type self"""
+    whose purpose is to cast the second positional argument to the type self.
+    """
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):

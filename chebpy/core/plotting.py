@@ -1,7 +1,7 @@
 import numpy as np
 
-from .settings import _preferences as prefs
 from .importing import import_optional
+from .settings import _preferences as prefs
 
 
 def import_plt():

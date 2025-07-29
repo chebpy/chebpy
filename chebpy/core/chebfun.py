@@ -3,11 +3,11 @@ import operator
 import numpy as np
 
 from .bndfun import Bndfun
-from .settings import _preferences as prefs
-from .utilities import Domain, check_funs, generate_funs, compute_breakdata
-from .decorators import self_empty, float_argument, cast_arg_to_chebfun, cache
+from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, SupportMismatch
 from .plotting import import_plt, plotfun
+from .settings import _preferences as prefs
+from .utilities import Domain, check_funs, compute_breakdata, generate_funs
 
 
 class Chebfun:
@@ -133,8 +133,8 @@ class Chebfun:
         rowcol = "row" if self.transposed else "column"
         numpcs = self.funs.size
         plural = "" if numpcs == 1 else "s"
-        header = "Chebfun {} ({} smooth piece{})\n".format(rowcol, numpcs, plural)
-        domain_info = "domain: {}\n".format(self.support)
+        header = f"Chebfun {rowcol} ({numpcs} smooth piece{plural})\n"
+        domain_info = f"domain: {self.support}\n"
         toprow = "       interval       length     endpoint values\n"
         tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
         rowdta = ""
@@ -144,8 +144,8 @@ class Chebfun:
             fl, fr = fun(endpts)
             row = tmplat.format(xl, xr, fun.size, fl, fr)
             rowdta += row
-        btmrow = "vertical scale = {:3.2g}".format(self.vscale)
-        btmxtr = "" if numpcs == 1 else "    total length = {}".format(sum([f.size for f in self]))
+        btmrow = f"vertical scale = {self.vscale:3.2g}"
+        btmxtr = "" if numpcs == 1 else f"    total length = {sum([f.size for f in self])}"
         return header + domain_info + toprow + rowdta + btmrow + btmxtr
 
     def __rsub__(self, f):
@@ -165,8 +165,8 @@ class Chebfun:
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
-        domain_str = "domain {}".format(self.support) if not self.isempty else "empty"
-        out = "<Chebfun-{},{},{}, {}>\n".format(rowcol, self.funs.size, sum([f.size for f in self]), domain_str)
+        domain_str = f"domain {self.support}" if not self.isempty else "empty"
+        out = f"<Chebfun-{rowcol},{self.funs.size},{sum([f.size for f in self])}, {domain_str}>\n"
         return out
 
     def __sub__(self, f):
@@ -207,7 +207,8 @@ class Chebfun:
     def _break(self, targetdomain):
         """Resamples self to the supplied Domain object, targetdomain. This
         method is intended as private since one will typically need to have
-        called either Domain.union(f), or Domain.merge(f) prior to call."""
+        called either Domain.union(f), or Domain.merge(f) prior to call.
+        """
         newfuns = []
         subintervals = targetdomain.intervals
         interval = next(subintervals)  # next(..) for Python2/3 compatibility
@@ -337,11 +338,11 @@ class Chebfun:
 
     @self_empty()
     def simplify(self):
-        """Simplify each fun in the chebfun"""
+        """Simplify each fun in the chebfun."""
         return self.__class__([fun.simplify() for fun in self])
 
     def translate(self, c):
-        """Translate a chebfun by c, i.e., return f(x-c)"""
+        """Translate a chebfun by c, i.e., return f(x-c)."""
         return self.__class__([x.translate(c) for x in self])
 
     # ----------
@@ -376,7 +377,7 @@ class Chebfun:
     # ----------
     @self_empty()
     def absolute(self):
-        """Absolute value of a Chebfun"""
+        """Absolute value of a Chebfun."""
         newdom = self.domain.merge(self.roots())
         funs = [x.absolute() for x in self._break(newdom)]
         return self.__class__(funs)
@@ -386,18 +387,19 @@ class Chebfun:
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other):
-        """Pointwise maximum of self and another chebfun"""
+        """Pointwise maximum of self and another chebfun."""
         return self._maximum_minimum(other, operator.ge)
 
     @self_empty()
     @cast_arg_to_chebfun
     def minimum(self, other):
-        """Pointwise mimimum of self and another chebfun"""
+        """Pointwise mimimum of self and another chebfun."""
         return self._maximum_minimum(other, operator.lt)
 
     def _maximum_minimum(self, other, comparator):
         """Method for computing the pointwise maximum/minimum of two
-        Chebfuns"""
+        Chebfuns.
+        """
         # Handle empty Chebfuns
         if self.isempty or other.isempty:
             return self.__class__.initempty()

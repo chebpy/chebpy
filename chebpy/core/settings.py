@@ -26,7 +26,8 @@ class ChebPreferences(DefaultPreferences):
         """Reset default preferences.
         `.reset()` resets all preferences to the DefaultPrefs state
         `.reset(*names)` resets only the selected ones.
-        This leaves additional user-added prefs untouched."""
+        This leaves additional user-added prefs untouched.
+        """
         if len(names) == 0:
             names = DefaultPreferences._defaults()
         for name in names:

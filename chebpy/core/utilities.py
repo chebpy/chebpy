@@ -3,16 +3,16 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from .settings import _preferences as prefs
 from .decorators import cast_other
 from .exceptions import (
     IntervalGap,
     IntervalOverlap,
     IntervalValues,
     InvalidDomain,
-    SupportMismatch,
     NotSubdomain,
+    SupportMismatch,
 )
+from .settings import _preferences as prefs
 
 
 def HTOL():
@@ -391,7 +391,6 @@ def _sortindex(intervals):
         IntervalOverlap: If any intervals overlap.
         IntervalGap: If there are gaps between intervals.
     """
-
     # sort by the left endpoint Interval values
     subintervals = np.array([x for x in intervals])
     leftbreakpts = np.array([s[0] for s in subintervals])

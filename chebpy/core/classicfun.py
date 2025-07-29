@@ -2,14 +2,13 @@ from abc import ABC
 
 import numpy as np
 
-from .fun import Fun
 from .chebtech import Chebtech2
-from .utilities import Interval
-from .settings import _preferences as prefs
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
+from .fun import Fun
 from .plotting import import_plt, plotfun
-
+from .settings import _preferences as prefs
+from .utilities import Interval
 
 techdict = {
     "Chebtech2": Chebtech2,
@@ -25,34 +24,37 @@ class Classicfun(Fun, ABC):
         """Adaptive initialisation of a Classicfun from a callable
         function f and a Interval object. The interval's interval has no
         relevance to the emptiness status of a Classicfun so we
-        arbitrarily set this to be DefaultPreferences.interval"""
+        arbitrarily set this to be DefaultPreferences.interval.
+        """
         interval = Interval()
         onefun = techdict[prefs.tech].initempty(interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initconst(cls, c, interval):
-        """Classicfun representation of a constant on the supplied interval"""
+        """Classicfun representation of a constant on the supplied interval."""
         onefun = techdict[prefs.tech].initconst(c, interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initidentity(cls, interval):
-        """Classicfun representation of f(x) = x on the supplied interval"""
+        """Classicfun representation of f(x) = x on the supplied interval."""
         onefun = techdict[prefs.tech].initvalues(np.asarray(interval), interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initfun_adaptive(cls, f, interval):
         """Adaptive initialisation of a BndFun from a callable function f
-        and a Interval object"""
+        and a Interval object.
+        """
         onefun = techdict[prefs.tech].initfun(lambda y: f(interval(y)), interval=interval)
         return cls(onefun, interval)
 
     @classmethod
     def initfun_fixedlen(cls, f, interval, n):
         """Fixed length initialisation of a BndFun from a callable
-        function f and a Interval object"""
+        function f and a Interval object.
+        """
         onefun = techdict[prefs.tech].initfun(lambda y: f(interval(y)), n, interval=interval)
         return cls(onefun, interval)
 
@@ -65,7 +67,8 @@ class Classicfun(Fun, ABC):
 
     def __init__(self, onefun, interval):
         """Initialise a Classicfun from its two defining properties: a
-        Interval object and a Onefun object"""
+        Interval object and a Onefun object.
+        """
         self.onefun = onefun
         self._interval = interval
 
@@ -78,47 +81,47 @@ class Classicfun(Fun, ABC):
     # ------------
     @property
     def coeffs(self):
-        """Return the coeffs property of the underlying onefun"""
+        """Return the coeffs property of the underlying onefun."""
         return self.onefun.coeffs
 
     @property
     def endvalues(self):
-        """Return a 2-array of endpointvalues taken from the interval"""
+        """Return a 2-array of endpointvalues taken from the interval."""
         return self.__call__(self.support)
 
     @property
     def interval(self):
-        """Return the Interval object associated with the Classicfun"""
+        """Return the Interval object associated with the Classicfun."""
         return self._interval
 
     @property
     def isconst(self):
-        """Return the isconst property of the underlying onefun"""
+        """Return the isconst property of the underlying onefun."""
         return self.onefun.isconst
 
     @property
     def iscomplex(self):
-        """Determine whether the underlying onefun is complex or real valued"""
+        """Determine whether the underlying onefun is complex or real valued."""
         return self.onefun.iscomplex
 
     @property
     def isempty(self):
-        """Return the isempty property of the underlying onefun"""
+        """Return the isempty property of the underlying onefun."""
         return self.onefun.isempty
 
     @property
     def size(self):
-        """Return the size property of the underlying onefun"""
+        """Return the size property of the underlying onefun."""
         return self.onefun.size
 
     @property
     def support(self):
-        """Return a 2-array of endpoints taken from the interval"""
+        """Return a 2-array of endpoints taken from the interval."""
         return np.asarray(self.interval)
 
     @property
     def vscale(self):
-        """Return the vscale property of the underlying onefun"""
+        """Return the vscale property of the underlying onefun."""
         return self.onefun.vscale
 
     # -----------
@@ -140,7 +143,8 @@ class Classicfun(Fun, ABC):
     def restrict(self, subinterval):
         """Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length
-        construction using same number of degrees of freedom as self."""
+        construction using same number of degrees of freedom as self.
+        """
         if subinterval not in self.interval:  # pragma: no cover
             raise NotSubinterval(self.interval, subinterval)
         if self.interval == subinterval:
@@ -149,7 +153,7 @@ class Classicfun(Fun, ABC):
             return self.__class__.initfun_fixedlen(self, subinterval, self.size)
 
     def translate(self, c):
-        """Translate a fun by c, i.e., return f(x-c)"""
+        """Translate a fun by c, i.e., return f(x-c)."""
         return self.__class__(self.onefun, self.interval + c)
 
     # -------------
