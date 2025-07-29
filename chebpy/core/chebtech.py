@@ -111,6 +111,18 @@ class Chebtech(Smoothfun, ABC):
         return cls(cls._vals2coeffs(values), interval=interval)
 
     def __init__(self, coeffs, interval=None):
+        """Initialize a Chebtech object.
+
+        This method initializes a new Chebtech object with the given coefficients
+        and interval. If no interval is provided, the default interval from
+        preferences is used.
+
+        Args:
+            coeffs (array-like): The coefficients of the Chebyshev series.
+            interval (array-like, optional): The interval on which the function
+                is defined. Defaults to None, which uses the default interval
+                from preferences.
+        """
         interval = interval if interval is not None else prefs.domain
         self._coeffs = np.array(coeffs)
         self._interval = Interval(*interval)

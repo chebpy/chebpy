@@ -1,3 +1,15 @@
+"""Abstract base class for functions defined on the standard interval [-1, 1].
+
+This module provides the Onefun abstract base class, which defines the interface for
+all function representations on the standard interval [-1, 1] in ChebPy. It specifies
+the methods and properties that concrete function classes must implement.
+
+The Onefun class serves as the foundation for representing functions on the standard
+interval, with concrete implementations like Chebtech inheriting from it. Functions
+defined on arbitrary intervals are typically mapped to this standard interval for
+internal representation and manipulation.
+"""
+
 from abc import ABC, abstractmethod
 
 
