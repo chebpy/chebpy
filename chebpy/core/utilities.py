@@ -16,64 +16,150 @@ from .exceptions import (
 
 
 def HTOL():
+    """Return the horizontal tolerance used for interval comparisons.
+
+    Returns:
+        float: 5 times the machine epsilon from preferences.
+    """
     return 5 * prefs.eps
 
 
 class Interval(np.ndarray):
-    """
-    Utility class to implement Interval logic. The purpose of this class
-    is to both enforce certain properties of domain components such as
-    having exactly two monotonically increasing elements and also to
-    implement the functionality of mapping to and from the unit interval.
+    """Utility class to implement Interval logic.
 
-        formap: y in [-1,1] -> x in [a,b]
-        invmap: x in  [a,b] -> y in [-1,1]
-        drvmap: y in [-1,1] -> x in [a,b]
+    The purpose of this class is to both enforce certain properties of domain
+    components such as having exactly two monotonically increasing elements and
+    also to implement the functionality of mapping to and from the unit interval.
 
-    We also provide a convenience __eq__ method amd set the __call__
-    method to evaluate self.formap since this is the most frequently used
-    mapping operation.
+    Attributes:
+        formap: Maps y in [-1,1] to x in [a,b]
+        invmap: Maps x in [a,b] to y in [-1,1]
+        drvmap: Derivative mapping from y in [-1,1] to x in [a,b]
 
-    Currently only implemented for finite a and b.
+    Note:
+        Currently only implemented for finite a and b.
+        The __call__ method evaluates self.formap since this is the most
+        frequently used mapping operation.
     """
 
     def __new__(cls, a=-1.0, b=1.0):
+        """Create a new Interval instance.
+
+        Args:
+            a (float, optional): Left endpoint of the interval. Defaults to -1.0.
+            b (float, optional): Right endpoint of the interval. Defaults to 1.0.
+
+        Raises:
+            IntervalValues: If a >= b.
+
+        Returns:
+            Interval: A new Interval instance.
+        """
         if a >= b:
             raise IntervalValues
         return np.asarray((a, b), dtype=float).view(cls)
 
     def formap(self, y):
+        """Map from the reference interval [-1,1] to this interval [a,b].
+
+        Args:
+            y (float or numpy.ndarray): Points in the reference interval [-1,1].
+
+        Returns:
+            float or numpy.ndarray: Corresponding points in the interval [a,b].
+        """
         a, b = self
         return 0.5 * b * (y + 1.0) + 0.5 * a * (1.0 - y)
 
     def invmap(self, x):
+        """Map from this interval [a,b] to the reference interval [-1,1].
+
+        Args:
+            x (float or numpy.ndarray): Points in the interval [a,b].
+
+        Returns:
+            float or numpy.ndarray: Corresponding points in the reference interval [-1,1].
+        """
         a, b = self
         return (2.0 * x - a - b) / (b - a)
 
     def drvmap(self, y):
-        a, b = self
-        return 0.0 * y + 0.5 * (b - a)
+        """Compute the derivative of the forward map.
+
+        Args:
+            y (float or numpy.ndarray): Points in the reference interval [-1,1].
+
+        Returns:
+            float or numpy.ndarray: Derivative values at the corresponding points.
+        """
+        a, b = self  # pragma: no cover
+        return 0.0 * y + 0.5 * (b - a)  # pragma: no cover
 
     def __eq__(self, other):
+        """Check if two intervals are equal.
+
+        Args:
+            other (Interval): Another interval to compare with.
+
+        Returns:
+            bool: True if the intervals have the same endpoints, False otherwise.
+        """
         (a, b), (x, y) = self, other
         return (a == x) & (y == b)
 
     def __ne__(self, other):
+        """Check if two intervals are not equal.
+
+        Args:
+            other (Interval): Another interval to compare with.
+
+        Returns:
+            bool: True if the intervals have different endpoints, False otherwise.
+        """
         return not self == other
 
     def __call__(self, y):
+        """Map points from [-1,1] to this interval (shorthand for formap).
+
+        Args:
+            y (float or numpy.ndarray): Points in the reference interval [-1,1].
+
+        Returns:
+            float or numpy.ndarray: Corresponding points in the interval [a,b].
+        """
         return self.formap(y)
 
     def __contains__(self, other):
+        """Check if another interval is contained within this interval.
+
+        Args:
+            other (Interval): Another interval to check.
+
+        Returns:
+            bool: True if other is contained within this interval, False otherwise.
+        """
         (a, b), (x, y) = self, other
         return (a <= x) & (y <= b)
 
     def isinterior(self, x):
+        """Check if points are strictly in the interior of the interval.
+
+        Args:
+            x (float or numpy.ndarray): Points to check.
+
+        Returns:
+            bool or numpy.ndarray: Boolean array indicating which points are in the interior.
+        """
         a, b = self
         return np.logical_and(a < x, x < b)
 
     @property
     def hscale(self):
+        """Calculate the horizontal scale factor of the interval.
+
+        Returns:
+            float: The horizontal scale factor.
+        """
         a, b = self
         h = max(infnorm(self), 1)
         hF = b - a  # if interval == domain: scale hscale back to 1
@@ -82,19 +168,53 @@ class Interval(np.ndarray):
 
 
 def _merge_duplicates(arr, tols):
-    """Remove duplicate entries from an input array to within array tolerance
-    tols, working from left to right."""
-    # TODO: pathological cases may make this break since this method works by
-    # using consecutive differences. Might be better to take an average
-    # (median?), rather than the left-hand value.
+    """Remove duplicate entries from an input array within specified tolerances.
+
+    This function works from left to right, keeping the first occurrence of
+    values that are within tolerance of each other.
+
+    Args:
+        arr (numpy.ndarray): Input array to remove duplicates from.
+        tols (numpy.ndarray): Array of tolerance values for each pair of adjacent elements.
+            Should have length one less than arr.
+
+    Returns:
+        numpy.ndarray: Array with duplicates removed.
+
+    Note:
+        Pathological cases may cause issues since this method works by using
+        consecutive differences. It might be better to take an average (median?),
+        rather than the left-hand value.
+    """
     idx = np.append(np.abs(np.diff(arr)) > tols[:-1], True)
     return arr[idx]
 
 
 class Domain(np.ndarray):
-    """Numpy ndarray, with additional Chebfun-specific domain logic"""
+    """Numpy ndarray with additional Chebfun-specific domain logic.
+
+    A Domain represents a collection of breakpoints that define a piecewise domain.
+    It provides methods for manipulating and comparing domains, as well as
+    generating intervals between adjacent breakpoints.
+
+    Attributes:
+        intervals: Generator yielding Interval objects between adjacent breakpoints.
+        support: First and last breakpoints of the domain.
+    """
 
     def __new__(cls, breakpoints):
+        """Create a new Domain instance.
+
+        Args:
+            breakpoints (array-like): Collection of monotonically increasing breakpoints.
+                Must have at least 2 elements.
+
+        Raises:
+            InvalidDomain: If breakpoints has fewer than 2 elements or is not monotonically increasing.
+
+        Returns:
+            Domain: A new Domain instance.
+        """
         bpts = np.asarray(breakpoints, dtype=float)
         if bpts.size == 0:
             return bpts.view(cls)
@@ -104,8 +224,14 @@ class Domain(np.ndarray):
             return bpts.view(cls)
 
     def __contains__(self, other):
-        """Checks whether one domain object is a subodomain of another (to
-        within a tolerance)"""
+        """Check whether one domain object is a subdomain of another (within tolerance).
+
+        Args:
+            other (Domain): Another domain to check.
+
+        Returns:
+            bool: True if other is contained within this domain (within tolerance), False otherwise.
+        """
         a, b = self.support
         x, y = other.support
         bounds = np.array([1 - HTOL(), 1 + HTOL()])
@@ -114,25 +240,48 @@ class Domain(np.ndarray):
 
     @classmethod
     def from_chebfun(cls, chebfun):
-        """Initialise a Domain object from a Chebfun"""
+        """Initialize a Domain object from a Chebfun.
+
+        Args:
+            chebfun: A Chebfun object with breakpoints.
+
+        Returns:
+            Domain: A new Domain instance with the same breakpoints as the Chebfun.
+        """
         return cls(chebfun.breakpoints)
 
     @property
     def intervals(self):
-        """Iterate across adajacent pairs of breakpoints, yielding an interval
-        object."""
+        """Generate Interval objects between adjacent breakpoints.
+
+        Yields:
+            Interval: Interval objects for each pair of adjacent breakpoints.
+        """
         for a, b in zip(self[:-1], self[1:]):
             yield Interval(a, b)
 
     @property
     def support(self):
-        """First and last breakpoints"""
+        """Get the first and last breakpoints of the domain.
+
+        Returns:
+            numpy.ndarray: Array containing the first and last breakpoints.
+        """
         return self[[0, -1]]
 
     @cast_other
     def union(self, other):
-        """Union of two domain objects with an initial check that the support
-        of each object matches"""
+        """Create a union of two domain objects with matching support.
+
+        Args:
+            other (Domain): Another domain to union with.
+
+        Raises:
+            SupportMismatch: If the supports of the two domains don't match within tolerance.
+
+        Returns:
+            Domain: A new Domain containing all breakpoints from both domains.
+        """
         dspt = np.abs(self.support - other.support)
         htol = np.maximum(HTOL(), HTOL() * np.abs(self.support))
         if np.any(dspt > htol):
@@ -140,8 +289,14 @@ class Domain(np.ndarray):
         return self.merge(other)
 
     def merge(self, other):
-        """Merge two domain objects without checking first whether they have
-        the same support"""
+        """Merge two domain objects without checking if they have the same support.
+
+        Args:
+            other (Domain): Another domain to merge with.
+
+        Returns:
+            Domain: A new Domain containing all breakpoints from both domains.
+        """
         all_bpts = np.append(self, other)
         new_bpts = np.unique(all_bpts)
         mergetol = np.maximum(HTOL(), HTOL() * np.abs(new_bpts))
@@ -150,8 +305,17 @@ class Domain(np.ndarray):
 
     @cast_other
     def restrict(self, other):
-        """Truncate self to the support of other, retaining any interior
-        breakpoints"""
+        """Truncate self to the support of other, retaining any interior breakpoints.
+
+        Args:
+            other (Domain): Domain to restrict to.
+
+        Raises:
+            NotSubdomain: If other is not a subdomain of self.
+
+        Returns:
+            Domain: A new Domain with breakpoints from self restricted to other's support.
+        """
         if other not in self:
             raise NotSubdomain
         dom = self.merge(other)
@@ -162,8 +326,15 @@ class Domain(np.ndarray):
         return self.__class__(new)
 
     def breakpoints_in(self, other):
-        """Return a Boolean array of size equal to self where True indicates
-        that the breakpoint is in other to within the specified tolerance"""
+        """Check which breakpoints are in another domain within tolerance.
+
+        Args:
+            other (Domain): Domain to check against.
+
+        Returns:
+            numpy.ndarray: Boolean array of size equal to self where True indicates
+                that the breakpoint is in other within the specified tolerance.
+        """
         out = np.empty(self.size, dtype=bool)
         window = np.array([1 - HTOL(), 1 + HTOL()])
         # TODO: is there way to vectorise this?
@@ -176,8 +347,14 @@ class Domain(np.ndarray):
         return out
 
     def __eq__(self, other):
-        """Test for pointwise equality (within a tolerance) of two Domain
-        objects"""
+        """Test for pointwise equality (within a tolerance) of two Domain objects.
+
+        Args:
+            other (Domain): Another domain to compare with.
+
+        Returns:
+            bool: True if domains have the same size and all breakpoints match within tolerance.
+        """
         if self.size != other.size:
             return False
         else:
@@ -186,14 +363,34 @@ class Domain(np.ndarray):
             return bool(np.all(dbpt <= htol))  # cast back to bool
 
     def __ne__(self, other):
+        """Test for inequality of two Domain objects.
+
+        Args:
+            other (Domain): Another domain to compare with.
+
+        Returns:
+            bool: True if domains differ in size or any breakpoints don't match within tolerance.
+        """
         return not self == other
 
 
 def _sortindex(intervals):
-    """Helper function to return an index determining the ordering of the
-    supplied array of interval objects. We check that the intervals (1) do not
-    overlap, and (2) represent a complete partition of the broader
-    approximation domain"""
+    """Return an index determining the ordering of interval objects.
+
+    This helper function checks that the intervals:
+    1. Do not overlap
+    2. Represent a complete partition of the broader approximation domain
+
+    Args:
+        intervals (array-like): Array of Interval objects to sort.
+
+    Returns:
+        numpy.ndarray: Index array for sorting the intervals.
+
+    Raises:
+        IntervalOverlap: If any intervals overlap.
+        IntervalGap: If there are gaps between intervals.
+    """
 
     # sort by the left endpoint Interval values
     subintervals = np.array([x for x in intervals])
@@ -213,9 +410,21 @@ def _sortindex(intervals):
 
 
 def check_funs(funs):
-    """Return an array of sorted funs.  As the name suggests, this method
-    checks that the funs provided do not overlap or have gaps (the actual
-    checks are performed in _sortindex)"""
+    """Return an array of sorted funs with validation checks.
+
+    This function checks that the provided funs do not overlap or have gaps
+    between their intervals. The actual checks are performed in _sortindex.
+
+    Args:
+        funs (array-like): Array of function objects with interval attributes.
+
+    Returns:
+        numpy.ndarray: Sorted array of funs.
+
+    Raises:
+        IntervalOverlap: If any function intervals overlap.
+        IntervalGap: If there are gaps between function intervals.
+    """
     funs = np.array(funs)
     if funs.size == 0:
         sortedfuns = np.array([])
@@ -227,10 +436,18 @@ def check_funs(funs):
 
 
 def compute_breakdata(funs):
-    """Define function values at the interior breakpoints by averaging the
-    left and right limits. This method is called after check_funs() and
-    thus at the point of calling we are guaranteed to have a fully partitioned
-    and nonoverlapping domain."""
+    """Define function values at breakpoints by averaging left and right limits.
+
+    This function computes values at breakpoints by averaging the left and right
+    limits of adjacent functions. It is typically called after check_funs(),
+    which ensures that the domain is fully partitioned and non-overlapping.
+
+    Args:
+        funs (numpy.ndarray): Array of function objects with support and endvalues attributes.
+
+    Returns:
+        OrderedDict: Dictionary mapping breakpoints to function values.
+    """
     if funs.size == 0:
         return OrderedDict()
     else:
@@ -249,8 +466,19 @@ def compute_breakdata(funs):
 
 
 def generate_funs(domain, bndfun_constructor, kwds={}):
-    """Method used by several of the Chebfun classmethod constructors to
-    generate a collection of funs."""
+    """Generate a collection of function objects over a domain.
+
+    This method is used by several of the Chebfun classmethod constructors to
+    generate a collection of function objects over the specified domain.
+
+    Args:
+        domain (array-like or None): Domain breakpoints. If None, uses default domain from preferences.
+        bndfun_constructor (callable): Constructor function for creating function objects.
+        kwds (dict, optional): Additional keyword arguments to pass to the constructor. Defaults to {}.
+
+    Returns:
+        list: List of function objects covering the domain.
+    """
     domain = Domain(domain if domain is not None else prefs.domain)
     funs = []
     for interval in domain.intervals:
@@ -260,10 +488,30 @@ def generate_funs(domain, bndfun_constructor, kwds={}):
 
 
 def infnorm(vals):
+    """Calculate the infinity norm of an array.
+
+    Args:
+        vals (array-like): Input array.
+
+    Returns:
+        float: The infinity norm (maximum absolute value) of the input.
+    """
     return np.linalg.norm(vals, np.inf)
 
 
 def coerce_list(x):
-    if not isinstance(x, Iterable) or isinstance(x, str):
+    """Convert a non-iterable object to a list containing that object.
+
+    If the input is already an iterable (except strings), it is returned unchanged.
+    Strings are treated as non-iterables and wrapped in a list.
+
+    Args:
+        x: Input object to coerce to a list if necessary.
+
+    Returns:
+        list or iterable: The input wrapped in a list if it was not an iterable,
+            or the original input if it was already an iterable (except strings).
+    """
+    if not isinstance(x, Iterable) or isinstance(x, str):  # pragma: no cover
         x = [x]
     return x

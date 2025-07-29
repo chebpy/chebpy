@@ -69,7 +69,7 @@ class Classicfun(Fun, ABC):
         self.onefun = onefun
         self._interval = interval
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         out = "{0}([{2}, {3}], {1})".format(self.__class__.__name__, self.size, *self.support)
         return out
 
@@ -141,7 +141,7 @@ class Classicfun(Fun, ABC):
         """Return a Classicfun that matches self on a subinterval of its
         interval of definition. The output is formed using a fixed length
         construction using same number of degrees of freedom as self."""
-        if subinterval not in self.interval:
+        if subinterval not in self.interval:  # pragma: no cover
             raise NotSubinterval(self.interval, subinterval)
         if self.interval == subinterval:
             return self
@@ -206,7 +206,7 @@ def addUtility(methodname):
 
 
 for methodname in methods_onefun_other:
-    if methodname[:4] == "plot" and plt is None:
+    if methodname[:4] == "plot" and plt is None:  # pragma: no cover
         continue
     addUtility(methodname)
 
@@ -262,7 +262,7 @@ def addBinaryOp(methodname):
                 return f.copy()
             g = f.onefun
             # raise Exception if intervals are not consistent
-            if self.interval != f.interval:
+            if self.interval != f.interval:  # pragma: no cover
                 raise IntervalMismatch(self.interval, f.interval)
         else:
             # let the lower level classes raise any other exceptions

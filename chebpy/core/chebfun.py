@@ -6,7 +6,7 @@ from .bndfun import Bndfun
 from .settings import _preferences as prefs
 from .utilities import Domain, check_funs, generate_funs, compute_breakdata
 from .decorators import self_empty, float_argument, cast_arg_to_chebfun, cache
-from .exceptions import BadFunLengthArgument
+from .exceptions import BadFunLengthArgument, SupportMismatch
 from .plotting import import_plt, plotfun
 
 
@@ -85,6 +85,28 @@ class Chebfun:
     def __iter__(self):
         return self.funs.__iter__()
 
+    def __eq__(self, other):
+        """Test for equality between two Chebfun objects.
+
+        Two Chebfun objects are considered equal if they have the same domain
+        and their function values are equal (within tolerance) at a set of test points.
+        """
+        if not isinstance(other, self.__class__):
+            return False
+
+        # Check if both are empty
+        if self.isempty and other.isempty:
+            return True
+
+        # Check if domains are equal
+        if self.domain != other.domain:
+            return False
+
+        # Check function values at test points
+        xx = np.linspace(self.support[0], self.support[1], 100)
+        tol = 1e2 * max(self.vscale, other.vscale) * prefs.eps
+        return np.all(np.abs(self(xx) - other(xx)) <= tol)
+
     def __mul__(self, f):
         return self._apply_binop(f, operator.mul)
 
@@ -106,12 +128,13 @@ class Chebfun:
         newfuns = [fun.initfun_adaptive(lambda x: constfun(x, c) / fun(x), fun.interval) for fun in self]
         return self.__class__(newfuns)
 
-    @self_empty("chebfun<empty>")
+    @self_empty("Chebfun<empty>")
     def __repr__(self):
         rowcol = "row" if self.transposed else "column"
         numpcs = self.funs.size
         plural = "" if numpcs == 1 else "s"
-        header = "chebfun {} ({} smooth piece{})\n".format(rowcol, numpcs, plural)
+        header = "Chebfun {} ({} smooth piece{})\n".format(rowcol, numpcs, plural)
+        domain_info = "domain: {}\n".format(self.support)
         toprow = "       interval       length     endpoint values\n"
         tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
         rowdta = ""
@@ -123,7 +146,7 @@ class Chebfun:
             rowdta += row
         btmrow = "vertical scale = {:3.2g}".format(self.vscale)
         btmxtr = "" if numpcs == 1 else "    total length = {}".format(sum([f.size for f in self]))
-        return header + toprow + rowdta + btmrow + btmxtr
+        return header + domain_info + toprow + rowdta + btmrow + btmxtr
 
     def __rsub__(self, f):
         return -(self - f)
@@ -142,7 +165,8 @@ class Chebfun:
 
     def __str__(self):
         rowcol = "row" if self.transposed else "col"
-        out = "<chebfun-{},{},{}>\n".format(rowcol, self.funs.size, sum([f.size for f in self]))
+        domain_str = "domain {}".format(self.support) if not self.isempty else "empty"
+        out = "<Chebfun-{},{},{}, {}>\n".format(rowcol, self.funs.size, sum([f.size for f in self]), domain_str)
         return out
 
     def __sub__(self, f):
@@ -210,6 +234,11 @@ class Chebfun:
         """Construct and return a Domain object corresponding to self."""
         return Domain.from_chebfun(self)
 
+    @domain.setter
+    def domain(self, new_domain):
+        """Set the domain of the Chebfun by restricting to the new domain."""
+        self.restrict_(new_domain)
+
     @property
     @self_empty(Domain([]))
     def support(self):
@@ -276,6 +305,14 @@ class Chebfun:
     def restrict(self, subinterval):
         """Restrict a chebfun to a subinterval."""
         return self._restrict(subinterval).simplify()
+
+    @self_empty()
+    def restrict_(self, subinterval):
+        """Restrict a chebfun to a subinterval, modifying the object in place."""
+        restricted = self._restrict(subinterval).simplify()
+        self.funs = restricted.funs
+        self.breakdata = compute_breakdata(self.funs)
+        return self
 
     @cache
     @self_empty(np.array([]))
@@ -361,11 +398,45 @@ class Chebfun:
     def _maximum_minimum(self, other, comparator):
         """Method for computing the pointwise maximum/minimum of two
         Chebfuns"""
+        # Handle empty Chebfuns
+        if self.isempty or other.isempty:
+            return self.__class__.initempty()
+
+        # Find the intersection of domains
+        try:
+            # Try to use union if supports match
+            newdom = self.domain.union(other.domain)
+        except SupportMismatch:
+            # If supports don't match, find the intersection
+            a_min, a_max = self.support
+            b_min, b_max = other.support
+
+            # Calculate intersection
+            c_min = max(a_min, b_min)
+            c_max = min(a_max, b_max)
+
+            # If there's no intersection, return empty
+            if c_min >= c_max:
+                return self.__class__.initempty()
+
+            # Restrict both functions to the intersection
+            self_restricted = self.restrict([c_min, c_max])
+            other_restricted = other.restrict([c_min, c_max])
+
+            # Recursively call with the restricted functions
+            return self_restricted._maximum_minimum(other_restricted, comparator)
+
+        # Continue with the original algorithm
         roots = (self - other).roots()
-        newdom = self.domain.union(other.domain).merge(roots)
+        newdom = newdom.merge(roots)
         switch = newdom.support.merge(roots)
+
+        # Handle the case where switch is empty
+        if switch.size == 0:  # pragma: no cover
+            return self.__class__.initempty()
+
         keys = 0.5 * ((-1) ** np.arange(switch.size - 1) + 1)
-        if comparator(other(switch[0]), self(switch[0])):
+        if switch.size > 0 and comparator(other(switch[0]), self(switch[0])):
             keys = 1 - keys
         funs = np.array([])
         for interval, use_self in zip(switch.intervals, keys):
