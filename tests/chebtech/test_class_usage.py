@@ -10,7 +10,7 @@ import pytest
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import cos, eps, exp, pi, sin
+from ..utilities import cos, eps, exp, pi, sin
 
 
 @pytest.fixture

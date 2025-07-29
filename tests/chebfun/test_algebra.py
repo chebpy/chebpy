@@ -5,13 +5,14 @@ including addition, subtraction, multiplication, division, and powers.
 """
 
 import itertools
+import operator
 
 import numpy as np
 import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import binary_op_tester, binops, chebfun_testdomains, div_binops, eps, unary_op_tester
+from ..utilities import eps
 
 
 # tests for empty function operations
@@ -39,7 +40,7 @@ def test__neg__empty(emptyfun):
     assert (-emptyfun).isempty
 
 
-def test__add__radd__empty(emptyfun, testfunctions):
+def test__add__radd__empty(emptyfun, testdomains, testfunctions):
     """Test addition with empty Chebfun objects.
 
     This test verifies that adding an empty Chebfun object to any other
@@ -48,18 +49,19 @@ def test__add__radd__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions, each represented as a tuple containing
             (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
             assert (emptyfun + ff).isempty
             assert (ff + emptyfun).isempty
 
 
-def test__add__radd__constant(testfunctions):
+def test__add__radd__constant(testdomains, testfunctions):
     """Test addition of constants to Chebfun objects.
 
     This test verifies that adding a constant to a Chebfun object
@@ -67,7 +69,7 @@ def test__add__radd__constant(testfunctions):
     tolerance.
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
 
@@ -86,7 +88,7 @@ def test__add__radd__constant(testfunctions):
                 assert np.max(g(xx) - gg2(xx)) <= tol
 
 
-def test__sub__rsub__empty(emptyfun, testfunctions):
+def test__sub__rsub__empty(emptyfun, testdomains, testfunctions):
     """Test subtraction with empty Chebfun objects.
 
     This test verifies that subtracting an empty Chebfun object from any other
@@ -94,25 +96,26 @@ def test__sub__rsub__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions, each represented as a tuple containing
             (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
             assert (emptyfun - ff).isempty
             assert (ff - emptyfun).isempty
 
 
-def test__sub__rsub__constant(testfunctions):
+def test__sub__rsub__constant(testdomains, testfunctions):
     """Test subtraction of constants and Chebfun objects.
 
     This test verifies that subtracting a Chebfun object from a constant
     (and vice versa) produces the expected result within a specified tolerance.
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
 
@@ -134,7 +137,7 @@ def test__sub__rsub__constant(testfunctions):
                 assert np.max(h(xx) - hh(xx)) <= tol
 
 
-def test__mul__rmul__empty(emptyfun, testfunctions):
+def test__mul__rmul__empty(emptyfun, testdomains, testfunctions):
     """Test multiplication with empty Chebfun objects.
 
     This test verifies that multiplying an empty Chebfun object with any other
@@ -143,25 +146,26 @@ def test__mul__rmul__empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions, each represented as a tuple containing
             (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
             assert (emptyfun * ff).isempty
             assert (ff * emptyfun).isempty
 
 
-def test__mul__rmul__constant(testfunctions):
+def test__mul__rmul__constant(testdomains, testfunctions):
     """Test multiplication of constants and Chebfun objects.
 
     This test verifies that multiplying a Chebfun object by a constant
     (and vice versa) produces the expected result within a specified tolerance.
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             for const in (-1, 1, 10, -1e5):
 
@@ -183,7 +187,7 @@ def test__mul__rmul__constant(testfunctions):
                 assert np.max(h(xx) - hh(xx)) <= tol
 
 
-def test_truediv_empty(emptyfun, testfunctions):
+def test_truediv_empty(emptyfun, div_binops, testdomains, testfunctions):
     """Test division with empty Chebfun objects.
 
     This test verifies that dividing an empty Chebfun object by any other
@@ -191,11 +195,13 @@ def test_truediv_empty(emptyfun, testfunctions):
 
     Args:
         emptyfun: Fixture providing an empty Chebfun object
+        div_binops: List of division operators to test
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions, each represented as a tuple containing
             (fun, _, _) where fun is the function to test
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             ff = Chebfun.initfun_adaptive(fun, np.linspace(a, b, 9))
             for op in div_binops:
@@ -206,7 +212,7 @@ def test_truediv_empty(emptyfun, testfunctions):
             assert (ff / emptyfun).isempty
 
 
-def test_truediv_constant(testfunctions):
+def test_truediv_constant(testdomains, testfunctions):
     """Test division of constants and Chebfun objects.
 
     This test verifies that dividing a constant by a Chebfun object
@@ -214,7 +220,7 @@ def test_truediv_constant(testfunctions):
     """
     for fun, _, has_roots in testfunctions:
         if not has_roots:
-            for dom, _ in chebfun_testdomains:
+            for dom, _ in testdomains:
                 a, b = dom
                 for const in (-1, 1, 10, -1e5):
 
@@ -266,7 +272,7 @@ def test_rpow_empty(emptyfun):
         assert (const**emptyfun).isempty
 
 
-def test_pow_constant(testfunctions):
+def test_pow_constant(testdomains, testfunctions):
     """Test raising Chebfun objects to constant powers.
 
     This test verifies that raising a Chebfun object to a constant power
@@ -274,7 +280,7 @@ def test_pow_constant(testfunctions):
     """
     for fun, _, has_roots in testfunctions:
         if not has_roots:
-            for dom, _ in chebfun_testdomains:
+            for dom, _ in testdomains:
                 a, b = dom
                 for c in (-1, 1, 2, 0.5):
 
@@ -291,14 +297,14 @@ def test_pow_constant(testfunctions):
                     assert np.max(g(xx) - gg(xx)) <= tol
 
 
-def test_rpow_constant(testfunctions):
+def test_rpow_constant(testdomains, testfunctions):
     """Test raising constants to Chebfun objects.
 
     This test verifies that raising a constant to a Chebfun object
     produces the expected result within a specified tolerance.
     """
     for fun, _, _ in testfunctions:
-        for dom, _ in chebfun_testdomains:
+        for dom, _ in testdomains:
             a, b = dom
             for c in (0.5, 1, 2, np.e):
 
@@ -334,9 +340,7 @@ def test_rpow_constant(testfunctions):
 
 
 # Generate test functions for binary operations
-@pytest.mark.parametrize("binop", binops)
-@pytest.mark.parametrize("dom,tol", chebfun_testdomains)
-def test_binary_operations(binop, dom, tol, testfunctions):
+def test_binary_operations(binops, div_binops, testdomains, testfunctions):
     """Test binary operations between two Chebfun objects.
 
     This test verifies that binary operations (addition, subtraction,
@@ -345,26 +349,56 @@ def test_binary_operations(binop, dom, tol, testfunctions):
     scale of the functions.
 
     Args:
-        binop: Binary operator function (e.g., operator.add)
-        dom: Domain for the functions
-        tol: Tolerance for the comparison
+        binops: List of binary operators to test (e.g., operator.add, operator.mul)
+        div_binops: List of division operators to check for special handling
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions to evaluate
     """
-    for f, g in itertools.product(testfunctions, testfunctions):
-        f, _, roots_f = f
-        g, _, roots_g = g
+    for binop in binops:
+        for f, g in itertools.product(testfunctions, testfunctions):
 
-        if binop in div_binops and roots_g:
-            pytest.skip("Skipping division test with denominator that has roots")
+            f, _, roots_f = f
+            g, _, roots_g = g
 
-        test_func = binary_op_tester(f, g, binop, dom, 10 * tol)
-        test_func()
+            for dom, tol in testdomains:
+                if binop in div_binops and roots_g:
+                    pass
+                else:
+                    a, b = dom
+                    xx = np.linspace(a, b, 1001)
+                    n, m = 3, 8
+                    ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, n + 1))
+                    gg = Chebfun.initfun_adaptive(g, np.linspace(a, b, m + 1))
+
+                    def fg_expected(x):
+                        return binop(f(x), g(x))
+
+                    fg = binop(ff, gg)
+
+                        #def tester():
+                    vscl = max([ff.vscale, gg.vscale])
+                    hscl = max([ff.hscale, gg.hscale])
+                    lscl = max([fun.size for fun in np.append(ff.funs, gg.funs)])
+                    assert ff.funs.size == n
+                    assert gg.funs.size == m
+                    assert fg.funs.size == n + m - 1
+
+                    # Increase tolerance for multiplication on large domains
+                    extra_factor = 1
+                    if binop == operator.mul and abs(b - a) > 10:
+                        extra_factor = 100
+
+                    # try:
+                    # Evaluate both functions
+                    fg_vals = fg(xx)
+                    fg_expected_vals = fg_expected(xx)
+
+                    assert np.max(fg_vals - fg_expected_vals) <= extra_factor * vscl * hscl * lscl * tol
 
 
 # Generate test functions for unary operations
 @pytest.mark.parametrize("unaryop", [lambda x: +x, lambda x: -x])
-@pytest.mark.parametrize("dom,tol", chebfun_testdomains)
-def test_unary_operations(unaryop, dom, tol, testfunctions):
+def test_unary_operations(unaryop, testdomains, testfunctions):
     """Test unary operations on a Chebfun object.
 
     This test verifies that unary operations (positive, negative) on
@@ -373,10 +407,31 @@ def test_unary_operations(unaryop, dom, tol, testfunctions):
 
     Args:
         unaryop: Unary operator function (e.g., lambda x: -x)
-        dom: Domain for the function
-        tol: Tolerance for the comparison
+        testdomains: List of tuples, each containing a domain (list of endpoints) and a tolerance value
         testfunctions: List of test functions to evaluate
     """
     for f, _, _ in testfunctions:
-        test_func = unary_op_tester(f, unaryop, dom, tol)
-        test_func()
+        for dom, tol in testdomains:
+            a, b = dom
+            xx = np.linspace(a, b, 1001)
+            ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 9))
+
+            #def gg_expected(x):
+            #    return unaryop(f(x))
+
+            gg = unaryop(ff)
+
+            #def tester():
+            vscl = ff.vscale
+            hscl = ff.hscale
+            lscl = max([fun.size for fun in ff])
+
+            assert ff.funs.size == gg.funs.size
+            assert np.max(gg(xx) - unaryop(f(xx))) <= vscl * hscl * lscl * tol
+
+            #return tester
+
+
+
+            #test_func = unary_op_tester(f, unaryop, dom, tol)
+            #test_func()

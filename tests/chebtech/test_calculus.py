@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import cos, eps, exp, pi, sin
+from ..utilities import cos, eps, exp, pi, sin
 
 
 # tests for the correct results in the empty cases

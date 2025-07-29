@@ -5,18 +5,9 @@ the bndfun class. It provides fixtures for common test objects and
 helper functions for testing algebraic operations.
 """
 
-import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.settings import DefaultPreferences
-
-# aliases
-eps = DefaultPreferences.eps
-pi = np.pi
-sin = np.sin
-cos = np.cos
-exp = np.exp
 
 
 @pytest.fixture

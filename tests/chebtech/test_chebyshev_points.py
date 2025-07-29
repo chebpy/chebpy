@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import eps, scaled_tol
+from ..utilities import eps, scaled_tol
 
 # aliases
 _vals2coeffs = Chebtech2._vals2coeffs

@@ -10,7 +10,7 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import cos, eps, exp, sin
+from ..utilities import cos, eps, exp, sin
 
 
 @pytest.fixture

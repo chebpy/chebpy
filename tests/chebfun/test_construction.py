@@ -17,7 +17,7 @@ from chebpy.core.exceptions import (
 )
 from chebpy.core.utilities import Interval
 
-from .conftest import eps, exp
+from ..utilities import eps, exp
 
 
 @pytest.fixture

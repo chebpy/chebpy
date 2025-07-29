@@ -8,7 +8,7 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
 
-from .conftest import eps
+from ..utilities import eps
 
 # Binary operators to test
 binops = (operator.add, operator.mul, operator.sub, operator.truediv)

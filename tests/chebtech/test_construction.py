@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import eps
+from ..utilities import eps
 
 
 # TODO: expand to all the constructor variants

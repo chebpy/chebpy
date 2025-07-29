@@ -10,22 +10,7 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import cos, sin
-
-
-def _joukowsky(z):
-    """Apply the Joukowsky transformation to z.
-
-    The Joukowsky transformation maps the unit circle to an ellipse and is used
-    in complex analysis and fluid dynamics. It is defined as f(z) = 0.5 * (z + 1/z).
-
-    Args:
-        z (complex or numpy.ndarray): Complex number or array of complex numbers.
-
-    Returns:
-        complex or numpy.ndarray: Result of the Joukowsky transformation.
-    """
-    return 0.5 * (z + 1 / z)
+from ..utilities import cos, joukowsky, sin
 
 
 @pytest.fixture
@@ -85,7 +70,7 @@ def test_plot_complex(plotting_fixtures):
     fig, ax = plt.subplots()
     # plot Bernstein ellipses
     for rho in np.arange(1.1, 2, 0.1):
-        _joukowsky(rho * plotting_fixtures["f2"]).plot(ax=ax)
+        joukowsky(rho * plotting_fixtures["f2"]).plot(ax=ax)
 
 
 @pytest.mark.skipif(plt is None, reason="matplotlib not installed")

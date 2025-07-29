@@ -6,7 +6,7 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
 
-from .conftest import eps, sin
+from ..utilities import eps, sin
 
 
 @pytest.fixture

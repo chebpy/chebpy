@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import exp, sin
+from ..utilities import exp, sin
 
 
 @pytest.fixture

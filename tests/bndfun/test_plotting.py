@@ -1,28 +1,13 @@
 """Unit-tests for Bndfun plotting methods."""
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.plotting import import_plt
 from chebpy.core.utilities import Interval
 
-from .conftest import cos, sin
-
-
-def _joukowsky(z):
-    """Apply the Joukowsky transformation to z.
-
-    The Joukowsky transformation maps the unit circle to an ellipse and is used
-    in complex analysis and fluid dynamics. It is defined as f(z) = 0.5 * (z + 1/z).
-
-    Args:
-        z (complex or numpy.ndarray): Complex number or array of complex numbers.
-
-    Returns:
-        complex or numpy.ndarray: Result of the Joukowsky transformation.
-    """
-    return 0.5 * (z + 1 / z)
+from ..utilities import cos, joukowsky, sin
 
 
 @pytest.fixture
@@ -43,10 +28,7 @@ def plotting_fixtures():
     return {"f0": f0, "f1": f1, "f2": f2}
 
 
-plt = import_plt()
 
-
-@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
 def test_plot(plotting_fixtures):
     """Test the plot method of Bndfun."""
     f0 = plotting_fixtures["f0"]
@@ -54,17 +36,15 @@ def test_plot(plotting_fixtures):
     f0.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")
 
 
-@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
 def test_plot_complex(plotting_fixtures):
     """Test plotting complex Bndfun objects."""
     f2 = plotting_fixtures["f2"]
     fig, ax = plt.subplots()
     # plot Bernstein ellipses
     for rho in np.arange(1.1, 2, 0.1):
-        (np.exp(1j * 0.25 * np.pi) * _joukowsky(rho * f2)).plot(ax=ax)
+        (np.exp(1j * 0.25 * np.pi) * joukowsky(rho * f2)).plot(ax=ax)
 
 
-@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
 def test_plotcoeffs(plotting_fixtures):
     """Test the plotcoeffs method of Bndfun."""
     f0 = plotting_fixtures["f0"]

@@ -9,35 +9,30 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from .conftest import eps, uf1, uf2, uf3, ufunc_empty_case_tester, ufunc_tester
+from ..utilities import eps
+
+# @pytest.fixture
+# def ufuncs_fixtures(emptyfun):
+#     """Create fixtures for testing ufunc operations.
+#
+#     This fixture creates an empty Chebfun object and an array of test points
+#     for evaluating functions.
+#
+#     Returns:
+#         dict: Dictionary containing:
+#             emptyfun: Empty Chebfun object
+#             yy: Array of test points in [-1, 1]
+#     """
+#     yy = np.linspace(-1, 1, 2000)
+#     return {"emptyfun": emptyfun, "yy": yy}
 
 
-@pytest.fixture
-def ufuncs_fixtures(emptyfun):
-    """Create fixtures for testing ufunc operations.
-
-    This fixture creates an empty Chebfun object and an array of test points
-    for evaluating functions.
-
-    Returns:
-        dict: Dictionary containing:
-            emptyfun: Empty Chebfun object
-            yy: Array of test points in [-1, 1]
-    """
-    yy = np.linspace(-1, 1, 2000)
-    return {"emptyfun": emptyfun, "yy": yy}
-
-
-def test_abs_absolute_alias(ufuncs_fixtures):
+def test_abs_absolute_alias():
     """Test that abs and absolute are aliases.
 
     This test verifies that the abs and absolute methods of Chebfun
     are aliases for the same function.
-
-    Args:
-        ufuncs_fixtures: Fixture providing test objects.
     """
-    ufuncs_fixtures["emptyfun"]
     assert Chebfun.abs == Chebfun.absolute
 
 
@@ -68,7 +63,7 @@ ufuncs = (
 
 # Test empty cases for all ufuncs
 @pytest.mark.parametrize("ufunc", ufuncs)
-def test_empty_case(ufunc, ufuncs_fixtures):
+def test_empty_case(ufunc, emptyfun):
     """Test ufunc operations on empty Chebfun objects.
 
     This test verifies that applying a ufunc to an empty Chebfun object
@@ -76,151 +71,171 @@ def test_empty_case(ufunc, ufuncs_fixtures):
 
     Args:
         ufunc: The ufunc to test
-        ufuncs_fixtures: Fixture providing test objects.
+        emptyfun: Fixture providing an empty Chebfun object
     """
-    emptyfun = ufuncs_fixtures["emptyfun"]
-    test_func = ufunc_empty_case_tester(ufunc)
-    test_func(emptyfun)
+    assert getattr(emptyfun, ufunc.__name__)().isempty
 
-
-# Define the ufunc test parameters
-ufunc_test_params = [
-    (
-        np.absolute,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.arccos,
-        [
-            ([uf1, (-0.8, 0.8)], eps),
-        ],
-    ),
-    (
-        np.arccosh,
-        [
-            ([uf1, (2, 3)], eps),
-        ],
-    ),
-    (
-        np.arcsin,
-        [
-            ([uf1, (-0.8, 0.8)], eps),
-        ],
-    ),
-    (
-        np.arcsinh,
-        [
-            ([uf1, (2, 3)], eps),
-        ],
-    ),
-    (
-        np.arctan,
-        [
-            ([uf1, (-0.8, 0.8)], eps),
-        ],
-    ),
-    (
-        np.arctanh,
-        [
-            ([uf1, (-0.8, 0.8)], eps),
-        ],
-    ),
-    (
-        np.cos,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.cosh,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.exp,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.exp2,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.expm1,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.log,
-        [
-            ([uf1, (2, 3)], eps),
-        ],
-    ),
-    (
-        np.log10,
-        [
-            ([uf1, (2, 3)], eps),
-        ],
-    ),
-    (
-        np.log1p,
-        [
-            ([uf1, (2, 3)], eps),
-        ],
-    ),
-    (
-        np.sin,
-        [
-            ([uf1, (-3, 3)], eps),
-            ([uf2, (-3, 3)], eps),
-            ([uf3, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.sinh,
-        [
-            ([uf1, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.tan,
-        [
-            ([uf3, (-3, 3)], eps),
-        ],
-    ),
-    (
-        np.tanh,
-        [
-            ([uf3, (-3, 3)], eps),
-        ],
-    ),
-]
+@pytest.fixture()
+def ufunc_parameter(uf1, uf2, uf3):
+    """List of ufunc test parameters."""
+    # Define the ufunc test parameters
+    ufunc_test_params = [
+        (
+            np.absolute,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.arccos,
+            [
+                ([uf1, (-0.8, 0.8)], eps),
+            ],
+        ),
+        (
+            np.arccosh,
+            [
+                ([uf1, (2, 3)], eps),
+            ],
+        ),
+        (
+            np.arcsin,
+            [
+                ([uf1, (-0.8, 0.8)], eps),
+            ],
+        ),
+        (
+            np.arcsinh,
+            [
+                ([uf1, (2, 3)], eps),
+            ],
+        ),
+        (
+            np.arctan,
+            [
+                ([uf1, (-0.8, 0.8)], eps),
+            ],
+        ),
+        (
+            np.arctanh,
+            [
+                ([uf1, (-0.8, 0.8)], eps),
+            ],
+        ),
+        (
+            np.cos,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.cosh,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.exp,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.exp2,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.expm1,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.log,
+            [
+                ([uf1, (2, 3)], eps),
+            ],
+        ),
+        (
+            np.log10,
+            [
+                ([uf1, (2, 3)], eps),
+            ],
+        ),
+        (
+            np.log1p,
+            [
+                ([uf1, (2, 3)], eps),
+            ],
+        ),
+        (
+            np.sin,
+            [
+                ([uf1, (-3, 3)], eps),
+                ([uf2, (-3, 3)], eps),
+                ([uf3, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.sinh,
+            [
+                ([uf1, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.tan,
+            [
+                ([uf3, (-3, 3)], eps),
+            ],
+        ),
+        (
+            np.tanh,
+            [
+                ([uf3, (-3, 3)], eps),
+            ],
+        ),
+    ]
+    return ufunc_test_params
 
 
 # Generate test functions for ufuncs
-@pytest.mark.parametrize("ufunc,test_cases", ufunc_test_params)
-def test_ufuncs(ufunc, test_cases, ufuncs_fixtures):
+#@pytest.mark.parametrize("ufunc,test_cases", ufunc_test_params)
+def test_ufuncs(ufunc_parameter):
     """Test ufunc operations on Chebfun objects.
 
     This test verifies that applying a ufunc to a Chebfun object
     produces the expected result within a specified tolerance.
 
     Args:
-        ufunc: The ufunc to test
-        test_cases: List of test cases, each containing a function, interval, and tolerance
-        ufuncs_fixtures: Fixture providing test objects.
+        ufunc_parameter: List of tuples, each containing a ufunc and a list of test cases
+            where each test case contains a function, interval, and tolerance
     """
-    yy = ufuncs_fixtures["yy"]
-    for [f, intvl], tol in test_cases:
-        from chebpy.core.utilities import Interval
+    yy = np.linspace(-1, 1, 2000)
 
-        interval = Interval(*intvl)
-        test_func = ufunc_tester(ufunc, f, interval, tol)
-        test_func(yy)
+    for ufunc, test_cases in ufunc_parameter:
+        for [f, intvl], tol in test_cases:
+            from chebpy.core.utilities import Interval
+
+            interval = Interval(*intvl)
+
+            a, b = interval
+            ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
+
+            def gg(x):
+                return ufunc(f(x))
+
+            gg_result = getattr(ff, ufunc.__name__)()
+
+            #def tester(yy):
+            xx = interval(yy)
+            vscl = gg_result.vscale
+            lscl = sum([fun.size for fun in gg_result])
+            assert np.max(gg(xx) - gg_result(xx)) <= vscl * lscl * tol
+
+            #return tester
+
+
+            #test_func = ufunc_tester(ufunc, f, interval, tol)
+            #test_func(yy)

@@ -5,15 +5,9 @@ import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
-from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Interval
 
-# aliases
-pi = np.pi
-sin = np.sin
-cos = np.cos
-exp = np.exp
-eps = DefaultPreferences.eps
+from ..utilities import cos, eps, exp, pi, sin
 
 
 @pytest.fixture

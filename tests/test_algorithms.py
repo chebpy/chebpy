@@ -19,7 +19,7 @@ import pytest
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
 from chebpy.core.chebtech import Chebtech2
 
-from .conftest import cos, eps, exp, scaled_tol
+from .utilities import cos, eps, exp, scaled_tol
 
 np.random.seed(0)
 

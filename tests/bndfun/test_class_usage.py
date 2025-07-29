@@ -8,7 +8,7 @@ from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
-from .conftest import cos, eps, exp, pi, sin
+from ..utilities import cos, eps, exp, pi, sin
 
 
 @pytest.fixture
