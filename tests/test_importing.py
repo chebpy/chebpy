@@ -1,5 +1,12 @@
+"""Unit tests for the importing utilities in chebpy.core.importing.
+
+This module contains tests that verify the behavior of the import_optional function
+in the chebpy.core.importing module, including successful imports, fallback behavior,
+and environment variable control.
+"""
+
 import os
-import pytest
+
 from chebpy.core.importing import import_optional
 
 

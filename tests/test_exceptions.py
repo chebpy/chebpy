@@ -1,15 +1,23 @@
+"""Unit tests for the exception classes in chebpy.core.exceptions.
+
+This module contains tests that verify the behavior of all exception classes
+defined in the chebpy.core.exceptions module, including initialization with
+custom messages, default messages, and the abstract base class behavior.
+"""
+
 import pytest
+
 from chebpy.core.exceptions import (
+    BadFunLengthArgument,
     ChebpyBaseException,
-    IntervalOverlap,
     IntervalGap,
     IntervalMismatch,
-    NotSubinterval,
+    IntervalOverlap,
     IntervalValues,
     InvalidDomain,
     NotSubdomain,
+    NotSubinterval,
     SupportMismatch,
-    BadFunLengthArgument,
 )
 
 
