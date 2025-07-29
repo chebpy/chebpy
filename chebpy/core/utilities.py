@@ -1,3 +1,10 @@
+"""Utility functions and classes for the ChebPy package.
+
+This module provides various utility functions and classes used throughout the ChebPy
+package, including interval operations, domain manipulations, and tolerance functions.
+It defines the core data structures for representing and manipulating intervals and domains.
+"""
+
 from collections import OrderedDict
 from collections.abc import Iterable
 
@@ -15,7 +22,7 @@ from .exceptions import (
 from .settings import _preferences as prefs
 
 
-def HTOL() -> float:
+def htol() -> float:
     """Return the horizontal tolerance used for interval comparisons.
 
     Returns:
@@ -162,8 +169,8 @@ class Interval(np.ndarray):
         """
         a, b = self
         h = max(infnorm(self), 1)
-        hF = b - a  # if interval == domain: scale hscale back to 1
-        hscale = max(h / hF, 1)  # else: hscale < 1
+        h_factor = b - a  # if interval == domain: scale hscale back to 1
+        hscale = max(h / h_factor, 1)  # else: hscale < 1
         return hscale
 
 
@@ -234,7 +241,7 @@ class Domain(np.ndarray):
         """
         a, b = self.support
         x, y = other.support
-        bounds = np.array([1 - HTOL(), 1 + HTOL()])
+        bounds = np.array([1 - htol(), 1 + htol()])
         lbnd, rbnd = np.min(a * bounds), np.max(b * bounds)
         return (lbnd <= x) & (y <= rbnd)
 
@@ -283,8 +290,8 @@ class Domain(np.ndarray):
             Domain: A new Domain containing all breakpoints from both domains.
         """
         dspt = np.abs(self.support - other.support)
-        htol = np.maximum(HTOL(), HTOL() * np.abs(self.support))
-        if np.any(dspt > htol):
+        tolerance = np.maximum(htol(), htol() * np.abs(self.support))
+        if np.any(dspt > tolerance):
             raise SupportMismatch
         return self.merge(other)
 
@@ -299,7 +306,7 @@ class Domain(np.ndarray):
         """
         all_bpts = np.append(self, other)
         new_bpts = np.unique(all_bpts)
-        mergetol = np.maximum(HTOL(), HTOL() * np.abs(new_bpts))
+        mergetol = np.maximum(htol(), htol() * np.abs(new_bpts))
         mgd_bpts = _merge_duplicates(new_bpts, mergetol)
         return self.__class__(mgd_bpts)
 
@@ -320,7 +327,7 @@ class Domain(np.ndarray):
             raise NotSubdomain
         dom = self.merge(other)
         a, b = other.support
-        bounds = np.array([1 - HTOL(), 1 + HTOL()])
+        bounds = np.array([1 - htol(), 1 + htol()])
         lbnd, rbnd = np.min(a * bounds), np.max(b * bounds)
         new = dom[(lbnd <= dom) & (dom <= rbnd)]
         return self.__class__(new)
@@ -336,12 +343,12 @@ class Domain(np.ndarray):
                 that the breakpoint is in other within the specified tolerance.
         """
         out = np.empty(self.size, dtype=bool)
-        window = np.array([1 - HTOL(), 1 + HTOL()])
+        window = np.array([1 - htol(), 1 + htol()])
         # TODO: is there way to vectorise this?
         for idx, bpt in enumerate(self):
             lbnd, rbnd = np.sort(bpt * window)
-            lbnd = -HTOL() if np.abs(lbnd) < HTOL() else lbnd
-            rbnd = +HTOL() if np.abs(rbnd) < HTOL() else rbnd
+            lbnd = -htol() if np.abs(lbnd) < htol() else lbnd
+            rbnd = +htol() if np.abs(rbnd) < htol() else rbnd
             isin = (lbnd <= other) & (other <= rbnd)
             out[idx] = np.any(isin)
         return out
@@ -359,8 +366,8 @@ class Domain(np.ndarray):
             return False
         else:
             dbpt = np.abs(self - other)
-            htol = np.maximum(HTOL(), HTOL() * np.abs(self))
-            return bool(np.all(dbpt <= htol))  # cast back to bool
+            tolerance = np.maximum(htol(), htol() * np.abs(self))
+            return bool(np.all(dbpt <= tolerance))  # cast back to bool
 
     def __ne__(self, other: 'Domain') -> bool:
         """Test for inequality of two Domain objects.

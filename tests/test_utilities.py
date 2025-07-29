@@ -21,11 +21,11 @@ from chebpy.core.exceptions import (
     SupportMismatch,
 )
 from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import HTOL, Domain, Interval, check_funs, compute_breakdata
+from chebpy.core.utilities import htol, Domain, Interval, check_funs, compute_breakdata
 
 np.random.seed(0)
 eps = DefaultPreferences.eps
-HTOL = HTOL()
+HTOL = htol()
 
 
 # tests for usage of the Interval class

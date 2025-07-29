@@ -96,12 +96,12 @@ def rootsunit(ak: np.ndarray, htol: float = None) -> np.ndarray:
         rts = np.array([-ak[0] / ak[1]])
     elif n <= 50:
         v = 0.5 * np.ones(n - 2)
-        C = np.diag(v, -1) + np.diag(v, 1)
-        C[0, 1] = 1
-        D = np.zeros(C.shape, dtype=ak.dtype)
-        D[-1, :] = ak[:-1]
-        E = C - 0.5 * 1.0 / ak[-1] * D
-        rts = np.linalg.eigvals(E)
+        colleague_matrix = np.diag(v, -1) + np.diag(v, 1)
+        colleague_matrix[0, 1] = 1
+        coeffs_matrix = np.zeros(colleague_matrix.shape, dtype=ak.dtype)
+        coeffs_matrix[-1, :] = ak[:-1]
+        eigenvalue_matrix = colleague_matrix - 0.5 * 1.0 / ak[-1] * coeffs_matrix
+        rts = np.linalg.eigvals(eigenvalue_matrix)
 
     # discard values with large imaginary part and treat the remaining
     # ones as real; then sort and retain only the roots inside [-1,1]
@@ -248,13 +248,13 @@ def standard_chop(coeffs: np.ndarray, tol: float = None) -> int:
         plateau = (e1 == 0.0) | (e2 / e1 > r)
         if plateau:
             # a plateau has been found: go to Step 3
-            plateauPoint = j
+            plateau_point = j
             break
 
     # Step 3: Fix cutoff at a point where envelope, plus a linear function
     # included to bias the result towards the left end, is minimal.
-    if envelope[int(plateauPoint)] == 0.0:
-        cutoff = plateauPoint
+    if envelope[int(plateau_point)] == 0.0:
+        cutoff = plateau_point
     else:
         j3 = sum(envelope >= tol ** (7.0 / 6.0))
         if j3 < j2:
