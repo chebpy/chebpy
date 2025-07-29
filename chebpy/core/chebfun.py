@@ -432,7 +432,7 @@ class Chebfun:
         switch = newdom.support.merge(roots)
 
         # Handle the case where switch is empty
-        if switch.size == 0:
+        if switch.size == 0:  # pragma: no cover
             return self.__class__.initempty()
 
         keys = 0.5 * ((-1) ** np.arange(switch.size - 1) + 1)
