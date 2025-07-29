@@ -719,6 +719,16 @@ class Chebfun:
     #  calculus
     # ----------
     def cumsum(self):
+        """Compute the indefinite integral (antiderivative) of the Chebfun.
+
+        This method computes the indefinite integral of the Chebfun, with the
+        constant of integration chosen so that the indefinite integral evaluates
+        to 0 at the left endpoint of the domain. For piecewise functions, constants
+        are added to ensure continuity across the pieces.
+
+        Returns:
+            Chebfun: A new Chebfun representing the indefinite integral of this Chebfun.
+        """
         newfuns = []
         prevfun = None
         for fun in self:
@@ -733,13 +743,44 @@ class Chebfun:
         return self.__class__(newfuns)
 
     def diff(self):
+        """Compute the derivative of the Chebfun.
+
+        This method calculates the derivative of the Chebfun with respect to x.
+        It creates a new Chebfun where each piece is the derivative of the
+        corresponding piece in the original Chebfun.
+
+        Returns:
+            Chebfun: A new Chebfun representing the derivative of this Chebfun.
+        """
         dfuns = np.array([fun.diff() for fun in self])
         return self.__class__(dfuns)
 
     def sum(self):
+        """Compute the definite integral of the Chebfun over its domain.
+
+        This method calculates the definite integral of the Chebfun over its
+        entire domain of definition by summing the definite integrals of each
+        piece.
+
+        Returns:
+            float or complex: The definite integral of the Chebfun over its domain.
+        """
         return np.sum([fun.sum() for fun in self])
 
     def dot(self, f):
+        """Compute the dot product of this Chebfun with another function.
+
+        This method calculates the inner product (dot product) of this Chebfun
+        with another function f by multiplying them pointwise and then integrating
+        the result over the domain.
+
+        Args:
+            f (Chebfun or scalar): The function or scalar to compute the dot product with.
+                If not a Chebfun, it will be converted to one.
+
+        Returns:
+            float or complex: The dot product of this Chebfun with f.
+        """
         return (self * f).sum()
 
     # ----------
@@ -767,8 +808,20 @@ class Chebfun:
         return self._maximum_minimum(other, operator.lt)
 
     def _maximum_minimum(self, other, comparator):
-        """Method for computing the pointwise maximum/minimum of two
-        Chebfuns.
+        """Method for computing the pointwise maximum/minimum of two Chebfuns.
+
+        This internal method implements the algorithm for computing the pointwise
+        maximum or minimum of two Chebfun objects, based on the provided comparator.
+        It is used by the maximum() and minimum() methods.
+
+        Args:
+            other (Chebfun): Another Chebfun to compare with this one.
+            comparator (callable): A function that compares two values and returns
+                a boolean. For maximum, this is operator.ge (>=), and for minimum,
+                this is operator.lt (<).
+
+        Returns:
+            Chebfun: A new Chebfun representing the pointwise maximum or minimum.
         """
         # Handle empty Chebfuns
         if self.isempty or other.isempty:
@@ -829,6 +882,19 @@ plt = import_plt()
 if plt:
 
     def plot(self, ax=None, **kwds):
+        """Plot the Chebfun over its domain.
+
+        This method plots the Chebfun over its domain using matplotlib.
+        For complex-valued Chebfuns, it plots the real part against the imaginary part.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+                a new axes will be created. Defaults to None.
+            **kwds: Additional keyword arguments to pass to matplotlib's plot function.
+
+        Returns:
+            matplotlib.axes.Axes: The axes on which the plot was created.
+        """
         return plotfun(self, self.support, ax=ax, **kwds)
 
     setattr(Chebfun, "plot", plot)
