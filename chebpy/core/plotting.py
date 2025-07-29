@@ -17,7 +17,7 @@ def import_plt() -> object:
     return import_optional("matplotlib.pyplot", "MPL")
 
 
-def plotfun(fun: callable, support: tuple, ax=None, N: int = None, **kwds) -> object:
+def plotfun(fun: callable, support: tuple, ax=None, n: int = None, **kwds) -> object:
     """Plot a function over a specified support interval.
 
     This function plots a callable object over a specified interval using
@@ -30,7 +30,7 @@ def plotfun(fun: callable, support: tuple, ax=None, N: int = None, **kwds) -> ob
         support (tuple): A tuple specifying the interval [a, b] over which to plot.
         ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
             a new axes will be created. Defaults to None.
-        N (int, optional): Number of points to use for plotting. If None, uses
+        n (int, optional): Number of points to use for plotting. If None, uses
             the value from preferences. Defaults to None.
         **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
@@ -38,8 +38,8 @@ def plotfun(fun: callable, support: tuple, ax=None, N: int = None, **kwds) -> ob
         matplotlib.axes.Axes: The axes on which the plot was created.
     """
     ax = ax or import_plt().gca()
-    N = N if N is not None else prefs.N_plot
-    xx = np.linspace(*support, N)
+    n = n if n is not None else prefs.N_plot
+    xx = np.linspace(*support, n)
     ff = fun(xx)
     if fun.iscomplex:
         ax.plot(np.real(ff), np.imag(ff), **kwds)
