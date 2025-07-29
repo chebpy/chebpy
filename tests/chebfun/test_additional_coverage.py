@@ -1,10 +1,9 @@
 """Additional tests to improve coverage for chebfun.py."""
 
 import numpy as np
-import pytest
 
-from chebpy.core.chebfun import Chebfun
 from chebpy.api import chebfun
+from chebpy.core.chebfun import Chebfun
 
 
 class TestAdditionalCoverage:
@@ -36,7 +35,7 @@ class TestAdditionalCoverage:
         f = chebfun(lambda t: np.abs(t), domain=x)
 
         # Compute the cumulative sum
-        F = f.cumsum()
+        F = f.cumsum()    # noqa: N806
 
         # Check that F is continuous by evaluating at breakpoints
         for i in range(1, len(x)-1):

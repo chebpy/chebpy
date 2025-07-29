@@ -1,15 +1,23 @@
+"""Unit tests for the exception classes in chebpy.core.exceptions.
+
+This module contains tests that verify the behavior of all exception classes
+defined in the chebpy.core.exceptions module, including initialization with
+custom messages, default messages, and the abstract base class behavior.
+"""
+
 import pytest
+
 from chebpy.core.exceptions import (
-    ChebpyBaseException,
-    IntervalOverlap,
+    BadFunLengthArgument,
+    ChebpyBaseError,
     IntervalGap,
     IntervalMismatch,
-    NotSubinterval,
+    IntervalOverlap,
     IntervalValues,
     InvalidDomain,
     NotSubdomain,
+    NotSubinterval,
     SupportMismatch,
-    BadFunLengthArgument,
 )
 
 
@@ -46,7 +54,7 @@ class TestExceptions:
         for exc_class in exceptions:
             # Test with default message
             exc = exc_class()
-            assert isinstance(exc, ChebpyBaseException)
+            assert isinstance(exc, ChebpyBaseError)
             assert isinstance(exc, Exception)
             assert exc.message == exc.default_message
             assert str(exc) == exc.default_message
@@ -63,7 +71,7 @@ class TestExceptions:
         # but we can create a concrete subclass and test that it raises NotImplementedError
         # when default_message is accessed
 
-        class TestException(ChebpyBaseException):
+        class TestException(ChebpyBaseError):
             pass
 
         # This should raise NotImplementedError when default_message is accessed

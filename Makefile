@@ -37,7 +37,8 @@ fmt: uv ## Run code formatters only
 
 lint: uv ## Run linters only
 	@printf "$(BLUE)Running linters...$(RESET)\n"
-	@uvx pre-commit run --files tests
+	#@uvx ruff check run --files tests
+	@uvx ruff check --unsafe-fixes --fix chebpy
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"
