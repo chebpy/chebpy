@@ -1,3 +1,21 @@
+"""Implementation of Chebyshev polynomial technology for function approximation.
+
+This module provides the Chebtech class, which is an abstract base class for
+representing functions using Chebyshev polynomial expansions. It serves as the
+foundation for the Chebtech2 class, which uses Chebyshev points of the second kind.
+
+The Chebtech classes implement core functionality for working with Chebyshev
+expansions, including:
+- Function evaluation using Clenshaw's algorithm or barycentric interpolation
+- Algebraic operations (addition, multiplication, etc.)
+- Calculus operations (differentiation, integration, etc.)
+- Rootfinding
+- Plotting
+
+These classes are primarily used internally by higher-level classes like Bndfun
+and Chebfun, rather than being used directly by end users.
+"""
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -23,8 +41,7 @@ from .utilities import Interval, coerce_list
 
 
 class Chebtech(Smoothfun, ABC):
-    """Abstract base class serving as the template for Chebtech1 and
-    Chebtech2 subclasses.
+    """Abstract base class serving as the template for Chebtech1 and Chebtech2 subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
     of the core operational functionality is defined this level.
@@ -54,8 +71,10 @@ class Chebtech(Smoothfun, ABC):
 
     @classmethod
     def initfun(cls, fun, n=None, *, interval=None):
-        """Convenience constructor to automatically select the adaptive or
-        fixedlen constructor from the input arguments passed.
+        """Convenience constructor to automatically select the adaptive or fixedlen constructor.
+
+        This constructor automatically selects between the adaptive or fixed-length
+        constructor based on the input arguments passed.
         """
         if n is None:
             return cls.initfun_adaptive(fun, interval=interval)
@@ -64,8 +83,10 @@ class Chebtech(Smoothfun, ABC):
 
     @classmethod
     def initfun_fixedlen(cls, fun, n, *, interval=None):
-        """Initialise a Chebtech from the callable fun using n degrees of
-        freedom.
+        """Initialise a Chebtech from the callable fun using n degrees of freedom.
+
+        This constructor creates a Chebtech representation of the function using
+        a fixed number of degrees of freedom specified by n.
         """
         points = cls._chebpts(n)
         values = fun(points)

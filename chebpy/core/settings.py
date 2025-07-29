@@ -1,3 +1,18 @@
+"""Configuration and preferences management for the ChebPy package.
+
+This module provides classes for managing preferences and settings in ChebPy.
+It implements a singleton pattern for the preferences object, ensuring that
+all parts of the package use the same settings. It also provides a context
+manager interface for temporarily changing preferences.
+
+The main classes are:
+- DefaultPreferences: Defines the default values for all preferences
+- ChebPreferences: The actual preferences object used throughout the package
+
+The module creates a singleton instance of ChebPreferences called _preferences,
+which is imported by other modules to access the current settings.
+"""
+
 import numpy as np
 
 
@@ -24,6 +39,7 @@ class ChebPreferences(DefaultPreferences):
 
     def reset(self, *names):
         """Reset default preferences.
+
         `.reset()` resets all preferences to the DefaultPrefs state
         `.reset(*names)` resets only the selected ones.
         This leaves additional user-added prefs untouched.
@@ -38,6 +54,18 @@ class ChebPreferences(DefaultPreferences):
     _instance = None  # persistent reference for the singleton object
 
     def __new__(cls):
+        """Create or return the singleton instance of ChebPreferences.
+
+        This method implements the singleton pattern, ensuring that only one
+        instance of ChebPreferences exists. If an instance already exists,
+        it returns that instance; otherwise, it creates a new one.
+
+        Args:
+            cls (type): The class being instantiated (ChebPreferences).
+
+        Returns:
+            ChebPreferences: The singleton instance of ChebPreferences.
+        """
         if cls._instance is None:
             cls._instance = super(DefaultPreferences, cls).__new__(cls)
         return cls._instance
@@ -46,6 +74,18 @@ class ChebPreferences(DefaultPreferences):
     _stash = []  # persistent stash for old prefs when entering context(s)
 
     def __enter__(self):
+        """Save current preferences when entering a context.
+
+        This method is called when entering a context manager block. It saves
+        the current preferences to a stack so they can be restored when exiting
+        the context.
+
+        Args:
+            self (ChebPreferences): The preferences object.
+
+        Returns:
+            ChebPreferences: The preferences object (self._instance).
+        """
         self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults().keys()})
         return self._instance
 
