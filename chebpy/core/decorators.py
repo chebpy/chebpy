@@ -3,12 +3,22 @@ from functools import wraps
 import numpy as np
 
 
-def cache(f):
-    """Object method output caching mechanism. Particularly useful for speeding
-    up repeated execution of relatively expensive zero-argument operations such
-    as .roots(). Cached computations are stored in a dictionary called _cache
-    which is bound to self using keys corresponding to the method name.
-    Can be used in principle on arbitrary objects.
+def cache(f: callable) -> callable:
+    """Object method output caching mechanism.
+
+    This decorator caches the output of zero-argument methods to speed up repeated
+    execution of relatively expensive operations such as .roots(). Cached computations
+    are stored in a dictionary called _cache which is bound to self using keys
+    corresponding to the method name.
+
+    Args:
+        f (callable): The method to be cached. Must be a zero-argument method.
+
+    Returns:
+        callable: A wrapped version of the method that implements caching.
+
+    Note:
+        Can be used in principle on arbitrary objects.
     """
 
     # TODO: look into replacing this with one of the functools cache decorators
@@ -29,10 +39,22 @@ def cache(f):
     return wrapper
 
 
-def self_empty(resultif=None):
-    """Factory method to produce a decorator that checks whether the object
-    whose classmethod is being wrapped is empty, returning the object if
-    so, but returning the supplied resultif if not. (Used in chebtech.py).
+def self_empty(resultif=None) -> callable:
+    """Factory method to produce a decorator for handling empty objects.
+
+    This factory creates a decorator that checks whether the object whose method
+    is being wrapped is empty. If the object is empty, it returns either the supplied
+    resultif value or a copy of the object. Otherwise, it executes the wrapped method.
+
+    Args:
+        resultif: Value to return when the object is empty. If None, returns a copy
+            of the object instead.
+
+    Returns:
+        callable: A decorator function that implements the empty-checking logic.
+
+    Note:
+        This decorator is primarily used in chebtech.py.
     """
 
     # TODO: add unit test for this
@@ -52,8 +74,21 @@ def self_empty(resultif=None):
     return decorator
 
 
-def preandpostprocess(f):
-    """Pre- and post-processing tasks common to bary and clenshaw."""
+def preandpostprocess(f: callable) -> callable:
+    """Decorator for pre- and post-processing tasks common to bary and clenshaw.
+
+    This decorator handles several edge cases for functions like bary and clenshaw:
+    - Empty arrays in input arguments
+    - Constant functions
+    - NaN values in coefficients
+    - Scalar vs. array inputs
+
+    Args:
+        f (callable): The function to be wrapped.
+
+    Returns:
+        callable: A wrapped version of the function with pre- and post-processing.
+    """
 
     @wraps(f)
     def thewrapper(*args, **kwargs):
@@ -81,9 +116,19 @@ def preandpostprocess(f):
     return thewrapper
 
 
-def float_argument(f):
-    """Chebfun classmethod wrapper for __call__: ensure that we provide
-    float output for float input and array output otherwise.
+def float_argument(f: callable) -> callable:
+    """Decorator to ensure consistent input/output types for Chebfun __call__ method.
+
+    This decorator ensures that when a Chebfun object is called with a float input,
+    it returns a float output, and when called with an array input, it returns an
+    array output. It handles various input formats including scalars, numpy arrays,
+    and nested arrays.
+
+    Args:
+        f (callable): The __call__ method to be wrapped.
+
+    Returns:
+        callable: A wrapped version of the method that ensures type consistency.
     """
 
     @wraps(f)
@@ -102,9 +147,18 @@ def float_argument(f):
     return thewrapper
 
 
-def cast_arg_to_chebfun(f):
-    """Attempt to cast the first argument to chebfun if is not so already.
-    The only castable type at this point is a numeric type.
+def cast_arg_to_chebfun(f: callable) -> callable:
+    """Decorator to cast the first argument to a chebfun object if needed.
+
+    This decorator attempts to convert the first argument to a chebfun object
+    if it is not already one. Currently, only numeric types can be cast to chebfun.
+
+    Args:
+        f (callable): The method to be wrapped.
+
+    Returns:
+        callable: A wrapped version of the method that ensures the first argument
+            is a chebfun object.
     """
 
     @wraps(f)
@@ -119,9 +173,19 @@ def cast_arg_to_chebfun(f):
     return wrapper
 
 
-def cast_other(f):
-    """Generic wrapper to be applied to binary operator type class methods and
-    whose purpose is to cast the second positional argument to the type self.
+def cast_other(f: callable) -> callable:
+    """Decorator to cast the first argument to the same type as self.
+
+    This generic decorator is applied to binary operator methods to ensure that
+    the first positional argument (typically 'other') is cast to the same type
+    as the object on which the method is called.
+
+    Args:
+        f (callable): The binary operator method to be wrapped.
+
+    Returns:
+        callable: A wrapped version of the method that ensures type consistency
+            between self and the first argument.
     """
 
     @wraps(f)

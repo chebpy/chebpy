@@ -9,7 +9,7 @@ import os
 from importlib import import_module
 
 
-def import_optional(name, envvarname, fallback=None):
+def import_optional(name: str, envvarname: str, fallback: str = None) -> object:
     """Attempt to import an optional module with fallback and environment control.
 
     This function tries to import a module that may or may not be installed.
