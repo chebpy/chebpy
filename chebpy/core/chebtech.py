@@ -390,19 +390,19 @@ class Chebtech(Smoothfun, ABC):
     #  subclasses must implement these
     # ---------------------------------
     @abstractmethod
-    def _chebpts():  # pragma: no cover
+    def _chebpts(self):  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _barywts():  # pragma: no cover
+    def _barywts(self):  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _vals2coeffs():  # pragma: no cover
+    def _vals2coeffs(self):  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def _coeffs2vals():  # pragma: no cover
+    def _coeffs2vals(self):  # pragma: no cover
         raise NotImplementedError
 
 
