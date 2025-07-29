@@ -888,6 +888,7 @@ if plt:
         For complex-valued Chebfuns, it plots the real part against the imaginary part.
 
         Args:
+            self (Chebfun): The Chebfun object to plot.
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
                 a new axes will be created. Defaults to None.
             **kwds: Additional keyword arguments to pass to matplotlib's plot function.
@@ -900,6 +901,21 @@ if plt:
     setattr(Chebfun, "plot", plot)
 
     def plotcoeffs(self, ax=None, **kwds):
+        """Plot the coefficients of the Chebfun on a semilogy scale.
+
+        This method plots the absolute values of the coefficients for each piece
+        of the Chebfun on a semilogy scale, which is useful for visualizing the
+        decay of coefficients in the Chebyshev series.
+
+        Args:
+            self (Chebfun): The Chebfun object whose coefficients to plot.
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+                a new axes will be created. Defaults to None.
+            **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
+
+        Returns:
+            matplotlib.axes.Axes: The axes on which the plot was created.
+        """
         ax = ax or plt.gca()
         for fun in self:
             fun.plotcoeffs(ax=ax, **kwds)
@@ -911,14 +927,37 @@ if plt:
 # ---------
 #  ufuncs
 # ---------
-def addUfunc(op):
+def add_ufunc(op):
+    """Add a NumPy universal function method to the Chebfun class.
+
+    This function creates a method that applies a NumPy universal function (ufunc)
+    to each piece of a Chebfun and returns a new Chebfun representing the result.
+
+    Args:
+        op (callable): The NumPy universal function to apply.
+
+    Note:
+        The created method will have the same name as the NumPy function
+        and will take no arguments other than self.
+    """
     @self_empty()
     def method(self):
+        """Apply a NumPy universal function to this Chebfun.
+
+        This method applies a NumPy universal function (ufunc) to each piece
+        of this Chebfun and returns a new Chebfun representing the result.
+
+        Args:
+            self (Chebfun): The Chebfun object to which the function is applied.
+
+        Returns:
+            Chebfun: A new Chebfun representing op(f(x)).
+        """
         return self.__class__([op(fun) for fun in self])
 
     name = op.__name__
     method.__name__ = name
-    method.__doc__ = "TODO: CHANGE THIS TO SOMETHING MEANINGFUL"
+    method.__doc__ = method.__doc__
     setattr(Chebfun, name, method)
 
 
@@ -946,4 +985,4 @@ ufuncs = (
 )
 
 for op in ufuncs:
-    addUfunc(op)
+    add_ufunc(op)

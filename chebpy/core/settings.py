@@ -50,6 +50,18 @@ class ChebPreferences(DefaultPreferences):
         return self._instance
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Restore previous preferences when exiting a context.
+
+        This method is called when exiting a context manager block. It restores
+        the preferences to their previous values by popping the stashed values
+        from the stack and setting them back on the object.
+
+        Args:
+            self (ChebPreferences): The preferences object.
+            exc_type: The exception type, if an exception was raised in the context.
+            exc_value: The exception value, if an exception was raised in the context.
+            traceback: The traceback, if an exception was raised in the context.
+        """
         for k, v in self._stash.pop().items():
             setattr(self, k, v)
 
