@@ -1,3 +1,9 @@
+"""Implementation of the Classicfun class for functions on arbitrary intervals.
+
+This module provides the Classicfun class, which represents functions on arbitrary intervals
+by mapping them to a standard domain [-1, 1] and using a Onefun representation.
+"""
+
 from abc import ABC
 
 import numpy as np
@@ -420,6 +426,7 @@ if plt:
         For complex-valued functions, it plots the real part against the imaginary part.
 
         Args:
+            self (Classicfun): The function to plot.
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
                 a new axes will be created. Defaults to None.
             **kwds: Additional keyword arguments to pass to matplotlib's plot function.
@@ -438,7 +445,7 @@ if plt:
 methods_onefun_other = ("values", "plotcoeffs")
 
 
-def addUtility(methodname):
+def add_utility(methodname):
     """Add a utility method to the Classicfun class.
 
     This function creates a method that delegates to the corresponding method
@@ -474,7 +481,7 @@ def addUtility(methodname):
 for methodname in methods_onefun_other:
     if methodname[:4] == "plot" and plt is None:  # pragma: no cover
         continue
-    addUtility(methodname)
+    add_utility(methodname)
 
 
 # -----------------------------------------------------------------------
@@ -484,7 +491,7 @@ for methodname in methods_onefun_other:
 methods_onefun_zeroargs = ("__pos__", "__neg__", "copy", "simplify")
 
 
-def addZeroArgOp(methodname):
+def add_zero_arg_op(methodname):
     """Add a zero-argument operation method to the Classicfun class.
 
     This function creates a method that delegates to the corresponding method
@@ -521,7 +528,7 @@ def addZeroArgOp(methodname):
 
 
 for methodname in methods_onefun_zeroargs:
-    addZeroArgOp(methodname)
+    add_zero_arg_op(methodname)
 
 # -----------------------------------------
 # binary operators returning a onefun
