@@ -128,6 +128,19 @@ class Chebtech(Smoothfun, ABC):
         self._interval = Interval(*interval)
 
     def __call__(self, x, how="clenshaw"):
+        """Evaluate the Chebtech at the given points.
+
+        Args:
+            x: Points at which to evaluate the Chebtech.
+            how (str, optional): Method to use for evaluation. Either "clenshaw" or "bary".
+                Defaults to "clenshaw".
+
+        Returns:
+            The values of the Chebtech at the given points.
+
+        Raises:
+            ValueError: If the specified method is not supported.
+        """
         method = {
             "clenshaw": self.__call__clenshaw,
             "bary": self.__call__bary,
@@ -147,6 +160,11 @@ class Chebtech(Smoothfun, ABC):
         return bary(x, fk, xk, vk)
 
     def __repr__(self):  # pragma: no cover
+        """Return a string representation of the Chebtech.
+
+        Returns:
+            str: A string representation of the Chebtech.
+        """
         out = f"<{self.__class__.__name__}{{{self.size}}}>"
         return out
 
@@ -197,15 +215,22 @@ class Chebtech(Smoothfun, ABC):
         return self.__class__(self.coeffs.copy(), interval=self.interval.copy())
 
     def imag(self):
+        """Return the imaginary part of the Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing the imaginary part of this Chebtech.
+                If this Chebtech is real-valued, returns a zero Chebtech.
+        """
         if self.iscomplex:
             return self.__class__(np.imag(self.coeffs), self.interval)
         else:
             return self.initconst(0, interval=self.interval)
 
     def prolong(self, n):
-        """Return a Chebtech of length n, obtained either by truncating
-        if n < self.size or zero-padding if n > self.size. In all cases a
-        deep copy is returned.
+        """Return a Chebtech of length n.
+
+        Obtained either by truncating if n < self.size or zero-padding if n > self.size.
+        In all cases a deep copy is returned.
         """
         m = self.size
         ak = self.coeffs
@@ -219,14 +244,21 @@ class Chebtech(Smoothfun, ABC):
         return out
 
     def real(self):
+        """Return the real part of the Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing the real part of this Chebtech.
+                If this Chebtech is already real-valued, returns self.
+        """
         if self.iscomplex:
             return self.__class__(np.real(self.coeffs), self.interval)
         else:
             return self
 
     def simplify(self):
-        """Call standard_chop on the coefficients of self, returning a
-        Chebtech comprised of a copy of the truncated coefficients.
+        """Call standard_chop on the coefficients of self.
+
+        Returns a Chebtech comprised of a copy of the truncated coefficients.
         """
         # coefficients
         oldlen = len(self.coeffs)
@@ -249,6 +281,14 @@ class Chebtech(Smoothfun, ABC):
     # ---------
     @self_empty()
     def __add__(self, f):
+        """Add a scalar or another Chebtech to this Chebtech.
+
+        Args:
+            f: A scalar or another Chebtech to add to this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing the sum.
+        """
         cls = self.__class__
         if np.isscalar(f):
             if np.iscomplexobj(f):
@@ -281,6 +321,14 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def __div__(self, f):
+        """Divide this Chebtech by a scalar or another Chebtech.
+
+        Args:
+            f: A scalar or another Chebtech to divide this Chebtech by.
+
+        Returns:
+            Chebtech: A new Chebtech representing the quotient.
+        """
         cls = self.__class__
         if np.isscalar(f):
             cfs = 1.0 / f * self.coeffs
@@ -295,6 +343,14 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def __mul__(self, g):
+        """Multiply this Chebtech by a scalar or another Chebtech.
+
+        Args:
+            g: A scalar or another Chebtech to multiply this Chebtech by.
+
+        Returns:
+            Chebtech: A new Chebtech representing the product.
+        """
         cls = self.__class__
         if np.isscalar(g):
             cfs = g * self.coeffs
@@ -312,14 +368,32 @@ class Chebtech(Smoothfun, ABC):
             return out
 
     def __neg__(self):
+        """Return the negative of this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing the negative of this Chebtech.
+        """
         coeffs = -self.coeffs
         return self.__class__(coeffs, interval=self.interval)
 
     def __pos__(self):
+        """Return this Chebtech (unary positive).
+
+        Returns:
+            Chebtech: This Chebtech (self).
+        """
         return self
 
     @self_empty()
     def __pow__(self, f):
+        """Raise this Chebtech to a power.
+
+        Args:
+            f: The exponent, which can be a scalar or another Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing this Chebtech raised to the power f.
+        """
         def powfun(fn, x):
             if np.isscalar(fn):
                 return fn
@@ -329,6 +403,16 @@ class Chebtech(Smoothfun, ABC):
         return self.__class__.initfun_adaptive(lambda x: np.power(self(x), powfun(f, x)), interval=self.interval)
 
     def __rdiv__(self, f):
+        """Divide a scalar by this Chebtech.
+
+        This is called when f / self is executed and f is not a Chebtech.
+
+        Args:
+            f: A scalar to be divided by this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing f divided by this Chebtech.
+        """
         # Executed when __div__(f, self) fails, which is to say whenever f
         # is not a Chebtech. We proceeed on the assumption f is a scalar.
         def constfun(x):
@@ -339,24 +423,53 @@ class Chebtech(Smoothfun, ABC):
     __radd__ = __add__
 
     def __rsub__(self, f):
+        """Subtract this Chebtech from a scalar.
+
+        This is called when f - self is executed and f is not a Chebtech.
+
+        Args:
+            f: A scalar from which to subtract this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing f minus this Chebtech.
+        """
         return -(self - f)
 
     @self_empty()
     def __rpow__(self, f):
+        """Raise a scalar to the power of this Chebtech.
+
+        This is called when f ** self is executed and f is not a Chebtech.
+
+        Args:
+            f: A scalar to be raised to the power of this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing f raised to the power of this Chebtech.
+        """
         return self.__class__.initfun_adaptive(lambda x: np.power(f, self(x)), interval=self.interval)
 
     __rtruediv__ = __rdiv__
     __rmul__ = __mul__
 
     def __sub__(self, f):
+        """Subtract a scalar or another Chebtech from this Chebtech.
+
+        Args:
+            f: A scalar or another Chebtech to subtract from this Chebtech.
+
+        Returns:
+            Chebtech: A new Chebtech representing the difference.
+        """
         return self + (-f)
 
     # -------
     #  roots
     # -------
     def roots(self, sort=None):
-        """Compute the roots of the Chebtech on [-1,1] using the
-        coefficients in the associated Chebyshev series approximation.
+        """Compute the roots of the Chebtech on [-1,1].
+
+        Uses the coefficients in the associated Chebyshev series approximation.
         """
         sort = sort if sort is not None else prefs.sortroots
         rts = rootsunit(self.coeffs)
@@ -386,9 +499,10 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def cumsum(self):
-        """Return a Chebtech object representing the indefinite integral
-        of a Chebtech on the interval [-1,1]. The constant term is chosen
-        such that F(-1) = 0.
+        """Return a Chebtech object representing the indefinite integral.
+
+        Computes the indefinite integral of a Chebtech on the interval [-1,1].
+        The constant term is chosen such that F(-1) = 0.
         """
         n = self.size
         ak = np.append(self.coeffs, [0, 0])
@@ -404,8 +518,9 @@ class Chebtech(Smoothfun, ABC):
 
     @self_empty()
     def diff(self):
-        """Return a Chebtech object representing the derivative of a
-        Chebtech on the interval [-1,1].
+        """Return a Chebtech object representing the derivative.
+
+        Computes the derivative of a Chebtech on the interval [-1,1].
         """
         if self.isconst:
             out = self.__class__(np.array([0.0]), interval=self.interval)
@@ -449,11 +564,29 @@ plt = import_plt()
 if plt:
 
     def plot(self, ax=None, **kwargs):
+        """Plot the Chebtech on the interval [-1, 1].
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+            **kwargs: Additional keyword arguments to pass to the plot function.
+
+        Returns:
+            matplotlib.lines.Line2D: The line object created by the plot.
+        """
         return plotfun(self, (-1, 1), ax=ax, **kwargs)
 
     setattr(Chebtech, "plot", plot)
 
     def plotcoeffs(self, ax=None, **kwargs):
+        """Plot the absolute values of the Chebyshev coefficients.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+            **kwargs: Additional keyword arguments to pass to the plot function.
+
+        Returns:
+            matplotlib.lines.Line2D: The line object created by the plot.
+        """
         ax = ax or plt.gca()
         return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
 
@@ -475,14 +608,16 @@ class Chebtech2(Chebtech):
 
     @staticmethod
     def _vals2coeffs(vals):
-        """Map function values at Chebyshev points of 2nd kind to
-        first-kind Chebyshev polynomial coefficients.
+        """Map function values at Chebyshev points of 2nd kind.
+
+        Converts values at Chebyshev points of 2nd kind to first-kind Chebyshev polynomial coefficients.
         """
         return vals2coeffs2(vals)
 
     @staticmethod
     def _coeffs2vals(coeffs):
-        """Map first-kind Chebyshev polynomial coefficients to
-        function values at Chebyshev points of 2nd kind.
+        """Map first-kind Chebyshev polynomial coefficients.
+
+        Converts first-kind Chebyshev polynomial coefficients to function values at Chebyshev points of 2nd kind.
         """
         return coeffs2vals2(coeffs)
