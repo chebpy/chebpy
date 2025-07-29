@@ -612,12 +612,32 @@ class Chebfun:
         return self._break(newdom)
 
     def restrict(self, subinterval):
-        """Restrict a chebfun to a subinterval."""
+        """Restrict a Chebfun to a subinterval.
+
+        This method creates a new Chebfun that is restricted to the specified subinterval
+        and simplifies the result.
+
+        Args:
+            subinterval (array-like): The subinterval to which this Chebfun should be restricted.
+
+        Returns:
+            Chebfun: A new Chebfun restricted to the specified subinterval.
+        """
         return self._restrict(subinterval).simplify()
 
     @self_empty()
     def restrict_(self, subinterval):
-        """Restrict a chebfun to a subinterval, modifying the object in place."""
+        """Restrict a Chebfun to a subinterval, modifying the object in place.
+
+        This method modifies the current Chebfun by restricting it to the specified
+        subinterval and simplifying the result.
+
+        Args:
+            subinterval (array-like): The subinterval to which this Chebfun should be restricted.
+
+        Returns:
+            Chebfun: The modified Chebfun (self).
+        """
         restricted = self._restrict(subinterval).simplify()
         self.funs = restricted.funs
         self.breakdata = compute_breakdata(self.funs)
