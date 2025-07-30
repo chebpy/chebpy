@@ -61,36 +61,6 @@ def test_coeff_construction():
     assert np.max(f.coeffs - coeffs) < eps
 
 
-def test_const_construction():
-    """Test construction of constant Chebtech2 objects.
-
-    This test verifies that constant Chebtech2 objects have the expected
-    properties: size 1, isconst=True, isempty=False. It also checks that
-    attempting to create a constant from a list raises a ValueError.
-    """
-    ff = Chebtech2.initconst(1.0)
-    assert ff.size == 1
-    assert ff.isconst
-    assert not ff.isempty
-    with pytest.raises(ValueError):
-        Chebtech2.initconst([1.0])
-
-
-def test_empty_construction():
-    """Test construction of empty Chebtech2 objects.
-
-    This test verifies that empty Chebtech2 objects have the expected
-    properties: size 0, isconst=False, isempty=True. It also checks that
-    attempting to create an empty Chebtech2 with arguments raises a TypeError.
-    """
-    ff = Chebtech2.initempty()
-    assert ff.size == 0
-    assert not ff.isconst
-    assert ff.isempty
-    with pytest.raises(TypeError):
-        Chebtech2.initempty([1.0])
-
-
 # Test adaptive function construction
 def test_adaptive_construction(testfunctions):
     """Test adaptive construction of Chebtech2 objects.

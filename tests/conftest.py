@@ -164,3 +164,40 @@ def constfun(request):
     assert fun.roots().size == 0
 
     return fun
+
+
+@pytest.fixture
+def complexfun(request):
+    """Create a complex function object for testing.
+
+    This generic fixture creates a complex function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+    The complex function is set to exp(π·i·x).
+
+    Args:
+        request: The pytest request object, used to determine the calling module
+
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech2]: A complex function object of the appropriate type
+    """
+    module_name = request.module.__name__
+
+    if "bndfun" in module_name:
+        # Bndfun requires an interval
+        from chebpy.core.utilities import Interval
+        fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
+    elif "chebfun" in module_name:
+        fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
+    elif "chebtech" in module_name:
+        fun = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
+
+    assert fun.iscomplex
+    assert not fun.isempty
+    assert not fun.isconst
+    assert fun.roots().size == 0
+
+    return fun
