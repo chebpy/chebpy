@@ -44,6 +44,7 @@ class Chebfun:
         breakdata (OrderedDict): Mapping of breakpoints to function values.
         transposed (bool): Flag indicating if the Chebfun is transposed.
     """
+
     def __init__(self, funs):
         """Initialize a Chebfun object.
 
@@ -301,6 +302,7 @@ class Chebfun:
             This is executed when truediv(f, self) fails, which is to say whenever c
             is not a Chebfun. We proceed on the assumption f is a scalar.
         """
+
         def constfun(cheb, const):
             return 0.0 * cheb + const
 
@@ -940,6 +942,7 @@ def add_ufunc(op):
         The created method will have the same name as the NumPy function
         and will take no arguments other than self.
     """
+
     @self_empty()
     def method(self):
         """Apply a NumPy universal function to this Chebfun.

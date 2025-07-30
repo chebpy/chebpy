@@ -24,12 +24,13 @@ class Onefun(ABC):
     which include constructors, algebraic operations, calculus operations,
     and utility functions.
     """
+
     # --------------------------
     #  alternative constructors
     # --------------------------
     @classmethod
     @abstractmethod
-    def initconst(cls): # pragma: no cover
+    def initconst(cls):  # pragma: no cover
         """Initialize a constant function.
 
         This constructor creates a function that represents a constant value
@@ -45,7 +46,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initempty(cls): # pragma: no cover
+    def initempty(cls):  # pragma: no cover
         """Initialize an empty function.
 
         This constructor creates an empty function representation, which is
@@ -58,7 +59,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initidentity(cls): # pragma: no cover
+    def initidentity(cls):  # pragma: no cover
         """Initialize the identity function f(x) = x.
 
         This constructor creates a function that represents f(x) = x
@@ -71,7 +72,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun(cls): # pragma: no cover
+    def initfun(cls):  # pragma: no cover
         """Initialize from a callable function.
 
         This is a general constructor that delegates to either initfun_adaptive
@@ -89,7 +90,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun_adaptive(cls): # pragma: no cover
+    def initfun_adaptive(cls):  # pragma: no cover
         """Initialize from a callable function using adaptive sampling.
 
         This constructor determines the appropriate number of points needed to
@@ -105,7 +106,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun_fixedlen(cls): # pragma: no cover
+    def initfun_fixedlen(cls):  # pragma: no cover
         """Initialize from a callable function using a fixed number of points.
 
         This constructor uses a specified number of points to represent the function,
@@ -122,7 +123,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initvalues(cls): # pragma: no cover
+    def initvalues(cls):  # pragma: no cover
         """Initialize from function values at Chebyshev points.
 
         This constructor creates a function representation from values
@@ -140,7 +141,7 @@ class Onefun(ABC):
     #  "private" methods
     # -------------------
     @abstractmethod
-    def __call__(self, x): # pragma: no cover
+    def __call__(self, x):  # pragma: no cover
         """Evaluate the function at points x.
 
         This method evaluates the function at the specified points.
@@ -156,7 +157,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __init__(self): # pragma: no cover
+    def __init__(self):  # pragma: no cover
         """Initialize a new Onefun instance.
 
         This method initializes a new function representation on the interval [-1, 1].
@@ -165,7 +166,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __repr__(self): # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         """Return a string representation of the function.
 
         This method returns a string representation of the function that includes
@@ -180,7 +181,7 @@ class Onefun(ABC):
     #    algebra
     # ----------------
     @abstractmethod
-    def __add__(self, other): # pragma: no cover
+    def __add__(self, other):  # pragma: no cover
         """Add this function with another function or a scalar.
 
         This method implements the addition operation between this function
@@ -195,7 +196,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __mul__(self, other): # pragma: no cover
+    def __mul__(self, other):  # pragma: no cover
         """Multiply this function with another function or a scalar.
 
         This method implements the multiplication operation between this function
@@ -210,7 +211,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __neg__(self): # pragma: no cover
+    def __neg__(self):  # pragma: no cover
         """Return the negative of this function.
 
         This method implements the unary negation operation for this function.
@@ -221,7 +222,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __pos__(self): # pragma: no cover
+    def __pos__(self):  # pragma: no cover
         """Return the positive of this function (which is the function itself).
 
         This method implements the unary plus operation for this function.
@@ -232,7 +233,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __pow__(self, power): # pragma: no cover
+    def __pow__(self, power):  # pragma: no cover
         """Raise this function to a power.
 
         This method implements the power operation for this function.
@@ -246,7 +247,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __radd__(self, other): # pragma: no cover
+    def __radd__(self, other):  # pragma: no cover
         """Add a scalar or another function to this function (from the right).
 
         This method is called when a scalar or another function is added to this function,
@@ -261,7 +262,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __rmul__(self, other): # pragma: no cover
+    def __rmul__(self, other):  # pragma: no cover
         """Multiply a scalar or another function with this function (from the right).
 
         This method is called when a scalar or another function is multiplied with this function,
@@ -276,7 +277,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __rsub__(self, other): # pragma: no cover
+    def __rsub__(self, other):  # pragma: no cover
         """Subtract this function from a scalar or another function.
 
         This method is called when this function is subtracted from a scalar or another function,
@@ -291,7 +292,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __sub__(self, other): # pragma: no cover
+    def __sub__(self, other):  # pragma: no cover
         """Subtract another function or a scalar from this function.
 
         This method implements the subtraction operation between this function
@@ -310,7 +311,7 @@ class Onefun(ABC):
     # ---------------
     @property
     @abstractmethod
-    def coeffs(self): # pragma: no cover
+    def coeffs(self):  # pragma: no cover
         """Get the coefficients of the function representation.
 
         This property returns the coefficients used in the function representation,
@@ -323,7 +324,7 @@ class Onefun(ABC):
 
     @property
     @abstractmethod
-    def isconst(self): # pragma: no cover
+    def isconst(self):  # pragma: no cover
         """Check if this function represents a constant.
 
         This property determines whether the function is constant (i.e., f(x) = c
@@ -336,7 +337,7 @@ class Onefun(ABC):
 
     @property
     @abstractmethod
-    def isempty(self): # pragma: no cover
+    def isempty(self):  # pragma: no cover
         """Check if this function is empty.
 
         This property determines whether the function is empty, which is a special
@@ -349,7 +350,7 @@ class Onefun(ABC):
 
     @property
     @abstractmethod
-    def size(self): # pragma: no cover
+    def size(self):  # pragma: no cover
         """Get the size of the function representation.
 
         This property returns the number of coefficients or other measure of the
@@ -362,7 +363,7 @@ class Onefun(ABC):
 
     @property
     @abstractmethod
-    def vscale(self): # pragma: no cover
+    def vscale(self):  # pragma: no cover
         """Get the vertical scale of the function.
 
         This property returns a measure of the range of function values, typically
@@ -377,7 +378,7 @@ class Onefun(ABC):
     #   utilities
     # ---------------
     @abstractmethod
-    def copy(self): # pragma: no cover
+    def copy(self):  # pragma: no cover
         """Create a deep copy of this function.
 
         This method creates a new function that is a deep copy of this function,
@@ -389,7 +390,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def imag(self): # pragma: no cover
+    def imag(self):  # pragma: no cover
         """Get the imaginary part of this function.
 
         This method returns a new function representing the imaginary part of this function.
@@ -401,7 +402,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def prolong(self, n): # pragma: no cover
+    def prolong(self, n):  # pragma: no cover
         """Extend the function representation to a larger size.
 
         This method extends the function representation to use more coefficients
@@ -416,7 +417,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def real(self): # pragma: no cover
+    def real(self):  # pragma: no cover
         """Get the real part of this function.
 
         This method returns a new function representing the real part of this function.
@@ -428,7 +429,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def simplify(self): # pragma: no cover
+    def simplify(self):  # pragma: no cover
         """Simplify the function representation.
 
         This method simplifies the function representation by removing unnecessary
@@ -440,7 +441,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def values(self): # pragma: no cover
+    def values(self):  # pragma: no cover
         """Get the values of the function at Chebyshev points.
 
         This method returns the values of the function at Chebyshev points,
@@ -455,7 +456,7 @@ class Onefun(ABC):
     #  rootfinding
     # --------------
     @abstractmethod
-    def roots(self): # pragma: no cover
+    def roots(self):  # pragma: no cover
         """Find the roots (zeros) of the function on [-1, 1].
 
         This method computes the points where the function equals zero
@@ -471,7 +472,7 @@ class Onefun(ABC):
     #   calculus
     # -------------
     @abstractmethod
-    def sum(self): # pragma: no cover
+    def sum(self):  # pragma: no cover
         """Compute the definite integral of the function over [-1, 1].
 
         This method calculates the definite integral of the function
@@ -483,7 +484,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def cumsum(self): # pragma: no cover
+    def cumsum(self):  # pragma: no cover
         """Compute the indefinite integral of the function.
 
         This method calculates the indefinite integral (antiderivative) of the function,
@@ -496,7 +497,7 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def diff(self): # pragma: no cover
+    def diff(self):  # pragma: no cover
         """Compute the derivative of the function.
 
         This method calculates the derivative of the function with respect to x.

@@ -394,6 +394,7 @@ class Chebtech(Smoothfun, ABC):
         Returns:
             Chebtech: A new Chebtech representing this Chebtech raised to the power f.
         """
+
         def powfun(fn, x):
             if np.isscalar(fn):
                 return fn
@@ -413,6 +414,7 @@ class Chebtech(Smoothfun, ABC):
         Returns:
             Chebtech: A new Chebtech representing f divided by this Chebtech.
         """
+
         # Executed when __div__(f, self) fails, which is to say whenever f
         # is not a Chebtech. We proceeed on the assumption f is a scalar.
         def constfun(x):

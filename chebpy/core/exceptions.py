@@ -69,7 +69,7 @@ IntervalOverlap = type(
 
         This exception is raised when two or more intervals overlap
         but are required to be disjoint for the operation.
-        """
+        """,
     },
 )
 
@@ -84,7 +84,7 @@ IntervalGap = type(
 
         This exception is raised when a collection of intervals does not
         form a complete partition of the approximation interval.
-        """
+        """,
     },
 )
 
@@ -98,7 +98,7 @@ IntervalMismatch = type(
 
         This exception is raised when an operation requires Fun objects
         to be defined on identical intervals, but they are not.
-        """
+        """,
     },
 )
 
@@ -112,7 +112,7 @@ NotSubinterval = type(
 
         This exception is raised when an interval is expected to be
         a subinterval of another interval, but it is not.
-        """
+        """,
     },
 )
 
@@ -126,7 +126,7 @@ IntervalValues = type(
 
         This exception is raised when the defining values of an Interval
         object are not strictly increasing.
-        """
+        """,
     },
 )
 
@@ -147,7 +147,7 @@ InvalidDomain = type(
 
         This exception is raised when attempting to create a Domain object
         with invalid parameters, such as non-monotonic values or too few points.
-        """
+        """,
     },
 )
 
@@ -163,7 +163,7 @@ NotSubdomain = type(
 
         This exception is raised when a domain is expected to be
         a subdomain of another domain, but it is not.
-        """
+        """,
     },
 )
 
@@ -177,7 +177,7 @@ SupportMismatch = type(
 
         This exception is raised when an operation requires objects
         to be supported on the same interval, but they are not.
-        """
+        """,
     },
 )
 
@@ -194,6 +194,6 @@ BadFunLengthArgument = type(
         This exception is raised when the 'n' argument for a function does not
         meet the requirements: it must be either a single numeric value or an
         iterable with one fewer elements than the size of the domain.
-        """
+        """,
     },
 )
