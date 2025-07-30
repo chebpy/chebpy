@@ -21,7 +21,7 @@ from chebpy.core.chebtech import Chebtech2
 
 from .utilities import cos, eps, exp, scaled_tol
 
-np.random.seed(0)
+rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 
 # Turn off 'divide' and 'invalid' RuntimeWarnings
 # These warnings are expected and required for the barycentric formula,
@@ -42,10 +42,10 @@ def evaluation_fixtures() -> dict[str, Any]:
     npts = 15
     xk = Chebtech2._chebpts(npts)
     vk = Chebtech2._barywts(npts)
-    fk = np.random.rand(npts)
-    ak = np.random.rand(11)
-    xx = -1 + 2 * np.random.rand(9)
-    pts = -1 + 2 * np.random.rand(1001)
+    fk = rng.random(npts)
+    ak = rng.random(11)
+    xx = -1 + 2 * rng.random(9)
+    pts = -1 + 2 * rng.random(1001)
     return {"xk": xk, "vk": vk, "fk": fk, "ak": ak, "xx": xx, "pts": pts}
 
 
@@ -142,7 +142,7 @@ def test_clenshaw_float_output() -> None:
 # TODO: Move these tests elsewhere?
 def test_bary_clenshaw_consistency() -> None:
     """Test that bary and clenshaw return consistent output types."""
-    coeffs = np.random.rand(3)
+    coeffs = rng.random(3)
     evalpts = (0.5, np.array([]), np.array([0.5]), np.array([0.5, 0.6]))
     for n in range(len(coeffs)):
         ff = Chebtech2(coeffs[:n])

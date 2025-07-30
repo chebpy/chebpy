@@ -11,6 +11,9 @@ from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import eps
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 # TODO: expand to all the constructor variants
 def test_initvalues():
@@ -22,13 +25,13 @@ def test_initvalues():
     coefficients computed directly from the values.
     """
     # test n = 0 case separately
-    vals = np.random.rand(0)
+    vals = rng.random(0)
     fun = Chebtech2.initvalues(vals)
     cfs = Chebtech2._vals2coeffs(vals)
     assert fun.coeffs.size == cfs.size == 0
     # now test the other cases
     for n in range(1, 10):
-        vals = np.random.rand(n)
+        vals = rng.random(n)
         fun = Chebtech2.initvalues(vals)
         cfs = Chebtech2._vals2coeffs(vals)
         assert np.max(fun.coeffs - cfs) == 0.0
@@ -41,7 +44,7 @@ def test_initidentity():
     correctly returns its input values when evaluated at random points.
     """
     x = Chebtech2.initidentity()
-    s = -1 + 2 * np.random.rand(10000)
+    s = -1 + 2 * rng.random(10000)
     assert np.max(s - x(s)) == 0.0
 
 
@@ -52,7 +55,7 @@ def test_coeff_construction():
     from arrays of coefficients, checking that the resulting object has the
     expected coefficients within machine precision.
     """
-    coeffs = np.random.rand(10)
+    coeffs = rng.random(10)
     f = Chebtech2(coeffs)
     assert isinstance(f, Chebtech2)
     assert np.max(f.coeffs - coeffs) < eps
@@ -86,10 +89,6 @@ def test_empty_construction():
     assert ff.isempty
     with pytest.raises(TypeError):
         Chebtech2.initempty([1.0])
-
-
-# Ensure reproducibility
-np.random.seed(0)
 
 
 # Test adaptive function construction

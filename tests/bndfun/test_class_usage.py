@@ -10,6 +10,9 @@ from chebpy.core.utilities import Interval
 
 from ..utilities import cos, eps, exp, pi, sin
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 @pytest.fixture
 def class_usage_fixtures():
@@ -73,7 +76,7 @@ def test_isconst_false(class_usage_fixtures):
 
 def test_size():
     """Test the size method of Bndfun."""
-    cfs = np.random.rand(10)
+    cfs = rng.random(10)
     subinterval = Interval()
     b0 = Bndfun(Chebtech2(np.array([])), subinterval)
     b1 = Bndfun(Chebtech2(np.array([1.0])), subinterval)

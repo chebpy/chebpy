@@ -11,6 +11,9 @@ from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import cos, eps, exp, pi, sin
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 # tests for the correct results in the empty cases
 def test_sum_empty(emptyfun):
@@ -64,10 +67,6 @@ def_integrals = [
     (lambda x: 1e10 * exp(x), 15, 1e10 * (exp(1) - exp(-1)), 4e10 * eps),
     (lambda x: 0 * x + 1.0, 1, 2, eps),
 ]
-
-
-# Ensure reproducibility
-np.random.seed(0)
 
 
 @pytest.mark.parametrize("fun, n, integral, tol", def_integrals)

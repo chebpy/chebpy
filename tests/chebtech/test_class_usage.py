@@ -12,6 +12,9 @@ from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import cos, eps, exp, pi, sin
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 @pytest.fixture
 def chebtech_fixture():
@@ -25,9 +28,8 @@ def chebtech_fixture():
             ff: Chebtech2 object for sin(30*x)
             xx: Array of random test points
     """
-    np.random.seed(0)  # Ensure reproducibility
     ff = Chebtech2.initfun_fixedlen(lambda x: np.sin(30 * x), 100)
-    xx = -1 + 2 * np.random.rand(100)
+    xx = -1 + 2 * rng.random(100)
     return {"ff": ff, "xx": xx}
 
 
@@ -87,7 +89,7 @@ def test_size():
     2. Constant Chebtech2 (should have size 1)
     3. Chebtech2 with arbitrary coefficients (should match coefficient array size)
     """
-    cfs = np.random.rand(10)
+    cfs = rng.random(10)
     assert Chebtech2(np.array([])).size == 0
     assert Chebtech2(np.array([1.0])).size == 1
     assert Chebtech2(cfs).size == cfs.size
@@ -260,7 +262,6 @@ def test_vscale(fun, n, vscale):
         n: Number of points to use
         vscale: Expected vscale value
     """
-    np.random.seed(0)  # Ensure reproducibility
     ff = Chebtech2.initfun_fixedlen(fun, n)
     absdiff = abs(ff.vscale - vscale)
     assert absdiff <= 0.1 * vscale
