@@ -213,42 +213,27 @@ def test_truediv_constant(random_points, testfunctions):
             function length, and _ is an unused parameter.
     """
     xx = random_points
-    for fun, funlen, _ in testfunctions:
+    for fun, funlen, has_roots in testfunctions:
+        test_fun = Chebtech2.initfun_fixedlen(fun, funlen)
+
         for const in (-1, 1, 10, -1e5):
-
-            def f(x):
-                return const / fun(x)
-
-            def g(x):
-                return fun(x) / const
-
-            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-            gg = techfun / const
+            g = test_fun(xx) / const
+            gg = (test_fun / const)(xx)
             tol = 3e2 * eps * abs(const)
 
             # Test division of function by constant (should always work)
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(g - gg)) <= tol
 
-            # Test division of constant by function (may have issues with division by zero)
-            # try:
-            ff = const / techfun
-            # Evaluate both functions
-            f_vals = f(xx)
-            ff_vals = ff(xx)
+            if not has_roots:
+                f_vals = const / fun(xx)
+                ff_vals = (const / test_fun)(xx)
 
-            # Skip test if there are any NaN values
-            if np.any(np.isnan(f_vals)) or np.any(np.isnan(ff_vals)):
-                continue
+                error = np.max(np.abs(f_vals - ff_vals))
+                assert error <= tol, (
+                    f"Division failed for {fun.__name__} and {const}:\n"
+                    f"max error = {error:.2e}, tol = {tol:.2e}"
+                )
 
-            # Skip test if function values are too close to zero
-            error = np.max(np.abs(f_vals - ff_vals))
-            if error > 1e3:
-                continue
-
-            assert error <= tol
-            # except (RuntimeWarning, ValueError, ZeroDivisionError, FloatingPointError):
-            #    # Skip test if division by zero or other numerical issues
-            #    continue
 
 
 def test__pos__empty(emptyfun):
