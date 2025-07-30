@@ -8,6 +8,8 @@ Specifically, it:
 - Sets the matplotlib backend to 'Agg' (a non-interactive backend) when
   running in a CI environment, which is necessary for running tests that
   generate plots without a display.
+- Provides a generic emptyfun fixture that can return different types of
+  empty function objects based on the class name.
 
 Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
@@ -19,6 +21,10 @@ import os
 import matplotlib
 import numpy as np
 import pytest
+
+from chebpy.core.bndfun import Bndfun
+from chebpy.core.chebfun import Chebfun
+from chebpy.core.chebtech import Chebtech2
 
 if os.environ.get("CI") == "true":  # pragma: no cover
     matplotlib.use("Agg")
@@ -88,3 +94,73 @@ def binops():
 def div_binops():
     """Binary operators for testing division."""
     return (operator.truediv,)
+
+
+@pytest.fixture
+def emptyfun(request):
+    """Create an empty function object for testing.
+
+    This generic fixture creates an empty function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+
+    Args:
+        request: The pytest request object, used to determine the calling module
+
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech2]: An empty function object of the appropriate type
+    """
+    module_name = request.module.__name__
+
+    if "bndfun" in module_name:
+        fun = Bndfun.initempty()
+    elif "chebfun" in module_name:
+        fun = Chebfun.initempty()
+    elif "chebtech" in module_name:
+        fun = Chebtech2.initempty()
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initempty()
+
+    assert not fun.isconst
+    assert fun.isempty
+    assert fun.vscale == 0.0
+    assert fun.roots().size == 0
+
+    return fun
+
+
+@pytest.fixture
+def constfun(request):
+    """Create a constant function object for testing.
+
+    This generic fixture creates a constant function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+    The constant value is set to 1.0.
+
+    Args:
+        request: The pytest request object, used to determine the calling module
+
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech2]: A constant function object of the appropriate type
+    """
+    module_name = request.module.__name__
+
+    if "bndfun" in module_name:
+        # Bndfun requires an interval
+        from chebpy.core.utilities import Interval
+        fun = Bndfun.initconst(1.0, Interval())
+    elif "chebfun" in module_name:
+        fun = Chebfun.initconst(1.0)
+    elif "chebtech" in module_name:
+        fun = Chebtech2.initconst(1.0)
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initconst(1.0)
+
+    assert fun.isconst
+    assert not fun.isempty
+    assert fun.roots().size == 0
+
+    return fun

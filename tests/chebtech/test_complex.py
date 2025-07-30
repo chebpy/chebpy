@@ -23,15 +23,6 @@ def complex_function():
     return Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
 
 
-def test_init_empty():
-    """Test initialization of an empty Chebtech2 object.
-
-    This test verifies that an empty Chebtech2 object can be created
-    without errors.
-    """
-    Chebtech2.initempty()
-
-
 def test_roots(complex_function):
     """Test finding roots of complex Chebtech2 functions.
 

@@ -3,11 +3,13 @@
 This module contains fixtures and helper functions specific to testing
 the Chebfun class. It provides fixtures for common test objects and
 helper functions for testing various operations.
+
+Note:
+    The emptyfun fixture has been moved to the main conftest.py file
+    to provide a generic implementation that works across all test modules.
 """
 
 import pytest
-
-from chebpy.core.chebfun import Chebfun
 
 from ..utilities import eps, sin
 
@@ -22,19 +24,6 @@ def testdomains() -> list:
         ([-1, 2], 5 * eps),
         ([-5, 9], 35 * eps),
     ]
-
-
-@pytest.fixture
-def emptyfun() -> Chebfun:
-    """Create an empty Chebfun function for testing.
-
-    This fixture creates an empty Chebfun object that can be used
-    to test the behavior of operations on empty functions.
-
-    Returns:
-        Chebfun: An empty Chebfun object
-    """
-    return Chebfun.initempty()
 
 
 @pytest.fixture()
@@ -84,4 +73,3 @@ def uf3():
         return sin(25 * x - 1)
 
     return f
-

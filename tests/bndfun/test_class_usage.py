@@ -24,54 +24,8 @@ def class_usage_fixtures():
 
     ff = Bndfun.initfun_adaptive(f, subinterval)
     xx = subinterval(np.linspace(-1, 1, 100))
-    emptyfun = Bndfun(Chebtech2.initempty(), subinterval)
-    constfun = Bndfun(Chebtech2.initconst(1.0), subinterval)
 
-    return {"f": f, "ff": ff, "xx": xx, "emptyfun": emptyfun, "constfun": constfun, "subinterval": subinterval}
-
-
-def test_isempty_true(class_usage_fixtures):
-    """Test that emptyfun.isempty is True.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    emptyfun = class_usage_fixtures["emptyfun"]
-    assert emptyfun.isempty
-    assert not (not emptyfun.isempty)
-
-
-def test_isempty_false(class_usage_fixtures):
-    """Test that constfun.isempty is False.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    constfun = class_usage_fixtures["constfun"]
-    assert not constfun.isempty
-    assert constfun.isempty is False
-
-
-def test_isconst_true(class_usage_fixtures):
-    """Test that constfun.isconst is True.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    constfun = class_usage_fixtures["constfun"]
-    assert constfun.isconst
-    assert not (not constfun.isconst)
-
-
-def test_isconst_false(class_usage_fixtures):
-    """Test that emptyfun.isconst is False.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    emptyfun = class_usage_fixtures["emptyfun"]
-    assert not emptyfun.isconst
-    assert emptyfun.isconst is False
+    return {"f": f, "ff": ff, "xx": xx, "subinterval": subinterval}
 
 
 def test_size():
@@ -172,16 +126,6 @@ def test_call_raises(class_usage_fixtures):
         ff(xx, "notamethod")
     with pytest.raises(ValueError):
         ff(xx, how="notamethod")
-
-
-def test_vscale_empty(class_usage_fixtures):
-    """Test the vscale property of an empty Bndfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    emptyfun = class_usage_fixtures["emptyfun"]
-    assert emptyfun.vscale == 0.0
 
 
 def test_copy(class_usage_fixtures):

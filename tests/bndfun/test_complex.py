@@ -15,11 +15,6 @@ def complex_fixtures():
     return {"z": z}
 
 
-def test_init_empty():
-    """Test initialization of an empty Bndfun."""
-    Bndfun.initempty()
-
-
 def test_roots(complex_fixtures):
     """Test the roots method on complex Bndfun objects."""
     z = complex_fixtures["z"]

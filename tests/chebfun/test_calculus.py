@@ -21,7 +21,6 @@ def calculus_fixtures():
 
     Returns:
         dict: Dictionary containing:
-            f0: Empty Chebfun
             f1: Chebfun representing sin(4x - 1.4)
             f2: Chebfun representing exp(x)
             f3: Chebfun representing x^2
@@ -34,13 +33,12 @@ def calculus_fixtures():
     def g(x):
         return exp(x)
 
-    f0 = Chebfun.initempty()
     f1 = Chebfun.initfun_adaptive(f, [-1, 1])
     f2 = Chebfun.initfun_adaptive(g, [-1, 1])
     f3 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
     f4 = Chebfun.initfun_adaptive(lambda x: x**3, [-1, 1])
 
-    return {"f0": f0, "f1": f1, "f2": f2, "f3": f3, "f4": f4}
+    return {"f1": f1, "f2": f2, "f3": f3, "f4": f4}
 
 
 def test_sum(calculus_fixtures):
@@ -104,44 +102,6 @@ def test_cumsum(calculus_fixtures):
     assert (f4.cumsum().diff() - f4).isconst
 
 
-def test_sum_empty(calculus_fixtures):
-    """Test the sum method on an empty Chebfun.
-
-    This test verifies that the sum method on an empty Chebfun returns 0.
-
-    Args:
-        calculus_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = calculus_fixtures["f0"]
-    assert f0.sum() == 0
-
-
-def test_cumsum_empty(calculus_fixtures):
-    """Test the cumsum method on an empty Chebfun.
-
-    This test verifies that the cumsum method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        calculus_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = calculus_fixtures["f0"]
-    assert f0.cumsum().isempty
-
-
-def test_diff_empty(calculus_fixtures):
-    """Test the diff method on an empty Chebfun.
-
-    This test verifies that the diff method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        calculus_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = calculus_fixtures["f0"]
-    assert f0.diff().isempty
-
-
 def test_dot(calculus_fixtures):
     """Test the dot method of Chebfun objects.
 
@@ -176,17 +136,17 @@ def test_dot_commute(calculus_fixtures):
     assert abs(f1.dot(f2) - f2.dot(f1)) < 1e-10
 
 
-def test_dot_empty(calculus_fixtures):
+def test_dot_empty(emptyfun, calculus_fixtures):
     """Test the dot method with an empty Chebfun.
 
     This test verifies that the dot method with an empty Chebfun
     returns 0.
 
     Args:
+        emptyfun: Fixture providing an empty Chebfun object.
         calculus_fixtures: Fixture providing test Chebfun objects.
     """
-    f0 = calculus_fixtures["f0"]
     f1 = calculus_fixtures["f1"]
 
-    assert f0.dot(f1) == 0
-    assert f1.dot(f0) == 0
+    assert emptyfun.dot(f1) == 0
+    assert f1.dot(emptyfun) == 0

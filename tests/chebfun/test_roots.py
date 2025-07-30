@@ -9,6 +9,7 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
+from ..generic.roots import test_empty  # noqa: F401
 from ..utilities import cos, pi, sin
 
 
@@ -21,32 +22,17 @@ def roots_fixtures():
 
     Returns:
         dict: Dictionary containing:
-            f0: Empty Chebfun
             f1: Chebfun representing sin(x)
             f2: Chebfun representing cos(x)
             f3: Chebfun representing x^2 - 0.25
             f4: Chebfun representing x^3 - x
     """
-    f0 = Chebfun.initempty()
     f1 = Chebfun.initfun_adaptive(sin, [-1, 1])
     f2 = Chebfun.initfun_adaptive(cos, [0, 2])
     f3 = Chebfun.initfun_adaptive(lambda x: x**2 - 0.25, [-1, 1])
     f4 = Chebfun.initfun_adaptive(lambda x: x**3 - x, [-1, 1])
 
-    return {"f0": f0, "f1": f1, "f2": f2, "f3": f3, "f4": f4}
-
-
-def test_roots_empty(roots_fixtures):
-    """Test roots method on an empty Chebfun.
-
-    This test verifies that the roots method on an empty Chebfun
-    returns an empty array.
-
-    Args:
-        roots_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = roots_fixtures["f0"]
-    assert f0.roots().size == 0
+    return {"f1": f1, "f2": f2, "f3": f3, "f4": f4}
 
 
 def test_roots_sin(roots_fixtures):

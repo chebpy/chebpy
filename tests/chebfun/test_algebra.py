@@ -12,32 +12,8 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
+from ..generic.algebra import test__neg__empty, test__pos__empty  # noqa: F401
 from ..utilities import eps
-
-
-# tests for empty function operations
-def test__pos__empty(emptyfun):
-    """Test unary positive operator on empty Chebfun objects.
-
-    This test verifies that applying the unary positive operator to an
-    empty Chebfun object results in an empty Chebfun object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebfun object
-    """
-    assert (+emptyfun).isempty
-
-
-def test__neg__empty(emptyfun):
-    """Test unary negative operator on empty Chebfun objects.
-
-    This test verifies that applying the unary negative operator to an
-    empty Chebfun object results in an empty Chebfun object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebfun object
-    """
-    assert (-emptyfun).isempty
 
 
 def test__add__radd__empty(emptyfun, testdomains, testfunctions):
@@ -84,8 +60,8 @@ def test__add__radd__constant(testdomains, testfunctions):
                 hscl = ff.hscale
                 lscl = max([fun.size for fun in ff])
                 tol = 2 * abs(const) * vscl * hscl * lscl * eps
-                assert np.max(g(xx) - gg1(xx)) <= tol
-                assert np.max(g(xx) - gg2(xx)) <= tol
+                assert np.max(np.abs(g(xx) - gg1(xx))) <= tol
+                assert np.max(np.abs(g(xx) - gg2(xx))) <= tol
 
 
 def test__sub__rsub__empty(emptyfun, testdomains, testfunctions):
@@ -133,8 +109,8 @@ def test__sub__rsub__constant(testdomains, testfunctions):
                 hscl = ff.hscale
                 lscl = max([fun.size for fun in ff])
                 tol = 2 * abs(const) * vscl * hscl * lscl * eps
-                assert np.max(g(xx) - gg(xx)) <= tol
-                assert np.max(h(xx) - hh(xx)) <= tol
+                assert np.max(np.abs(g(xx) - gg(xx))) <= tol
+                assert np.max(np.abs(h(xx) - hh(xx))) <= tol
 
 
 def test__mul__rmul__empty(emptyfun, testdomains, testfunctions):
@@ -183,8 +159,8 @@ def test__mul__rmul__constant(testdomains, testfunctions):
                 hscl = ff.hscale
                 lscl = max([fun.size for fun in ff])
                 tol = 2 * abs(const) * vscl * hscl * lscl * eps
-                assert np.max(g(xx) - gg(xx)) <= tol
-                assert np.max(h(xx) - hh(xx)) <= tol
+                assert np.max(np.abs(g(xx) - gg(xx))) <= tol
+                assert np.max(np.abs(h(xx) - hh(xx))) <= tol
 
 
 def test_truediv_empty(emptyfun, div_binops, testdomains, testfunctions):
@@ -238,8 +214,8 @@ def test_truediv_constant(testdomains, testfunctions):
                     hscl = ff.hscale
                     lscl = max([fun.size for fun in ff])
                     tol = 10 * abs(const) * vscl * hscl * lscl * eps
-                    assert np.max(g(xx) - gg(xx)) <= tol
-                    assert np.max(h(xx) - hh(xx)) <= tol
+                    assert np.max(np.abs(g(xx) - gg(xx))) <= tol
+                    assert np.max(np.abs(h(xx) - hh(xx))) <= tol
 
 
 def test_pow_empty(emptyfun):
@@ -294,7 +270,7 @@ def test_pow_constant(testdomains, testfunctions):
                     hscl = gg.hscale
                     lscl = max([fun.size for fun in gg])
                     tol = 10 * abs(c) * vscl * hscl * lscl * eps
-                    assert np.max(g(xx) - gg(xx)) <= tol
+                    assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 def test_rpow_constant(testdomains, testfunctions):
@@ -332,7 +308,7 @@ def test_rpow_constant(testdomains, testfunctions):
                 hscl = gg.hscale
                 lscl = max([fun.size for fun in gg])
                 tol = 50 * abs(c) * vscl * hscl * lscl * eps
-                assert np.max(g_vals - gg_vals) <= tol
+                assert np.max(np.abs(g_vals - gg_vals)) <= tol
 
 
 # Generate test functions for binary operations
@@ -388,7 +364,7 @@ def test_binary_operations(binops, div_binops, testdomains, testfunctions):
                     fg_vals = fg(xx)
                     fg_expected_vals = fg_expected(xx)
 
-                    assert np.max(fg_vals - fg_expected_vals) <= extra_factor * vscl * hscl * lscl * tol
+                    assert np.max(np.abs(fg_vals - fg_expected_vals)) <= extra_factor * vscl * hscl * lscl * tol
 
 
 # Generate test functions for unary operations
@@ -418,4 +394,4 @@ def test_unary_operations(unaryop, testdomains, testfunctions):
             lscl = max([fun.size for fun in ff])
 
             assert ff.funs.size == gg.funs.size
-            assert np.max(gg(xx) - unaryop(f(xx))) <= vscl * hscl * lscl * tol
+            assert np.max(np.abs(gg(xx) - unaryop(f(xx)))) <= vscl * hscl * lscl * tol

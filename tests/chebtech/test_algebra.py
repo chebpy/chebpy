@@ -58,8 +58,8 @@ def test__add__radd__constant(random_points, testfunctions):
             f1 = const + techfun
             f2 = techfun + const
             tol = 5e1 * eps * abs(const)
-            assert np.max(f(xx) - f1(xx)) <= tol
-            assert np.max(f(xx) - f2(xx)) <= tol
+            assert np.max(np.abs(f(xx) - f1(xx))) <= tol
+            assert np.max(np.abs(f(xx) - f2(xx))) <= tol
 
 
 def test__add__negself(random_points, testfunctions):
@@ -126,8 +126,8 @@ def test__sub__rsub__constant(random_points, testfunctions):
             ff = const - techfun
             gg = techfun - const
             tol = 5e1 * eps * abs(const)
-            assert np.max(f(xx) - ff(xx)) <= tol
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 def test__mul__rmul__empty(emptyfun, testfunctions):
@@ -175,8 +175,8 @@ def test__mul__rmul__constant(random_points, testfunctions):
             ff = const * techfun
             gg = techfun * const
             tol = 5e1 * eps * abs(const)
-            assert np.max(f(xx) - ff(xx)) <= tol
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 def test_truediv_empty(emptyfun, testfunctions):
@@ -309,7 +309,7 @@ def test_pow_const(random_points, testfunctions):
                 techfun = Chebtech2.initfun_fixedlen(fun, funlen)
                 ff = techfun**const
                 tol = 1e2 * eps
-                assert np.max(f(xx) - ff(xx)) <= tol
+                assert np.max(np.abs(f(xx) - ff(xx))) <= tol
 
 
 def test_rpow_const(random_points, testfunctions):
@@ -334,7 +334,7 @@ def test_rpow_const(random_points, testfunctions):
             techfun = Chebtech2.initfun_fixedlen(fun, funlen)
             gg = const**techfun
             tol = 3e3 * eps
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 @pytest.mark.parametrize("binop", [operator.add, operator.sub, operator.mul, operator.truediv])
@@ -375,7 +375,7 @@ def test_binary_operations(binop, testfunctions):
                 continue
 
             actual, expected, tol = binary_op_tester(f, g, nf, ng)
-            absdiff = np.max(actual - expected)
+            absdiff = np.max(np.abs(actual - expected))
             assert absdiff <= tol, (
                 f"{binop.__name__} failed for {f.__name__} and {g.__name__}: "
                 f"max diff = {absdiff:.2e}, tol = {tol:.2e}"
@@ -401,7 +401,7 @@ def test_unary_operations(unaryop, testfunctions):
         xx = np.linspace(-1, 1, 1000)
         gg = unaryop(ff)
 
-        absdiff = np.max(unaryop(f(xx)) - gg(xx))
+        absdiff = np.max(np.abs(unaryop(f(xx)) - gg(xx)))
 
         vscl = max([ff.vscale, gg.vscale])
         lscl = max([ff.size, gg.size])

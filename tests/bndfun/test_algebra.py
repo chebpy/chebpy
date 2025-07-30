@@ -8,26 +8,36 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.utilities import Interval
 
+from ..generic.algebra import (
+    test_pow_empty,  # noqa: F401
+    )
 from ..utilities import eps
 
 
-def test__pos__empty(emptyfun):
-    """Test unary positive operator on an empty Bndfun."""
-    assert (+emptyfun).isempty
+@pytest.fixture()
+def t_functions(testfunctions):
+    """Create a list of Bndfun objects for testing.
 
+    This fixture creates a list of Bndfun objects by adapting each function
+    in the testfunctions fixture to the interval [-2, 3].
 
-def test__neg__empty(emptyfun):
-    """Test unary negative operator on an empty Bndfun."""
-    assert (-emptyfun).isempty
+    Args:
+        testfunctions: Fixture providing test functions
 
-
-def test__add__radd__empty(emptyfun, testfunctions):
-    """Test addition with an empty Bndfun."""
+    Returns:
+        list: List of Bndfun objects
+    """
     subinterval = Interval(-2, 3)
-    for fun, _, _ in testfunctions:
-        chebtech = Bndfun.initfun_adaptive(fun, subinterval)
-        assert (emptyfun + chebtech).isempty
-        assert (chebtech + emptyfun).isempty
+    return [
+        Bndfun.initfun_adaptive(fun, subinterval)
+        for fun, _, _ in testfunctions
+    ]
+
+def test__add__radd__empty(emptyfun, t_functions):
+    """Test addition with an empty Bndfun."""
+    for test_function in t_functions:
+        assert (emptyfun + test_function).isempty
+        assert (test_function + emptyfun).isempty
 
 
 def test__add__radd__constant(testfunctions):
@@ -45,8 +55,8 @@ def test__add__radd__constant(testfunctions):
             f1 = const + bndfun
             f2 = bndfun + const
             tol = 4e1 * eps * abs(const)
-            assert np.max(f(xx) - f1(xx)) <= tol
-            assert np.max(f(xx) - f2(xx)) <= tol
+            assert np.max(np.abs(f(xx) - f1(xx))) <= tol
+            assert np.max(np.abs(f(xx) - f2(xx))) <= tol
 
 
 def test__sub__rsub__empty(emptyfun, testfunctions):
@@ -76,8 +86,8 @@ def test__sub__rsub__constant(testfunctions):
             ff = const - bndfun
             gg = bndfun - const
             tol = 5e1 * eps * abs(const)
-            assert np.max(f(xx) - ff(xx)) <= tol
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 def test__mul__rmul__empty(emptyfun, testfunctions):
@@ -107,8 +117,8 @@ def test__mul__rmul__constant(testfunctions):
             ff = const * bndfun
             gg = bndfun * const
             tol = 4e1 * eps * abs(const)
-            assert np.max(f(xx) - ff(xx)) <= tol
-            assert np.max(g(xx) - gg(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= tol
 
 
 def test_truediv_empty(emptyfun, testfunctions):
@@ -141,23 +151,11 @@ def test_truediv_constant(testfunctions):
             tol = hscl * eps * abs(const)
             bndfun = Bndfun.initfun_adaptive(fun, subinterval)
             gg = bndfun / const
-            assert np.max(g(xx) - gg(xx)) <= 3 * gg.size * tol
+            assert np.max(np.abs(g(xx) - gg(xx))) <= 3 * gg.size * tol
             # don't do the following test for functions with roots
             if not has_roots:
                 ff = const / bndfun
-                assert np.max(f(xx) - ff(xx)) <= 2 * ff.size * tol
-
-
-def test_pow_empty(emptyfun):
-    """Test power operation with an empty Bndfun."""
-    for c in range(10):
-        assert (emptyfun**c).isempty
-
-
-def test_rpow_empty(emptyfun):
-    """Test raising a constant to an empty Bndfun power."""
-    for c in range(10):
-        assert (c**emptyfun).isempty
+                assert np.max(np.abs(f(xx) - ff(xx))) <= 2 * ff.size * tol
 
 
 def test_pow_const():
@@ -173,7 +171,7 @@ def test_pow_const():
 
             ff = Bndfun.initfun_adaptive(func, subinterval) ** c
             tol = 2e1 * eps * abs(c)
-            assert np.max(f(xx) - ff(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
 
 
 def test_rpow_const():
@@ -189,7 +187,7 @@ def test_rpow_const():
 
             ff = c ** Bndfun.initfun_adaptive(func, subinterval)
             tol = 1e1 * eps * abs(c)
-            assert np.max(f(xx) - ff(xx)) <= tol
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol
 
 
 # Helper function for binary operator tests
@@ -206,7 +204,7 @@ def binary_op_test(f, g, subinterval, binop, yy):
     vscl = max([ff.vscale, gg.vscale])
     lscl = max([ff.size, gg.size])
     xx = subinterval(yy)
-    assert np.max(fg(xx) - fg_expected(xx)) <= 6 * vscl * lscl * eps
+    assert np.max(np.abs(fg(xx) - fg_expected(xx))) <= 6 * vscl * lscl * eps
 
 
 # Test binary operations between Bndfun objects
@@ -232,15 +230,11 @@ def test_pow_operations(f, g, subinterval, binop=operator.pow):
 # Helper function for unary operator tests
 def unary_op_test(unaryop, f, subinterval, yy):
     """Test a unary operation on a Bndfun object."""
-    ff = Bndfun.initfun_adaptive(f, subinterval)
-
-    def gg(x):
-        return unaryop(f(x))
-
-    gg_result = unaryop(ff)
-
+    test_fun = Bndfun.initfun_adaptive(f, subinterval)
     xx = subinterval(yy)
-    assert np.max(gg(xx) - gg_result(xx)) <= 4e1 * eps
+
+
+    assert np.max(np.abs((unaryop(test_fun))(xx) - unaryop(test_fun(xx)))) <= 4e1 * eps
 
 
 @pytest.mark.parametrize("unaryop", [operator.pos, operator.neg])

@@ -9,19 +9,11 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
+from ..generic.roots import test_empty  # noqa: F401
 from ..utilities import cos, eps, pi, sin
 
 # Ensure reproducibility
 rng = np.random.default_rng(0)
-
-
-def test_empty(emptyfun):
-    """Test that empty Chebtech2 objects have no roots.
-
-    This test verifies that the roots() method of an empty Chebtech2 object
-    returns an empty array.
-    """
-    assert emptyfun.roots().size == 0
 
 
 def test_const():
@@ -62,4 +54,4 @@ def test_roots(f, roots, tol=eps):
     """
     ff = Chebtech2.initfun_adaptive(f)
     rts = ff.roots()
-    assert np.max(rts - roots) <= tol
+    assert np.max(np.abs(rts - roots)) <= tol

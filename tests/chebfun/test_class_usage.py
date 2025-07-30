@@ -11,6 +11,9 @@ import pytest
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
 
+from ..generic.class_usage import (
+    test_translate_empty,  # noqa: F401
+)
 from .conftest import eps
 
 
@@ -23,14 +26,12 @@ def class_usage_fixtures() -> dict:
 
     Returns:
         dict: Dictionary containing:
-            f0: Empty Chebfun
             f1: Chebfun on [-1, 1]
             f2: Chebfun on a piecewise domain
     """
-    f0 = Chebfun.initempty()
     f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
     f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
-    return {"f0": f0, "f1": f1, "f2": f2}
+    return {"f1": f1, "f2": f2}
 
 
 def test__str__(class_usage_fixtures: dict) -> None:
@@ -71,13 +72,8 @@ def test_copy(class_usage_fixtures: dict) -> None:
     Args:
         class_usage_fixtures: Fixture providing test Chebfun objects.
     """
-    f0 = class_usage_fixtures["f0"]
     f1 = class_usage_fixtures["f1"]
     f2 = class_usage_fixtures["f2"]
-
-    # check empty case
-    g0 = f0.copy()
-    assert g0.isempty
 
     # check continuous case
     g1 = f1.copy()
@@ -122,12 +118,8 @@ def test_x_property(class_usage_fixtures: dict) -> None:
     Args:
         class_usage_fixtures: Fixture providing test Chebfun objects.
     """
-    f0 = class_usage_fixtures["f0"]
     f1 = class_usage_fixtures["f1"]
     f2 = class_usage_fixtures["f2"]
-
-    # check empty case
-    assert f0.x.isempty
 
     # check continuous case
     xx = np.linspace(-1, 1, 100)
@@ -172,20 +164,6 @@ def test_restrict_(class_usage_fixtures: dict) -> None:
     assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
-def test_restrict__empty(class_usage_fixtures: dict) -> None:
-    """Test the restrict_ method on an empty Chebfun.
-
-    This test verifies that the restrict_ method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.copy()
-    g0.restrict_([-0.5, 0.5])
-    assert g0.isempty
-
 
 def test_simplify(class_usage_fixtures: dict) -> None:
     """Test the simplify method of Chebfun objects.
@@ -208,17 +186,16 @@ def test_simplify(class_usage_fixtures: dict) -> None:
     assert g2 == f2
 
 
-def test_simplify_empty(class_usage_fixtures: dict) -> None:
+def test_simplify_empty(emptyfun) -> None:
     """Test the simplify method on an empty Chebfun.
 
     This test verifies that the simplify method on an empty Chebfun
     returns an empty Chebfun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
+        emptyfun: Fixture providing an empty Chebfun object.
     """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.simplify()
+    g0 = emptyfun.simplify()
     assert g0.isempty
 
 
@@ -253,20 +230,6 @@ def test_restrict(class_usage_fixtures: dict) -> None:
     assert np.max(g2(xx) - f2(xx)) <= 2 * eps
 
 
-def test_restrict_empty(class_usage_fixtures: dict) -> None:
-    """Test the restrict method on an empty Chebfun.
-
-    This test verifies that the restrict method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.restrict([-0.5, 0.5])
-    assert g0.isempty
-
-
 def test_translate(class_usage_fixtures: dict) -> None:
     """Test the translate method of Chebfun objects.
 
@@ -299,17 +262,3 @@ def test_translate(class_usage_fixtures: dict) -> None:
     xx = np.linspace(-1, 1, 100)
     yy = xx - 1
     assert np.max(g1(yy) - f1(xx)) <= 2 * eps
-
-
-def test_translate_empty(class_usage_fixtures: dict) -> None:
-    """Test the translate method on an empty Chebfun.
-
-    This test verifies that the translate method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.translate(1)
-    assert g0.isempty

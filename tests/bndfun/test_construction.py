@@ -23,15 +23,11 @@ def test_onefun_construction():
     assert np.max(f.coeffs - coeffs) < eps
 
 
-def test_const_construction():
+def test_const_construction(constfun):
     """Test construction of a constant Bndfun."""
-    subinterval = Interval()
-    ff = Bndfun.initconst(1.0, subinterval)
-    assert ff.size == 1
-    assert ff.isconst
-    assert not ff.isempty
-    with pytest.raises(ValueError):
-        Bndfun.initconst([1.0], subinterval)
+    assert constfun.size == 1
+    assert constfun.isconst
+    assert not constfun.isempty
 
 
 def test_empty_construction():

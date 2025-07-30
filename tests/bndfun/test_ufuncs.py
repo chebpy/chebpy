@@ -9,15 +9,6 @@ from chebpy.core.utilities import Interval
 from ..utilities import eps, sin
 
 
-@pytest.fixture
-def ufuncs_fixtures():
-    """Create fixtures for testing Bndfun ufunc operations."""
-    yy = np.linspace(-1, 1, 1000)
-    emptyfun = Bndfun.initempty()
-
-    return {"yy": yy, "emptyfun": emptyfun}
-
-
 # Define utility functions for testing
 def uf1(x):
     """Identity function."""
@@ -62,9 +53,8 @@ ufuncs = (
 
 # Test empty cases for all ufuncs
 @pytest.mark.parametrize("ufunc", ufuncs)
-def test_emptycase(ufunc, ufuncs_fixtures):
+def test_emptycase(ufunc, emptyfun):
     """Test that applying ufuncs to empty Bndfun objects returns empty Bndfun objects."""
-    emptyfun = ufuncs_fixtures["emptyfun"]
     assert getattr(emptyfun, ufunc.__name__)().isempty
 
 
@@ -111,9 +101,9 @@ ufunc_test_params = [
 
 
 @pytest.mark.parametrize("ufunc, f, interval, tol", ufunc_test_params)
-def test_ufunc(ufunc, f, interval, tol, ufuncs_fixtures):
+def test_ufunc(ufunc, f, interval, tol):
     """Test applying ufuncs to Bndfun objects."""
-    yy = ufuncs_fixtures["yy"]
+    yy = np.linspace(-1, 1, 1000)
     subinterval = Interval(*interval)
     ff = Bndfun.initfun_adaptive(f, subinterval)
 
