@@ -11,21 +11,6 @@ from chebpy.core.chebfun import Chebfun
 
 from ..utilities import eps
 
-# @pytest.fixture
-# def ufuncs_fixtures(emptyfun):
-#     """Create fixtures for testing ufunc operations.
-#
-#     This fixture creates an empty Chebfun object and an array of test points
-#     for evaluating functions.
-#
-#     Returns:
-#         dict: Dictionary containing:
-#             emptyfun: Empty Chebfun object
-#             yy: Array of test points in [-1, 1]
-#     """
-#     yy = np.linspace(-1, 1, 2000)
-#     return {"emptyfun": emptyfun, "yy": yy}
-
 
 def test_abs_absolute_alias():
     """Test that abs and absolute are aliases.
@@ -201,7 +186,6 @@ def ufunc_parameter(uf1, uf2, uf3):
 
 
 # Generate test functions for ufuncs
-#@pytest.mark.parametrize("ufunc,test_cases", ufunc_test_params)
 def test_ufuncs(ufunc_parameter):
     """Test ufunc operations on Chebfun objects.
 
@@ -228,14 +212,7 @@ def test_ufuncs(ufunc_parameter):
 
             gg_result = getattr(ff, ufunc.__name__)()
 
-            #def tester(yy):
             xx = interval(yy)
             vscl = gg_result.vscale
             lscl = sum([fun.size for fun in gg_result])
             assert np.max(gg(xx) - gg_result(xx)) <= vscl * lscl * tol
-
-            #return tester
-
-
-            #test_func = ufunc_tester(ufunc, f, interval, tol)
-            #test_func(yy)

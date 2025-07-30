@@ -104,9 +104,3 @@ def test_evaluate() -> None:
 
     x = -1
     assert f0(x) == f1(x)
-
-
-# TODO: implement test for equality once objects can be compared
-# def test_equality(pickled_chebfun: dict[str, Any]) -> None:
-#     """Test that pickled/unpickled chebfun objects are equal."""
-#     assert vars(pickled_chebfun["f0"]) == vars(pickled_chebfun["f1"])

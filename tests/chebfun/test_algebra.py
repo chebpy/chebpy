@@ -315,7 +315,6 @@ def test_rpow_constant(testdomains, testfunctions):
                 gg = c**ff
                 xx = np.linspace(a, b, 1001)
 
-                # try:
                 # Evaluate both functions
                 g_vals = g(xx)
                 gg_vals = gg(xx)
@@ -334,9 +333,6 @@ def test_rpow_constant(testdomains, testfunctions):
                 lscl = max([fun.size for fun in gg])
                 tol = 50 * abs(c) * vscl * hscl * lscl * eps
                 assert np.max(g_vals - gg_vals) <= tol
-                # except (RuntimeWarning, ValueError, OverflowError, FloatingPointError):
-                #    # Skip test if numerical issues occur
-                #    continue
 
 
 # Generate test functions for binary operations
@@ -388,7 +384,6 @@ def test_binary_operations(binops, div_binops, testdomains, testfunctions):
                     if binop == operator.mul and abs(b - a) > 10:
                         extra_factor = 100
 
-                    # try:
                     # Evaluate both functions
                     fg_vals = fg(xx)
                     fg_expected_vals = fg_expected(xx)
@@ -416,22 +411,11 @@ def test_unary_operations(unaryop, testdomains, testfunctions):
             xx = np.linspace(a, b, 1001)
             ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 9))
 
-            #def gg_expected(x):
-            #    return unaryop(f(x))
-
             gg = unaryop(ff)
 
-            #def tester():
             vscl = ff.vscale
             hscl = ff.hscale
             lscl = max([fun.size for fun in ff])
 
             assert ff.funs.size == gg.funs.size
             assert np.max(gg(xx) - unaryop(f(xx))) <= vscl * hscl * lscl * tol
-
-            #return tester
-
-
-
-            #test_func = unary_op_tester(f, unaryop, dom, tol)
-            #test_func()

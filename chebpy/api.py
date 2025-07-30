@@ -47,17 +47,17 @@ def chebfun(f=None, domain=None, n=None):
         >>> # Constant function
         >>> c = chebfun(3.14)
     """
-    # chebfun()
+    # Empty via chebfun()
     if f is None:
         return Chebfun.initempty()
 
     domain = domain if domain is not None else prefs.domain
 
-    # chebfun(lambda x: f(x), ... )
+    # Callable fct in chebfun(lambda x: f(x), ... )
     if hasattr(f, "__call__"):
         return Chebfun.initfun(f, domain, n)
 
-    # chebfun('x', ... )
+    # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():
         if n:
             return Chebfun.initfun(lambda x: x, domain, n)
@@ -65,7 +65,7 @@ def chebfun(f=None, domain=None, n=None):
             return Chebfun.initidentity(domain)
 
     try:
-        # chebfun(3.14, ... ), chebfun('3.14', ... )
+        # Constant fct via chebfun(3.14, ... ), chebfun('3.14', ... )
         return Chebfun.initconst(float(f), domain)
     except (OverflowError, ValueError):
         raise ValueError(f"Unable to construct const function from {{{f}}}")

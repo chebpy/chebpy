@@ -41,7 +41,7 @@ def test_diff_empty(calculus_fixtures):
 #           definite integrals
 # --------------------------------------
 def_integrals = [
-    # (function, interval, integral, tolerance)
+    # Use function, interval, integral, tolerance
     (lambda x: sin(x), [-2, 2], 0.0, 2 * eps),
     (lambda x: sin(4 * pi * x), [-0.1, 0.7], 0.088970317927147, 1e1 * eps),
     (lambda x: cos(x), [-100, 203], 0.426944059057085, 5e2 * eps),

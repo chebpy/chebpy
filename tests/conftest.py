@@ -13,7 +13,7 @@ Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
     making it suitable for headless CI environments.
 """
-
+import operator
 import os
 
 import matplotlib
@@ -42,12 +42,11 @@ def testfunctions() -> list:
     """
     test_functions = []
     fun_details = [
-        # (
+        # Use the convention:
         #  function,
         #  name for the test printouts,
         #  Matlab chebfun adaptive degree on [-1,1],
         #  Any roots on the real line?
-        # )
         (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)", 4, True),
         (lambda x: np.exp(x), "exp(x)", 15, False),
         (lambda x: np.sin(x), "sin(x)", 14, True),
@@ -62,3 +61,30 @@ def testfunctions() -> list:
         test_functions.append((fun, items[2], items[3]))
 
     return test_functions
+
+
+@pytest.fixture
+def random_points() -> np.ndarray:
+    """Create an array of random points in [-1, 1] for testing.
+
+    This fixture creates an array of 1000 random points in the interval [-1, 1]
+    that can be used for evaluating and testing Chebtech2 objects.
+
+    Returns:
+        numpy.ndarray: Array of 1000 random points in [-1, 1]
+    """
+    # Ensure reproducibility
+    rng = np.random.default_rng(0)
+
+    return -1 + 2 * rng.random(1000)
+
+
+@pytest.fixture()
+def binops():
+    """Binary operators for testing algebraic operations."""
+    return [operator.add, operator.mul, operator.sub, operator.truediv]
+
+@pytest.fixture()
+def div_binops():
+    """Binary operators for testing division."""
+    return (operator.truediv,)

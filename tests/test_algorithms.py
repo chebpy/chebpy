@@ -151,9 +151,6 @@ def test_bary_clenshaw_consistency() -> None:
             fc = ff(xx, "clenshaw")
             assert isinstance(fb, type(fc))
 
-            #assert type(fb) == type(fc)
-
-
 # Define evaluation points of increasing density for testing algorithm accuracy
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
 

@@ -10,20 +10,6 @@ from chebpy.core.utilities import Interval
 
 from ..utilities import eps
 
-# Binary operators to test
-binops = (operator.add, operator.mul, operator.sub, operator.truediv)
-
-
-# @pytest.fixture
-# def algebra_fixtures(emptyfun):
-#     """Create fixtures for testing Bndfun algebraic operations."""
-#     yy = np.linspace(-1, 1, 1000)
-#
-#     return {
-#         "yy": yy,
-#         "emptyfun": emptyfun
-#     }
-
 
 def test__pos__empty(emptyfun):
     """Test unary positive operator on an empty Bndfun."""
@@ -227,16 +213,6 @@ def binary_op_test(f, g, subinterval, binop, yy):
 subintervals = [Interval(-0.5, 0.9), Interval(-1.2, 1.3), Interval(-2.2, -1.9), Interval(0.4, 1.3)]
 
 
-# # Generate test cases for binary operations
-# binary_test_cases = []
-# for binop in binops:
-#     for (f, _, _), (g, _, denomRoots) in itertools.combinations(testfunctions, 2):
-#         for subinterval in subintervals:
-#             if binop is operator.truediv and denomRoots:
-#                 # skip truediv test if denominator has roots on the real line
-#                 continue
-#             binary_test_cases.append((f, g, subinterval, binop))
-#
 @pytest.mark.parametrize("subinterval", subintervals)
 @pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
 def test_binary_operations(f, g, subinterval, binop=operator.pow):

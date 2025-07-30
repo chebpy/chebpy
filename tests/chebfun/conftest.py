@@ -5,25 +5,12 @@ the Chebfun class. It provides fixtures for common test objects and
 helper functions for testing various operations.
 """
 
-import operator
-
 import pytest
 
 from chebpy.core.chebfun import Chebfun
 
 from ..utilities import eps, sin
 
-
-# in Python 3, the operator module does not have a 'div' method
-@pytest.fixture()
-def binops():
-    """Binary operators for testing algebraic operations."""
-    return [operator.add, operator.mul, operator.sub, operator.truediv]
-
-@pytest.fixture()
-def div_binops():
-    """Binary operators for testing division."""
-    return (operator.truediv,)
 
 # domain, test_tolerance
 @pytest.fixture()

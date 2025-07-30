@@ -401,7 +401,6 @@ def test_unary_operations(unaryop, testfunctions):
         xx = np.linspace(-1, 1, 1000)
         gg = unaryop(ff)
 
-        #ff, gg_result, gg, xx, tol = unary_op_tester(unaryop, f, nf)
         absdiff = np.max(unaryop(f(xx)) - gg(xx))
 
         vscl = max([ff.vscale, gg.vscale])
