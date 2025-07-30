@@ -1,3 +1,10 @@
+"""Generic test functions for complex function operations.
+
+This module contains test functions for complex function operations that can be used
+with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+focus on operations specific to complex-valued functions.
+"""
+
 import numpy as np
 import pytest
 
@@ -44,7 +51,7 @@ def test_roots(complexfun):
     5. The function plus i has a root at x=-0.5
 
     Args:
-        complex_function: Fixture providing a complex Chebtech2 function
+        complexfun: Fixture providing a complex function object
     """
     z = complexfun
     r0 = z.roots()
@@ -68,7 +75,7 @@ def test_rho_ellipse_construction(complexfun):
     of ellipses in the complex plane.
 
     Args:
-        complex_function: Fixture providing a complex Chebtech2 function
+        complexfun: Fixture providing a complex function object
     """
     z = complexfun
     zz = 1.2 * z
@@ -87,12 +94,10 @@ def test_calculus(complexfun):
     2. Differentiating the cumulative sum returns the original function
 
     Args:
-        complex_function: Fixture providing a complex Chebtech2 function
+        complexfun: Fixture providing a complex function object
     """
     z = complexfun
     assert np.allclose([z.sum()], [0])
-    #assert (z.cumsum().diff() - z).size == 1
-    #assert (z - z.cumsum().diff()).size == 1
 
 
 def test_real_imag(complexfun):
@@ -106,17 +111,12 @@ def test_real_imag(complexfun):
     4. The imaginary part of a real function is a zero constant function
 
     Args:
-        complex_function: Fixture providing a complex Chebtech2 function
+        complexfun: Fixture providing a complex function object
     """
     z = complexfun
     # check definition of real and imaginary
     zreal = z.real()
-    #zimag = z.imag()
-    #np.testing.assert_equal(zreal.coeffs, np.real(z.coeffs))
-    #np.testing.assert_equal(zimag.coeffs, np.imag(z.coeffs))
     # check real part of real chebtech is the same chebtech
     assert zreal.real() == zreal
     # check imaginary part of real chebtech is the zero chebtech
     assert zreal.imag().isconst
-    #assert zreal.imag().coeffs[0] == 0
-
