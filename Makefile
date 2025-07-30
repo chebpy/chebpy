@@ -39,6 +39,7 @@ lint: uv ## Run linters only
 	@printf "$(BLUE)Running linters...$(RESET)\n"
 	#@uvx ruff check run --files tests
 	@uvx ruff check --unsafe-fixes --fix chebpy
+	@uvx ruff check --unsafe-fixes --fix tests
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"

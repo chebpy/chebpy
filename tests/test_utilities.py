@@ -21,7 +21,7 @@ from chebpy.core.exceptions import (
     SupportMismatch,
 )
 from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import htol, Domain, Interval, check_funs, compute_breakdata
+from chebpy.core.utilities import Domain, Interval, check_funs, compute_breakdata, htol
 
 np.random.seed(0)
 eps = DefaultPreferences.eps

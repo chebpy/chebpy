@@ -49,7 +49,7 @@ class Interval(np.ndarray):
         frequently used mapping operation.
     """
 
-    def __new__(cls, a: float = -1.0, b: float = 1.0) -> 'Interval':
+    def __new__(cls, a: float = -1.0, b: float = 1.0) -> "Interval":
         """Create a new Interval instance.
 
         Args:
@@ -102,7 +102,7 @@ class Interval(np.ndarray):
         a, b = self  # pragma: no cover
         return 0.0 * y + 0.5 * (b - a)  # pragma: no cover
 
-    def __eq__(self, other: 'Interval') -> bool:
+    def __eq__(self, other: "Interval") -> bool:
         """Check if two intervals are equal.
 
         Args:
@@ -114,7 +114,7 @@ class Interval(np.ndarray):
         (a, b), (x, y) = self, other
         return (a == x) & (y == b)
 
-    def __ne__(self, other: 'Interval') -> bool:
+    def __ne__(self, other: "Interval") -> bool:
         """Check if two intervals are not equal.
 
         Args:
@@ -136,7 +136,7 @@ class Interval(np.ndarray):
         """
         return self.formap(y)
 
-    def __contains__(self, other: 'Interval') -> bool:
+    def __contains__(self, other: "Interval") -> bool:
         """Check if another interval is contained within this interval.
 
         Args:
@@ -230,7 +230,7 @@ class Domain(np.ndarray):
         else:
             return bpts.view(cls)
 
-    def __contains__(self, other: 'Domain') -> bool:
+    def __contains__(self, other: "Domain") -> bool:
         """Check whether one domain object is a subdomain of another (within tolerance).
 
         Args:
@@ -277,7 +277,7 @@ class Domain(np.ndarray):
         return self[[0, -1]]
 
     @cast_other
-    def union(self, other: 'Domain') -> 'Domain':
+    def union(self, other: "Domain") -> "Domain":
         """Create a union of two domain objects with matching support.
 
         Args:
@@ -295,7 +295,7 @@ class Domain(np.ndarray):
             raise SupportMismatch
         return self.merge(other)
 
-    def merge(self, other: 'Domain') -> 'Domain':
+    def merge(self, other: "Domain") -> "Domain":
         """Merge two domain objects without checking if they have the same support.
 
         Args:
@@ -311,7 +311,7 @@ class Domain(np.ndarray):
         return self.__class__(mgd_bpts)
 
     @cast_other
-    def restrict(self, other: 'Domain') -> 'Domain':
+    def restrict(self, other: "Domain") -> "Domain":
         """Truncate self to the support of other, retaining any interior breakpoints.
 
         Args:
@@ -332,7 +332,7 @@ class Domain(np.ndarray):
         new = dom[(lbnd <= dom) & (dom <= rbnd)]
         return self.__class__(new)
 
-    def breakpoints_in(self, other: 'Domain') -> np.ndarray:
+    def breakpoints_in(self, other: "Domain") -> np.ndarray:
         """Check which breakpoints are in another domain within tolerance.
 
         Args:
@@ -353,7 +353,7 @@ class Domain(np.ndarray):
             out[idx] = np.any(isin)
         return out
 
-    def __eq__(self, other: 'Domain') -> bool:
+    def __eq__(self, other: "Domain") -> bool:
         """Test for pointwise equality (within a tolerance) of two Domain objects.
 
         Args:
@@ -369,7 +369,7 @@ class Domain(np.ndarray):
             tolerance = np.maximum(htol(), htol() * np.abs(self))
             return bool(np.all(dbpt <= tolerance))  # cast back to bool
 
-    def __ne__(self, other: 'Domain') -> bool:
+    def __ne__(self, other: "Domain") -> bool:
         """Test for inequality of two Domain objects.
 
         Args:

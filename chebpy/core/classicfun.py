@@ -32,6 +32,7 @@ class Classicfun(Fun, ABC):
     It handles the mapping between the arbitrary interval and the standard domain,
     delegating the actual function representation to the underlying Onefun object.
     """
+
     # --------------------------
     #  alternative constructors
     # --------------------------
@@ -458,6 +459,7 @@ def add_utility(methodname):
         The created method will have the same name and signature as the
         corresponding method in the onefun object.
     """
+
     def method(self, *args, **kwds):
         """Delegate to the corresponding method of the underlying onefun object.
 
@@ -507,6 +509,7 @@ def add_zero_arg_op(methodname):
         corresponding method in the onefun object, but will return a Classicfun
         instance instead of an onefun instance.
     """
+
     def method(self, *args, **kwds):
         """Apply a zero-argument operation and return a new Classicfun.
 
@@ -569,6 +572,7 @@ def add_binary_op(methodname):
         same interval before performing the operation. If one operand is not
         a Classicfun, it will be passed directly to the onefun method.
     """
+
     @self_empty()
     def method(self, f, *args, **kwds):
         """Apply a binary operation and return a new Classicfun.
@@ -631,6 +635,7 @@ def add_ufunc(op):
         The created method will have the same name as the NumPy function
         and will take no arguments other than self.
     """
+
     @self_empty()
     def method(self):
         """Apply a NumPy universal function to this function.

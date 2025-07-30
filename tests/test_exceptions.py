@@ -4,6 +4,7 @@ This module contains tests that verify the behavior of all exception classes
 defined in the chebpy.core.exceptions module, including initialization with
 custom messages, default messages, and the abstract base class behavior.
 """
+from abc import ABC
 
 import pytest
 
@@ -71,9 +72,9 @@ class TestExceptions:
         # but we can create a concrete subclass and test that it raises NotImplementedError
         # when default_message is accessed
 
-        class TestException(ChebpyBaseError):
+        class TestError(ChebpyBaseError, ABC):
             pass
 
         # This should raise NotImplementedError when default_message is accessed
         with pytest.raises(NotImplementedError):
-            TestException()
+            TestError()
