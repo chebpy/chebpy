@@ -9,10 +9,13 @@ from chebpy.core.utilities import Interval
 
 from ..utilities import cos, eps, exp, sin
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 def test_onefun_construction():
     """Test construction of Bndfun from a Chebtech object."""
-    coeffs = np.random.rand(10)
+    coeffs = rng.random(10)
     subinterval = Interval()
     onefun = Chebtech2(coeffs)
     f = Bndfun(onefun, subinterval)

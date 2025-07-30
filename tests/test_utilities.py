@@ -23,7 +23,7 @@ from chebpy.core.exceptions import (
 from chebpy.core.settings import DefaultPreferences
 from chebpy.core.utilities import Domain, Interval, check_funs, compute_breakdata, htol
 
-np.random.seed(0)
+rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 eps = DefaultPreferences.eps
 HTOL = htol()
 
@@ -145,7 +145,7 @@ def test_maps():
     The forward map transforms points from [-1,1] to [a,b], while the
     inverse map transforms points from [a,b] to [-1,1].
     """
-    yy = -1 + 2 * np.random.rand(1000)
+    yy = -1 + 2 * rng.random(1000)
     interval = Interval(-2, 3)
     vals = interval.invmap(interval(yy)) - yy
     assert np.max(vals) <= eps

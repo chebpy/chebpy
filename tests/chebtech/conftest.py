@@ -10,6 +10,9 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 @pytest.fixture
 def emptyfun() -> Chebtech2:
@@ -34,8 +37,7 @@ def random_points() -> np.ndarray:
     Returns:
         numpy.ndarray: Array of 1000 random points in [-1, 1]
     """
-    np.random.seed(0)  # Ensure reproducibility
-    return -1 + 2 * np.random.rand(1000)
+    return -1 + 2 * rng.random(1000)
 
 
 # def binary_op_tester(f: callable, g: callable, binop: callable, nf: int, ng: int) -> tuple:

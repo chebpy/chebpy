@@ -11,6 +11,9 @@ from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import eps, scaled_tol
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 # aliases
 _vals2coeffs = Chebtech2._vals2coeffs
 _coeffs2vals = Chebtech2._coeffs2vals
@@ -69,7 +72,6 @@ def test_coeffs2vals_size1():
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
 # ------------------------------------------------------------------------
 # Generate test sizes
-np.random.seed(0)  # Ensure reproducibility
 test_sizes = 2 ** np.arange(2, 18, 2) + 1
 
 
@@ -84,7 +86,7 @@ def test_vals2coeffs2vals(n):
     Args:
         n: Size of the test array
     """
-    values = np.random.rand(n)
+    values = rng.random(n)
     coeffs = _vals2coeffs(values)
     _values_ = _coeffs2vals(coeffs)
     assert np.max(values - _values_) <= scaled_tol(n)
@@ -101,7 +103,7 @@ def test_coeffs2vals2coeffs(n):
     Args:
         n: Size of the test array
     """
-    coeffs = np.random.rand(n)
+    coeffs = rng.random(n)
     values = _coeffs2vals(coeffs)
     _coeffs_ = _vals2coeffs(values)
     assert np.max(coeffs - _coeffs_) <= scaled_tol(n)

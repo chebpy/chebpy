@@ -11,6 +11,9 @@ from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import cos, eps, pi, sin
 
+# Ensure reproducibility
+rng = np.random.default_rng(0)
+
 
 def test_empty(emptyfun):
     """Test that empty Chebtech2 objects have no roots.
@@ -43,10 +46,6 @@ rootstestfuns = [
     (lambda x: sin(100 * pi * x), np.linspace(-1, 1, 201)),
     (lambda x: sin(5 * pi / 2 * x), np.array([-0.8, -0.4, 0, 0.4, 0.8])),
 ]
-
-# Ensure reproducibility
-np.random.seed(0)
-
 
 @pytest.mark.parametrize("f, roots", rootstestfuns)
 def test_roots(f, roots, tol=eps):
