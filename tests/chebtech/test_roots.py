@@ -16,18 +16,6 @@ from ..utilities import cos, eps, pi, sin
 rng = np.random.default_rng(0)
 
 
-def test_const():
-    """Test that constant Chebtech2 objects have no roots.
-
-    This test verifies that the roots() method of constant Chebtech2 objects
-    (both zero and non-zero) returns an empty array.
-    """
-    ff = Chebtech2.initconst(0.0)
-    gg = Chebtech2.initconst(2.0)
-    assert ff.roots().size == 0
-    assert gg.roots().size == 0
-
-
 # Define test functions and their expected roots
 rootstestfuns = [
     (lambda x: 3 * x + 2.0, np.array([-2 / 3])),

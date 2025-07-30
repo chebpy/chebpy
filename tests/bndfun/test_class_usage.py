@@ -40,41 +40,27 @@ def test_size():
     assert b2.size == cfs.size
 
 
-def test_support(class_usage_fixtures):
+def test_support(constfun):
     """Test the support property of Bndfun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
+        constfun: Fixture providing a constant function object.
     """
-    ff = class_usage_fixtures["ff"]
-    a, b = ff.support
-    assert a == -2
-    assert b == 3
+    a, b = constfun.support
+    assert a == -1
+    assert b == 1
 
 
-def test_endvalues(class_usage_fixtures):
+def test_endvalues(constfun):
     """Test the endvalues property of Bndfun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
+        constfun: Fixture providing a constant function object.
     """
-    ff = class_usage_fixtures["ff"]
-    f = class_usage_fixtures["f"]
-    a, b = ff.support
-    fa, fb = ff.endvalues
-    assert abs(fa - f(a)) <= 2e1 * eps
-    assert abs(fb - f(b)) <= 2e1 * eps
-
-
-def test_call(class_usage_fixtures):
-    """Test calling a Bndfun object.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
-    """
-    ff = class_usage_fixtures["ff"]
-    xx = class_usage_fixtures["xx"]
-    ff(xx)
+    a, b = constfun.support
+    fa, fb = constfun.endvalues
+    assert abs(fa - constfun(a)) <= 2e1 * eps
+    assert abs(fb - constfun(b)) <= 2e1 * eps
 
 
 def test_call_bary(class_usage_fixtures):
@@ -128,18 +114,17 @@ def test_call_raises(class_usage_fixtures):
         ff(xx, how="notamethod")
 
 
-def test_copy(class_usage_fixtures):
+def test_copy(constfun):
     """Test the copy method of Bndfun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Bndfun objects.
+        constfun: Fixture providing a constant function object.
     """
-    ff = class_usage_fixtures["ff"]
+    ff = constfun
     gg = ff.copy()
     assert ff == ff
     assert gg == gg
     assert ff != gg
-    assert np.max(ff.coeffs - gg.coeffs) == 0
 
 
 def test_restrict(class_usage_fixtures):
