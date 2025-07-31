@@ -1,4 +1,9 @@
-# List of ufuncs to test
+"""Generic test functions for universal functions (ufuncs).
+
+This module contains test functions for universal functions (ufuncs) that can be used
+with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+focus on operations with empty function objects and various mathematical functions.
+"""
 import numpy as np
 import pytest
 
@@ -44,6 +49,16 @@ ufuncs = (
 )
 
 def ufunc_parameter():
+    """Generate test parameters for ufunc tests.
+
+    This function returns a list of tuples, each containing:
+    1. A NumPy ufunc to test
+    2. A test function to apply the ufunc to
+    3. A domain interval for testing
+
+    Returns:
+        list: List of (ufunc, test_function, domain) tuples for testing
+    """
     # Test parameters for ufunc tests
     ufunc_test_params = [
         (np.absolute, uf1, (-3, -0.5)),

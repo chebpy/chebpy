@@ -1,3 +1,9 @@
+"""Generic test functions for plotting operations.
+
+This module contains test functions for plotting operations that can be used
+with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+focus on basic plotting functionality and complex function visualization.
+"""
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -13,7 +19,7 @@ def test_plot_complex(complexfun):
     scaled versions of a complex Chebfun object.
 
     Args:
-        plotting_fixtures: Fixture providing test Chebfun objects.
+        complexfun: Fixture providing a complex function object.
     """
     fig, ax = plt.subplots()
 
@@ -24,6 +30,5 @@ def test_plot_complex(complexfun):
 
 def test_plot(constfun):
     """Test the plot method of Bndfun."""
-    #f0 = plotting_fixtures["f0"]
     fig, ax = plt.subplots()
     constfun.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")

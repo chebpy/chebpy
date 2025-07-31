@@ -4,9 +4,11 @@ This module contains test functions for algebraic operations that can be used
 with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
 focus on operations with empty function objects.
 """
+import itertools
 import operator
 
 import numpy as np
+import pytest
 
 from tests.utilities import eps
 
@@ -65,8 +67,6 @@ def test__sub__rsub__empty(emptyfun, ttt):
 
 def test__sub__rsub__constant(ttt, random_points):
     """Test subtraction of a constant from a Bndfun and vice versa."""
-    #yy = np.linspace(-1, 1, 1000)
-    #subinterval = Interval(-0.5, 0.9)
     xx = random_points
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
@@ -87,7 +87,6 @@ def test__sub__rsub__constant(ttt, random_points):
 
 def test__mul__rmul__empty(emptyfun, ttt):
     """Test multiplication with an empty Bndfun."""
-    #subinterval = Interval(-2, 3)
     for fun in ttt:
         assert (emptyfun * fun.cheb).isempty
         assert (fun.cheb * emptyfun).isempty
@@ -95,8 +94,6 @@ def test__mul__rmul__empty(emptyfun, ttt):
 
 def test__mul__rmul__constant(ttt, random_points):
     """Test multiplication of a Bndfun by a constant."""
-    #yy = np.linspace(-1, 1, 1000)
-    #subinterval = Interval(-0.5, 0.9)
     xx = random_points
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
@@ -135,7 +132,8 @@ def test_truediv_constant(ttt, random_points):
             tol = eps * abs(const)
             gg = fun.cheb / const
 
-            assert np.max(np.abs(g(xx) - gg(xx))) <= 1e2 * tol, "Failed for " + fun.cheb.name + " and c = " + str(const) + "."
+            error_msg = f"Failed for {fun.cheb.name} and c = {const}."
+            assert np.max(np.abs(g(xx) - gg(xx))) <= 1e2 * tol, error_msg
 
 
             # don't do the following test for functions with roots
@@ -174,7 +172,8 @@ def test_rpow_const(ttt, random_points):
 
             ff = c ** fun.cheb
             tol = 1e2 * eps * abs(c)
-            assert np.max(np.abs(f(xx) - ff(xx))) <= tol, "Failed for " + fun.cheb.name + " and c = " + str(c) + "."
+            error_msg = f"Failed for {fun.cheb.name} and c = {c}."
+            assert np.max(np.abs(f(xx) - ff(xx))) <= tol, error_msg
 
 
 def test__add__negself(random_points, ttt):
@@ -185,13 +184,42 @@ def test__add__negself(random_points, ttt):
 
     Args:
         random_points: Fixture providing random points for evaluation
-        testfunctions: List of test functions, each represented as a tuple containing
-            (fun, funlen, _) where fun is the function to test, funlen is the expected
-            function length, and _ is an unused parameter.
+        ttt: List of test function objects for testing
     """
     xx = random_points
     for fun in ttt:
-        #chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
         chebzero = fun.cheb - fun.cheb
         assert chebzero.isconst
         assert np.max(chebzero(xx)) == 0
+
+@pytest.mark.parametrize("unaryop", [operator.pos, operator.neg])
+def test_unary_operations(unaryop, ttt, random_points):
+    """Test unary operations on Bndfun objects."""
+    xx = random_points
+    for f in ttt:
+        ff = unaryop(f.cheb)(xx)
+        gg = unaryop(f.raw(xx))
+
+        assert np.max(np.abs(ff - gg)) <= 4e1 * eps
+
+@pytest.mark.parametrize("binop", [operator.add, operator.sub, operator.mul, operator.truediv])
+#@pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
+def test_binary_operations(ttt, random_points, binop):
+    """Test binary operations between Bndfun objects."""
+    xx = random_points
+    for f, g in itertools.product(ttt, ttt):
+
+        if binop == operator.truediv and g.has_roots:
+            continue
+
+        def fg_expected(x):
+            return binop(f.raw(x), g.raw(x))
+
+        fg = binop(f.cheb, g.cheb)
+
+        a = fg(xx)
+        b = fg_expected(xx)
+        assert not np.all(np.isnan(a)), f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}"
+        assert not np.all(np.isnan(b)), f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}"
+        diff = np.max(np.abs(a-b))
+        assert diff <= 1e-10, f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}: max diff = {diff:.2e}"
