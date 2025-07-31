@@ -20,28 +20,7 @@ def test_onefun_construction():
     onefun = Chebtech2(coeffs)
     f = Bndfun(onefun, subinterval)
     assert isinstance(f, Bndfun)
-    assert np.max(f.coeffs - coeffs) < eps
-
-
-def test_const_construction():
-    """Test construction of a constant Bndfun."""
-    subinterval = Interval()
-    ff = Bndfun.initconst(1.0, subinterval)
-    assert ff.size == 1
-    assert ff.isconst
-    assert not ff.isempty
-    with pytest.raises(ValueError):
-        Bndfun.initconst([1.0], subinterval)
-
-
-def test_empty_construction():
-    """Test construction of an empty Bndfun."""
-    ff = Bndfun.initempty()
-    assert ff.size == 0
-    assert not ff.isconst
-    assert ff.isempty
-    with pytest.raises(TypeError):
-        Bndfun.initempty([1.0])
+    assert np.max(np.abs(f.coeffs - coeffs)) < eps
 
 
 def test_identity_construction():
@@ -52,7 +31,7 @@ def test_identity_construction():
         assert ff.size == 2
         xx = np.linspace(a, b, 1001)
         tol = eps * abs(itvl).max()
-        assert np.max(ff(xx) - xx) <= tol
+        assert np.max(np.abs(ff(xx) - xx)) <= tol
 
 
 # Test functions for adaptive and fixed-length construction

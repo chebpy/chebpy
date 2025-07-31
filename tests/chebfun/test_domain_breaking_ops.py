@@ -52,7 +52,7 @@ def test_maximum_multipiece(domain_breaking_fixtures: dict) -> None:
         return np.maximum(x**2, 1.5)
 
     # Check that the result matches the expected function
-    assert np.max(f(t) - g(t)) <= 1e1 * eps
+    assert np.max(np.abs(f(t) - g(t))) <= 1e1 * eps
 
 
 def test_minimum_multipiece(domain_breaking_fixtures: dict) -> None:
@@ -76,7 +76,7 @@ def test_minimum_multipiece(domain_breaking_fixtures: dict) -> None:
         return np.minimum(x**2, 1.5)
 
     # Check that the result matches the expected function
-    assert np.max(f(t) - g(t)) <= 1e1 * eps
+    assert np.max(np.abs(f(t) - g(t))) <= 1e1 * eps
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_maximum_identity_constant(domain: list, tol: float) -> None:
         return np.maximum(x, c)
 
     # Check that the result matches the expected function
-    assert np.max(f(xx) - g(xx)) <= tol
+    assert np.max(np.abs(f(xx) - g(xx))) <= tol
 
 
 @pytest.mark.parametrize(
@@ -144,7 +144,7 @@ def test_minimum_identity_constant(domain: list, tol: float) -> None:
         return np.minimum(x, c)
 
     # Check that the result matches the expected function
-    assert np.max(f(xx) - g(xx)) <= tol
+    assert np.max(np.abs(f(xx) - g(xx))) <= tol
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ def test_maximum_sin_cos(domain: list, tol: float) -> None:
     vscl = max([f1.vscale, f2.vscale])
     hscl = max([f1.hscale, f2.hscale])
     lscl = max([fun.size for fun in np.append(f1.funs, f2.funs)])
-    assert np.max(f(xx) - g(xx)) <= vscl * hscl * lscl * tol
+    assert np.max(np.abs(f(xx) - g(xx))) <= vscl * hscl * lscl * tol
 
 
 @pytest.mark.parametrize(
@@ -218,7 +218,7 @@ def test_minimum_sin_cos(domain: list, tol: float) -> None:
     vscl = max([f1.vscale, f2.vscale])
     hscl = max([f1.hscale, f2.hscale])
     lscl = max([fun.size for fun in np.append(f1.funs, f2.funs)])
-    assert np.max(f(xx) - g(xx)) <= vscl * hscl * lscl * tol
+    assert np.max(np.abs(f(xx) - g(xx))) <= vscl * hscl * lscl * tol
 
 
 def test_maximum_empty() -> None:

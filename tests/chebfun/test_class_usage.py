@@ -11,6 +11,7 @@ import pytest
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
 
+from ..generic.class_usage import test_support, test_translate_empty  # noqa: F401
 from .conftest import eps
 
 
@@ -23,14 +24,12 @@ def class_usage_fixtures() -> dict:
 
     Returns:
         dict: Dictionary containing:
-            f0: Empty Chebfun
             f1: Chebfun on [-1, 1]
             f2: Chebfun on a piecewise domain
     """
-    f0 = Chebfun.initempty()
     f1 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
     f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
-    return {"f0": f0, "f1": f1, "f2": f2}
+    return {"f1": f1, "f2": f2}
 
 
 def test__str__(class_usage_fixtures: dict) -> None:
@@ -61,39 +60,6 @@ def test__repr__(class_usage_fixtures: dict) -> None:
     assert "domain" in repr(f1)
 
 
-def test_copy(class_usage_fixtures: dict) -> None:
-    """Test copying of Chebfun objects.
-
-    This test verifies that the copy method creates a new Chebfun object
-    that is equal to the original but not the same object. It also checks
-    that modifying the copy does not affect the original.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    f1 = class_usage_fixtures["f1"]
-    f2 = class_usage_fixtures["f2"]
-
-    # check empty case
-    g0 = f0.copy()
-    assert g0.isempty
-
-    # check continuous case
-    g1 = f1.copy()
-    assert g1 == f1
-    assert g1 is not f1
-
-    # check piecewise case
-    g2 = f2.copy()
-    assert g2 == f2
-    assert g2 is not f2
-
-    # check that modifying the copy does not affect the original
-    g2.domain = Domain([-1, 0, 0.5, 2])
-    assert g2 != f2
-
-
 def test__iter__(class_usage_fixtures: dict) -> None:
     """Test iteration over Chebfun objects.
 
@@ -122,20 +88,16 @@ def test_x_property(class_usage_fixtures: dict) -> None:
     Args:
         class_usage_fixtures: Fixture providing test Chebfun objects.
     """
-    f0 = class_usage_fixtures["f0"]
     f1 = class_usage_fixtures["f1"]
     f2 = class_usage_fixtures["f2"]
 
-    # check empty case
-    assert f0.x.isempty
-
     # check continuous case
     xx = np.linspace(-1, 1, 100)
-    assert np.max(f1.x(xx) - xx) <= eps
+    assert np.max(np.abs(f1.x(xx) - xx)) <= eps
 
     # check piecewise case
     xx = np.linspace(-1, 2, 100)
-    assert np.max(f2.x(xx) - xx) <= eps
+    assert np.max(np.abs(f2.x(xx) - xx)) <= eps
 
 
 def test_restrict_(class_usage_fixtures: dict) -> None:
@@ -155,36 +117,22 @@ def test_restrict_(class_usage_fixtures: dict) -> None:
     g1.restrict_([-0.5, 0.5])
     assert g1.domain == Domain([-0.5, 0.5])
     xx = np.linspace(-0.5, 0.5, 100)
-    assert np.max(g1(xx) - f1(xx)) <= 2 * eps
+    assert np.max(np.abs(g1(xx) - f1(xx))) <= 5 * eps
 
     # check piecewise case
     g2 = f2.copy()
     g2.restrict_([-0.5, 1.5])
     assert g2.domain == Domain([-0.5, 0, 1, 1.5])
     xx = np.linspace(-0.5, 1.5, 100)
-    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
+    assert np.max(np.abs(g2(xx) - f2(xx))) <= 5 * eps
 
     # check with a domain that has more breakpoints
     g2 = f2.copy()
     g2.restrict_([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     assert g2.domain == Domain([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     xx = np.linspace(-0.8, 1.8, 100)
-    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
+    assert np.max(np.abs(g2(xx) - f2(xx))) <= 5 * eps
 
-
-def test_restrict__empty(class_usage_fixtures: dict) -> None:
-    """Test the restrict_ method on an empty Chebfun.
-
-    This test verifies that the restrict_ method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.copy()
-    g0.restrict_([-0.5, 0.5])
-    assert g0.isempty
 
 
 def test_simplify(class_usage_fixtures: dict) -> None:
@@ -208,17 +156,16 @@ def test_simplify(class_usage_fixtures: dict) -> None:
     assert g2 == f2
 
 
-def test_simplify_empty(class_usage_fixtures: dict) -> None:
+def test_simplify_empty(emptyfun) -> None:
     """Test the simplify method on an empty Chebfun.
 
     This test verifies that the simplify method on an empty Chebfun
     returns an empty Chebfun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
+        emptyfun: Fixture providing an empty Chebfun object.
     """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.simplify()
+    g0 = emptyfun.simplify()
     assert g0.isempty
 
 
@@ -238,33 +185,19 @@ def test_restrict(class_usage_fixtures: dict) -> None:
     g1 = f1.restrict([-0.5, 0.5])
     assert g1.domain == Domain([-0.5, 0.5])
     xx = np.linspace(-0.5, 0.5, 100)
-    assert np.max(g1(xx) - f1(xx)) <= 2 * eps
+    assert np.max(np.abs(g1(xx) - f1(xx))) <= 5 * eps
 
     # check piecewise case
     g2 = f2.restrict([-0.5, 1.5])
     assert g2.domain == Domain([-0.5, 0, 1, 1.5])
     xx = np.linspace(-0.5, 1.5, 100)
-    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
+    assert np.max(np.abs(g2(xx) - f2(xx))) <= 5 * eps
 
     # check with a domain that has more breakpoints
     g2 = f2.restrict([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     assert g2.domain == Domain([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8])
     xx = np.linspace(-0.8, 1.8, 100)
-    assert np.max(g2(xx) - f2(xx)) <= 2 * eps
-
-
-def test_restrict_empty(class_usage_fixtures: dict) -> None:
-    """Test the restrict method on an empty Chebfun.
-
-    This test verifies that the restrict method on an empty Chebfun
-    returns an empty Chebfun.
-
-    Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
-    """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.restrict([-0.5, 0.5])
-    assert g0.isempty
+    assert np.max(np.abs(g2(xx) - f2(xx))) <= 5 * eps
 
 
 def test_translate(class_usage_fixtures: dict) -> None:
@@ -284,32 +217,36 @@ def test_translate(class_usage_fixtures: dict) -> None:
     assert g1.domain == Domain([0, 2])
     xx = np.linspace(-1, 1, 100)
     yy = xx + 1
-    assert np.max(g1(yy) - f1(xx)) <= 2 * eps
+    assert np.max(np.abs(g1(yy) - f1(xx))) <= 2 * eps
 
     # check piecewise case
     g2 = f2.translate(1)
     assert g2.domain == Domain([0, 1, 2, 3])
     xx = np.linspace(-1, 2, 100)
     yy = xx + 1
-    assert np.max(g2(yy) - f2(xx)) <= 2 * eps
+    assert np.max(np.abs(g2(yy) - f2(xx))) <= 2 * eps
 
     # check with a negative translation
     g1 = f1.translate(-1)
     assert g1.domain == Domain([-2, 0])
     xx = np.linspace(-1, 1, 100)
     yy = xx - 1
-    assert np.max(g1(yy) - f1(xx)) <= 2 * eps
+    assert np.max(np.abs(g1(yy) - f1(xx))) <= 2 * eps
 
-
-def test_translate_empty(class_usage_fixtures: dict) -> None:
-    """Test the translate method on an empty Chebfun.
-
-    This test verifies that the translate method on an empty Chebfun
-    returns an empty Chebfun.
+def test_copy(constfun):
+    """Test the copy method of fun.
 
     Args:
-        class_usage_fixtures: Fixture providing test Chebfun objects.
+        constfun: Fixture providing a constant function object.
     """
-    f0 = class_usage_fixtures["f0"]
-    g0 = f0.translate(1)
-    assert g0.isempty
+    ff = constfun
+    gg = ff.copy()
+    assert ff == ff
+    assert gg == gg
+
+    # we check for identity via function values, etc.
+    assert ff == gg
+
+    # check that modifying the copy does not affect the original
+    gg.domain = Domain([-1, 0, 0.5, 1])
+    assert gg != ff

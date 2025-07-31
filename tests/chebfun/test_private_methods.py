@@ -155,13 +155,8 @@ def test_break_with_tolerance():
     # Since the domains are equal within tolerance, we expect _break to return
     # either a copy of the original function or an empty Chebfun
     f_new = f._break(newdom)
-
-    # If f_new is not empty, check that the function values are preserved
     assert f_new.isempty
-    # if not f_new.isempty:
-    #    xx = np.linspace(-1, 1, 1000)
-    #    error = np.max(np.abs(f(xx) - f_new(xx)))
-    #    assert error <= 3 * eps
+
 
 
 def test_break_multipiece():

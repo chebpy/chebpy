@@ -4,44 +4,16 @@ import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
+from ..generic.calculus import test_cumsum_empty, test_diff_empty, test_sum_empty  # noqa: F401
 from ..utilities import cos, eps, exp, pi, sin
-
-
-@pytest.fixture
-def calculus_fixtures():
-    """Create fixtures for testing Bndfun calculus operations."""
-    emptyfun = Bndfun(Chebtech2.initempty(), Interval())
-    yy = np.linspace(-1, 1, 2000)
-
-    return {"emptyfun": emptyfun, "yy": yy}
-
-
-def test_sum_empty(calculus_fixtures):
-    """Test the sum method on an empty Bndfun."""
-    emptyfun = calculus_fixtures["emptyfun"]
-    assert emptyfun.sum() == 0
-
-
-def test_cumsum_empty(calculus_fixtures):
-    """Test the cumsum method on an empty Bndfun."""
-    emptyfun = calculus_fixtures["emptyfun"]
-    assert emptyfun.cumsum().isempty
-
-
-def test_diff_empty(calculus_fixtures):
-    """Test the diff method on an empty Bndfun."""
-    emptyfun = calculus_fixtures["emptyfun"]
-    assert emptyfun.diff().isempty
-
 
 # --------------------------------------
 #           definite integrals
 # --------------------------------------
 def_integrals = [
-    # (function, interval, integral, tolerance)
+    # Use function, interval, integral, tolerance
     (lambda x: sin(x), [-2, 2], 0.0, 2 * eps),
     (lambda x: sin(4 * pi * x), [-0.1, 0.7], 0.088970317927147, 1e1 * eps),
     (lambda x: cos(x), [-100, 203], 0.426944059057085, 5e2 * eps),

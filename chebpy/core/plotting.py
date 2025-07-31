@@ -13,23 +13,10 @@ These functions are typically used by higher-level classes like Chebfun and
 Chebtech to provide plotting capabilities.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 
-from .importing import import_optional
 from .settings import _preferences as prefs
-
-
-def import_plt() -> object:
-    """Import matplotlib.pyplot if available and not skipped.
-
-    This function attempts to import matplotlib.pyplot for plotting functionality.
-    No fallback option exists, because the plot* functions are not added if
-    module import returns None.
-
-    Returns:
-        object: The matplotlib.pyplot module if available, None otherwise.
-    """
-    return import_optional("matplotlib.pyplot", "MPL")
 
 
 def plotfun(fun: callable, support: tuple, ax=None, n: int = None, **kwds) -> object:
@@ -52,7 +39,7 @@ def plotfun(fun: callable, support: tuple, ax=None, n: int = None, **kwds) -> ob
     Returns:
         matplotlib.axes.Axes: The axes on which the plot was created.
     """
-    ax = ax or import_plt().gca()
+    ax = ax or plt.gca()
     n = n if n is not None else prefs.N_plot
     xx = np.linspace(*support, n)
     ff = fun(xx)
@@ -81,7 +68,7 @@ def plotfuncoeffs(abscoeffs: np.ndarray, ax=None, **kwds) -> object:
     Returns:
         matplotlib.axes.Axes: The axes on which the plot was created.
     """
-    ax = ax or import_plt().gca()
+    ax = ax or plt.gca()
     ax.set_ylabel(kwds.pop("xlabel", "coefficient magnitude"))
     ax.set_xlabel(kwds.pop("ylabel", "polynomial degree"))
     ax.semilogy(abscoeffs, ".", **kwds)

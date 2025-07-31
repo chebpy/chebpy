@@ -7,6 +7,7 @@ readme = "README.rst"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.0",
+    "matplotlib>=3.10.0"
 ]
 
 [project.urls]
@@ -17,8 +18,7 @@ homepage = "https://chebpy.github.io/chebpy/"
 dev = [
     "pytest-cov>=6.2.1",
     "pytest>=8.4.1",
-    "pre-commit>=4.2.0",
-    "matplotlib==3.10.3"
+    "pre-commit>=4.2.0"
 ]
 
 [build-system]

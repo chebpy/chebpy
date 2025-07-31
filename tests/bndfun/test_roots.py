@@ -8,21 +8,6 @@ from chebpy.core.utilities import Interval
 
 from ..utilities import cos, eps, pi, sin
 
-
-def test_empty():
-    """Test the roots method on an empty Bndfun."""
-    ff = Bndfun.initempty()
-    assert ff.roots().size == 0
-
-
-def test_const():
-    """Test the roots method on constant Bndfun objects."""
-    ff = Bndfun.initconst(0.0, Interval(-2, 3))
-    gg = Bndfun.initconst(2.0, Interval(-2, 3))
-    assert ff.roots().size == 0
-    assert gg.roots().size == 0
-
-
 # Test parameters for roots tests
 roots_test_params = [
     (lambda x: 3 * x + 2.0, [-2, 3], np.array([-2 / 3]), eps),
@@ -40,4 +25,4 @@ def test_roots(f, interval, roots_expected, tol):
     subinterval = Interval(*interval)
     ff = Bndfun.initfun_adaptive(f, subinterval)
     rts = ff.roots()
-    assert np.max(rts - roots_expected) <= tol
+    assert np.max(np.abs(rts - roots_expected)) <= tol

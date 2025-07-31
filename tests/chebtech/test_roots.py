@@ -9,43 +9,9 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from ..utilities import cos, eps, pi, sin
+from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
+from ..utilities import eps
 
-# Ensure reproducibility
-rng = np.random.default_rng(0)
-
-
-def test_empty(emptyfun):
-    """Test that empty Chebtech2 objects have no roots.
-
-    This test verifies that the roots() method of an empty Chebtech2 object
-    returns an empty array.
-    """
-    assert emptyfun.roots().size == 0
-
-
-def test_const():
-    """Test that constant Chebtech2 objects have no roots.
-
-    This test verifies that the roots() method of constant Chebtech2 objects
-    (both zero and non-zero) returns an empty array.
-    """
-    ff = Chebtech2.initconst(0.0)
-    gg = Chebtech2.initconst(2.0)
-    assert ff.roots().size == 0
-    assert gg.roots().size == 0
-
-
-# Define test functions and their expected roots
-rootstestfuns = [
-    (lambda x: 3 * x + 2.0, np.array([-2 / 3])),
-    (lambda x: x**2, np.array([0.0, 0.0])),
-    (lambda x: x**2 + 0.2 * x - 0.08, np.array([-0.4, 0.2])),
-    (lambda x: sin(x), np.array([0])),
-    (lambda x: cos(2 * pi * x), np.array([-0.75, -0.25, 0.25, 0.75])),
-    (lambda x: sin(100 * pi * x), np.linspace(-1, 1, 201)),
-    (lambda x: sin(5 * pi / 2 * x), np.array([-0.8, -0.4, 0, 0.4, 0.8])),
-]
 
 @pytest.mark.parametrize("f, roots", rootstestfuns)
 def test_roots(f, roots, tol=eps):
@@ -62,4 +28,4 @@ def test_roots(f, roots, tol=eps):
     """
     ff = Chebtech2.initfun_adaptive(f)
     rts = ff.roots()
-    assert np.max(rts - roots) <= tol
+    assert np.max(np.abs(rts - roots)) <= tol

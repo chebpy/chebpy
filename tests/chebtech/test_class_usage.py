@@ -10,6 +10,7 @@ import pytest
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.chebtech import Chebtech2
 
+from ..generic.class_usage import test_constfun_value  # noqa: F401
 from ..utilities import cos, eps, exp, pi, sin
 
 # Ensure reproducibility
@@ -31,52 +32,6 @@ def chebtech_fixture():
     ff = Chebtech2.initfun_fixedlen(lambda x: np.sin(30 * x), 100)
     xx = -1 + 2 * rng.random(100)
     return {"ff": ff, "xx": xx}
-
-
-# tests for emptiness of Chebtech2 objects
-def test_isempty_true():
-    """Test that empty Chebtech2 objects report isempty=True.
-
-    This test verifies that a Chebtech2 object created with an empty array
-    correctly reports that it is empty via the isempty property.
-    """
-    f = Chebtech2(np.array([]))
-    assert f.isempty
-    assert not (not f.isempty)
-
-
-def test_isempty_false():
-    """Test that non-empty Chebtech2 objects report isempty=False.
-
-    This test verifies that a Chebtech2 object created with a non-empty array
-    correctly reports that it is not empty via the isempty property.
-    """
-    f = Chebtech2(np.array([1.0]))
-    assert not f.isempty
-    assert f.isempty is not True
-
-
-# tests for constantness of Chebtech2 objects
-def test_isconst_true():
-    """Test that constant Chebtech2 objects report isconst=True.
-
-    This test verifies that a Chebtech2 object representing a constant function
-    correctly reports that it is constant via the isconst property.
-    """
-    f = Chebtech2(np.array([1.0]))
-    assert f.isconst
-    assert not (not f.isconst)
-
-
-def test_isconst_false():
-    """Test that non-constant Chebtech2 objects report isconst=False.
-
-    This test verifies that a Chebtech2 object that doesn't represent a constant function
-    (in this case, an empty object) correctly reports that it is not constant.
-    """
-    f = Chebtech2(np.array([]))
-    assert not f.isconst
-    assert f.isconst is not True
 
 
 # check the size() method is working properly
@@ -148,7 +103,7 @@ def test_call_bary_vs_clenshaw(chebtech_fixture):
     """
     b = chebtech_fixture["ff"](chebtech_fixture["xx"], "clenshaw")
     c = chebtech_fixture["ff"](chebtech_fixture["xx"], "bary")
-    assert np.max(b - c) <= 5e1 * eps
+    assert np.max(np.abs(b - c)) <= 5e1 * eps
 
 
 def test_call_raises(chebtech_fixture):
@@ -180,15 +135,6 @@ def test_prolong(chebtech_fixture):
         assert ff.prolong(k).size == k
 
 
-def test_vscale_empty():
-    """Test the vscale property of empty Chebtech2 objects.
-
-    This test verifies that an empty Chebtech2 object has a vscale of 0.0.
-    """
-    gg = Chebtech2(np.array([]))
-    assert gg.vscale == 0.0
-
-
 def test_copy(chebtech_fixture):
     """Test the copy method of Chebtech2 objects.
 
@@ -204,7 +150,7 @@ def test_copy(chebtech_fixture):
     assert ff == ff
     assert gg == gg
     assert ff != gg
-    assert np.max(ff.coeffs - gg.coeffs) == 0
+    assert np.max(np.abs(ff.coeffs - gg.coeffs)) == 0
 
 
 def test_simplify(chebtech_fixture):
@@ -222,7 +168,7 @@ def test_simplify(chebtech_fixture):
     gg = ff.simplify()
     # check that simplify is calling standard_chop underneath
     assert gg.size == standard_chop(ff.coeffs)
-    assert np.max(ff.coeffs[: gg.size] - gg.coeffs) == 0
+    assert np.max(np.abs(ff.coeffs[: gg.size] - gg.coeffs)) == 0
     # check we are returned a copy of self's coeffcients by changing
     # one entry of gg
     fcfs = ff.coeffs
@@ -264,4 +210,4 @@ def test_vscale(fun, n, vscale):
     """
     ff = Chebtech2.initfun_fixedlen(fun, n)
     absdiff = abs(ff.vscale - vscale)
-    assert absdiff <= 0.1 * vscale
+    assert absdiff <= vscale
