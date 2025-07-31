@@ -905,7 +905,6 @@ class Chebfun:
         decay of coefficients in the Chebyshev series.
 
         Args:
-
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
                 a new axes will be created. Defaults to None.
             **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
