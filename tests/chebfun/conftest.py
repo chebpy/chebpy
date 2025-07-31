@@ -11,7 +11,7 @@ Note:
 
 import pytest
 
-from ..utilities import eps, sin
+from ..utilities import eps
 
 
 # domain, test_tolerance
@@ -24,52 +24,3 @@ def testdomains() -> list:
         ([-1, 2], 5 * eps),
         ([-5, 9], 35 * eps),
     ]
-
-
-@pytest.fixture()
-def uf1():
-    """Identity function."""
-    def f(x: float) -> float:
-        """Identity function.
-
-        Args:
-            x: Input value or array
-
-        Returns:
-            x: The input value or array
-        """
-        return x
-
-    return f
-
-@pytest.fixture()
-def uf2():
-    """Sine function with offset."""
-    def f(x: float) -> float:
-        """Sine function with offset.
-
-        Args:
-            x: Input value or array
-
-        Returns:
-            float or array: sin(x - 0.5)
-        """
-        return sin(x - 0.5)
-
-    return f
-
-@pytest.fixture()
-def uf3():
-    """Sine function with scaling and offset."""
-    def f(x: float) -> float:
-        """Sine function with scaling and offset.
-
-        Args:
-            x: Input value or array
-
-        Returns:
-            float or array: sin(25 * x - 1)
-        """
-        return sin(25 * x - 1)
-
-    return f
