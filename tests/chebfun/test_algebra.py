@@ -12,7 +12,7 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from ..generic.algebra import test__neg__empty, test__pos__empty  # noqa: F401
+from ..generic.algebra import test__neg__empty, test__pos__empty, test_pow_empty, test_rpow_empty  # noqa: F401
 from ..utilities import eps
 
 
@@ -216,36 +216,6 @@ def test_truediv_constant(testdomains, testfunctions):
                     tol = 10 * abs(const) * vscl * hscl * lscl * eps
                     assert np.max(np.abs(g(xx) - gg(xx))) <= tol
                     assert np.max(np.abs(h(xx) - hh(xx))) <= tol
-
-
-def test_pow_empty(emptyfun):
-    """Test power operation on empty Chebfun objects.
-
-    This test verifies that raising an empty Chebfun object to any power
-    results in an empty Chebfun object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebfun object
-    """
-    for const in (-1, 0, 1, 2):
-        assert (emptyfun**const).isempty
-    for const in (-1.0, 0.0, 1.0, 2.0):
-        assert (emptyfun**const).isempty
-
-
-def test_rpow_empty(emptyfun):
-    """Test raising constants to empty Chebfun objects.
-
-    This test verifies that raising a constant to an empty Chebfun object
-    results in an empty Chebfun object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebfun object
-    """
-    for const in (-1, 0, 1, 2):
-        assert (const**emptyfun).isempty
-    for const in (-1.0, 0.0, 1.0, 2.0):
-        assert (const**emptyfun).isempty
 
 
 def test_pow_constant(testdomains, testfunctions):
