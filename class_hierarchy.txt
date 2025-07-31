@@ -1,0 +1,29 @@
+# ChebPy Class Hierarchy
+
+```
+                  BaseFun (ABC)
+                       |
+                       |
+        +--------------+--------------+
+        |                             |
+        v                             v
+   Chebtech                        Bndfun
+        |                             |
+        |                             |
+        +--------------+--------------+
+                       |
+                       v
+                    Chebfun
+```
+
+This diagram shows the current class hierarchy in ChebPy after the refactoring:
+
+1. **BaseFun (ABC)**: Abstract base class that defines the interface for all function representations in ChebPy.
+
+2. **Chebtech**: Class for representing functions using Chebyshev polynomial expansions on the standard domain [-1, 1]. Inherits from BaseFun. While marked as an abstract base class in the code, it is used as a concrete implementation in practice.
+
+3. **Bndfun**: Concrete class for representing functions on bounded intervals [a, b]. Inherits directly from BaseFun.
+
+4. **Chebfun**: Top-level class that represents piecewise functions using an array of Bndfun objects. Does not inherit from any other class.
+
+The hierarchy has been simplified compared to the previous version, which had additional classes like Fun, Onefun, Smoothfun, and Classicfun. These have been consolidated into the current structure, with BaseFun now serving as the main abstract base class.
