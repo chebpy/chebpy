@@ -5,7 +5,9 @@ with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
 focus on operations with empty function objects.
 """
 import numpy as np
+
 from ..utilities import cos, pi, sin
+
 
 def test_empty(emptyfun):
     """Test the roots method on an empty Bndfun."""

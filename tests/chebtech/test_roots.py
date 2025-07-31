@@ -8,7 +8,8 @@ import numpy as np
 import pytest
 
 from chebpy.core.chebtech import Chebtech2
-from ..generic.roots import test_empty, rootstestfuns  # noqa: F401
+
+from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
 from ..utilities import eps
 
 

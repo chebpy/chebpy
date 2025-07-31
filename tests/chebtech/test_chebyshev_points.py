@@ -51,7 +51,7 @@ def test_vals2coeffs_size1():
     """
     for k in np.arange(10):
         fk = np.array([k])
-        assert np.max(_vals2coeffs(fk) - fk) <= eps
+        assert np.max(np.abs(_vals2coeffs(fk) - fk)) <= eps
 
 
 def test_coeffs2vals_size1():
@@ -62,7 +62,7 @@ def test_coeffs2vals_size1():
     """
     for k in np.arange(10):
         ak = np.array([k])
-        assert np.max(_coeffs2vals(ak) - ak) <= eps
+        assert np.max(np.abs(_coeffs2vals(ak) - ak)) <= eps
 
 
 # TODO: further checks for chepbts
@@ -89,7 +89,7 @@ def test_vals2coeffs2vals(n):
     values = rng.random(n)
     coeffs = _vals2coeffs(values)
     _values_ = _coeffs2vals(coeffs)
-    assert np.max(values - _values_) <= scaled_tol(n)
+    assert np.max(np.abs(values - _values_)) <= scaled_tol(n)
 
 
 @pytest.mark.parametrize("n", test_sizes)
@@ -106,7 +106,7 @@ def test_coeffs2vals2coeffs(n):
     coeffs = rng.random(n)
     values = _coeffs2vals(coeffs)
     _coeffs_ = _vals2coeffs(values)
-    assert np.max(coeffs - _coeffs_) <= scaled_tol(n)
+    assert np.max(np.abs(coeffs - _coeffs_)) <= scaled_tol(n)
 
 
 # ------------------------------------------------------------------------
@@ -140,7 +140,7 @@ def test_chebpts_values(n, expected, tol):
         tol: Tolerance for the comparison
     """
     actual = Chebtech2._chebpts(n)
-    assert np.max(actual - expected) <= tol
+    assert np.max(np.abs(actual - expected)) <= tol
 
 
 # Test Chebyshev points properties for various sizes

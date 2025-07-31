@@ -8,8 +8,8 @@ from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
-from ..utilities import cos, eps, exp, pi, sin
 from ..generic.class_usage import test_constfun_value, test_copy, test_endvalues, test_support  # noqa: F401
+from ..utilities import cos, eps, exp, pi, sin
 
 # Ensure reproducibility
 rng = np.random.default_rng(0)

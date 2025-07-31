@@ -148,7 +148,7 @@ def test_maps():
     yy = -1 + 2 * rng.random(1000)
     interval = Interval(-2, 3)
     vals = interval.invmap(interval(yy)) - yy
-    assert np.max(vals) <= eps
+    assert np.max(np.abs(vals)) <= eps
 
 
 def test_isinterior():
@@ -813,8 +813,8 @@ def test_compute_breakdata_1(compute_breakdata_fixtures):
     funs = np.array([fun0])
     breaks = compute_breakdata(funs)
     x, y = list(breaks.keys()), list(breaks.values())
-    assert np.max(x - np.array([-1, 0])) <= eps
-    assert np.max(y - np.array([np.exp(-1), np.exp(0)])) <= 2 * eps
+    assert np.max(np.abs(x - np.array([-1, 0]))) <= eps
+    assert np.max(np.abs(y - np.array([np.exp(-1), np.exp(0)]))) <= 2 * eps
 
 
 def test_compute_breakdata_2(compute_breakdata_fixtures):
@@ -832,5 +832,5 @@ def test_compute_breakdata_2(compute_breakdata_fixtures):
     funs = np.array([fun0, fun1])
     breaks = compute_breakdata(funs)
     x, y = list(breaks.keys()), list(breaks.values())
-    assert np.max(x - np.array([-1, 0, 1])) <= eps
-    assert np.max(y - np.array([np.exp(-1), np.exp(0), np.exp(1)])) <= 2 * eps
+    assert np.max(np.abs(x - np.array([-1, 0, 1]))) <= eps
+    assert np.max(np.abs(y - np.array([np.exp(-1), np.exp(0), np.exp(1)]))) <= 2 * eps

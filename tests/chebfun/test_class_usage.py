@@ -11,10 +11,7 @@ import pytest
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Domain
 
-from ..generic.class_usage import (
-    test_support,
-    test_translate_empty
-)  # noqa: F401
+from ..generic.class_usage import test_support, test_translate_empty  # noqa: F401
 from .conftest import eps
 
 

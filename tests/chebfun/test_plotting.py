@@ -10,8 +10,9 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
+from ..generic.plotting import test_plot, test_plot_complex  # noqa: F401
 from ..utilities import cos, exp, sin
-from ..generic.plotting import test_plot_complex, test_plot   # noqa: F401
+
 
 @pytest.fixture
 def plotting_fixtures():

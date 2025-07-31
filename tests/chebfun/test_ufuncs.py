@@ -9,8 +9,9 @@ import numpy as np
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.utilities import Interval
 
-from ..utilities import eps
 from ..generic.ufuncs import test_emptycase, ufunc_parameter  # noqa: F401
+from ..utilities import eps
+
 
 def test_abs_absolute_alias():
     """Test that abs and absolute are aliases.
@@ -42,4 +43,4 @@ def test_ufuncs():
         xx = interval(yy)
         vscl = gg_result.vscale
         lscl = sum([fun.size for fun in gg_result])
-        assert np.max(gg(xx) - gg_result(xx)) <= vscl * lscl * eps
+        assert np.max(np.abs(gg(xx) - gg_result(xx))) <= vscl * lscl * eps

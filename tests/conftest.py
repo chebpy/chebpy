@@ -15,6 +15,7 @@ Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
     making it suitable for headless CI environments.
 """
+import dataclasses
 import operator
 import os
 
@@ -25,6 +26,7 @@ import pytest
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
 from chebpy.core.chebtech import Chebtech2
+from chebpy.core.utilities import Interval
 
 if os.environ.get("CI") == "true":  # pragma: no cover
     matplotlib.use("Agg")
@@ -201,3 +203,46 @@ def complexfun(request):
     assert fun.roots().size == 0
 
     return fun
+
+@dataclasses.dataclass(frozen=True)
+class TestFunction:
+    """Container for test functions."""
+    cheb: Chebfun | Chebtech2 | Bndfun
+    raw: callable
+    degree: int
+    has_roots: bool
+
+
+@pytest.fixture
+def ttt(request, testfunctions):
+    """Create a collection of test functions for testing."""
+    module_name = request.module.__name__
+
+    t_functions = []
+
+    if "bndfun" in module_name:
+        interval = Interval()
+        for fun, degree, roots in testfunctions:
+            bndfun = Bndfun.initfun_adaptive(fun, interval)
+            bndfun.name = fun.__name__
+            t_functions.append(
+                TestFunction(cheb=bndfun, raw=fun, degree=degree, has_roots=roots)
+            )
+
+    if "chebfun" in module_name:
+        for fun, degree, roots in testfunctions:
+            chebfun = Chebfun.initfun_adaptive(fun, [-1, 1])
+            chebfun.name = fun.__name__
+            t_functions.append(
+                TestFunction(cheb=chebfun, raw=fun, degree=degree, has_roots=roots)
+            )
+
+    if "chebtech" in module_name:
+        for fun, degree, roots in testfunctions:
+            chebtech = Chebtech2.initfun_adaptive(fun)
+            chebtech.name = fun.__name__
+            t_functions.append(
+                TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots)
+            )
+    return t_functions
+

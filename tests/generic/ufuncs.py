@@ -2,7 +2,6 @@
 import numpy as np
 import pytest
 
-from ..utilities import eps
 
 # Define utility functions for testing
 def uf1(x):

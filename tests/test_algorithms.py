@@ -198,7 +198,7 @@ def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: 
     n = evalpts.size
     tol = tol_multiplier * scaled_tol(n)
 
-    return np.max(a - b) < tol  # inf_norm_less_than_tol(a, b, tol)
+    return np.max(np.abs(a - b)) < tol  # inf_norm_less_than_tol(a, b, tol)
 
 
 def test_bary(testfunctions: list) -> None:
@@ -281,4 +281,4 @@ def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
     gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
     hc = coeffmult(fc, gc)
     hx = Chebtech2.initfun(h, hn).coeffs
-    assert np.max(hc - hx) <= 2e1 * eps
+    assert np.max(np.abs(hc - hx)) <= 2e1 * eps
