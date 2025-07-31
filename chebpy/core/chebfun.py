@@ -877,47 +877,46 @@ class Chebfun:
         return self.__class__(funs)
 
 
-# ----------
-#  plotting
-# ----------
-def plot(self, ax=None, **kwds):
-    """Plot the Chebfun over its domain.
+    # ----------
+    #  plotting
+    # ----------
+    def plot(self, ax=None, **kwds):
+        """Plot the Chebfun over its domain.
 
-    This method plots the Chebfun over its domain using matplotlib.
-    For complex-valued Chebfuns, it plots the real part against the imaginary part.
+        This method plots the Chebfun over its domain using matplotlib.
+        For complex-valued Chebfuns, it plots the real part against the imaginary part.
 
-    Args:
-        self (Chebfun): The Chebfun object to plot.
-        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
-            a new axes will be created. Defaults to None.
-        **kwds: Additional keyword arguments to pass to matplotlib's plot function.
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+                a new axes will be created. Defaults to None.
+            **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
-    Returns:
-        matplotlib.axes.Axes: The axes on which the plot was created.
-    """
-    return plotfun(self, self.support, ax=ax, **kwds)
+        Returns:
+            matplotlib.axes.Axes: The axes on which the plot was created.
+        """
+        return plotfun(self, self.support, ax=ax, **kwds)
 
 
-def plotcoeffs(self, ax=None, **kwds):
-    """Plot the coefficients of the Chebfun on a semilogy scale.
+    def plotcoeffs(self, ax=None, **kwds):
+        """Plot the coefficients of the Chebfun on a semilogy scale.
 
-    This method plots the absolute values of the coefficients for each piece
-    of the Chebfun on a semilogy scale, which is useful for visualizing the
-    decay of coefficients in the Chebyshev series.
+        This method plots the absolute values of the coefficients for each piece
+        of the Chebfun on a semilogy scale, which is useful for visualizing the
+        decay of coefficients in the Chebyshev series.
 
-    Args:
-        self (Chebfun): The Chebfun object whose coefficients to plot.
-        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
-            a new axes will be created. Defaults to None.
-        **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
+        Args:
 
-    Returns:
-        matplotlib.axes.Axes: The axes on which the plot was created.
-    """
-    ax = ax or plt.gca()
-    for fun in self:
-        fun.plotcoeffs(ax=ax, **kwds)
-    return ax
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+                a new axes will be created. Defaults to None.
+            **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
+
+        Returns:
+            matplotlib.axes.Axes: The axes on which the plot was created.
+        """
+        ax = ax or plt.gca()
+        for fun in self:
+            fun.plotcoeffs(ax=ax, **kwds)
+        return ax
 
 
 # ---------
