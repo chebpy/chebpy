@@ -5,7 +5,7 @@ import pytest
 
 from chebpy.core.algorithms import standard_chop
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 from chebpy.core.utilities import Interval
 
 from ..generic.class_usage import test_constfun_value, test_copy, test_endvalues, test_support  # noqa: F401
@@ -33,7 +33,7 @@ def test_size():
     """Test the size method of Bndfun."""
     cfs = rng.random(10)
     subinterval = Interval()
-    b2 = Bndfun(Chebtech2(cfs), subinterval)
+    b2 = Bndfun(Chebtech(cfs), subinterval)
     assert b2.size == cfs.size
 
 

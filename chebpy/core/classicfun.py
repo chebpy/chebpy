@@ -9,7 +9,7 @@ from abc import ABC
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .chebtech import Chebtech2
+from .chebtech import Chebtech
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
 from .fun import Fun
@@ -18,7 +18,7 @@ from .settings import _preferences as prefs
 from .utilities import Interval
 
 techdict = {
-    "Chebtech2": Chebtech2,
+    "Chebtech": Chebtech,
 }
 
 

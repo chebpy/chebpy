@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 from chebpy.core.utilities import Interval
 
 from ..utilities import cos, eps, exp, sin
@@ -17,7 +17,7 @@ def test_onefun_construction():
     """Test construction of Bndfun from a Chebtech object."""
     coeffs = rng.random(10)
     subinterval = Interval()
-    onefun = Chebtech2(coeffs)
+    onefun = Chebtech(coeffs)
     f = Bndfun(onefun, subinterval)
     assert isinstance(f, Bndfun)
     assert np.max(np.abs(f.coeffs - coeffs)) < eps

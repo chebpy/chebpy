@@ -1,7 +1,7 @@
 """Generic test functions for class usage.
 
 This module contains test functions for class usage that can be used
-with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on common operations and properties of function objects.
 """
 from chebpy.core.utilities import Domain

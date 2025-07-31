@@ -17,7 +17,7 @@ from ..utilities import pi, sin
 def test_roots(f, roots):
     """Test that the roots of a function are correctly identified.
 
-    This test verifies that the roots() method of a Chebtech2 object
+    This test verifies that the roots() method of a Chebtech object
     correctly identifies the roots of various functions within the
     specified tolerance.
 

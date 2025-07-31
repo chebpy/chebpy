@@ -25,7 +25,7 @@ import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 from chebpy.core.utilities import Interval
 
 if os.environ.get("CI") == "true":  # pragma: no cover
@@ -76,7 +76,7 @@ def random_points() -> np.ndarray:
     """Create an array of random points in [-1, 1] for testing.
 
     This fixture creates an array of 1000 random points in the interval [-1, 1]
-    that can be used for evaluating and testing Chebtech2 objects.
+    that can be used for evaluating and testing Chebtech objects.
 
     Returns:
         numpy.ndarray: Array of 1000 random points in [-1, 1]
@@ -104,13 +104,13 @@ def emptyfun(request):
 
     This generic fixture creates an empty function object of the appropriate type
     based on the test module that requests it. It automatically determines the
-    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
 
     Args:
         request: The pytest request object, used to determine the calling module
 
     Returns:
-        Union[Bndfun, Chebfun, Chebtech2]: An empty function object of the appropriate type
+        Union[Bndfun, Chebfun, Chebtech]: An empty function object of the appropriate type
     """
     module_name = request.module.__name__
 
@@ -119,7 +119,7 @@ def emptyfun(request):
     elif "chebfun" in module_name:
         fun = Chebfun.initempty()
     elif "chebtech" in module_name:
-        fun = Chebtech2.initempty()
+        fun = Chebtech.initempty()
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initempty()
@@ -138,14 +138,14 @@ def constfun(request):
 
     This generic fixture creates a constant function object of the appropriate type
     based on the test module that requests it. It automatically determines the
-    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
     The constant value is set to 1.0.
 
     Args:
         request: The pytest request object, used to determine the calling module
 
     Returns:
-        Union[Bndfun, Chebfun, Chebtech2]: A constant function object of the appropriate type
+        Union[Bndfun, Chebfun, Chebtech]: A constant function object of the appropriate type
     """
     module_name = request.module.__name__
 
@@ -156,7 +156,7 @@ def constfun(request):
     elif "chebfun" in module_name:
         fun = Chebfun.initconst(1.0)
     elif "chebtech" in module_name:
-        fun = Chebtech2.initconst(1.0)
+        fun = Chebtech.initconst(1.0)
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initconst(1.0)
@@ -174,14 +174,14 @@ def complexfun(request):
 
     This generic fixture creates a complex function object of the appropriate type
     based on the test module that requests it. It automatically determines the
-    correct class (Bndfun, Chebfun, or Chebtech2) based on the module name.
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
     The complex function is set to exp(π·i·x).
 
     Args:
         request: The pytest request object, used to determine the calling module
 
     Returns:
-        Union[Bndfun, Chebfun, Chebtech2]: A complex function object of the appropriate type
+        Union[Bndfun, Chebfun, Chebtech]: A complex function object of the appropriate type
     """
     module_name = request.module.__name__
 
@@ -192,7 +192,7 @@ def complexfun(request):
     elif "chebfun" in module_name:
         fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
     elif "chebtech" in module_name:
-        fun = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
+        fun = Chebtech.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
@@ -207,7 +207,7 @@ def complexfun(request):
 @dataclasses.dataclass(frozen=True)
 class TestFunction:
     """Container for test functions."""
-    cheb: Chebfun | Chebtech2 | Bndfun
+    cheb: Chebfun | Chebtech | Bndfun
     raw: callable
     degree: int
     has_roots: bool
@@ -239,7 +239,7 @@ def ttt(request, testfunctions):
 
     if "chebtech" in module_name:
         for fun, degree, roots in testfunctions:
-            chebtech = Chebtech2.initfun_adaptive(fun)
+            chebtech = Chebtech.initfun_adaptive(fun)
             chebtech.name = fun.__name__
             t_functions.append(
                 TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots)

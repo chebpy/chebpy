@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 from chebpy.core.algorithms import bary, clenshaw, coeffmult
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 
 from .utilities import cos, eps, exp, scaled_tol
 
@@ -40,8 +40,8 @@ def evaluation_fixtures() -> dict[str, Any]:
         Dictionary containing test fixtures for evaluation
     """
     npts = 15
-    xk = Chebtech2._chebpts(npts)
-    vk = Chebtech2._barywts(npts)
+    xk = Chebtech._chebpts(npts)
+    vk = Chebtech._barywts(npts)
     fk = rng.random(npts)
     ak = rng.random(11)
     xx = -1 + 2 * rng.random(9)
@@ -124,16 +124,16 @@ def test_bary_scalar_input(evaluation_fixtures: dict[str, Any]) -> None:
 # TODO: Move these tests elsewhere?
 def test_bary_float_output() -> None:
     """Test that bary evaluation returns float output for constant Chebtechs."""
-    ff = Chebtech2.initconst(1)
-    gg = Chebtech2.initconst(1.0)
+    ff = Chebtech.initconst(1)
+    gg = Chebtech.initconst(1.0)
     assert isinstance(ff(0, "bary"), float)
     assert isinstance(gg(0, "bary"), float)
 
 
 def test_clenshaw_float_output() -> None:
     """Test that clenshaw evaluation returns float output for constant Chebtechs."""
-    ff = Chebtech2.initconst(1)
-    gg = Chebtech2.initconst(1.0)
+    ff = Chebtech.initconst(1)
+    gg = Chebtech.initconst(1.0)
     assert isinstance(ff(0, "clenshaw"), float)
     assert isinstance(gg(0, "clenshaw"), float)
 
@@ -145,7 +145,7 @@ def test_bary_clenshaw_consistency() -> None:
     coeffs = rng.random(3)
     evalpts = (0.5, np.array([]), np.array([0.5]), np.array([0.5, 0.6]))
     for n in range(len(coeffs)):
-        ff = Chebtech2(coeffs[:n])
+        ff = Chebtech(coeffs[:n])
         for xx in evalpts:
             fb = ff(xx, "bary")
             fc = ff(xx, "clenshaw")
@@ -155,7 +155,7 @@ def test_bary_clenshaw_consistency() -> None:
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
 
 # Define arrays of Chebyshev points for interpolation
-ptsarry = [Chebtech2._chebpts(n) for n in np.array([100, 200])]
+ptsarry = [Chebtech._chebpts(n) for n in np.array([100, 200])]
 
 # List of evaluation methods to test
 methods = [bary, clenshaw]
@@ -185,12 +185,12 @@ def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: 
     fvals = fun(xk)
 
     if method is bary:
-        vk = Chebtech2._barywts(fvals.size)
+        vk = Chebtech._barywts(fvals.size)
         a = bary(x, fvals, xk, vk)
         tol_multiplier = 1e0
 
     elif method is clenshaw:
-        ak = Chebtech2._vals2coeffs(fvals)
+        ak = Chebtech._vals2coeffs(fvals)
         a = clenshaw(x, ak)
         tol_multiplier = 2e1
 
@@ -277,8 +277,8 @@ def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
         return f(x) * g(x)
 
     hn = fn + gn - 1
-    fc = Chebtech2.initfun(f, fn).prolong(hn).coeffs
-    gc = Chebtech2.initfun(g, gn).prolong(hn).coeffs
+    fc = Chebtech.initfun(f, fn).prolong(hn).coeffs
+    gc = Chebtech.initfun(g, gn).prolong(hn).coeffs
     hc = coeffmult(fc, gc)
-    hx = Chebtech2.initfun(h, hn).coeffs
+    hx = Chebtech.initfun(h, hn).coeffs
     assert np.max(np.abs(hc - hx)) <= 2e1 * eps

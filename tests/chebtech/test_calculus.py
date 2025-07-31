@@ -1,13 +1,13 @@
-"""Unit-tests for Chebtech2 calculus operations.
+"""Unit-tests for Chebtech calculus operations.
 
-This module contains tests for the calculus operations of Chebtech2,
+This module contains tests for the calculus operations of Chebtech,
 including sum, cumsum, and diff methods.
 """
 
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 
 from ..utilities import cos, eps, exp, pi, sin  # noqa: F401
 
@@ -34,9 +34,9 @@ def_integrals = [
 
 @pytest.mark.parametrize("fun, n, integral, tol", def_integrals)
 def test_definite_integral(fun, n, integral, tol):
-    """Test definite integration (sum method) of Chebtech2 objects.
+    """Test definite integration (sum method) of Chebtech objects.
 
-    This test verifies that the sum method of a Chebtech2 object correctly
+    This test verifies that the sum method of a Chebtech object correctly
     computes the definite integral of various functions within the specified
     tolerance.
 
@@ -46,7 +46,7 @@ def test_definite_integral(fun, n, integral, tol):
         integral: Expected value of the integral
         tol: Tolerance for the comparison
     """
-    ff = Chebtech2.initfun_fixedlen(fun, n)
+    ff = Chebtech.initfun_fixedlen(fun, n)
     absdiff = abs(ff.sum() - integral)
     assert absdiff <= tol
 
@@ -67,9 +67,9 @@ indef_integrals = [
 
 @pytest.mark.parametrize("fun, dfn, n, tol", indef_integrals)
 def test_indefinite_integral(fun, dfn, n, tol):
-    """Test indefinite integration (cumsum method) of Chebtech2 objects.
+    """Test indefinite integration (cumsum method) of Chebtech objects.
 
-    This test verifies that the cumsum method of a Chebtech2 object correctly
+    This test verifies that the cumsum method of a Chebtech object correctly
     computes the indefinite integral of various functions within the specified
     tolerance. It checks that the indefinite integral of the function matches
     the expected antiderivative (up to a constant).
@@ -80,8 +80,8 @@ def test_indefinite_integral(fun, dfn, n, tol):
         n: Number of points to use
         tol: Tolerance for the comparison
     """
-    ff = Chebtech2.initfun_fixedlen(fun, n)
-    gg = Chebtech2.initfun_fixedlen(dfn, n)
+    ff = Chebtech.initfun_fixedlen(fun, n)
+    gg = Chebtech.initfun_fixedlen(dfn, n)
     xx = np.linspace(-1, 1, 1000)
     absdiff = np.max(np.abs(ff.cumsum()(xx) - (gg(xx) - gg(-1))))
     assert absdiff <= 100*tol
@@ -103,9 +103,9 @@ derivatives = [
 
 @pytest.mark.parametrize("fun, der, n, tol", derivatives)
 def test_derivative(fun, der, n, tol):
-    """Test differentiation (diff method) of Chebtech2 objects.
+    """Test differentiation (diff method) of Chebtech objects.
 
-    This test verifies that the diff method of a Chebtech2 object correctly
+    This test verifies that the diff method of a Chebtech object correctly
     computes the derivative of various functions within the specified
     tolerance. It checks that the derivative of the function matches
     the expected derivative function.
@@ -116,8 +116,8 @@ def test_derivative(fun, der, n, tol):
         n: Number of points to use
         tol: Tolerance for the comparison
     """
-    ff = Chebtech2.initfun_fixedlen(fun, n)
-    gg = Chebtech2.initfun_fixedlen(der, n)
+    ff = Chebtech.initfun_fixedlen(fun, n)
+    gg = Chebtech.initfun_fixedlen(der, n)
     xx = np.linspace(-1, 1, 1000)
     absdiff = np.max(np.abs(ff.diff()(xx) - gg(xx)))
     assert absdiff <= 10 * tol

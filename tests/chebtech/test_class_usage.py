@@ -1,6 +1,6 @@
-"""Unit-tests for miscellaneous Chebtech2 class usage.
+"""Unit-tests for miscellaneous Chebtech class usage.
 
-This module contains tests for various aspects of the Chebtech2 class,
+This module contains tests for various aspects of the Chebtech class,
 including emptiness, constantness, size, calling, prolongation, vscale, and copying.
 """
 
@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from chebpy.core.algorithms import standard_chop
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 
 from ..generic.class_usage import test_constfun_value  # noqa: F401
 from ..utilities import cos, eps, exp, pi, sin
@@ -19,46 +19,46 @@ rng = np.random.default_rng(0)
 
 @pytest.fixture
 def chebtech_fixture():
-    """Create Chebtech2 object and test points for testing.
+    """Create Chebtech object and test points for testing.
 
-    This fixture creates a Chebtech2 object representing sin(30*x) with 100 coefficients
+    This fixture creates a Chebtech object representing sin(30*x) with 100 coefficients
     and an array of 100 random test points in the interval [-1, 1].
 
     Returns:
         dict: Dictionary containing:
-            ff: Chebtech2 object for sin(30*x)
+            ff: Chebtech object for sin(30*x)
             xx: Array of random test points
     """
-    ff = Chebtech2.initfun_fixedlen(lambda x: np.sin(30 * x), 100)
+    ff = Chebtech.initfun_fixedlen(lambda x: np.sin(30 * x), 100)
     xx = -1 + 2 * rng.random(100)
     return {"ff": ff, "xx": xx}
 
 
 # check the size() method is working properly
 def test_size():
-    """Test the size property of Chebtech2 objects.
+    """Test the size property of Chebtech objects.
 
     This test verifies that the size property correctly returns the number
-    of coefficients in the Chebtech2 object for various cases:
-    1. Empty Chebtech2 (should have size 0)
-    2. Constant Chebtech2 (should have size 1)
-    3. Chebtech2 with arbitrary coefficients (should match coefficient array size)
+    of coefficients in the Chebtech object for various cases:
+    1. Empty Chebtech (should have size 0)
+    2. Constant Chebtech (should have size 1)
+    3. Chebtech with arbitrary coefficients (should match coefficient array size)
     """
     cfs = rng.random(10)
-    assert Chebtech2(np.array([])).size == 0
-    assert Chebtech2(np.array([1.0])).size == 1
-    assert Chebtech2(cfs).size == cfs.size
+    assert Chebtech(np.array([])).size == 0
+    assert Chebtech(np.array([1.0])).size == 1
+    assert Chebtech(cfs).size == cfs.size
 
 
 # test the different permutations of self(xx, ..)
 def test_call(chebtech_fixture):
-    """Test basic function evaluation of Chebtech2 objects.
+    """Test basic function evaluation of Chebtech objects.
 
-    This test verifies that a Chebtech2 object can be called with an array of points
+    This test verifies that a Chebtech object can be called with an array of points
     to evaluate the function at those points.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object and points.
+        chebtech_fixture: Fixture providing test Chebtech object and points.
     """
     chebtech_fixture["ff"](chebtech_fixture["xx"])
 
@@ -66,12 +66,12 @@ def test_call(chebtech_fixture):
 def test_call_bary(chebtech_fixture):
     """Test function evaluation using barycentric interpolation.
 
-    This test verifies that a Chebtech2 object can be called with the 'bary' method
+    This test verifies that a Chebtech object can be called with the 'bary' method
     to evaluate the function using barycentric interpolation, both with positional
     and keyword arguments.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object and points.
+        chebtech_fixture: Fixture providing test Chebtech object and points.
     """
     chebtech_fixture["ff"](chebtech_fixture["xx"], "bary")
     chebtech_fixture["ff"](chebtech_fixture["xx"], how="bary")
@@ -80,12 +80,12 @@ def test_call_bary(chebtech_fixture):
 def test_call_clenshaw(chebtech_fixture):
     """Test function evaluation using Clenshaw's algorithm.
 
-    This test verifies that a Chebtech2 object can be called with the 'clenshaw' method
+    This test verifies that a Chebtech object can be called with the 'clenshaw' method
     to evaluate the function using Clenshaw's algorithm, both with positional
     and keyword arguments.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object and points.
+        chebtech_fixture: Fixture providing test Chebtech object and points.
     """
     chebtech_fixture["ff"](chebtech_fixture["xx"], "clenshaw")
     chebtech_fixture["ff"](chebtech_fixture["xx"], how="clenshaw")
@@ -94,12 +94,12 @@ def test_call_clenshaw(chebtech_fixture):
 def test_call_bary_vs_clenshaw(chebtech_fixture):
     """Test that barycentric and Clenshaw evaluation methods give similar results.
 
-    This test verifies that evaluating a Chebtech2 object using both the barycentric
+    This test verifies that evaluating a Chebtech object using both the barycentric
     and Clenshaw methods gives results that are close to each other within a specified
     tolerance.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object and points.
+        chebtech_fixture: Fixture providing test Chebtech object and points.
     """
     b = chebtech_fixture["ff"](chebtech_fixture["xx"], "clenshaw")
     c = chebtech_fixture["ff"](chebtech_fixture["xx"], "bary")
@@ -109,11 +109,11 @@ def test_call_bary_vs_clenshaw(chebtech_fixture):
 def test_call_raises(chebtech_fixture):
     """Test that invalid evaluation methods raise appropriate exceptions.
 
-    This test verifies that attempting to evaluate a Chebtech2 object with an
+    This test verifies that attempting to evaluate a Chebtech object with an
     invalid method name raises a ValueError, both with positional and keyword arguments.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object and points.
+        chebtech_fixture: Fixture providing test Chebtech object and points.
     """
     with pytest.raises(ValueError):
         chebtech_fixture["ff"](chebtech_fixture["xx"], "notamethod")
@@ -122,13 +122,13 @@ def test_call_raises(chebtech_fixture):
 
 
 def test_prolong(chebtech_fixture):
-    """Test the prolong method of Chebtech2 objects.
+    """Test the prolong method of Chebtech objects.
 
     This test verifies that the prolong method correctly changes the size of
-    a Chebtech2 object to the specified size for various target sizes.
+    a Chebtech object to the specified size for various target sizes.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object.
+        chebtech_fixture: Fixture providing test Chebtech object.
     """
     ff = chebtech_fixture["ff"]
     for k in [0, 1, 20, ff.size, 200]:
@@ -136,14 +136,14 @@ def test_prolong(chebtech_fixture):
 
 
 def test_copy(chebtech_fixture):
-    """Test the copy method of Chebtech2 objects.
+    """Test the copy method of Chebtech objects.
 
-    This test verifies that the copy method creates a new Chebtech2 object
+    This test verifies that the copy method creates a new Chebtech object
     that is equal to itself but not equal to the original, and that has
     the same coefficients as the original.
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object.
+        chebtech_fixture: Fixture providing test Chebtech object.
     """
     ff = chebtech_fixture["ff"]
     gg = ff.copy()
@@ -154,15 +154,15 @@ def test_copy(chebtech_fixture):
 
 
 def test_simplify(chebtech_fixture):
-    """Test the simplify method of Chebtech2 objects.
+    """Test the simplify method of Chebtech objects.
 
     This test verifies that the simplify method:
     1. Uses standard_chop to determine the new size
-    2. Creates a new Chebtech2 object with the chopped coefficients
+    2. Creates a new Chebtech object with the chopped coefficients
     3. Returns a copy of the coefficients, not a view
 
     Args:
-        chebtech_fixture: Fixture providing test Chebtech2 object.
+        chebtech_fixture: Fixture providing test Chebtech object.
     """
     ff = chebtech_fixture["ff"]
     gg = ff.simplify()
@@ -199,7 +199,7 @@ vscales = [
 def test_vscale(fun, n, vscale):
     """Test vscale estimates for various functions.
 
-    This test verifies that the vscale property of Chebtech2 objects
+    This test verifies that the vscale property of Chebtech objects
     correctly estimates the vertical scale of the function within
     a specified tolerance.
 
@@ -208,6 +208,6 @@ def test_vscale(fun, n, vscale):
         n: Number of points to use
         vscale: Expected vscale value
     """
-    ff = Chebtech2.initfun_fixedlen(fun, n)
+    ff = Chebtech.initfun_fixedlen(fun, n)
     absdiff = abs(ff.vscale - vscale)
     assert absdiff <= vscale

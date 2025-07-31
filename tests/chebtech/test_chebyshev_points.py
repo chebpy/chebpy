@@ -1,13 +1,13 @@
-"""Unit-tests for Chebtech2 Chebyshev points functionality.
+"""Unit-tests for Chebtech Chebyshev points functionality.
 
-This module contains tests for the Chebyshev points functionality in Chebtech2,
+This module contains tests for the Chebyshev points functionality in Chebtech,
 including the _chebpts method and the vals2coeffs and coeffs2vals transformations.
 """
 
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech2
+from chebpy.core.chebtech import Chebtech
 
 from ..utilities import eps, scaled_tol
 
@@ -15,8 +15,8 @@ from ..utilities import eps, scaled_tol
 rng = np.random.default_rng(0)
 
 # aliases
-_vals2coeffs = Chebtech2._vals2coeffs
-_coeffs2vals = Chebtech2._coeffs2vals
+_vals2coeffs = Chebtech._vals2coeffs
+_coeffs2vals = Chebtech._coeffs2vals
 
 
 def test_chebpts_0():
@@ -24,7 +24,7 @@ def test_chebpts_0():
 
     This test verifies that calling _chebpts with size 0 returns an empty array.
     """
-    assert Chebtech2._chebpts(0).size == 0
+    assert Chebtech._chebpts(0).size == 0
 
 
 def test_vals2coeffs_empty():
@@ -139,7 +139,7 @@ def test_chebpts_values(n, expected, tol):
         expected: Expected values of the Chebyshev points
         tol: Tolerance for the comparison
     """
-    actual = Chebtech2._chebpts(n)
+    actual = Chebtech._chebpts(n)
     assert np.max(np.abs(actual - expected)) <= tol
 
 
@@ -160,7 +160,7 @@ def test_chebpts_properties(k):
     Args:
         k: Number of Chebyshev points
     """
-    pts = Chebtech2._chebpts(k)
+    pts = Chebtech._chebpts(k)
     assert pts.size == k
     assert pts[0] == -1.0
     assert pts[-1] == 1.0

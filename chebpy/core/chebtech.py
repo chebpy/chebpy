@@ -2,7 +2,7 @@
 
 This module provides the Chebtech class, which is an abstract base class for
 representing functions using Chebyshev polynomial expansions. It serves as the
-foundation for the Chebtech2 class, which uses Chebyshev points of the second kind.
+foundation for the Chebtech class, which uses Chebyshev points of the second kind.
 
 The Chebtech classes implement core functionality for working with Chebyshev
 expansions, including:
@@ -42,7 +42,7 @@ from .utilities import Interval, coerce_list
 
 
 class Chebtech(Smoothfun, ABC):
-    """Abstract base class serving as the template for Chebtech1 and Chebtech2 subclasses.
+    """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
     of the core operational functionality is defined this level.
@@ -539,25 +539,31 @@ class Chebtech(Smoothfun, ABC):
             out = self.__class__(zk, interval=self.interval)
         return out
 
-    # ---------------------------------
-    #  subclasses must implement these
-    # ---------------------------------
-    @abstractmethod
-    def _chebpts(self):  # pragma: no cover
-        raise NotImplementedError
+    @staticmethod
+    def _chebpts(n):
+        """Return n Chebyshev points of the second-kind."""
+        return chebpts2(n)
 
-    @abstractmethod
-    def _barywts(self):  # pragma: no cover
-        raise NotImplementedError
+    @staticmethod
+    def _barywts(n):
+        """Barycentric weights for Chebyshev points of 2nd kind."""
+        return barywts2(n)
 
-    @abstractmethod
-    def _vals2coeffs(self):  # pragma: no cover
-        raise NotImplementedError
+    @staticmethod
+    def _vals2coeffs(vals):
+        """Map function values at Chebyshev points of 2nd kind.
 
-    @abstractmethod
-    def _coeffs2vals(self):  # pragma: no cover
-        raise NotImplementedError
+        Converts values at Chebyshev points of 2nd kind to first-kind Chebyshev polynomial coefficients.
+        """
+        return vals2coeffs2(vals)
 
+    @staticmethod
+    def _coeffs2vals(coeffs):
+        """Map first-kind Chebyshev polynomial coefficients.
+
+        Converts first-kind Chebyshev polynomial coefficients to function values at Chebyshev points of 2nd kind.
+        """
+        return coeffs2vals2(coeffs)
 
     # ----------
     #  plotting
@@ -587,33 +593,3 @@ class Chebtech(Smoothfun, ABC):
         """
         ax = ax or plt.gca()
         return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
-
-
-class Chebtech2(Chebtech):
-    """Second-Kind Chebyshev technology."""
-
-    @staticmethod
-    def _chebpts(n):
-        """Return n Chebyshev points of the second-kind."""
-        return chebpts2(n)
-
-    @staticmethod
-    def _barywts(n):
-        """Barycentric weights for Chebyshev points of 2nd kind."""
-        return barywts2(n)
-
-    @staticmethod
-    def _vals2coeffs(vals):
-        """Map function values at Chebyshev points of 2nd kind.
-
-        Converts values at Chebyshev points of 2nd kind to first-kind Chebyshev polynomial coefficients.
-        """
-        return vals2coeffs2(vals)
-
-    @staticmethod
-    def _coeffs2vals(coeffs):
-        """Map first-kind Chebyshev polynomial coefficients.
-
-        Converts first-kind Chebyshev polynomial coefficients to function values at Chebyshev points of 2nd kind.
-        """
-        return coeffs2vals2(coeffs)
