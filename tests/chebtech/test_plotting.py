@@ -10,8 +10,8 @@ import pytest
 
 from chebpy.core.chebtech import Chebtech2
 
-from ..utilities import cos, joukowsky, sin
-
+from ..utilities import cos, sin
+from ..generic.plotting import test_plot, test_plot_complex   # noqa: F401
 
 @pytest.fixture
 def plotting_fixtures():
@@ -42,38 +42,6 @@ def plotting_fixtures():
     return {"f0": f0, "f1": f1, "f2": f2}
 
 
-def test_plot(plotting_fixtures):
-    """Test the plot method of Chebtech2.
-
-    This test verifies that the plot method of a Chebtech2 object
-    can be called without errors. It creates a matplotlib figure and
-    axes, then calls the plot method with the axes as an argument.
-
-    Args:
-        plotting_fixtures: Fixture providing test Chebtech2 objects.
-    """
-    fig, ax = plt.subplots()
-    plotting_fixtures["f0"].plot(ax=ax)
-
-
-def test_plot_complex(plotting_fixtures):
-    """Test plotting complex Chebtech2 objects.
-
-    This test verifies that complex Chebtech2 objects can be plotted
-    without errors. It creates a matplotlib figure and axes, then
-    plots Bernstein ellipses by applying the joukowsky function to
-    scaled versions of a complex Chebtech2 object.
-
-    Args:
-        plotting_fixtures: Fixture providing test Chebtech2 objects.
-    """
-    fig, ax = plt.subplots()
-    # plot Bernstein ellipses
-    for rho in np.arange(1.1, 2, 0.1):
-        joukowsky(rho * plotting_fixtures["f2"]).plot(ax=ax)
-
-
-@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
 def test_plotcoeffs(plotting_fixtures):
     """Test the plotcoeffs method of Chebtech2.
 

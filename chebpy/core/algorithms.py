@@ -12,9 +12,9 @@ in Trefethen's "Approximation Theory and Approximation Practice".
 import warnings
 
 import numpy as np
+from numpy.fft import fft, ifft
 
 from .decorators import preandpostprocess
-from .ffts import fft, ifft
 from .settings import _preferences as prefs
 from .utilities import Interval, infnorm
 

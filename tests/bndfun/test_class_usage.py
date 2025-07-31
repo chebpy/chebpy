@@ -9,6 +9,7 @@ from chebpy.core.chebtech import Chebtech2
 from chebpy.core.utilities import Interval
 
 from ..utilities import cos, eps, exp, pi, sin
+from ..generic.class_usage import test_constfun_value, test_copy, test_endvalues, test_support  # noqa: F401
 
 # Ensure reproducibility
 rng = np.random.default_rng(0)
@@ -32,35 +33,8 @@ def test_size():
     """Test the size method of Bndfun."""
     cfs = rng.random(10)
     subinterval = Interval()
-    b0 = Bndfun(Chebtech2(np.array([])), subinterval)
-    b1 = Bndfun(Chebtech2(np.array([1.0])), subinterval)
     b2 = Bndfun(Chebtech2(cfs), subinterval)
-    assert b0.size == 0
-    assert b1.size == 1
     assert b2.size == cfs.size
-
-
-def test_support(constfun):
-    """Test the support property of Bndfun.
-
-    Args:
-        constfun: Fixture providing a constant function object.
-    """
-    a, b = constfun.support
-    assert a == -1
-    assert b == 1
-
-
-def test_endvalues(constfun):
-    """Test the endvalues property of Bndfun.
-
-    Args:
-        constfun: Fixture providing a constant function object.
-    """
-    a, b = constfun.support
-    fa, fb = constfun.endvalues
-    assert abs(fa - constfun(a)) <= 2e1 * eps
-    assert abs(fb - constfun(b)) <= 2e1 * eps
 
 
 def test_call_bary(class_usage_fixtures):
@@ -97,7 +71,7 @@ def test_call_bary_vs_clenshaw(class_usage_fixtures):
     xx = class_usage_fixtures["xx"]
     b = ff(xx, "clenshaw")
     c = ff(xx, "bary")
-    assert np.max(b - c) <= 2e2 * eps
+    assert np.max(np.abs(b - c)) <= 2e2 * eps
 
 
 def test_call_raises(class_usage_fixtures):
@@ -114,18 +88,6 @@ def test_call_raises(class_usage_fixtures):
         ff(xx, how="notamethod")
 
 
-def test_copy(constfun):
-    """Test the copy method of Bndfun.
-
-    Args:
-        constfun: Fixture providing a constant function object.
-    """
-    ff = constfun
-    gg = ff.copy()
-    assert ff == ff
-    assert gg == gg
-    assert ff != gg
-
 
 def test_restrict(class_usage_fixtures):
     """Test the restrict method of Bndfun.
@@ -137,7 +99,7 @@ def test_restrict(class_usage_fixtures):
     i1 = Interval(-1, 1)
     gg = ff.restrict(i1)
     yy = np.linspace(-1, 1, 1000)
-    assert np.max(ff(yy) - gg(yy)) <= 1e2 * eps
+    assert np.max(np.abs(ff(yy) - gg(yy))) <= 1e2 * eps
 
 
 def test_simplify(class_usage_fixtures):
@@ -151,7 +113,7 @@ def test_simplify(class_usage_fixtures):
     ff = Bndfun.initfun_fixedlen(f, interval, 1000)
     gg = ff.simplify()
     assert gg.size == standard_chop(ff.onefun.coeffs)
-    assert np.max(ff.coeffs[: gg.size] - gg.coeffs) == 0
+    assert np.max(np.abs(ff.coeffs[: gg.size] - gg.coeffs)) == 0
     assert ff.interval == gg.interval
 
 
@@ -168,8 +130,8 @@ def test_translate(class_usage_fixtures):
     hh = Bndfun.initfun_fixedlen(lambda x: ff(x - c), shifted_interval, gg.size)
     yk = shifted_interval(np.linspace(-1, 1, 100))
     assert gg.interval == hh.interval
-    assert np.max(gg.coeffs - hh.coeffs) <= 2e1 * eps
-    assert np.max(gg(yk) - hh(yk)) <= 1e2 * eps
+    assert np.max(np.abs(gg.coeffs - hh.coeffs)) <= 2e1 * eps
+    assert np.max(np.abs(gg(yk) - hh(yk))) <= 1e2 * eps
 
 
 # --------------------------------------

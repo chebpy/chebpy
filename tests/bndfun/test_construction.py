@@ -23,23 +23,6 @@ def test_onefun_construction():
     assert np.max(f.coeffs - coeffs) < eps
 
 
-def test_const_construction(constfun):
-    """Test construction of a constant Bndfun."""
-    assert constfun.size == 1
-    assert constfun.isconst
-    assert not constfun.isempty
-
-
-def test_empty_construction():
-    """Test construction of an empty Bndfun."""
-    ff = Bndfun.initempty()
-    assert ff.size == 0
-    assert not ff.isconst
-    assert ff.isempty
-    with pytest.raises(TypeError):
-        Bndfun.initempty([1.0])
-
-
 def test_identity_construction():
     """Test construction of an identity Bndfun."""
     for a, b in [(-1, 1), (-10, -2), (-2.3, 1.24), (20, 2000)]:

@@ -18,6 +18,7 @@ and Chebfun, rather than being used directly by end users.
 
 from abc import ABC, abstractmethod
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .algorithms import (
@@ -34,7 +35,7 @@ from .algorithms import (
     vals2coeffs2,
 )
 from .decorators import self_empty
-from .plotting import import_plt, plotfun, plotfuncoeffs
+from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
 from .smoothfun import Smoothfun
 from .utilities import Interval, coerce_list
@@ -561,40 +562,39 @@ class Chebtech(Smoothfun, ABC):
 # ----------
 #  plotting
 # ----------
+def plot(self, ax=None, **kwargs):
+    """Plot the Chebtech on the interval [-1, 1].
 
-plt = import_plt()
-if plt:
+    Args:
+        self (Chebtech): The Chebtech object to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+        **kwargs: Additional keyword arguments to pass to the plot function.
 
-    def plot(self, ax=None, **kwargs):
-        """Plot the Chebtech on the interval [-1, 1].
+    Returns:
+        matplotlib.lines.Line2D: The line object created by the plot.
+    """
+    return plotfun(self, (-1, 1), ax=ax, **kwargs)
 
-        Args:
-            self (Chebtech): The Chebtech object to plot.
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-            **kwargs: Additional keyword arguments to pass to the plot function.
 
-        Returns:
-            matplotlib.lines.Line2D: The line object created by the plot.
-        """
-        return plotfun(self, (-1, 1), ax=ax, **kwargs)
+setattr(Chebtech, "plot", plot)
 
-    setattr(Chebtech, "plot", plot)
 
-    def plotcoeffs(self, ax=None, **kwargs):
-        """Plot the absolute values of the Chebyshev coefficients.
+def plotcoeffs(self, ax=None, **kwargs):
+    """Plot the absolute values of the Chebyshev coefficients.
 
-        Args:
-            self (Chebtech): The Chebtech object whose coefficients to plot.
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-            **kwargs: Additional keyword arguments to pass to the plot function.
+    Args:
+        self (Chebtech): The Chebtech object whose coefficients to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+        **kwargs: Additional keyword arguments to pass to the plot function.
 
-        Returns:
-            matplotlib.lines.Line2D: The line object created by the plot.
-        """
-        ax = ax or plt.gca()
-        return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
+    Returns:
+        matplotlib.lines.Line2D: The line object created by the plot.
+    """
+    ax = ax or plt.gca()
+    return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
 
-    setattr(Chebtech, "plotcoeffs", plotcoeffs)
+
+setattr(Chebtech, "plotcoeffs", plotcoeffs)
 
 
 class Chebtech2(Chebtech):

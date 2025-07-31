@@ -34,7 +34,7 @@ def test_initvalues():
         vals = rng.random(n)
         fun = Chebtech2.initvalues(vals)
         cfs = Chebtech2._vals2coeffs(vals)
-        assert np.max(fun.coeffs - cfs) == 0.0
+        assert np.max(np.abs(fun.coeffs - cfs)) == 0.0
 
 
 def test_initidentity():
@@ -45,7 +45,7 @@ def test_initidentity():
     """
     x = Chebtech2.initidentity()
     s = -1 + 2 * rng.random(10000)
-    assert np.max(s - x(s)) == 0.0
+    assert np.max(np.abs(s - x(s))) == 0.0
 
 
 def test_coeff_construction():
@@ -58,7 +58,7 @@ def test_coeff_construction():
     coeffs = rng.random(10)
     f = Chebtech2(coeffs)
     assert isinstance(f, Chebtech2)
-    assert np.max(f.coeffs - coeffs) < eps
+    assert np.max(np.abs(f.coeffs - coeffs)) < eps
 
 
 # Test adaptive function construction

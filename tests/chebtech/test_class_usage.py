@@ -103,7 +103,7 @@ def test_call_bary_vs_clenshaw(chebtech_fixture):
     """
     b = chebtech_fixture["ff"](chebtech_fixture["xx"], "clenshaw")
     c = chebtech_fixture["ff"](chebtech_fixture["xx"], "bary")
-    assert np.max(b - c) <= 5e1 * eps
+    assert np.max(np.abs(b - c)) <= 5e1 * eps
 
 
 def test_call_raises(chebtech_fixture):
@@ -150,7 +150,7 @@ def test_copy(chebtech_fixture):
     assert ff == ff
     assert gg == gg
     assert ff != gg
-    assert np.max(ff.coeffs - gg.coeffs) == 0
+    assert np.max(np.abs(ff.coeffs - gg.coeffs)) == 0
 
 
 def test_simplify(chebtech_fixture):
@@ -168,7 +168,7 @@ def test_simplify(chebtech_fixture):
     gg = ff.simplify()
     # check that simplify is calling standard_chop underneath
     assert gg.size == standard_chop(ff.coeffs)
-    assert np.max(ff.coeffs[: gg.size] - gg.coeffs) == 0
+    assert np.max(np.abs(ff.coeffs[: gg.size] - gg.coeffs)) == 0
     # check we are returned a copy of self's coeffcients by changing
     # one entry of gg
     fcfs = ff.coeffs

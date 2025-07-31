@@ -9,93 +9,27 @@ import pytest
 
 from chebpy.core.chebfun import Chebfun
 
-from ..generic.roots import test_empty  # noqa: F401
-from ..utilities import cos, pi, sin
+from ..generic.roots import test_empty, rootstestfuns  # noqa: F401
+from ..utilities import pi, sin
 
 
-@pytest.fixture
-def roots_fixtures():
-    """Create Chebfun objects for testing roots functionality.
+@pytest.mark.parametrize("f, roots", rootstestfuns)
+def test_roots(f, roots):
+    """Test that the roots of a function are correctly identified.
 
-    This fixture creates several Chebfun objects with different characteristics
-    for testing the roots method.
-
-    Returns:
-        dict: Dictionary containing:
-            f1: Chebfun representing sin(x)
-            f2: Chebfun representing cos(x)
-            f3: Chebfun representing x^2 - 0.25
-            f4: Chebfun representing x^3 - x
-    """
-    f1 = Chebfun.initfun_adaptive(sin, [-1, 1])
-    f2 = Chebfun.initfun_adaptive(cos, [0, 2])
-    f3 = Chebfun.initfun_adaptive(lambda x: x**2 - 0.25, [-1, 1])
-    f4 = Chebfun.initfun_adaptive(lambda x: x**3 - x, [-1, 1])
-
-    return {"f1": f1, "f2": f2, "f3": f3, "f4": f4}
-
-
-def test_roots_sin(roots_fixtures):
-    """Test roots method on sin(x).
-
-    This test verifies that the roots method correctly identifies
-    the roots of sin(x) in the interval [-1, 1].
+    This test verifies that the roots() method of a Chebtech2 object
+    correctly identifies the roots of various functions within the
+    specified tolerance.
 
     Args:
-        roots_fixtures: Fixture providing test Chebfun objects.
+        f: Function to find roots of
+        roots: Expected roots
+        tol: Tolerance for comparison
     """
-    f1 = roots_fixtures["f1"]
-    roots = f1.roots()
-    assert roots.size == 1
-    assert abs(roots[0]) < 1e-10  # sin(0) = 0
+    ff = Chebfun.initfun_adaptive(f)
+    rts = ff.roots()
+    assert np.max(np.abs(rts - roots)) <= 1e-15
 
-
-def test_roots_cos(roots_fixtures):
-    """Test roots method on cos(x).
-
-    This test verifies that the roots method correctly identifies
-    the roots of cos(x) in the interval [-1, 1].
-
-    Args:
-        roots_fixtures: Fixture providing test Chebfun objects.
-    """
-    f2 = roots_fixtures["f2"]
-    roots = f2.roots()
-    assert roots.size == 1
-    assert abs(roots[0] - pi / 2) < 1e-10  # cos(pi/2) = 0
-
-
-def test_roots_quadratic(roots_fixtures):
-    """Test roots method on a quadratic function.
-
-    This test verifies that the roots method correctly identifies
-    the roots of x^2 - 0.25 in the interval [-1, 1].
-
-    Args:
-        roots_fixtures: Fixture providing test Chebfun objects.
-    """
-    f3 = roots_fixtures["f3"]
-    roots = f3.roots()
-    assert roots.size == 2
-    assert abs(roots[0] + 0.5) < 1e-10  # x = -0.5
-    assert abs(roots[1] - 0.5) < 1e-10  # x = 0.5
-
-
-def test_roots_cubic(roots_fixtures):
-    """Test roots method on a cubic function.
-
-    This test verifies that the roots method correctly identifies
-    the roots of x^3 - x in the interval [-1, 1].
-
-    Args:
-        roots_fixtures: Fixture providing test Chebfun objects.
-    """
-    f4 = roots_fixtures["f4"]
-    roots = f4.roots()
-    assert roots.size == 3
-    assert abs(roots[0] + 1) < 1e-10  # x = -1
-    assert abs(roots[1]) < 1e-10  # x = 0
-    assert abs(roots[2] - 1) < 1e-10  # x = 1
 
 
 def test_roots_const():

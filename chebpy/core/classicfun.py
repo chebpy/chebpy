@@ -6,13 +6,14 @@ by mapping them to a standard domain [-1, 1] and using a Onefun representation.
 
 from abc import ABC
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .chebtech import Chebtech2
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
 from .fun import Fun
-from .plotting import import_plt, plotfun
+from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
 
@@ -416,28 +417,25 @@ class Classicfun(Fun, ABC):
 # ----------
 #  plotting
 # ----------
+def plot(self, ax=None, **kwds):
+    """Plot the function over its interval of definition.
 
-plt = import_plt()
-if plt:
+    This method plots the function over its interval of definition using matplotlib.
+    For complex-valued functions, it plots the real part against the imaginary part.
 
-    def plot(self, ax=None, **kwds):
-        """Plot the function over its interval of definition.
+    Args:
+        self (Classicfun): The function to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+            a new axes will be created. Defaults to None.
+        **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
-        This method plots the function over its interval of definition using matplotlib.
-        For complex-valued functions, it plots the real part against the imaginary part.
+    Returns:
+        matplotlib.axes.Axes: The axes on which the plot was created.
+    """
+    return plotfun(self, self.support, ax=ax, **kwds)
 
-        Args:
-            self (Classicfun): The function to plot.
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
-                a new axes will be created. Defaults to None.
-            **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
-        Returns:
-            matplotlib.axes.Axes: The axes on which the plot was created.
-        """
-        return plotfun(self, self.support, ax=ax, **kwds)
-
-    setattr(Classicfun, "plot", plot)
+setattr(Classicfun, "plot", plot)
 
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is

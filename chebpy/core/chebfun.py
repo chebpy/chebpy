@@ -11,12 +11,13 @@ similar functionality for working with functions rather than numbers.
 
 import operator
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .bndfun import Bndfun
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, SupportMismatch
-from .plotting import import_plt, plotfun
+from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Domain, check_funs, compute_breakdata, generate_funs
 
@@ -879,51 +880,50 @@ class Chebfun:
 # ----------
 #  plotting
 # ----------
+def plot(self, ax=None, **kwds):
+    """Plot the Chebfun over its domain.
 
-plt = import_plt()
-if plt:
+    This method plots the Chebfun over its domain using matplotlib.
+    For complex-valued Chebfuns, it plots the real part against the imaginary part.
 
-    def plot(self, ax=None, **kwds):
-        """Plot the Chebfun over its domain.
+    Args:
+        self (Chebfun): The Chebfun object to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+            a new axes will be created. Defaults to None.
+        **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
-        This method plots the Chebfun over its domain using matplotlib.
-        For complex-valued Chebfuns, it plots the real part against the imaginary part.
+    Returns:
+        matplotlib.axes.Axes: The axes on which the plot was created.
+    """
+    return plotfun(self, self.support, ax=ax, **kwds)
 
-        Args:
-            self (Chebfun): The Chebfun object to plot.
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
-                a new axes will be created. Defaults to None.
-            **kwds: Additional keyword arguments to pass to matplotlib's plot function.
 
-        Returns:
-            matplotlib.axes.Axes: The axes on which the plot was created.
-        """
-        return plotfun(self, self.support, ax=ax, **kwds)
+setattr(Chebfun, "plot", plot)
 
-    setattr(Chebfun, "plot", plot)
 
-    def plotcoeffs(self, ax=None, **kwds):
-        """Plot the coefficients of the Chebfun on a semilogy scale.
+def plotcoeffs(self, ax=None, **kwds):
+    """Plot the coefficients of the Chebfun on a semilogy scale.
 
-        This method plots the absolute values of the coefficients for each piece
-        of the Chebfun on a semilogy scale, which is useful for visualizing the
-        decay of coefficients in the Chebyshev series.
+    This method plots the absolute values of the coefficients for each piece
+    of the Chebfun on a semilogy scale, which is useful for visualizing the
+    decay of coefficients in the Chebyshev series.
 
-        Args:
-            self (Chebfun): The Chebfun object whose coefficients to plot.
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
-                a new axes will be created. Defaults to None.
-            **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
+    Args:
+        self (Chebfun): The Chebfun object whose coefficients to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+            a new axes will be created. Defaults to None.
+        **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
 
-        Returns:
-            matplotlib.axes.Axes: The axes on which the plot was created.
-        """
-        ax = ax or plt.gca()
-        for fun in self:
-            fun.plotcoeffs(ax=ax, **kwds)
-        return ax
+    Returns:
+        matplotlib.axes.Axes: The axes on which the plot was created.
+    """
+    ax = ax or plt.gca()
+    for fun in self:
+        fun.plotcoeffs(ax=ax, **kwds)
+    return ax
 
-    setattr(Chebfun, "plotcoeffs", plotcoeffs)
+
+setattr(Chebfun, "plotcoeffs", plotcoeffs)
 
 
 # ---------

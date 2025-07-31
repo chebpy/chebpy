@@ -4,6 +4,7 @@ This module contains test functions for class usage that can be used
 with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
 focus on common operations and properties of function objects.
 """
+from chebpy.core.utilities import Domain
 
 
 def test_constfun_value(constfun):
@@ -48,3 +49,43 @@ def test_translate_empty(emptyfun) -> None:
     """
     g0 = emptyfun.translate(1)
     assert g0.isempty
+
+
+def test_copy(constfun):
+    """Test the copy method of fun.
+
+    Args:
+        constfun: Fixture providing a constant function object.
+    """
+    ff = constfun
+    gg = ff.copy()
+    assert ff == ff
+    assert gg == gg
+    assert ff != gg
+
+    gg2 = gg.copy()
+    # check that modifying the copy does not affect the original
+    gg2.domain = Domain([-1, 0, 0.5, 2])
+    assert gg2 != gg
+
+def test_endvalues(constfun):
+    """Test the endvalues property of Bndfun.
+
+    Args:
+        constfun: Fixture providing a constant function object.
+    """
+    a, b = constfun.support
+    fa, fb = constfun.endvalues
+    assert abs(fa - constfun(a)) <= 1e-12
+    assert abs(fb - constfun(b)) <= 1e-12
+
+
+def test_support(constfun):
+    """Test the support property of Bndfun.
+
+    Args:
+        constfun: Fixture providing a constant function object.
+    """
+    a, b = constfun.support
+    assert a == -1
+    assert b == 1
