@@ -1,7 +1,7 @@
 """Implementation of the Classicfun class for functions on arbitrary intervals.
 
 This module provides the Classicfun class, which represents functions on arbitrary intervals
-by mapping them to a standard domain [-1, 1] and using a Onefun representation.
+by mapping them to a standard domain [-1, 1] and using a representation based on BaseFun.
 """
 
 from abc import ABC
@@ -12,7 +12,7 @@ import numpy as np
 from .chebtech import Chebtech
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
-from .fun import Fun
+from .basefun import BaseFun
 from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
@@ -22,17 +22,71 @@ techdict = {
 }
 
 
-class Classicfun(Fun, ABC):
+class Classicfun(BaseFun, ABC):
     """Abstract base class for functions defined on arbitrary intervals using a mapped representation.
 
-    This class implements the Fun interface for functions defined on arbitrary intervals
-    by mapping them to a standard domain [-1, 1] and using a Onefun representation
+    This class implements the BaseFun interface for functions defined on arbitrary intervals
+    by mapping them to a standard domain [-1, 1] and using a representation
     (such as Chebtech) on that standard domain.
 
     The Classicfun class serves as a base class for specific implementations like Bndfun.
     It handles the mapping between the arbitrary interval and the standard domain,
-    delegating the actual function representation to the underlying Onefun object.
+    delegating the actual function representation to the underlying representation object.
     """
+
+    @classmethod
+    def initfun(cls, f, interval=None, n=None):
+        """Initialize from a callable function.
+
+        This is a general constructor that delegates to either initfun_adaptive
+        or initfun_fixedlen based on the provided parameters.
+
+        Args:
+            f (callable): The function to be approximated.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
+            n (int, optional): If provided, specifies the number of points to use.
+                If None, determines the number adaptively.
+
+        Returns:
+            BaseFun: A new instance representing the function f.
+        """
+        if n is None:
+            return cls.initfun_adaptive(f, interval)
+        else:
+            return cls.initfun_fixedlen(f, interval, n)
+
+    @classmethod
+    def initvalues(cls, values, interval=None):
+        """Initialize from function values at Chebyshev points.
+
+        This constructor creates a function representation from values
+        at Chebyshev points.
+
+        Args:
+            values: Function values at Chebyshev points.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
+
+        Returns:
+            BaseFun: A new instance representing the function with the given values.
+        """
+        onefun = techdict[prefs.tech].initvalues(values, interval=interval)
+        return cls(onefun, interval or Interval())
+
+    def prolong(self, n):
+        """Extend the function representation to a larger size.
+
+        This method extends the function representation to use more coefficients
+        or a higher degree, which can be useful for certain operations.
+
+        Args:
+            n (int): The new size for the function representation.
+
+        Returns:
+            BaseFun: A new function with an extended representation.
+        """
+        return self.__class__(self.onefun.prolong(n), self.interval)
 
     # --------------------------
     #  alternative constructors

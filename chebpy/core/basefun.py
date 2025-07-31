@@ -1,24 +1,27 @@
-"""Abstract base class for functions defined on the standard interval [-1, 1].
+"""Abstract base class for functions in ChebPy.
 
-This module provides the Onefun abstract base class, which defines the interface for
-all function representations on the standard interval [-1, 1] in ChebPy. It specifies
-the methods and properties that concrete function classes must implement.
+This module provides the BaseFun abstract base class, which defines the interface for
+all function representations in ChebPy. It specifies the methods and properties that
+concrete function classes must implement.
 
-The Onefun class serves as the foundation for representing functions on the standard
-interval, with concrete implementations like Chebtech inheriting from it. Functions
-defined on arbitrary intervals are typically mapped to this standard interval for
-internal representation and manipulation.
+The BaseFun class serves as the foundation for the function class hierarchy in ChebPy,
+with concrete implementations inheriting from it. It defines a comprehensive interface
+for working with function representations, including algebraic operations, calculus
+operations, and utility functions.
+
+This class replaces the previous separate Fun and Onefun classes, merging their
+functionality into a single base class.
 """
 
 from abc import ABC, abstractmethod
 
 
-class Onefun(ABC):
-    """Abstract base class for functions defined on the interval [-1, 1].
+class BaseFun(ABC):
+    """Abstract base class for functions in ChebPy.
 
-    This class defines the interface for all function representations on the
-    standard interval [-1, 1]. It serves as the base class for specific
-    implementations like Chebtech.
+    This class defines the interface for all function representations in ChebPy.
+    It serves as the base class for specific implementations like Chebtech, Bndfun,
+    and Classicfun.
 
     Concrete subclasses must implement all the abstract methods defined here,
     which include constructors, algebraic operations, calculus operations,
@@ -30,17 +33,19 @@ class Onefun(ABC):
     # --------------------------
     @classmethod
     @abstractmethod
-    def initconst(cls):  # pragma: no cover
+    def initconst(cls, c, interval=None):  # pragma: no cover
         """Initialize a constant function.
 
         This constructor creates a function that represents a constant value
-        on the interval [-1, 1].
+        on the specified interval.
 
         Args:
             c: The constant value.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
 
         Returns:
-            Onefun: A new instance representing the constant function f(x) = c.
+            BaseFun: A new instance representing the constant function f(x) = c.
         """
         raise NotImplementedError
 
@@ -53,26 +58,30 @@ class Onefun(ABC):
         useful as a placeholder or for special cases.
 
         Returns:
-            Onefun: A new empty instance.
+            BaseFun: A new empty instance.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def initidentity(cls):  # pragma: no cover
+    def initidentity(cls, interval=None):  # pragma: no cover
         """Initialize the identity function f(x) = x.
 
         This constructor creates a function that represents f(x) = x
-        on the interval [-1, 1].
+        on the specified interval.
+
+        Args:
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
 
         Returns:
-            Onefun: A new instance representing the identity function.
+            BaseFun: A new instance representing the identity function.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def initfun(cls):  # pragma: no cover
+    def initfun(cls, f, interval=None, n=None):  # pragma: no cover
         """Initialize from a callable function.
 
         This is a general constructor that delegates to either initfun_adaptive
@@ -80,17 +89,19 @@ class Onefun(ABC):
 
         Args:
             f (callable): The function to be approximated.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
             n (int, optional): If provided, specifies the number of points to use.
                 If None, determines the number adaptively.
 
         Returns:
-            Onefun: A new instance representing the function f.
+            BaseFun: A new instance representing the function f.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def initfun_adaptive(cls):  # pragma: no cover
+    def initfun_adaptive(cls, f, interval=None):  # pragma: no cover
         """Initialize from a callable function using adaptive sampling.
 
         This constructor determines the appropriate number of points needed to
@@ -98,15 +109,17 @@ class Onefun(ABC):
 
         Args:
             f (callable): The function to be approximated.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
 
         Returns:
-            Onefun: A new instance representing the function f.
+            BaseFun: A new instance representing the function f.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def initfun_fixedlen(cls):  # pragma: no cover
+    def initfun_fixedlen(cls, f, n, interval=None):  # pragma: no cover
         """Initialize from a callable function using a fixed number of points.
 
         This constructor uses a specified number of points to represent the function,
@@ -115,15 +128,17 @@ class Onefun(ABC):
         Args:
             f (callable): The function to be approximated.
             n (int): The number of points to use.
+            interval: The interval on which to define the function.
+                If None, the standard interval [-1, 1] is used.
 
         Returns:
-            Onefun: A new instance representing the function f.
+            BaseFun: A new instance representing the function f.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def initvalues(cls):  # pragma: no cover
+    def initvalues(cls, values):  # pragma: no cover
         """Initialize from function values at Chebyshev points.
 
         This constructor creates a function representation from values
@@ -133,13 +148,28 @@ class Onefun(ABC):
             values: Function values at Chebyshev points.
 
         Returns:
-            Onefun: A new instance representing the function with the given values.
+            BaseFun: A new instance representing the function with the given values.
         """
         raise NotImplementedError
 
     # -------------------
     #  "private" methods
     # -------------------
+    @abstractmethod
+    def __add__(self, other):  # pragma: no cover
+        """Add this function with another function or a scalar.
+
+        This method implements the addition operation between this function
+        and another function or a scalar.
+
+        Args:
+            other (BaseFun or scalar): The function or scalar to add to this function.
+
+        Returns:
+            BaseFun: A new function representing the sum.
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def __call__(self, x):  # pragma: no cover
         """Evaluate the function at points x.
@@ -148,7 +178,6 @@ class Onefun(ABC):
 
         Args:
             x (float or array-like): Points at which to evaluate the function.
-                These should be in the interval [-1, 1].
 
         Returns:
             float or array-like: The value(s) of the function at the specified point(s).
@@ -158,40 +187,10 @@ class Onefun(ABC):
 
     @abstractmethod
     def __init__(self):  # pragma: no cover
-        """Initialize a new Onefun instance.
+        """Initialize a new BaseFun instance.
 
-        This method initializes a new function representation on the interval [-1, 1].
+        This method initializes a new function representation.
         The specific initialization depends on the concrete subclass implementation.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def __repr__(self):  # pragma: no cover
-        """Return a string representation of the function.
-
-        This method returns a string representation of the function that includes
-        relevant information about its representation.
-
-        Returns:
-            str: A string representation of the function.
-        """
-        raise NotImplementedError
-
-    # ----------------
-    #    algebra
-    # ----------------
-    @abstractmethod
-    def __add__(self, other):  # pragma: no cover
-        """Add this function with another function or a scalar.
-
-        This method implements the addition operation between this function
-        and another function or a scalar.
-
-        Args:
-            other (Onefun or scalar): The function or scalar to add to this function.
-
-        Returns:
-            Onefun: A new function representing the sum.
         """
         raise NotImplementedError
 
@@ -203,10 +202,10 @@ class Onefun(ABC):
         and another function or a scalar.
 
         Args:
-            other (Onefun or scalar): The function or scalar to multiply with this function.
+            other (BaseFun or scalar): The function or scalar to multiply with this function.
 
         Returns:
-            Onefun: A new function representing the product.
+            BaseFun: A new function representing the product.
         """
         raise NotImplementedError
 
@@ -217,7 +216,7 @@ class Onefun(ABC):
         This method implements the unary negation operation for this function.
 
         Returns:
-            Onefun: A new function representing -f(x).
+            BaseFun: A new function representing -f(x).
         """
         raise NotImplementedError
 
@@ -228,7 +227,7 @@ class Onefun(ABC):
         This method implements the unary plus operation for this function.
 
         Returns:
-            Onefun: This function object (unchanged).
+            BaseFun: This function object (unchanged).
         """
         raise NotImplementedError
 
@@ -239,10 +238,10 @@ class Onefun(ABC):
         This method implements the power operation for this function.
 
         Args:
-            power (int, float, or Onefun): The exponent to which this function is raised.
+            power (int, float, or BaseFun): The exponent to which this function is raised.
 
         Returns:
-            Onefun: A new function representing f(x)^power.
+            BaseFun: A new function representing f(x)^power.
         """
         raise NotImplementedError
 
@@ -254,10 +253,22 @@ class Onefun(ABC):
         i.e., other + self.
 
         Args:
-            other (scalar or Onefun): The scalar or function to add to this function.
+            other (scalar or BaseFun): The scalar or function to add to this function.
 
         Returns:
-            Onefun: A new function representing the sum.
+            BaseFun: A new function representing the sum.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def __repr__(self):  # pragma: no cover
+        """Return a string representation of the function.
+
+        This method returns a string representation of the function that includes
+        relevant information about its representation and interval.
+
+        Returns:
+            str: A string representation of the function.
         """
         raise NotImplementedError
 
@@ -269,10 +280,10 @@ class Onefun(ABC):
         i.e., other * self.
 
         Args:
-            other (scalar or Onefun): The scalar or function to multiply with this function.
+            other (scalar or BaseFun): The scalar or function to multiply with this function.
 
         Returns:
-            Onefun: A new function representing the product.
+            BaseFun: A new function representing the product.
         """
         raise NotImplementedError
 
@@ -284,10 +295,10 @@ class Onefun(ABC):
         i.e., other - self.
 
         Args:
-            other (scalar or Onefun): The scalar or function from which to subtract this function.
+            other (scalar or BaseFun): The scalar or function from which to subtract this function.
 
         Returns:
-            Onefun: A new function representing the difference.
+            BaseFun: A new function representing the difference.
         """
         raise NotImplementedError
 
@@ -299,16 +310,16 @@ class Onefun(ABC):
         and another function or a scalar.
 
         Args:
-            other (Onefun or scalar): The function or scalar to subtract from this function.
+            other (BaseFun or scalar): The function or scalar to subtract from this function.
 
         Returns:
-            Onefun: A new function representing the difference.
+            BaseFun: A new function representing the difference.
         """
         raise NotImplementedError
 
-    # ---------------
-    #   properties
-    # ---------------
+    # ------------
+    #  properties
+    # ------------
     @property
     @abstractmethod
     def coeffs(self):  # pragma: no cover
@@ -323,12 +334,25 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @property
+    def interval(self):  # pragma: no cover
+        """Get the interval on which this function is defined.
+
+        This property returns the interval object representing the domain
+        of definition for this function. For functions defined on the standard
+        interval [-1, 1], this returns a fixed interval.
+
+        Returns:
+            Interval: The interval on which this function is defined.
+        """
+        raise NotImplementedError
+
+    @property
     @abstractmethod
     def isconst(self):  # pragma: no cover
         """Check if this function represents a constant.
 
         This property determines whether the function is constant (i.e., f(x) = c
-        for some constant c) over the interval [-1, 1].
+        for some constant c) over its interval of definition.
 
         Returns:
             bool: True if the function is constant, False otherwise.
@@ -350,6 +374,19 @@ class Onefun(ABC):
 
     @property
     @abstractmethod
+    def iscomplex(self):  # pragma: no cover
+        """Check if this function has complex values.
+
+        This property determines whether the function has complex values or is
+        purely real-valued.
+
+        Returns:
+            bool: True if the function has complex values, False otherwise.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def size(self):  # pragma: no cover
         """Get the size of the function representation.
 
@@ -362,21 +399,33 @@ class Onefun(ABC):
         raise NotImplementedError
 
     @property
+    def support(self):  # pragma: no cover
+        """Get the support interval of this function.
+
+        This property returns the interval on which this function is defined,
+        represented as a numpy array with two elements [a, b].
+
+        Returns:
+            numpy.ndarray: Array containing the endpoints of the interval.
+        """
+        raise NotImplementedError
+
+    @property
     @abstractmethod
     def vscale(self):  # pragma: no cover
         """Get the vertical scale of the function.
 
         This property returns a measure of the range of function values, typically
-        the maximum absolute value of the function on the interval [-1, 1].
+        the maximum absolute value of the function on its interval of definition.
 
         Returns:
             float: The vertical scale of the function.
         """
         raise NotImplementedError
 
-    # ---------------
-    #   utilities
-    # ---------------
+    # -----------
+    #  utilities
+    # -----------
     @abstractmethod
     def copy(self):  # pragma: no cover
         """Create a deep copy of this function.
@@ -385,7 +434,7 @@ class Onefun(ABC):
         ensuring that modifications to the copy do not affect the original.
 
         Returns:
-            Onefun: A new function that is a deep copy of this function.
+            BaseFun: A new function that is a deep copy of this function.
         """
         raise NotImplementedError
 
@@ -397,7 +446,7 @@ class Onefun(ABC):
         If this function is real-valued, returns a zero function.
 
         Returns:
-            Onefun: A new function representing the imaginary part of this function.
+            BaseFun: A new function representing the imaginary part of this function.
         """
         raise NotImplementedError
 
@@ -412,7 +461,7 @@ class Onefun(ABC):
             n (int): The new size for the function representation.
 
         Returns:
-            Onefun: A new function with an extended representation.
+            BaseFun: A new function with an extended representation.
         """
         raise NotImplementedError
 
@@ -424,7 +473,23 @@ class Onefun(ABC):
         If this function is already real-valued, returns this function.
 
         Returns:
-            Onefun: A new function representing the real part of this function.
+            BaseFun: A new function representing the real part of this function.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def restrict(self, subinterval):  # pragma: no cover
+        """Restrict this function to a subinterval.
+
+        This method creates a new function that is the restriction of this function
+        to the specified subinterval.
+
+        Args:
+            subinterval (array-like): The subinterval to which this function should be restricted.
+                Must be contained within the original interval of definition.
+
+        Returns:
+            BaseFun: A new function representing the restriction of this function to the subinterval.
         """
         raise NotImplementedError
 
@@ -436,63 +501,51 @@ class Onefun(ABC):
         coefficients or reducing the degree, while maintaining the specified accuracy.
 
         Returns:
-            Onefun: A new function with a simplified representation.
+            BaseFun: A new function with a simplified representation.
         """
         raise NotImplementedError
 
     @abstractmethod
     def values(self):  # pragma: no cover
-        """Get the values of the function at Chebyshev points.
+        """Get the values of the function at the points used for its representation.
 
-        This method returns the values of the function at Chebyshev points,
-        which can be useful for certain operations or for visualization.
+        This method returns the values of the function at the points used for its
+        representation, such as Chebyshev points.
 
         Returns:
-            array-like: The values of the function at Chebyshev points.
+            array-like: The values of the function at the representation points.
         """
         raise NotImplementedError
 
-    # --------------
+    # -------------
     #  rootfinding
-    # --------------
+    # -------------
     @abstractmethod
     def roots(self):  # pragma: no cover
-        """Find the roots (zeros) of the function on [-1, 1].
+        """Find the roots (zeros) of the function on its interval of definition.
 
         This method computes the points where the function equals zero
-        within the interval [-1, 1].
+        within its interval of definition.
 
         Returns:
-            array-like: An array of the roots of the function in the interval [-1, 1],
+            array-like: An array of the roots of the function in its interval of definition,
                 sorted in ascending order.
         """
         raise NotImplementedError
 
-    # -------------
-    #   calculus
-    # -------------
-    @abstractmethod
-    def sum(self):  # pragma: no cover
-        """Compute the definite integral of the function over [-1, 1].
-
-        This method calculates the definite integral of the function
-        over the interval [-1, 1].
-
-        Returns:
-            float or complex: The definite integral of the function over [-1, 1].
-        """
-        raise NotImplementedError
-
+    # ----------
+    #  calculus
+    # ----------
     @abstractmethod
     def cumsum(self):  # pragma: no cover
         """Compute the indefinite integral of the function.
 
         This method calculates the indefinite integral (antiderivative) of the function,
         with the constant of integration chosen so that the indefinite integral
-        evaluates to 0 at x = -1.
+        evaluates to 0 at the left endpoint of the interval.
 
         Returns:
-            Onefun: A new function representing the indefinite integral of this function.
+            BaseFun: A new function representing the indefinite integral of this function.
         """
         raise NotImplementedError
 
@@ -503,6 +556,18 @@ class Onefun(ABC):
         This method calculates the derivative of the function with respect to x.
 
         Returns:
-            Onefun: A new function representing the derivative of this function.
+            BaseFun: A new function representing the derivative of this function.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def sum(self):  # pragma: no cover
+        """Compute the definite integral of the function over its interval of definition.
+
+        This method calculates the definite integral of the function
+        over its interval of definition.
+
+        Returns:
+            float or complex: The definite integral of the function over its interval of definition.
         """
         raise NotImplementedError

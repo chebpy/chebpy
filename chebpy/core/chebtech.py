@@ -34,14 +34,14 @@ from .algorithms import (
     standard_chop,
     vals2coeffs2,
 )
+from .basefun import BaseFun
 from .decorators import self_empty
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
-from .smoothfun import Smoothfun
 from .utilities import Interval, coerce_list
 
 
-class Chebtech(Smoothfun, ABC):
+class Chebtech(BaseFun, ABC):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
@@ -50,6 +50,25 @@ class Chebtech(Smoothfun, ABC):
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
     """
+
+    def restrict(self, subinterval):
+        """Restrict this function to a subinterval.
+
+        This method is not applicable for Chebtech objects, which are defined on the
+        standard interval [-1, 1]. For functions on arbitrary intervals, use the
+        restrict method of Classicfun or Bndfun instead.
+
+        Args:
+            subinterval (array-like): The subinterval to which this function should be restricted.
+
+        Raises:
+            NotImplementedError: This method is not implemented for Chebtech objects.
+        """
+        raise NotImplementedError(
+            "The restrict method is not applicable for Chebtech objects, which are defined "
+            "on the standard interval [-1, 1]. For functions on arbitrary intervals, use "
+            "the restrict method of Classicfun or Bndfun instead."
+        )
 
     @classmethod
     def initconst(cls, c, *, interval=None):
