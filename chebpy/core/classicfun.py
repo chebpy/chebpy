@@ -435,8 +435,6 @@ def plot(self, ax=None, **kwds):
     return plotfun(self, self.support, ax=ax, **kwds)
 
 
-setattr(Classicfun, "plot", plot)
-
 # ----------------------------------------------------------------
 #  methods that execute the corresponding onefun method as is
 # ----------------------------------------------------------------

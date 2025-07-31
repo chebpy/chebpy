@@ -898,9 +898,6 @@ def plot(self, ax=None, **kwds):
     return plotfun(self, self.support, ax=ax, **kwds)
 
 
-setattr(Chebfun, "plot", plot)
-
-
 def plotcoeffs(self, ax=None, **kwds):
     """Plot the coefficients of the Chebfun on a semilogy scale.
 
@@ -921,9 +918,6 @@ def plotcoeffs(self, ax=None, **kwds):
     for fun in self:
         fun.plotcoeffs(ax=ax, **kwds)
     return ax
-
-
-setattr(Chebfun, "plotcoeffs", plotcoeffs)
 
 
 # ---------

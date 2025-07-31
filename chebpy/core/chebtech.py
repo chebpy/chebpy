@@ -576,9 +576,6 @@ def plot(self, ax=None, **kwargs):
     return plotfun(self, (-1, 1), ax=ax, **kwargs)
 
 
-setattr(Chebtech, "plot", plot)
-
-
 def plotcoeffs(self, ax=None, **kwargs):
     """Plot the absolute values of the Chebyshev coefficients.
 
@@ -592,9 +589,6 @@ def plotcoeffs(self, ax=None, **kwargs):
     """
     ax = ax or plt.gca()
     return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
-
-
-setattr(Chebtech, "plotcoeffs", plotcoeffs)
 
 
 class Chebtech2(Chebtech):
