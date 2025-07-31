@@ -12,7 +12,7 @@ import pytest
 from chebpy.core.chebtech import Chebtech2
 
 from ..utilities import eps
-
+from ..generic.algebra import test__neg__empty, test__pos__empty, test_pow_empty, test_rpow_empty # noqa: F401
 
 # tests for empty function operations
 def test__add__radd__empty(emptyfun, testfunctions):
@@ -233,57 +233,6 @@ def test_truediv_constant(random_points, testfunctions):
                     f"Division failed for {fun.__name__} and {const}:\n"
                     f"max error = {error:.2e}, tol = {tol:.2e}"
                 )
-
-
-
-def test__pos__empty(emptyfun):
-    """Test unary positive operator on empty Chebtech2 objects.
-
-    This test verifies that applying the unary positive operator to an
-    empty Chebtech2 object results in an empty Chebtech2 object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebtech2 object
-    """
-    assert (+emptyfun).isempty
-
-
-def test__neg__empty(emptyfun):
-    """Test unary negative operator on empty Chebtech2 objects.
-
-    This test verifies that applying the unary negative operator to an
-    empty Chebtech2 object results in an empty Chebtech2 object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebtech2 object
-    """
-    assert (-emptyfun).isempty
-
-
-def test_pow_empty(emptyfun):
-    """Test power operation on empty Chebtech2 objects.
-
-    This test verifies that raising an empty Chebtech2 object to any power
-    results in an empty Chebtech2 object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebtech2 object
-    """
-    assert (emptyfun**1).isempty
-    assert (emptyfun**2).isempty
-
-
-def test_rpow_empty(emptyfun):
-    """Test raising constants to empty Chebtech2 objects.
-
-    This test verifies that raising a constant to an empty Chebtech2 object
-    results in an empty Chebtech2 object.
-
-    Args:
-        emptyfun: Fixture providing an empty Chebtech2 object
-    """
-    assert (2**emptyfun).isempty
-    assert (np.e**emptyfun).isempty
 
 
 def test_pow_const(random_points, testfunctions):
