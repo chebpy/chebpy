@@ -16,7 +16,7 @@ These classes are primarily used internally by higher-level classes like Bndfun
 and Chebfun, rather than being used directly by end users.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import matplotlib.pyplot as plt
 import numpy as np
