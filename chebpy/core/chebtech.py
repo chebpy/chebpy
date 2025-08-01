@@ -559,42 +559,34 @@ class Chebtech(Smoothfun, ABC):
         raise NotImplementedError
 
 
-# ----------
-#  plotting
-# ----------
-def plot(self, ax=None, **kwargs):
-    """Plot the Chebtech on the interval [-1, 1].
+    # ----------
+    #  plotting
+    # ----------
+    def plot(self, ax=None, **kwargs):
+        """Plot the Chebtech on the interval [-1, 1].
 
-    Args:
-        self (Chebtech): The Chebtech object to plot.
-        ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-        **kwargs: Additional keyword arguments to pass to the plot function.
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+            **kwargs: Additional keyword arguments to pass to the plot function.
 
-    Returns:
-        matplotlib.lines.Line2D: The line object created by the plot.
-    """
-    return plotfun(self, (-1, 1), ax=ax, **kwargs)
-
-
-setattr(Chebtech, "plot", plot)
+        Returns:
+            matplotlib.lines.Line2D: The line object created by the plot.
+        """
+        return plotfun(self, (-1, 1), ax=ax, **kwargs)
 
 
-def plotcoeffs(self, ax=None, **kwargs):
-    """Plot the absolute values of the Chebyshev coefficients.
+    def plotcoeffs(self, ax=None, **kwargs):
+        """Plot the absolute values of the Chebyshev coefficients.
 
-    Args:
-        self (Chebtech): The Chebtech object whose coefficients to plot.
-        ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-        **kwargs: Additional keyword arguments to pass to the plot function.
+        Args:
+            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+            **kwargs: Additional keyword arguments to pass to the plot function.
 
-    Returns:
-        matplotlib.lines.Line2D: The line object created by the plot.
-    """
-    ax = ax or plt.gca()
-    return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
-
-
-setattr(Chebtech, "plotcoeffs", plotcoeffs)
+        Returns:
+            matplotlib.lines.Line2D: The line object created by the plot.
+        """
+        ax = ax or plt.gca()
+        return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
 
 
 class Chebtech2(Chebtech):
