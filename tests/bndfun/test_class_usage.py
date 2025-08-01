@@ -88,7 +88,6 @@ def test_call_raises(class_usage_fixtures):
         ff(xx, how="notamethod")
 
 
-
 def test_restrict(class_usage_fixtures):
     """Test the restrict method of Bndfun.
 

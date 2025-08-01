@@ -134,7 +134,6 @@ def test_restrict_(class_usage_fixtures: dict) -> None:
     assert np.max(np.abs(g2(xx) - f2(xx))) <= 5 * eps
 
 
-
 def test_simplify(class_usage_fixtures: dict) -> None:
     """Test the simplify method of Chebfun objects.
 
@@ -232,6 +231,7 @@ def test_translate(class_usage_fixtures: dict) -> None:
     xx = np.linspace(-1, 1, 100)
     yy = xx - 1
     assert np.max(np.abs(g1(yy) - f1(xx))) <= 2 * eps
+
 
 def test_copy(constfun):
     """Test the copy method of fun.

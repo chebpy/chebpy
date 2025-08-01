@@ -158,7 +158,6 @@ def test_break_with_tolerance():
     assert f_new.isempty
 
 
-
 def test_break_multipiece():
     """Test the _break method with a multi-piece Chebfun.
 

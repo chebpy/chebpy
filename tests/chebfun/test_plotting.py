@@ -145,4 +145,3 @@ def test_plot_multipiece():
 
     fig, ax = plt.subplots()
     f_multi.plot(ax=ax)
-

@@ -1,4 +1,5 @@
 """Utility functions for testing chebfun."""
+
 import numpy as np
 
 from chebpy.core.settings import DefaultPreferences
@@ -9,6 +10,7 @@ sin = np.sin
 cos = np.cos
 exp = np.exp
 eps = DefaultPreferences.eps
+
 
 def scaled_tol(n: int) -> float:
     """Calculate a scaled tolerance based on the size of the input.

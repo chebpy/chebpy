@@ -1,4 +1,6 @@
 """Utility functions for testing chebfun."""
+
+
 def test_cumsum_empty(emptyfun):
     """Test the cumsum method on an empty function object.
 

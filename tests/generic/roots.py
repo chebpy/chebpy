@@ -4,6 +4,7 @@ This module contains test functions for root-finding operations that can be used
 with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations with empty function objects.
 """
+
 import numpy as np
 
 from ..utilities import cos, pi, sin
@@ -12,6 +13,7 @@ from ..utilities import cos, pi, sin
 def test_empty(emptyfun):
     """Test the roots method on an empty Bndfun."""
     assert emptyfun.roots().size == 0
+
 
 # Define test functions and their expected roots
 rootstestfuns = [

@@ -4,6 +4,7 @@ This module contains test functions for class usage that can be used
 with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on common operations and properties of function objects.
 """
+
 from chebpy.core.utilities import Domain
 
 
@@ -17,6 +18,7 @@ def test_constfun_value(constfun):
         constfun: Fixture providing a constant function object.
     """
     import numpy as np
+
     # Test at multiple points to ensure it's truly constant
     xx = np.linspace(-1, 1, 10)
     values = constfun(xx)
@@ -35,7 +37,6 @@ def test_restrict__empty(emptyfun) -> None:
     """
     emptyfun.restrict_([-0.5, 0.5])
     assert emptyfun.isempty
-
 
 
 def test_translate_empty(emptyfun) -> None:
@@ -67,6 +68,7 @@ def test_copy(constfun):
     # check that modifying the copy does not affect the original
     gg2.domain = Domain([-1, 0, 0.5, 2])
     assert gg2 != gg
+
 
 def test_endvalues(constfun):
     """Test the endvalues property of Bndfun.
