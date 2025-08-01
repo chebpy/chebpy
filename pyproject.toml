@@ -18,7 +18,9 @@ homepage = "https://chebpy.github.io/chebpy/"
 dev = [
     "pytest-cov>=6.2.1",
     "pytest>=8.4.1",
-    "pre-commit>=4.2.0"
+    "pre-commit>=4.2.0",
+    "seaborn==0.13.2",
+    "marimo==0.14.12"
 ]
 
 [build-system]
