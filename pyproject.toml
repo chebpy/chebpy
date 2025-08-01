@@ -3,7 +3,7 @@ name = 'chebfun'
 version = "0.0.0"
 description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.0",
@@ -34,7 +34,7 @@ packages = ["chebpy"]
 [tool.hatch.build]
 include = [
     "LICENSE.rst",    # Ensure the LICENSE file is included in your package
-    "README.rst",
+    "README.md",
     "chebpy"
 ]
 
