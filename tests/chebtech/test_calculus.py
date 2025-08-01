@@ -84,7 +84,7 @@ def test_indefinite_integral(fun, dfn, n, tol):
     gg = Chebtech.initfun_fixedlen(dfn, n)
     xx = np.linspace(-1, 1, 1000)
     absdiff = np.max(np.abs(ff.cumsum()(xx) - (gg(xx) - gg(-1))))
-    assert absdiff <= 100*tol
+    assert absdiff <= 100 * tol
 
 
 # --------------------------------------

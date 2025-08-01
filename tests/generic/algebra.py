@@ -4,6 +4,7 @@ This module contains test functions for algebraic operations that can be used
 with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations with empty function objects.
 """
+
 import itertools
 import operator
 
@@ -41,6 +42,7 @@ def test__add__radd__empty(emptyfun, ttt):
         assert (emptyfun + test_function.cheb).isempty
         assert (test_function.cheb + emptyfun).isempty
 
+
 def test__add__radd__constant(ttt, random_points):
     """Test addition of a constant to a Bndfun."""
     xx = random_points
@@ -76,7 +78,6 @@ def test__sub__rsub__constant(ttt, random_points):
 
             def g(x):
                 return fun.raw(x) - const
-
 
             ff = const - fun.cheb
             gg = fun.cheb - const
@@ -126,6 +127,7 @@ def test_truediv_constant(ttt, random_points):
     xx = random_points
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
+
             def g(x):
                 return fun.raw(x) / const
 
@@ -135,9 +137,9 @@ def test_truediv_constant(ttt, random_points):
             error_msg = f"Failed for {fun.cheb.name} and c = {const}."
             assert np.max(np.abs(g(xx) - gg(xx))) <= 1e2 * tol, error_msg
 
-
             # don't do the following test for functions with roots
             if not fun.has_roots:
+
                 def f(x):
                     return const / fun.raw(x)
 
@@ -155,11 +157,10 @@ def test_pow_const(ttt, random_points):
                 return fun.raw(x) ** c
 
             tol = 2e1 * eps * abs(c)
-            func = fun.cheb ** c
+            func = fun.cheb**c
 
-            assert np.max(np.abs(f(xx) - func(xx))) <= 1e2 * tol, (
-                f"Failed for {fun.cheb.name} and c = {c}"
-            )
+            assert np.max(np.abs(f(xx) - func(xx))) <= 1e2 * tol, f"Failed for {fun.cheb.name} and c = {c}"
+
 
 def test_rpow_const(ttt, random_points):
     """Test raising a constant to a fun power."""
@@ -170,7 +171,7 @@ def test_rpow_const(ttt, random_points):
             def f(x):
                 return c ** fun.raw(x)
 
-            ff = c ** fun.cheb
+            ff = c**fun.cheb
             tol = 1e2 * eps * abs(c)
             error_msg = f"Failed for {fun.cheb.name} and c = {c}."
             assert np.max(np.abs(f(xx) - ff(xx))) <= tol, error_msg
@@ -192,6 +193,7 @@ def test__add__negself(random_points, ttt):
         assert chebzero.isconst
         assert np.max(chebzero(xx)) == 0
 
+
 @pytest.mark.parametrize("unaryop", [operator.pos, operator.neg])
 def test_unary_operations(unaryop, ttt, random_points):
     """Test unary operations on Bndfun objects."""
@@ -202,13 +204,13 @@ def test_unary_operations(unaryop, ttt, random_points):
 
         assert np.max(np.abs(ff - gg)) <= 4e1 * eps
 
+
 @pytest.mark.parametrize("binop", [operator.add, operator.sub, operator.mul, operator.truediv])
-#@pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
+# @pytest.mark.parametrize("f, g", [(np.exp, np.sin), (np.exp, lambda x: 2 - x), (lambda x: 2 - x, np.exp)])
 def test_binary_operations(ttt, random_points, binop):
     """Test binary operations between Bndfun objects."""
     xx = random_points
     for f, g in itertools.product(ttt, ttt):
-
         if binop == operator.truediv and g.has_roots:
             continue
 
@@ -221,5 +223,5 @@ def test_binary_operations(ttt, random_points, binop):
         b = fg_expected(xx)
         assert not np.all(np.isnan(a)), f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}"
         assert not np.all(np.isnan(b)), f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}"
-        diff = np.max(np.abs(a-b))
+        diff = np.max(np.abs(a - b))
         assert diff <= 1e-10, f"{binop.__name__} failed for {f.cheb.name} and {g.cheb.name}: max diff = {diff:.2e}"

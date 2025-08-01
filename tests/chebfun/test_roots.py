@@ -31,7 +31,6 @@ def test_roots(f, roots):
     assert np.max(np.abs(rts - roots)) <= 1e-15
 
 
-
 def test_roots_const():
     """Test roots method on constant Chebfun objects.
 

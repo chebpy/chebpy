@@ -35,10 +35,10 @@ class TestAdditionalCoverage:
         f = chebfun(lambda t: np.abs(t), domain=x)
 
         # Compute the cumulative sum
-        F = f.cumsum()    # noqa: N806
+        F = f.cumsum()  # noqa: N806
 
         # Check that F is continuous by evaluating at breakpoints
-        for i in range(1, len(x)-1):
+        for i in range(1, len(x) - 1):
             left_val = F(x[i] - 1e-10)
             right_val = F(x[i] + 1e-10)
             assert np.abs(left_val - right_val) < 1e-9

@@ -14,7 +14,6 @@ def test_ufunc():
     yy = np.linspace(-1, 1, 1000)
 
     for ufunc, f, interval in ufunc_parameter():
-
         subinterval = Interval(*interval)
         ff = Bndfun.initfun_adaptive(f, subinterval)
 
