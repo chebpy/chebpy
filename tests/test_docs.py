@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from _pytest.capture import CaptureFixture
 
+
 def find_project_root(start_path: Path = None) -> Path:
     """Find the project root directory by looking for the .git folder.
 
