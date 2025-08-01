@@ -20,7 +20,7 @@ class DefaultPreferences:
     """Default preferences for chebpy."""
 
     eps = np.finfo(float).eps
-    tech = "Chebtech2"
+    tech = "Chebtech"
     domain = np.array([-1.0, 1.0])  # TODO: should this be .utilities.Domain?
     N_plot = 2001
     maxpow2 = 16

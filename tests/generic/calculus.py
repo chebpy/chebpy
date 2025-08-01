@@ -4,7 +4,7 @@ def test_cumsum_empty(emptyfun):
 
     This test verifies that the cumsum method on an empty function object
     returns an empty function object. This is a generic test that works with
-    any type of empty function object (Bndfun, Chebfun, or Chebtech2).
+    any type of empty function object (Bndfun, Chebfun, or Chebtech).
 
     Args:
         emptyfun: Fixture providing an empty function object
@@ -17,7 +17,7 @@ def test_sum_empty(emptyfun):
 
     This test verifies that the sum method on an empty function object
     returns 0. This is a generic test that works with any type of empty
-    function object (Bndfun, Chebfun, or Chebtech2).
+    function object (Bndfun, Chebfun, or Chebtech).
 
     Args:
         emptyfun: Fixture providing an empty function object
@@ -30,7 +30,7 @@ def test_diff_empty(emptyfun):
 
     This test verifies that the diff method on an empty function object
     returns an empty function object. This is a generic test that works with
-    any type of empty function object (Bndfun, Chebfun, or Chebtech2).
+    any type of empty function object (Bndfun, Chebfun, or Chebtech).
 
     Args:
         emptyfun: Fixture providing an empty function object

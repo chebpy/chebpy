@@ -1,6 +1,6 @@
-"""Unit-tests for Chebtech2 complex function operations.
+"""Unit-tests for Chebtech complex function operations.
 
-This module contains tests for complex function operations in Chebtech2,
+This module contains tests for complex function operations in Chebtech,
 including roots, rho ellipse construction, calculus, and real/imag methods.
 """
 from ..generic.complex import (  # noqa: F401

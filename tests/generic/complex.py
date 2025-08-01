@@ -1,7 +1,7 @@
 """Generic test functions for complex function operations.
 
 This module contains test functions for complex function operations that can be used
-with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations specific to complex-valued functions.
 """
 
@@ -39,7 +39,7 @@ def test_complexfun_properties(complexfun):
 
 
 def test_roots(complexfun):
-    """Test finding roots of complex Chebtech2 functions.
+    """Test finding roots of complex Chebtech functions.
 
     This test verifies that the roots method correctly identifies the roots
     of various complex functions derived from the base complex function.
@@ -86,7 +86,7 @@ def test_rho_ellipse_construction(complexfun):
 
 
 def test_calculus(complexfun):
-    """Test calculus operations on complex Chebtech2 functions.
+    """Test calculus operations on complex Chebtech functions.
 
     This test verifies that calculus operations (sum, cumsum, diff)
     work correctly on complex functions. It checks:
@@ -104,7 +104,7 @@ def test_real_imag(complexfun):
     """Test real and imaginary part extraction from complex functions.
 
     This test verifies that the real() and imag() methods correctly extract
-    the real and imaginary parts of complex Chebtech2 functions. It checks:
+    the real and imaginary parts of complex Chebtech functions. It checks:
     1. The coefficients of the real part match the real parts of the original coefficients
     2. The coefficients of the imaginary part match the imaginary parts of the original coefficients
     3. The real part of a real function is the same function

@@ -1,7 +1,7 @@
 """Generic test functions for root-finding operations.
 
 This module contains test functions for root-finding operations that can be used
-with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations with empty function objects.
 """
 import numpy as np

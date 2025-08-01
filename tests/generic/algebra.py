@@ -1,7 +1,7 @@
 """Generic test functions for algebraic operations.
 
 This module contains test functions for algebraic operations that can be used
-with any type of function object (Bndfun, Chebfun, or Chebtech2). These tests
+with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations with empty function objects.
 """
 import itertools
@@ -179,7 +179,7 @@ def test_rpow_const(ttt, random_points):
 def test__add__negself(random_points, ttt):
     """Test subtraction of a fun object from itself.
 
-    This test verifies that subtracting a Chebtech2 object from itself
+    This test verifies that subtracting a Chebtech object from itself
     results in a constant zero function.
 
     Args:
