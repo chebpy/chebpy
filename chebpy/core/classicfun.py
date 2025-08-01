@@ -413,7 +413,6 @@ class Classicfun(Fun, ABC):
         a, b = self.support
         return 0.5 * (b - a) * self.onefun.sum()
 
-
     # ----------
     #  plotting
     # ----------

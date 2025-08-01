@@ -580,7 +580,6 @@ class Chebtech(Smoothfun, ABC):
         """
         return plotfun(self, (-1, 1), ax=ax, **kwargs)
 
-
     def plotcoeffs(self, ax=None, **kwargs):
         """Plot the absolute values of the Chebyshev coefficients.
 
