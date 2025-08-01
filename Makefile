@@ -40,6 +40,7 @@ lint: uv ## Run linters only
 	#@uvx ruff check run --files tests
 	@uvx ruff check --unsafe-fixes --fix chebpy
 	@uvx ruff check --unsafe-fixes --fix tests
+	@uvx ruff check --unsafe-fixes --fix docs
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"
