@@ -71,5 +71,5 @@ def plotfuncoeffs(abscoeffs: np.ndarray, ax=None, **kwds) -> object:
     ax = ax or plt.gca()
     ax.set_ylabel(kwds.pop("xlabel", "coefficient magnitude"))
     ax.set_xlabel(kwds.pop("ylabel", "polynomial degree"))
-    ax.semilogy(abscoeffs, ".", **kwds)
+    ax.semilogy(abscoeffs, **kwds)
     return ax
