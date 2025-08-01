@@ -175,7 +175,6 @@ def test_rpow_const(ttt, random_points):
             error_msg = f"Failed for {fun.cheb.name} and c = {c}."
             assert np.max(np.abs(f(xx) - ff(xx))) <= tol, error_msg
 
-
 def test__add__negself(random_points, ttt):
     """Test subtraction of a fun object from itself.
 
@@ -195,10 +194,9 @@ def test__add__negself(random_points, ttt):
 @pytest.mark.parametrize("unaryop", [operator.pos, operator.neg])
 def test_unary_operations(unaryop, ttt, random_points):
     """Test unary operations on Bndfun objects."""
-    xx = random_points
     for f in ttt:
-        ff = unaryop(f.cheb)(xx)
-        gg = unaryop(f.raw(xx))
+        ff = unaryop(f.cheb)(random_points)
+        gg = unaryop(f.raw(random_points))
 
         assert np.max(np.abs(ff - gg)) <= 4e1 * eps
 
