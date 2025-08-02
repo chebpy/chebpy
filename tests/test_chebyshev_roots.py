@@ -1,11 +1,10 @@
 """Tests for the roots, companion matrices, and eigenvalues of ChebyshevPolynomial."""
 
 import numpy as np
-import pytest
-import numpy.polynomial.chebyshev as cheb
 import numpy.linalg as la
+import numpy.polynomial.chebyshev as cheb
 
-from chebpy.core.chebyshev import ChebyshevPolynomial, from_coefficients, from_roots
+from chebpy.core.chebyshev import ChebyshevPolynomial, from_roots
 
 
 def test_roots_of_quadratic_polynomial():
@@ -64,7 +63,7 @@ def test_roots_of_polynomial_with_complex_roots():
     # In standard form: (x - (1+1j)) * (x - (1-1j)) = 0
     # This expands to x^2 - 2x + 2 = 0
     # In Chebyshev basis: this is more complex, so we'll create it from roots
-    poly = from_roots([1+1j, 1-1j])
+    poly = from_roots([1 + 1j, 1 - 1j])
 
     # Compute the roots
     roots = poly.roots()
@@ -73,11 +72,12 @@ def test_roots_of_polynomial_with_complex_roots():
     assert len(roots) == 2, f"Expected 2 roots, got {len(roots)}"
 
     # The roots might be in any order, so we need to check that both expected roots are present
-    expected_roots = [1+1j, 1-1j]
+    expected_roots = [1 + 1j, 1 - 1j]
     for root in roots:
         # Check if the root is close to any of the expected roots
-        assert any(np.isclose(root, expected_root, atol=1e-7) for expected_root in expected_roots), \
+        assert any(np.isclose(root, expected_root, atol=1e-7) for expected_root in expected_roots), (
             f"Root {root} is not close to any of the expected roots {expected_roots}"
+        )
 
 
 def test_companion_matrix_of_quadratic_polynomial():
@@ -89,7 +89,9 @@ def test_companion_matrix_of_quadratic_polynomial():
     companion = cheb.chebcompanion(poly.coef)
 
     # Check that the companion matrix has the correct shape
-    assert companion.shape == (poly.degree(), poly.degree()), f"Expected shape {(poly.degree(), poly.degree())}, got {companion.shape}"
+    assert companion.shape == (poly.degree(), poly.degree()), (
+        f"Expected shape {(poly.degree(), poly.degree())}, got {companion.shape}"
+    )
 
     # Check that the eigenvalues of the companion matrix are the roots of the polynomial
     eigenvalues = la.eigvals(companion)
@@ -112,7 +114,9 @@ def test_companion_matrix_of_cubic_polynomial():
     companion = cheb.chebcompanion(poly.coef)
 
     # Check that the companion matrix has the correct shape
-    assert companion.shape == (poly.degree(), poly.degree()), f"Expected shape {(poly.degree(), poly.degree())}, got {companion.shape}"
+    assert companion.shape == (poly.degree(), poly.degree()), (
+        f"Expected shape {(poly.degree(), poly.degree())}, got {companion.shape}"
+    )
 
     # Check that the eigenvalues of the companion matrix are the roots of the polynomial
     eigenvalues = la.eigvals(companion)
@@ -143,13 +147,15 @@ def test_eigenvalues_of_companion_matrix():
     roots_expected = sorted(roots_expected)
 
     # Check that the eigenvalues match the expected roots
-    assert np.allclose(eigenvalues, roots_expected), f"Eigenvalues {eigenvalues} do not match expected roots {roots_expected}"
+    assert np.allclose(eigenvalues, roots_expected), (
+        f"Eigenvalues {eigenvalues} do not match expected roots {roots_expected}"
+    )
 
 
 def test_eigenvalues_of_companion_matrix_with_complex_roots():
     """Test that the eigenvalues of the companion matrix are the complex roots of the polynomial."""
     # Create a polynomial with known complex roots
-    roots_expected = [1+1j, 1-1j]
+    roots_expected = [1 + 1j, 1 - 1j]
     poly = from_roots(roots_expected)
 
     # Compute the companion matrix
@@ -161,8 +167,9 @@ def test_eigenvalues_of_companion_matrix_with_complex_roots():
     # The eigenvalues might be in any order, so we need to check that both expected roots are present
     for eigenvalue in eigenvalues:
         # Check if the eigenvalue is close to any of the expected roots
-        assert any(np.isclose(eigenvalue, root_expected, atol=1e-7) for root_expected in roots_expected), \
+        assert any(np.isclose(eigenvalue, root_expected, atol=1e-7) for root_expected in roots_expected), (
             f"Eigenvalue {eigenvalue} is not close to any of the expected roots {roots_expected}"
+        )
 
 
 def test_roots_companion_eigenvalues_relationship():

@@ -1,9 +1,8 @@
 """Tests for the arithmetic operations of ChebyshevPolynomial."""
 
 import numpy as np
-import pytest
 
-from chebpy.core.chebyshev import ChebyshevPolynomial, from_coefficients, from_constant
+from chebpy.core.chebyshev import ChebyshevPolynomial
 
 
 def test_add_polynomials():
@@ -146,7 +145,9 @@ def test_multiply_polynomials():
     # So (1 + 2*T_1(x)) * (3 + 4*T_1(x)) = 3 + 4*T_1(x) + 6*T_1(x) + 8*T_1(x)*T_1(x)
     # = 3 + 10*T_1(x) + 8*(T_0(x) + T_2(x))/2 = 3 + 4 + 10*T_1(x) + 4*T_2(x) = 7 + 10*T_1(x) + 4*T_2(x)
     expected_coef = [7, 10, 4]
-    assert np.allclose(result.coef, expected_coef), f"Coefficients are not correct. Expected {expected_coef}, got {result.coef}"
+    assert np.allclose(result.coef, expected_coef), (
+        f"Coefficients are not correct. Expected {expected_coef}, got {result.coef}"
+    )
 
     # Check that the domain and window are preserved
     assert np.array_equal(result.domain, poly1.domain), "Domain was not preserved"
@@ -220,7 +221,7 @@ def test_power_polynomial():
 
     # Raise to a power
     power = 2
-    result = poly ** power
+    result = poly**power
 
     # Check that the result is a ChebyshevPolynomial
     assert isinstance(result, ChebyshevPolynomial), "Result is not a ChebyshevPolynomial"
@@ -228,7 +229,9 @@ def test_power_polynomial():
     # Check that the coefficients are correct
     # For (1 + x)^2 = 1 + 2x + x^2, which in Chebyshev basis is 1.5 + 2*T_1(x) + 0.5*T_2(x)
     expected_coef = [1.5, 2, 0.5]
-    assert np.allclose(result.coef, expected_coef), f"Coefficients are not correct. Expected {expected_coef}, got {result.coef}"
+    assert np.allclose(result.coef, expected_coef), (
+        f"Coefficients are not correct. Expected {expected_coef}, got {result.coef}"
+    )
 
     # Check that the domain and window are preserved
     assert np.array_equal(result.domain, poly.domain), "Domain was not preserved"
@@ -238,7 +241,9 @@ def test_power_polynomial():
 def test_evaluate_polynomial_at_points():
     """Test evaluating a ChebyshevPolynomial at multiple points."""
     # Create a polynomial
-    poly = ChebyshevPolynomial(coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+    poly = ChebyshevPolynomial(
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Evaluate at multiple points
     points = np.array([-1.0, 0.0, 1.0])
@@ -249,13 +254,17 @@ def test_evaluate_polynomial_at_points():
     # At x = 0: -2 + 2*0 + 6*0^2 = -2
     # At x = 1: -2 + 2*1 + 6*1^2 = -2 + 2 + 6 = 6
     expected_results = np.array([2.0, -2.0, 6.0])
-    assert np.allclose(results, expected_results), f"Results are not correct. Expected {expected_results}, got {results}"
+    assert np.allclose(results, expected_results), (
+        f"Results are not correct. Expected {expected_results}, got {results}"
+    )
 
 
 def test_evaluate_polynomial_at_point():
     """Test evaluating a ChebyshevPolynomial at a single point."""
     # Create a polynomial
-    poly = ChebyshevPolynomial(coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+    poly = ChebyshevPolynomial(
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Evaluate at a single point
     point = 0.5
@@ -273,7 +282,9 @@ def test_evaluate_polynomial_at_point():
 def test_evaluate_derivative_at_point():
     """Test evaluating the derivative of a ChebyshevPolynomial at a single point."""
     # Create a polynomial
-    poly = ChebyshevPolynomial(coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+    poly = ChebyshevPolynomial(
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Calculate its derivative
     deriv = poly.diff()  # 2 + 12x
