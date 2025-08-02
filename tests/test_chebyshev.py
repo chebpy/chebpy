@@ -278,3 +278,29 @@ def test_constant_polynomial_evaluation():
     points = np.linspace(-1.0, 1.0, 10)
     results = poly(points)
     assert np.allclose(results, value), "Constant polynomial should evaluate to the constant value at all points."
+
+
+def test_copy_method():
+    """Test that the copy method creates a new instance with the same attributes."""
+    # Create a polynomial with known attributes
+    coef = [1, 2, 3]
+    domain = (0.0, 2.0)
+    window = (-1.0, 1.0)
+    symbol = "t"
+    poly = ChebyshevPolynomial(coef=coef, domain=domain, window=window, symbol=symbol)
+
+    # Create a copy
+    poly_copy = poly.copy()
+
+    # Check that it's a new instance
+    assert poly_copy is not poly, "Copy should be a new instance."
+
+    # Check that attributes are equal
+    assert np.array_equal(poly_copy.coef, poly.coef), "Coefficients should be equal."
+    assert np.array_equal(poly_copy.domain, poly.domain), "Domain should be equal."
+    assert np.array_equal(poly_copy.window, poly.window), "Window should be equal."
+    assert poly_copy.symbol == poly.symbol, "Symbol should be equal."
+
+    # Check that modifying the copy doesn't affect the original
+    poly_copy.coef[0] = 999
+    assert poly.coef[0] != 999, "Modifying the copy should not affect the original."

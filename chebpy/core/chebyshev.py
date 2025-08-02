@@ -40,30 +40,15 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         """
         return cheb.chebval(x, self.coef)
 
-    def __eq__(self, other):
-        """Check if two ChebyshevPolynomial objects are equal."""
-        if not isinstance(other, ChebyshevPolynomial):
-            return False
+    def copy(self):
+        """Create a copy of the ChebyshevPolynomial object.
 
-        if not np.array_equal(self.domain, other.domain):
-            return False
-
-        if not np.array_equal(self.window, other.window):
-            return False
-
-        return np.allclose(self.coef, other.coef)
-
-    def __repr__(self):
-        """Return a string representation of the ChebyshevPolynomial object."""
-        return f"ChebyshevPolynomial(coeffs={self.coef}, domain={self.domain}, window={self.window})"
-
-    def __str__(self):
-        """Return a string representation of the ChebyshevPolynomial object."""
-        return f"Chebyshev polynomial of degree {self.degree} on {self.domain}"
-
-    def __hash__(self):
-        """Return a hash value for the ChebyshevPolynomial object."""
-        return hash((self.domain, self.window, self.coef.tobytes()))
+        Returns:
+            ChebyshevPolynomial: A new ChebyshevPolynomial object with the same attributes.
+        """
+        return ChebyshevPolynomial(
+            coef=self.coef.copy(), domain=self.domain.copy(), window=self.window.copy(), symbol=self.symbol
+        )
 
     @property
     def iscomplex(self):
