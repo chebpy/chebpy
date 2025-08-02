@@ -17,7 +17,7 @@ def plotting_fixtures():
     custom_domain_poly = from_coefficients([1, 2, 3], domain=(0, 2))
 
     # Create a complex polynomial: (1+1j) + (2+2j)x + (3+3j)x^2
-    complex_poly = from_coefficients([1+1j, 2+2j, 3+3j])
+    complex_poly = from_coefficients([1 + 1j, 2 + 2j, 3 + 3j])
 
     return {
         "simple": simple_poly,

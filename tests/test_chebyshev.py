@@ -218,7 +218,7 @@ def test_iscomplex_property_with_real_coefficients():
 
 def test_iscomplex_property_with_complex_coefficients():
     """Test that iscomplex property returns True for polynomials with complex coefficients."""
-    poly = ChebyshevPolynomial(coef=[1+1j, 2+2j, 3+3j])
+    poly = ChebyshevPolynomial(coef=[1 + 1j, 2 + 2j, 3 + 3j])
     assert poly.iscomplex, "iscomplex property should be True for complex coefficients."
 
 
