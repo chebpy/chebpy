@@ -1,6 +1,9 @@
+"""Tests for the Chebyshev polynomial functionality."""
+
 import numpy as np
 import pytest
-from chebpy.core.chebyshev import ChebyshevPolynomial, from_coefficients, from_values, from_roots
+
+from chebpy.core.chebyshev import ChebyshevPolynomial, from_coefficients, from_constant, from_roots, from_values
 from chebpy.core.utilities import Interval
 
 
@@ -78,14 +81,6 @@ def test_call_evaluates_polynomial_at_multiple_points(valid_coeffs, valid_interv
     assert isinstance(results, np.ndarray), "Evaluated results are not a numpy array."
     assert results.shape == points.shape, "Shape of evaluated results does not match input points shape."
 
-    def test_roots_returns_correct_roots(valid_coeffs):
-        """Test that roots method correctly computes the roots of the Chebyshev polynomial."""
-
-    poly = ChebyshevPolynomial(coef=valid_coeffs, domain=(-1.0, 1.0))
-    roots = poly.roots()
-    assert isinstance(roots, np.ndarray), "Roots are not returned as a numpy array."
-    assert len(roots) <= poly.degree(), "Number of roots exceeds the polynomial's degree."
-
 
 def test_call_handles_out_of_domain_points(valid_coeffs, valid_interval):
     """Test that __call__ handles evaluation of points outside the domain."""
@@ -103,7 +98,7 @@ def test_call_handles_empty_input(valid_coeffs):
     assert results.size == 0, "Results for empty input are not empty."
 
 
-def test_post_init_converts_interval_to_Interval(valid_coeffs, valid_interval):
+def test_post_init_converts_interval_to_interval(valid_coeffs, valid_interval):
     """Test that __post_init__ converts interval to an Interval object."""
     poly = ChebyshevPolynomial(coef=valid_coeffs, domain=valid_interval)
     assert isinstance(poly.domain, np.ndarray), "Interval was not converted to numpy array."
@@ -194,3 +189,92 @@ def test_from_roots_with_empty_roots():
     """Test that from_roots works with empty roots."""
     with pytest.raises(ValueError):
         from_roots([])
+
+
+def test_round_trip_from_roots():
+    """Test creating a polynomial, computing its roots, and recreating from those roots."""
+    # Create a ChebyshevPolynomial with known coefficients
+    original_poly = ChebyshevPolynomial(coef=[1, 0, -1])  # x^2 - 1, with roots at +1 and -1
+
+    # Compute its roots
+    roots = original_poly.roots()
+
+    # Create a second ChebyshevPolynomial from those roots
+    recreated_poly = from_roots(roots)
+
+    # The coefficients might differ by a constant factor, so we normalize them
+    original_normalized = ChebyshevPolynomial(coef=original_poly.coef / original_poly.coef[0])
+    recreated_normalized = ChebyshevPolynomial(coef=recreated_poly.coef / recreated_poly.coef[0])
+
+    # Check if both polynomials are equal after normalization
+    assert original_normalized == recreated_normalized, "Original and recreated polynomials are not equal."
+
+
+def test_iscomplex_property_with_real_coefficients():
+    """Test that iscomplex property returns False for polynomials with real coefficients."""
+    poly = ChebyshevPolynomial(coef=[1, 2, 3])
+    assert not poly.iscomplex, "iscomplex property should be False for real coefficients."
+
+
+def test_iscomplex_property_with_complex_coefficients():
+    """Test that iscomplex property returns True for polynomials with complex coefficients."""
+    poly = ChebyshevPolynomial(coef=[1+1j, 2+2j, 3+3j])
+    assert poly.iscomplex, "iscomplex property should be True for complex coefficients."
+
+
+# Tests for from_constant factory function
+def test_from_constant_creates_chebyshev_polynomial():
+    """Test that from_constant creates a ChebyshevPolynomial with the given constant value."""
+    value = 42.0
+    poly = from_constant(value)
+    assert isinstance(poly, ChebyshevPolynomial), "from_constant did not return a ChebyshevPolynomial."
+    assert poly.coef.size == 1, "Polynomial should have exactly one coefficient."
+    assert poly.coef[0] == value, "Coefficient value does not match the input constant."
+    assert poly.degree() == 0, "Constant polynomial should have degree 0."
+
+
+def test_from_constant_with_integer_value():
+    """Test that from_constant converts integer values to float."""
+    value = 42
+    poly = from_constant(value)
+    assert isinstance(poly.coef[0], float), "Integer value was not converted to float."
+    assert poly.coef[0] == float(value), "Coefficient value does not match the input constant."
+
+
+def test_from_constant_with_complex_value():
+    """Test that from_constant works with complex values."""
+    value = 3 + 4j
+    poly = from_constant(value)
+    assert poly.iscomplex, "Polynomial should be complex for complex input."
+    assert poly.coef[0] == value, "Coefficient value does not match the input constant."
+
+
+def test_from_constant_with_domain():
+    """Test that from_constant works with a custom domain."""
+    value = 42.0
+    domain = (0.0, 2.0)
+    poly = from_constant(value, domain)
+    assert np.array_equal(poly.domain, np.array(domain)), "Domain was not set correctly."
+
+
+def test_from_constant_with_interval_object():
+    """Test that from_constant works with an Interval object."""
+    value = 42.0
+    interval = Interval(-2.0, 2.0)
+    poly = from_constant(value, interval)
+    assert np.array_equal(poly.domain, np.array([-2.0, 2.0])), "Domain was not set correctly."
+
+
+def test_from_constant_with_non_scalar_value():
+    """Test that from_constant raises an error for non-scalar inputs."""
+    with pytest.raises(ValueError):
+        from_constant([1, 2, 3])
+
+
+def test_constant_polynomial_evaluation():
+    """Test that a constant polynomial evaluates to the constant value at any point."""
+    value = 42.0
+    poly = from_constant(value)
+    points = np.linspace(-1.0, 1.0, 10)
+    results = poly(points)
+    assert np.allclose(results, value), "Constant polynomial should evaluate to the constant value at all points."
