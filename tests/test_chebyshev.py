@@ -4,7 +4,6 @@ from chebpy.core.chebyshev import ChebyshevPolynomial, from_coefficients, from_v
 from chebpy.core.utilities import Interval
 
 
-
 @pytest.fixture
 def valid_coeffs():
     """Fixture for valid coefficients."""
@@ -21,6 +20,7 @@ def test_post_init_converts_coeffs_to_numpy_array(valid_coeffs, valid_interval):
     """Test that __post_init__ converts coeffs to a numpy array."""
     poly = ChebyshevPolynomial(coef=valid_coeffs, domain=valid_interval)
     assert isinstance(poly.coef, np.ndarray), "Coeffs were not converted to numpy array."
+
 
 def test_roots_with_valid_coefficients(valid_coeffs):
     """Test that roots method correctly computes the roots of a Chebyshev polynomial."""
@@ -79,8 +79,8 @@ def test_call_evaluates_polynomial_at_multiple_points(valid_coeffs, valid_interv
     assert results.shape == points.shape, "Shape of evaluated results does not match input points shape."
 
     def test_roots_returns_correct_roots(valid_coeffs):
-
         """Test that roots method correctly computes the roots of the Chebyshev polynomial."""
+
     poly = ChebyshevPolynomial(coef=valid_coeffs, domain=(-1.0, 1.0))
     roots = poly.roots()
     assert isinstance(roots, np.ndarray), "Roots are not returned as a numpy array."
@@ -168,6 +168,7 @@ def test_from_values_with_empty_values():
     """Test that from_values works with empty values."""
     with pytest.raises(ValueError):
         from_values([])
+
 
 def test_from_roots_creates_chebyshev_polynomial():
     """Test that from_roots creates a ChebyshevPolynomial with the given roots."""

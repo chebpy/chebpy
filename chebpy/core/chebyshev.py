@@ -11,6 +11,7 @@ from .algorithms import (
     vals2coeffs2,
 )
 
+
 class ChebyshevPolynomial(cheb.Chebyshev):
     """Immutable representation of a Chebyshev polynomial.
 
@@ -21,10 +22,10 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         coeffs: The coefficients of the Chebyshev polynomial.
         interval: The interval on which the polynomial is defined.
     """
-    def __init__(self, coef, domain=None, window=None, symbol='x'):
+
+    def __init__(self, coef, domain=None, window=None, symbol="x"):
         """Initialize a ChebyshevPolynomial object."""
         super().__init__(coef, domain, window, symbol)
-
 
     def __call__(self, x):
         """Evaluate the polynomial at the given points.
@@ -63,7 +64,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         return hash((self.domain, self.window, self.coef.tobytes()))
 
 
-def from_coefficients(coef, domain=None, window=None, symbol='x'):
+def from_coefficients(coef, domain=None, window=None, symbol="x"):
     """Create a Chebyshev polynomial from its coefficients.
 
     Returns:
@@ -75,8 +76,7 @@ def from_coefficients(coef, domain=None, window=None, symbol='x'):
     return ChebyshevPolynomial(coef, domain, window, symbol)
 
 
-
-def from_values(values, domain=None, window=None, symbol='x'):
+def from_values(values, domain=None, window=None, symbol="x"):
     """Create a Chebyshev polynomial from values at Chebyshev points.
 
     Args:
@@ -96,7 +96,7 @@ def from_values(values, domain=None, window=None, symbol='x'):
     return ChebyshevPolynomial(coef, domain, window, symbol)
 
 
-def from_roots(roots, domain=None, window=None, symbol='x'):
+def from_roots(roots, domain=None, window=None, symbol="x"):
     """Create a Chebyshev polynomial from its roots."""
     if len(roots) == 0:
         raise ValueError("Empty roots")
