@@ -29,26 +29,29 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         """Initialize a ChebyshevPolynomial object."""
         super().__init__(coef, domain, window, symbol)
 
-    def __call__(self, x):
-        """Evaluate the polynomial at the given points.
+    def __call__(self, arg):
+        """Evaluate the polynomial at points x.
 
         Args:
-            x: Points at which to evaluate the polynomial.
+            arg: Points at which to evaluate the polynomial.
 
         Returns:
-            The values of the polynomial at the given points.
+            If arg is a scalar, returns a scalar value.
+            If arg is an array, returns an array of values.
         """
-        return cheb.chebval(x, self.coef)
+        # If the input is a scalar, directly evaluate the polynomial
+        if np.isscalar(arg):
+            # Map the input to the window
+            mapped_arg = np.asarray(arg)
+            mapped_arg = (mapped_arg - self.domain[0]) / (self.domain[1] - self.domain[0]) * (
+                self.window[1] - self.window[0]
+            ) + self.window[0]
 
-    def copy(self):
-        """Create a copy of the ChebyshevPolynomial object.
+            # Evaluate the polynomial using the chebval function
+            return cheb.chebval(mapped_arg, self.coef)
 
-        Returns:
-            ChebyshevPolynomial: A new ChebyshevPolynomial object with the same attributes.
-        """
-        return ChebyshevPolynomial(
-            coef=self.coef.copy(), domain=self.domain.copy(), window=self.window.copy(), symbol=self.symbol
-        )
+        # For array inputs, call the parent class's __call__ method
+        return super().__call__(arg)
 
     @property
     def iscomplex(self):
@@ -82,6 +85,29 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         else:
             ax.plot(xx, ff, **kwds)
         return ax
+
+    def diff(self):
+        """Return the derivative as a new ChebyshevPolynomial.
+
+        Returns:
+            ChebyshevPolynomial: The derivative of the polynomial.
+        """
+        # Get the coefficients of the derivative
+        deriv_coef = cheb.chebder(self.coef, m=1)
+        return ChebyshevPolynomial(coef=deriv_coef, domain=self.domain, window=self.window, symbol=f"{self.symbol}")
+
+    def cumsum(self):
+        """Return the antiderivative as a new ChebyshevPolynomial.
+
+        The antiderivative is calculated with the lower bound set to the lower bound of the domain
+        and the integration constant set to 0.
+
+        Returns:
+            ChebyshevPolynomial: The antiderivative of the polynomial.
+        """
+        # Get the coefficients of the antiderivative
+        integ_coef = cheb.chebint(self.coef, m=1, lbnd=self.domain[0], k=0)
+        return ChebyshevPolynomial(coef=integ_coef, domain=self.domain, window=self.window, symbol=f"{self.symbol}")
 
 
 def from_coefficients(coef, domain=None, window=None, symbol="x"):

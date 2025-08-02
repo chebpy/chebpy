@@ -304,3 +304,39 @@ def test_copy_method():
     # Check that modifying the copy doesn't affect the original
     poly_copy.coef[0] = 999
     assert poly.coef[0] != 999, "Modifying the copy should not affect the original."
+
+
+# Tests for diff method
+def test_diff_returns_chebyshev_polynomial():
+    """Test that diff returns a ChebyshevPolynomial instance."""
+    poly = ChebyshevPolynomial(coef=[1, 2, 3])
+    deriv = poly.diff()
+    assert isinstance(deriv, ChebyshevPolynomial), "diff did not return a ChebyshevPolynomial."
+
+
+def test_diff_preserves_domain_and_window():
+    """Test that diff preserves the domain and window of the original polynomial."""
+    domain = (0.0, 2.0)
+    window = (-1.0, 1.0)
+    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain, window=window)
+    deriv = poly.diff()
+    assert np.array_equal(deriv.domain, poly.domain), "Domain was not preserved in derivative."
+    assert np.array_equal(deriv.window, poly.window), "Window was not preserved in derivative."
+
+
+# Tests for cumsum method
+def test_cumsum_returns_chebyshev_polynomial():
+    """Test that cumsum returns a ChebyshevPolynomial instance."""
+    poly = ChebyshevPolynomial(coef=[1, 2, 3])
+    integ = poly.cumsum()
+    assert isinstance(integ, ChebyshevPolynomial), "cumsum did not return a ChebyshevPolynomial."
+
+
+def test_cumsum_preserves_domain_and_window():
+    """Test that cumsum preserves the domain and window of the original polynomial."""
+    domain = (0.0, 2.0)
+    window = (-1.0, 1.0)
+    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain, window=window)
+    integ = poly.cumsum()
+    assert np.array_equal(integ.domain, poly.domain), "Domain was not preserved in antiderivative."
+    assert np.array_equal(integ.window, poly.window), "Window was not preserved in antiderivative."
