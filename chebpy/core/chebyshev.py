@@ -7,10 +7,8 @@ polynomials and various build functions to construct such polynomials.
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.polynomial.chebyshev as cheb
-
-from .algorithms import (
-    vals2coeffs2,
-)
+#
+from .algorithms import vals2coeffs2
 from .settings import _preferences as prefs
 
 
