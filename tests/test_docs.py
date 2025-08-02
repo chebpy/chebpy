@@ -75,7 +75,7 @@ def docstring(project_root: Path) -> str:
     combines them into a single docstring that can be processed by doctest.
 
     Args:
-        root_dir: Path to the project root directory
+        project_root: Path to the project root directory
 
     Returns:
         str: A docstring containing all Python code examples from README.md
@@ -104,7 +104,7 @@ def test_blocks(project_root: Path, docstring: str, capfd: CaptureFixture[str]) 
     output or errors and fails the test if any issues are detected.
 
     Args:
-        root_dir: Path to the project root directory
+        project_root: Path to the project root directory
         docstring: String containing all Python code examples from README.md
         capfd: Pytest fixture for capturing stdout/stderr output
 

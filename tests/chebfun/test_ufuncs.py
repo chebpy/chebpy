@@ -21,6 +21,7 @@ def test_abs_absolute_alias():
     """
     assert Chebfun.abs == Chebfun.absolute
 
+
 # Generate test functions for ufuncs
 def test_ufuncs():
     """Test ufunc operations on Chebfun objects.

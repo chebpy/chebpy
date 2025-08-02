@@ -37,7 +37,6 @@ def test_complexfun_properties(complexfun):
     assert np.all(np.abs(actual_values - expected_values) < 1e-14)
 
 
-
 def test_roots(complexfun):
     """Test finding roots of complex Chebtech functions.
 

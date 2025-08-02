@@ -4,6 +4,7 @@ This module contains test functions for universal functions (ufuncs) that can be
 with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on operations with empty function objects and various mathematical functions.
 """
+
 import numpy as np
 import pytest
 
@@ -47,6 +48,7 @@ ufuncs = (
     np.tanh,
     np.sqrt,
 )
+
 
 def ufunc_parameter():
     """Generate test parameters for ufunc tests.
@@ -97,9 +99,10 @@ def ufunc_parameter():
         (np.sinh, uf3, (-3, 3)),
         (np.sin, uf3, (-3, 3)),
         (np.tan, uf3, (-0.8, 0.8)),
-        (np.tanh, uf3, (-3, 3))
+        (np.tanh, uf3, (-3, 3)),
     ]
     return ufunc_test_params
+
 
 # Test empty cases for all ufuncs
 @pytest.mark.parametrize("ufunc", ufuncs)

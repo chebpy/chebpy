@@ -876,7 +876,6 @@ class Chebfun:
             funs = np.append(funs, subfun.funs)
         return self.__class__(funs)
 
-
     # ----------
     #  plotting
     # ----------
@@ -895,7 +894,6 @@ class Chebfun:
             matplotlib.axes.Axes: The axes on which the plot was created.
         """
         return plotfun(self, self.support, ax=ax, **kwds)
-
 
     def plotcoeffs(self, ax=None, **kwds):
         """Plot the coefficients of the Chebfun on a semilogy scale.

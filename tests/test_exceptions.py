@@ -4,6 +4,7 @@ This module contains tests that verify the behavior of all exception classes
 defined in the chebpy.core.exceptions module, including initialization with
 custom messages, default messages, and the abstract base class behavior.
 """
+
 from abc import ABC
 
 import pytest

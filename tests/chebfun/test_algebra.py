@@ -3,4 +3,5 @@
 This module contains tests for the algebraic operations of Chebfun,
 including addition, subtraction, multiplication, division, and powers.
 """
+
 from ..generic.algebra import *  # noqa: F401, F403

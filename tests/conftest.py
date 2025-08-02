@@ -15,6 +15,7 @@ Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
     making it suitable for headless CI environments.
 """
+
 import dataclasses
 import operator
 import os
@@ -92,6 +93,7 @@ def binops():
     """Binary operators for testing algebraic operations."""
     return [operator.add, operator.mul, operator.sub, operator.truediv]
 
+
 @pytest.fixture()
 def div_binops():
     """Binary operators for testing division."""
@@ -152,6 +154,7 @@ def constfun(request):
     if "bndfun" in module_name:
         # Bndfun requires an interval
         from chebpy.core.utilities import Interval
+
         fun = Bndfun.initconst(1.0, Interval())
     elif "chebfun" in module_name:
         fun = Chebfun.initconst(1.0)
@@ -188,6 +191,7 @@ def complexfun(request):
     if "bndfun" in module_name:
         # Bndfun requires an interval
         from chebpy.core.utilities import Interval
+
         fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
     elif "chebfun" in module_name:
         fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
@@ -204,9 +208,11 @@ def complexfun(request):
 
     return fun
 
+
 @dataclasses.dataclass(frozen=True)
 class TestFunction:
     """Container for test functions."""
+
     cheb: Chebfun | Chebtech | Bndfun
     raw: callable
     degree: int
@@ -225,24 +231,17 @@ def ttt(request, testfunctions):
         for fun, degree, roots in testfunctions:
             bndfun = Bndfun.initfun_adaptive(fun, interval)
             bndfun.name = fun.__name__
-            t_functions.append(
-                TestFunction(cheb=bndfun, raw=fun, degree=degree, has_roots=roots)
-            )
+            t_functions.append(TestFunction(cheb=bndfun, raw=fun, degree=degree, has_roots=roots))
 
     if "chebfun" in module_name:
         for fun, degree, roots in testfunctions:
             chebfun = Chebfun.initfun_adaptive(fun, [-1, 1])
             chebfun.name = fun.__name__
-            t_functions.append(
-                TestFunction(cheb=chebfun, raw=fun, degree=degree, has_roots=roots)
-            )
+            t_functions.append(TestFunction(cheb=chebfun, raw=fun, degree=degree, has_roots=roots))
 
     if "chebtech" in module_name:
         for fun, degree, roots in testfunctions:
             chebtech = Chebtech.initfun_adaptive(fun)
             chebtech.name = fun.__name__
-            t_functions.append(
-                TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots)
-            )
+            t_functions.append(TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots))
     return t_functions
-
