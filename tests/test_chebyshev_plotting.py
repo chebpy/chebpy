@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from chebpy.core.chebyshev import from_coefficients
-from tests.generic.plotting import test_plot, test_plot_complex  # noqa: F401
+from tests.generic.plotting import test_plot  # noqa: F401
 
 
 @pytest.fixture

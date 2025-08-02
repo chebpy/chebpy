@@ -4,9 +4,9 @@ This module provides a dataclass for the immutable representation of Chebyshev
 polynomials and various build functions to construct such polynomials.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.polynomial.chebyshev as cheb
-import matplotlib.pyplot as plt
 
 from .algorithms import (
     vals2coeffs2,
