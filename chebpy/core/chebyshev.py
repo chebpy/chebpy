@@ -267,12 +267,8 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         return ChebyshevPolynomial(new_coeffs, domain=self.domain, symbol=self.symbol)
 
 
-
 def from_coefficients(
-    coef: ArrayLike,
-    domain: DomainLike | None = None,
-    window: DomainLike | None = None,
-    symbol: str = "x"
+    coef: ArrayLike, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x"
 ) -> ChebyshevPolynomial:
     """Create a Chebyshev polynomial from its coefficients.
 
@@ -299,10 +295,7 @@ def from_coefficients(
 
 
 def from_values(
-    values: ArrayLike,
-    domain: DomainLike | None = None,
-    window: DomainLike | None = None,
-    symbol: str = "x"
+    values: ArrayLike, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x"
 ) -> ChebyshevPolynomial:
     """Create a Chebyshev polynomial from values at Chebyshev points.
 
@@ -333,10 +326,7 @@ def from_values(
 
 
 def from_roots(
-    roots: ArrayLike,
-    domain: DomainLike | None = None,
-    window: DomainLike | None = None,
-    symbol: str = "x"
+    roots: ArrayLike, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x"
 ) -> ChebyshevPolynomial:
     """Create a Chebyshev polynomial from its roots.
 
@@ -366,10 +356,7 @@ def from_roots(
 
 
 def from_constant(
-    c: ScalarLike,
-    domain: DomainLike | None = None,
-    window: DomainLike | None = None,
-    symbol: str = "x"
+    c: ScalarLike, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x"
 ) -> ChebyshevPolynomial:
     """Create a Chebyshev polynomial representing a constant value.
 

@@ -357,11 +357,13 @@ def test_values_property():
     # For a polynomial with coefficients [1, 2, 3], the values at Chebyshev points
     # can be calculated using the coeffs2vals2 function from algorithms.py
     from chebpy.core.algorithms import coeffs2vals2
+
     expected_values = coeffs2vals2(np.array(coef))
     assert np.allclose(values, expected_values), "Values do not match expected values."
 
     # Check that converting back to coefficients gives the original coefficients
     from chebpy.core.algorithms import vals2coeffs2
+
     reconstructed_coef = vals2coeffs2(values)
     assert np.allclose(reconstructed_coef, coef), "Reconstructed coefficients do not match original coefficients."
 
@@ -533,6 +535,7 @@ def test_vscale_with_simple_polynomial():
 
     # Calculate the expected vscale
     from chebpy.core.algorithms import coeffs2vals2
+
     values = coeffs2vals2(np.array(coef))
     expected_vscale = np.abs(values).max()
 
@@ -548,6 +551,7 @@ def test_vscale_with_complex_polynomial():
 
     # Calculate the expected vscale
     from chebpy.core.algorithms import coeffs2vals2
+
     values = coeffs2vals2(np.array(coef))
     expected_vscale = np.abs(values).max()
 

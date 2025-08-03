@@ -242,7 +242,8 @@ def test_evaluate_polynomial_at_points():
     """Test evaluating a ChebyshevPolynomial at multiple points."""
     # Create a polynomial
     poly = ChebyshevPolynomial(
-        coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Evaluate at multiple points
     points = np.array([-1.0, 0.0, 1.0])
@@ -262,7 +263,8 @@ def test_evaluate_polynomial_at_point():
     """Test evaluating a ChebyshevPolynomial at a single point."""
     # Create a polynomial
     poly = ChebyshevPolynomial(
-        coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Evaluate at a single point
     point = 0.5
@@ -281,7 +283,8 @@ def test_evaluate_derivative_at_point():
     """Test evaluating the derivative of a ChebyshevPolynomial at a single point."""
     # Create a polynomial
     poly = ChebyshevPolynomial(
-        coef=[1, 2, 3])  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
+        coef=[1, 2, 3]
+    )  # 1 + 2*T_1(x) + 3*T_2(x) = 1 + 2x + 3(2x^2-1) = 1 + 2x + 6x^2 - 3 = -2 + 2x + 6x^2
 
     # Calculate its derivative
     deriv = poly.diff()  # 2 + 12x
