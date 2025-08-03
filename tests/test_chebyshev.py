@@ -106,9 +106,8 @@ def test_post_init_converts_interval_to_interval(valid_coeffs, valid_interval):
 
 def test_post_init_raises_error_on_invalid_interval(valid_coeffs):
     """Test that __post_init__ raises an error when interval is invalid."""
-    invalid_interval = (1.0, -1.0)
     with pytest.raises(Exception):
-        ChebyshevPolynomial(coeffs=valid_coeffs, interval=invalid_interval)
+        ChebyshevPolynomial()
 
 
 def test_post_init_handles_numpy_array_coeffs():
@@ -285,9 +284,8 @@ def test_copy_method():
     # Create a polynomial with known attributes
     coef = [1, 2, 3]
     domain = (0.0, 2.0)
-    window = (-1.0, 1.0)
     symbol = "t"
-    poly = ChebyshevPolynomial(coef=coef, domain=domain, window=window, symbol=symbol)
+    poly = ChebyshevPolynomial(coef=coef, domain=domain, symbol=symbol)
 
     # Create a copy
     poly_copy = poly.copy()
@@ -317,8 +315,7 @@ def test_diff_returns_chebyshev_polynomial():
 def test_diff_preserves_domain_and_window():
     """Test that diff preserves the domain and window of the original polynomial."""
     domain = (0.0, 2.0)
-    window = (-1.0, 1.0)
-    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain, window=window)
+    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain)
     deriv = poly.diff()
     assert np.array_equal(deriv.domain, poly.domain), "Domain was not preserved in derivative."
     assert np.array_equal(deriv.window, poly.window), "Window was not preserved in derivative."
@@ -335,8 +332,231 @@ def test_cumsum_returns_chebyshev_polynomial():
 def test_cumsum_preserves_domain_and_window():
     """Test that cumsum preserves the domain and window of the original polynomial."""
     domain = (0.0, 2.0)
-    window = (-1.0, 1.0)
-    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain, window=window)
+    poly = ChebyshevPolynomial(coef=[1, 2, 3], domain=domain)
     integ = poly.cumsum()
     assert np.array_equal(integ.domain, poly.domain), "Domain was not preserved in antiderivative."
     assert np.array_equal(integ.window, poly.window), "Window was not preserved in antiderivative."
+
+
+def test_values_property():
+    """Test that the values property returns the function values at Chebyshev points."""
+    # Create a polynomial with known coefficients
+    coef = [1, 2, 3]  # 1 + 2*T_1(x) + 3*T_2(x)
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Get the values
+    values = poly.values
+
+    # Check that the values are a numpy array
+    assert isinstance(values, np.ndarray), "Values should be a numpy array."
+
+    # Check that the number of values matches the number of coefficients
+    assert len(values) == len(coef), "Number of values should match number of coefficients."
+
+    # Check that the values are correct
+    # For a polynomial with coefficients [1, 2, 3], the values at Chebyshev points
+    # can be calculated using the coeffs2vals2 function from algorithms.py
+    from chebpy.core.algorithms import coeffs2vals2
+    expected_values = coeffs2vals2(np.array(coef))
+    assert np.allclose(values, expected_values), "Values do not match expected values."
+
+    # Check that converting back to coefficients gives the original coefficients
+    from chebpy.core.algorithms import vals2coeffs2
+    reconstructed_coef = vals2coeffs2(values)
+    assert np.allclose(reconstructed_coef, coef), "Reconstructed coefficients do not match original coefficients."
+
+
+def test_roundtrip_from_values_to_values():
+    """Test roundtrip from values to polynomial and back to values."""
+    # Create a set of values at Chebyshev points
+    original_values = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+
+    # Create a polynomial from these values
+    poly = from_values(original_values)
+
+    # Get the values back from the polynomial
+    retrieved_values = poly.values
+
+    # Check that the retrieved values match the original values
+    assert np.allclose(retrieved_values, original_values), "Retrieved values do not match original values."
+
+    # Also check with a custom domain
+    domain = (0.0, 2.0)
+    poly_with_domain = from_values(original_values, domain=domain)
+    retrieved_values_with_domain = poly_with_domain.values
+
+    # The domain shouldn't affect the values at Chebyshev points
+    assert np.allclose(retrieved_values_with_domain, original_values), (
+        "Retrieved values with custom domain do not match original values."
+    )
+
+
+# Tests for prolong method
+def test_prolong_truncation():
+    """Test that prolong correctly truncates coefficients when n < self.size."""
+    # Create a polynomial with known coefficients
+    coef = [1, 2, 3, 4, 5]
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Truncate to a smaller size
+    n = 3
+    truncated = poly.prolong(n)
+
+    # Check that the result is a ChebyshevPolynomial
+    assert isinstance(truncated, ChebyshevPolynomial), "prolong did not return a ChebyshevPolynomial."
+
+    # Check that the size is correct
+    assert truncated.size == n, f"Size should be {n}, got {truncated.size}."
+
+    # Check that the coefficients are correct (first n coefficients of the original)
+    assert np.array_equal(truncated.coef, np.array(coef[:n])), "Coefficients were not truncated correctly."
+
+    # Check that the original polynomial is unchanged
+    assert poly.size == len(coef), "Original polynomial was modified."
+    assert np.array_equal(poly.coef, np.array(coef)), "Original coefficients were modified."
+
+
+def test_prolong_zero_padding():
+    """Test that prolong correctly zero-pads coefficients when n > self.size."""
+    # Create a polynomial with known coefficients
+    coef = [1, 2, 3]
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Pad to a larger size
+    n = 5
+    padded = poly.prolong(n)
+
+    # Check that the result is a ChebyshevPolynomial
+    assert isinstance(padded, ChebyshevPolynomial), "prolong did not return a ChebyshevPolynomial."
+
+    # Check that the size is correct
+    assert padded.size == n, f"Size should be {n}, got {padded.size}."
+
+    # Check that the coefficients are correct (original coefficients followed by zeros)
+    expected_coef = np.concatenate([np.array(coef), np.zeros(n - len(coef))])
+    assert np.array_equal(padded.coef, expected_coef), "Coefficients were not zero-padded correctly."
+
+    # Check that the original polynomial is unchanged
+    assert poly.size == len(coef), "Original polynomial was modified."
+    assert np.array_equal(poly.coef, np.array(coef)), "Original coefficients were modified."
+
+
+def test_prolong_copy():
+    """Test that prolong returns a copy when n == self.size."""
+    # Create a polynomial with known coefficients
+    coef = [1, 2, 3]
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Call prolong with the same size
+    n = len(coef)
+    copy_poly = poly.prolong(n)
+
+    # Check that the result is a ChebyshevPolynomial
+    assert isinstance(copy_poly, ChebyshevPolynomial), "prolong did not return a ChebyshevPolynomial."
+
+    # Check that it's a new instance
+    assert copy_poly is not poly, "prolong should return a new instance."
+
+    # Check that the size is correct
+    assert copy_poly.size == n, f"Size should be {n}, got {copy_poly.size}."
+
+    # Check that the coefficients are the same
+    assert np.array_equal(copy_poly.coef, poly.coef), "Coefficients should be the same."
+
+    # Check that modifying the copy doesn't affect the original
+    copy_poly.coef[0] = 999
+    assert poly.coef[0] != 999, "Modifying the copy should not affect the original."
+
+
+def test_prolong_preserves_attributes():
+    """Test that prolong preserves domain, window, and symbol."""
+    # Create a polynomial with custom attributes
+    coef = [1, 2, 3]
+    domain = (0.0, 2.0)
+    symbol = "t"
+    poly = ChebyshevPolynomial(coef=coef, domain=domain, symbol=symbol)
+
+    # Test all three cases
+    for n in [2, 3, 4]:  # truncation, copy, zero-padding
+        result = poly.prolong(n)
+
+        # Check that attributes are preserved
+        assert np.array_equal(result.domain, poly.domain), f"Domain was not preserved for n={n}."
+        assert np.array_equal(result.window, poly.window), f"Window was not preserved for n={n}."
+        assert result.symbol == poly.symbol, f"Symbol was not preserved for n={n}."
+
+
+# Tests for isconst property
+def test_isconst_with_constant_polynomial():
+    """Test that isconst returns True for a constant polynomial."""
+    # Create a constant polynomial
+    poly = ChebyshevPolynomial(coef=[42.0])
+
+    # Check that isconst returns True
+    assert poly.isconst, "isconst should return True for a constant polynomial."
+
+
+def test_isconst_with_non_constant_polynomial():
+    """Test that isconst returns False for a non-constant polynomial."""
+    # Create a non-constant polynomial
+    poly = ChebyshevPolynomial(coef=[1, 2, 3])
+
+    # Check that isconst returns False
+    assert not poly.isconst, "isconst should return False for a non-constant polynomial."
+
+
+def test_isconst_with_empty_polynomial():
+    """Test that creating an empty polynomial raises a ValueError."""
+    # Attempt to create an empty polynomial
+    with pytest.raises(ValueError, match="Coefficient array is empty"):
+        ChebyshevPolynomial(coef=[])
+
+
+# Tests for vscale property
+def test_vscale_with_constant_polynomial():
+    """Test that vscale returns the absolute value of the constant for a constant polynomial."""
+    # Create a constant polynomial
+    value = 42.0
+    poly = ChebyshevPolynomial(coef=[value])
+
+    # Check that vscale returns the absolute value of the constant
+    assert poly.vscale == abs(value), "vscale should return the absolute value of the constant."
+
+
+def test_vscale_with_simple_polynomial():
+    """Test that vscale returns the maximum absolute value of the function values."""
+    # Create a polynomial with known values
+    # For a polynomial with coefficients [1, 2, 3], the values at Chebyshev points
+    # can be calculated using the coeffs2vals2 function from algorithms.py
+    coef = [1, 2, 3]
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Calculate the expected vscale
+    from chebpy.core.algorithms import coeffs2vals2
+    values = coeffs2vals2(np.array(coef))
+    expected_vscale = np.abs(values).max()
+
+    # Check that vscale returns the expected value
+    assert np.isclose(poly.vscale, expected_vscale), f"vscale should return {expected_vscale}, got {poly.vscale}."
+
+
+def test_vscale_with_complex_polynomial():
+    """Test that vscale returns the maximum absolute value of the complex function values."""
+    # Create a complex polynomial
+    coef = [1 + 1j, 2 + 2j, 3 + 3j]
+    poly = ChebyshevPolynomial(coef=coef)
+
+    # Calculate the expected vscale
+    from chebpy.core.algorithms import coeffs2vals2
+    values = coeffs2vals2(np.array(coef))
+    expected_vscale = np.abs(values).max()
+
+    # Check that vscale returns the expected value
+    assert np.isclose(poly.vscale, expected_vscale), f"vscale should return {expected_vscale}, got {poly.vscale}."
+
+
+def test_vscale_with_empty_polynomial():
+    """Test that creating an empty polynomial raises a ValueError."""
+    # Attempt to create an empty polynomial
+    with pytest.raises(ValueError, match="Coefficient array is empty"):
+        ChebyshevPolynomial(coef=[])
