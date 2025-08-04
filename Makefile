@@ -41,6 +41,7 @@ lint: uv ## Run linters only
 	@uvx ruff check --unsafe-fixes --fix chebpy
 	@uvx ruff check --unsafe-fixes --fix tests
 	@uvx ruff check --unsafe-fixes --fix docs
+	@uvx ruff check --unsafe-fixes --fix book
 
 check: fmt lint test ## Run all checks (lint and test)
 	@printf "$(GREEN)All checks passed!$(RESET)\n"
@@ -91,3 +92,14 @@ clean: ## Clean generated files and directories
 	@printf "$(BLUE)Removing local branches with no remote counterpart...$(RESET)\n"
 	@git fetch -p
 	@git branch -vv | grep ': gone]' | awk '{print $$1}' | xargs -r git branch -D
+
+##@ Marimo
+
+marimo: install ## Start a Marimo server (use FILE=filename.py to specify a file)
+	@if [ -z "$(FILE)" ]; then \
+		echo "❌ FILE is required. Usage: make marimo FILE=demo.py" >&2; \
+		exit 1; \
+	fi
+
+	@printf "$(BLUE)Start Marimo server with $(MARIMO_FOLDER)/$(FILE)...$(RESET)\n"
+	@uv run marimo edit $(MARIMO_FOLDER)/$(FILE)
