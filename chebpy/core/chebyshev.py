@@ -3,7 +3,7 @@
 This module provides a class for the immutable representation of Chebyshev
 polynomials and various factory functions to construct such polynomials.
 """
-
+import warnings
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ import numpy as np
 import numpy.polynomial.chebyshev as cheb
 from matplotlib.axes import Axes
 
-from .algorithms import coeffs2vals2, vals2coeffs2
+from .algorithms import coeffs2vals2, vals2coeffs2, standard_chop
 from .settings import _preferences as prefs
 
 # Type aliases
@@ -386,3 +386,93 @@ def from_constant(
         c = float(c)
 
     return ChebyshevPolynomial([c], domain, window, symbol)
+
+
+def from_function(
+    fun: callable, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x", n: int | None = None
+) -> ChebyshevPolynomial:
+    """Create a Chebyshev polynomial from a callable function.
+
+    Constructs a Chebyshev polynomial that approximates the given function.
+    If n is provided, uses a fixed number of degrees of freedom.
+    If n is None, uses an adaptive algorithm to determine the appropriate
+    number of degrees of freedom.
+
+    Args:
+        fun: Callable function to approximate.
+        domain: Domain to use. The interval [domain[0], domain[1]] is mapped
+            to the interval [window[0], window[1]] by shifting and scaling.
+            If None, the default domain [-1, 1] is used.
+        window: Window, see domain for its use. If None, the default window
+            [-1, 1] is used.
+        symbol: Symbol used to represent the independent variable in string
+            representations of the polynomial expression. Default is 'x'.
+        n: Number of degrees of freedom to use. If None, uses an adaptive algorithm.
+
+    Returns:
+        A new Chebyshev polynomial that approximates the given function.
+    """
+    from .algorithms import adaptive, chebpts2, vals2coeffs2
+
+    domain_arr = np.array([-1, 1]) if domain is None else np.array(domain)
+
+    # Create a wrapper function that maps points from [-1, 1] to the custom domain
+    def mapped_fun(x):
+        # Map x from [-1, 1] to the custom domain
+        a, b = domain_arr
+        mapped_x = 0.5 * (b - a) * (x + 1) + a
+        return fun(mapped_x)
+
+    if n is None:
+        # Use adaptive algorithm
+        hscale = (domain_arr[1] - domain_arr[0]) / 2
+        coeffs = __adaptive(ChebyshevPolynomial, mapped_fun, hscale=hscale)
+    else:
+        # Use fixed number of degrees of freedom
+        points = chebpts2(n)
+        values = mapped_fun(points)
+        coeffs = vals2coeffs2(values)
+
+    return ChebyshevPolynomial(coeffs, domain, window, symbol)
+
+
+
+def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
+    """Adaptively determine the number of points needed to represent a function.
+
+    This function implements an adaptive algorithm to determine the appropriate
+    number of points needed to represent a function to a specified tolerance.
+    It cycles over powers of two, evaluating the function at Chebyshev points
+    and checking if the resulting coefficients can be truncated.
+
+    Args:
+        cls: The class that provides the _chebpts and _vals2coeffs methods.
+        fun (callable): The function to be approximated.
+        hscale (float, optional): Scale factor for the tolerance. Defaults to 1.
+        maxpow2 (int, optional): Maximum power of 2 to try. If None, uses the
+            value from preferences.
+
+    Returns:
+        numpy.ndarray: Coefficients of the Chebyshev series representing the function.
+
+    Warns:
+        UserWarning: If the constructor does not converge within the maximum
+            number of iterations.
+    """
+    minpow2 = 4  # 17 points
+    maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
+    for k in range(minpow2, max(minpow2, maxpow2) + 1):
+        n = 2**k + 1
+        points = cheb.chebpts2(n)
+        values = fun(points)
+        coeffs = vals2coeffs2(values)
+        eps = prefs.eps
+        tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
+        chplen = standard_chop(coeffs, tol=tol)
+        if chplen < coeffs.size:
+            coeffs = coeffs[:chplen]
+            break
+        if k == maxpow2:
+            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points")
+            break
+    return coeffs
