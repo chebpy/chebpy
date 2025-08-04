@@ -3,6 +3,7 @@
 This module provides a class for the immutable representation of Chebyshev
 polynomials and various factory functions to construct such polynomials.
 """
+
 import warnings
 from typing import Any
 
@@ -11,7 +12,7 @@ import numpy as np
 import numpy.polynomial.chebyshev as cheb
 from matplotlib.axes import Axes
 
-from .algorithms import coeffs2vals2, vals2coeffs2, standard_chop
+from .algorithms import coeffs2vals2, standard_chop, vals2coeffs2
 from .settings import _preferences as prefs
 
 # Type aliases
@@ -389,7 +390,11 @@ def from_constant(
 
 
 def from_function(
-    fun: callable, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x", n: int | None = None
+    fun: callable,
+    domain: DomainLike | None = None,
+    window: DomainLike | None = None,
+    symbol: str = "x",
+    n: int | None = None,
 ) -> ChebyshevPolynomial:
     """Create a Chebyshev polynomial from a callable function.
 
@@ -412,7 +417,7 @@ def from_function(
     Returns:
         A new Chebyshev polynomial that approximates the given function.
     """
-    from .algorithms import adaptive, chebpts2, vals2coeffs2
+    from .algorithms import chebpts2, vals2coeffs2
 
     domain_arr = np.array([-1, 1]) if domain is None else np.array(domain)
 
@@ -434,7 +439,6 @@ def from_function(
         coeffs = vals2coeffs2(values)
 
     return ChebyshevPolynomial(coeffs, domain, window, symbol)
-
 
 
 def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:

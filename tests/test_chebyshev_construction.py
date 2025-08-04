@@ -181,8 +181,9 @@ def test_from_constant_with_non_scalar_value():
 # Tests for from_function factory function
 def test_from_function_creates_chebyshev_polynomial():
     """Test that from_function creates a ChebyshevPolynomial from a callable function."""
+
     def fun(x):
-        return x**2 + 2*x + 1  # Quadratic function
+        return x**2 + 2 * x + 1  # Quadratic function
 
     poly = from_function(fun)
     assert isinstance(poly, ChebyshevPolynomial), "from_function did not return a ChebyshevPolynomial."
@@ -196,8 +197,9 @@ def test_from_function_creates_chebyshev_polynomial():
 
 def test_from_function_with_fixed_degrees_of_freedom():
     """Test that from_function works with a fixed number of degrees of freedom."""
+
     def fun(x):
-        return x**2 + 2*x + 1  # Quadratic function
+        return x**2 + 2 * x + 1  # Quadratic function
 
     n = 5  # Fixed number of degrees of freedom
     poly = from_function(fun, n=n)
@@ -212,8 +214,9 @@ def test_from_function_with_fixed_degrees_of_freedom():
 
 def test_from_function_with_adaptive_algorithm():
     """Test that from_function works with the adaptive algorithm."""
+
     def fun(x):
-        return x**2 + 2*x + 1  # Quadratic function
+        return x**2 + 2 * x + 1  # Quadratic function
 
     poly = from_function(fun, n=None)  # Use adaptive algorithm
     assert isinstance(poly, ChebyshevPolynomial), "from_function did not return a ChebyshevPolynomial."
@@ -227,8 +230,9 @@ def test_from_function_with_adaptive_algorithm():
 
 def test_from_function_with_domain():
     """Test that from_function works with a custom domain."""
+
     def fun(x):
-        return x**2 + 2*x + 1  # Quadratic function
+        return x**2 + 2 * x + 1  # Quadratic function
 
     domain = (0.0, 2.0)
     poly = from_function(fun, domain=domain)
@@ -243,8 +247,9 @@ def test_from_function_with_domain():
 
 def test_from_function_with_linear_function():
     """Test that from_function works with a linear function."""
+
     def fun(x):
-        return 2*x + 1  # Linear function
+        return 2 * x + 1  # Linear function
 
     poly = from_function(fun)
     assert isinstance(poly, ChebyshevPolynomial), "from_function did not return a ChebyshevPolynomial."
@@ -260,8 +265,9 @@ def test_from_function_with_linear_function():
 
 def test_from_function_with_complex_function():
     """Test that from_function works with a complex-valued function."""
+
     def fun(x):
-        return (1 + 2j)*x**2 + (3 + 4j)*x + (5 + 6j)  # Complex quadratic function
+        return (1 + 2j) * x**2 + (3 + 4j) * x + (5 + 6j)  # Complex quadratic function
 
     poly = from_function(fun)
     assert isinstance(poly, ChebyshevPolynomial), "from_function did not return a ChebyshevPolynomial."
