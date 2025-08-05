@@ -5,6 +5,7 @@
 */.ipynb_checkpoints/*
 
 __marimo__
+.venv
 
 # C extensions
 *.so
