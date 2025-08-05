@@ -4,6 +4,8 @@
 *~
 */.ipynb_checkpoints/*
 
+__marimo__
+
 # C extensions
 *.so
 
