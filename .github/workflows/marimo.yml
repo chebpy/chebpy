@@ -12,13 +12,7 @@ name: "Marimo"
 
 on:
   push
-  #  branches:
-  #    - master
-  #    - main
-  #pull_request:
-  #  paths:
-  #    - 'book/marimo/**'
-  #    - '.github/workflows/marimo.yml'
+
 
 jobs:
   parse-env:
@@ -52,15 +46,26 @@ jobs:
         with:
           python-version: '3.13'
           
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install marimo
-          pip install -e .
+          uv venv .venv
+          source .venv/bin/activate
+          if [ -f "pyproject.toml" ]; then
+            echo "pyproject.toml found, installing package dependencies"
+            uv pip install -e .
+          else
+            echo "No pyproject.toml found, skipping package installation"
+          fi
           
       - name: Run Marimo notebooks
         run: |
+          uv pip install marimo
           for notebook in $(find ${{ needs.parse-env.outputs.marimo-folder }} -name "*.py"); do
             echo "Running $notebook"
-            marimo run "$notebook" --headless
+            uv run marimo run "$notebook" --headless --no-browser &
           done
