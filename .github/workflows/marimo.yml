@@ -1,7 +1,10 @@
 name: "Marimo"
 
 on:
-  push
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   # Parse .env and build matrix of notebooks
@@ -18,8 +21,12 @@ jobs:
         id: export
         run: |
           set -a
-          source .env
-          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
+          if [ -f .env ]; then
+            source .env
+          else
+            echo "WARNING: .env file not found"
+          fi
+          echo "MARIMO_FOLDER=${MARIMO_FOLDER:-book/marimo}" >> "$GITHUB_OUTPUT"
           USE_UV_RUN=${USE_UV_RUN:-false}
           echo "USE_UV_RUN=$USE_UV_RUN" >> "$GITHUB_OUTPUT"
           set +a
@@ -61,8 +68,7 @@ jobs:
           uv venv .venv
           source .venv/bin/activate
           uv sync --all-extras
-          uv pip install -e . coverage marimo
-          uv pip list
+          uv pip install -e . 'coverage==7.5.3' 'marimo==0.13.15'
         shell: bash
 
       - name: Run notebook with coverage
@@ -72,17 +78,21 @@ jobs:
           NOTEBOOK="${{ matrix.notebook }}"
           echo "Running $NOTEBOOK"
           
+          SANITIZED_NAME=$(echo "$NOTEBOOK" | sed 's/[\/\.]/_/g')
+          
           if [ "${{ needs.parse-env.outputs.use-uv-run }}" = "true" ]; then
             coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
           else
             coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
           fi
+
+          mv .coverage ".coverage.$SANITIZED_NAME"
         shell: bash
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.notebook }}
+          name: coverage
           path: .coverage.*
           if-no-files-found: error
 
@@ -101,16 +111,17 @@ jobs:
       - name: Download all coverage data
         uses: actions/download-artifact@v4
         with:
-          pattern: coverage-*
+          name: coverage
           path: coverage_data
           merge-multiple: true
 
       - name: Combine and report coverage
         run: |
-          pip install coverage
+          pip install 'coverage==7.5.3'
           coverage combine coverage_data
           coverage report
           coverage xml
+          coverage html -d htmlcov
         shell: bash
 
       - name: Upload coverage XML (for Codecov or similar)
@@ -118,3 +129,9 @@ jobs:
         with:
           name: coverage-xml
           path: coverage.xml
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
