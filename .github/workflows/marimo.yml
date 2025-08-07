@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
-      use-uv-run: ${{ steps.export.outputs.USE_UV_RUN || 'false' }}
       notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +51,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Install uv
         run: |
@@ -63,9 +62,7 @@ jobs:
         run: |
           set -e
           uv venv .venv
-          source .venv/bin/activate
           uv sync --all-extras
-          uv pip install -e .
         shell: bash
 
       - name: Run notebook
@@ -75,9 +72,12 @@ jobs:
           NOTEBOOK="${{ matrix.notebook }}"
           echo "Running $NOTEBOOK"
           
-          if [ "${{ needs.parse-env.outputs.use-uv-run }}" = "true" ]; then
-            $(which uv) run "$NOTEBOOK"
+          # Check if the notebook contains a SCRIPT section
+          if grep -q "# /// script" "$NOTEBOOK"; then
+            echo "SCRIPT section found, using uv run"
+            uv run "$NOTEBOOK"
           else
+            echo "No SCRIPT section found, using python"
             python "$NOTEBOOK"
           fi
         shell: bash
