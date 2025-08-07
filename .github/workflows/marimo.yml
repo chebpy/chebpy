@@ -7,12 +7,12 @@
 # Components:
 #   - 📚 Parse .env file for configuration
 #   - 🧪 Test Marimo notebooks execution
-
 name: "Marimo"
 
 on:
-  push
-
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
   parse-env:
@@ -40,32 +40,37 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-          
+
       - name: Install uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          
-      - name: Install dependencies
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Set up virtualenv and install dependencies
         run: |
           uv venv .venv
           source .venv/bin/activate
+
           if [ -f "pyproject.toml" ]; then
-            echo "pyproject.toml found, installing package dependencies"
+            echo "pyproject.toml found, installing editable package"
             uv pip install -e .
           else
-            echo "No pyproject.toml found, skipping package installation"
+            echo "No pyproject.toml found, skipping package install"
           fi
-          
+
+          uv pip install marimo
+
       - name: Run Marimo notebooks
         run: |
-          uv pip install marimo
-          for notebook in $(find ${{ needs.parse-env.outputs.marimo-folder }} -name "*.py"); do
+          source .venv/bin/activate
+          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
+          echo "Looking for notebooks in $NOTEBOOK_DIR"
+          find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            uv run marimo run "$notebook" --headless &
+            marimo run "$notebook" --headless
           done
