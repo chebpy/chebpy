@@ -96,6 +96,5 @@ clean: ## Clean generated files and directories
 ##@ Marimo
 
 marimo: install ## Start a Marimo server
-
-	@printf "$(BLUE)Start Marimo server with $(MARIMO_FOLDER)/$(FILE)...$(RESET)\n"
+	@printf "$(BLUE)Start Marimo server with $(MARIMO_FOLDER)...$(RESET)\n"
 	@uv run marimo edit $(MARIMO_FOLDER)
