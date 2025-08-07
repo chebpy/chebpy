@@ -83,5 +83,6 @@ jobs:
           # Find all Python files in the notebook directory and execute them
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            python "$notebook"  # Execute the notebook
+            #python "$notebook"  # Execute the notebook
+            uv run "$notebook"  # Execute the notebook using uv
           done
