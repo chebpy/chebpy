@@ -85,5 +85,6 @@ jobs:
           
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            uv run "$notebook"
+            #uv run "$notebook"
+            python "$notebook"
           done
