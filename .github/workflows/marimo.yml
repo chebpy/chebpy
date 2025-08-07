@@ -10,9 +10,7 @@
 name: "Marimo"
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  push
 
 jobs:
   parse-env:
