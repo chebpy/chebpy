@@ -1,0 +1,83 @@
+name: "Marimo"
+
+on:
+  push
+
+jobs:
+  # Parse .env and build matrix of notebooks
+  parse-env:
+    runs-on: ubuntu-latest
+    outputs:
+      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
+      notebook-list: ${{ steps.notebooks.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse .env and export variables
+        id: export
+        run: |
+          set -a
+          if [ -f .env ]; then
+            source .env
+          else
+            echo "WARNING: .env file not found"
+          fi
+          echo "MARIMO_FOLDER=${MARIMO_FOLDER:-book/marimo}" >> "$GITHUB_OUTPUT"
+          USE_UV_RUN=${USE_UV_RUN:-false}
+          echo "USE_UV_RUN=$USE_UV_RUN" >> "$GITHUB_OUTPUT"
+          set +a
+        shell: bash
+
+      - name: Find notebooks and build matrix
+        id: notebooks
+        run: |
+          NOTEBOOK_DIR="${{ steps.export.outputs.MARIMO_FOLDER }}"
+          echo "Searching notebooks in: $NOTEBOOK_DIR"
+          notebooks=$(find "$NOTEBOOK_DIR" -name "*.py" -print0 | xargs -0 -n1 echo | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$notebooks" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+  # One job per notebook using matrix
+  test-notebooks:
+    runs-on: ubuntu-latest
+    needs: parse-env
+    strategy:
+      matrix:
+        notebook: ${{ fromJson(needs.parse-env.outputs.notebook-list) }}
+    name: Run notebook ${{ matrix.notebook }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Set up virtualenv and install dependencies
+        run: |
+          set -e
+          uv venv .venv
+          uv sync --all-extras
+        shell: bash
+
+      - name: Run notebook
+        run: |
+          set -e
+          source .venv/bin/activate
+          NOTEBOOK="${{ matrix.notebook }}"
+          echo "Running $NOTEBOOK"
+          
+          # Check if the notebook contains a SCRIPT section
+          if grep -q "# /// script" "$NOTEBOOK"; then
+            echo "SCRIPT section found, using uv run"
+            uv run "$NOTEBOOK"
+          else
+            echo "No SCRIPT section found, using python"
+            python "$NOTEBOOK"
+          fi
+        shell: bash

@@ -10,7 +10,7 @@ with app.setup:
 
 
 @app.cell
-def _(mo):
+def _():
     mo.md(
         """
     # ChebyshevPolynomial Demonstration
