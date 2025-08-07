@@ -7,6 +7,10 @@
 # Components:
 #   - 📚 Parse .env file for configuration
 #   - 🧪 Test Marimo notebooks execution
+#
+# Configuration:
+#   - USE_UV_RUN: Set to 'true' in .env file to use 'uv run' instead of 'python'
+#                 for executing notebooks (enables script section execution)
 name: "Marimo"
 
 # Trigger workflow on any push to the repository
@@ -22,6 +26,7 @@ jobs:
       contents: read  # Only needs read access to repository contents
     outputs:
       marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}  # Path to Marimo notebooks
+      use-uv-run: ${{ steps.export.outputs.USE_UV_RUN || 'false' }}  # Whether to use 'uv run' instead of 'python'
     steps:
       # Checkout the repository code
       - uses: actions/checkout@v4
@@ -32,6 +37,9 @@ jobs:
           set -a  # Export all variables automatically
           source .env  # Load variables from .env file
           echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"  # Make MARIMO_FOLDER available as output
+          # Extract USE_UV_RUN from .env or default to 'false'
+          USE_UV_RUN=${USE_UV_RUN:-false}
+          echo "USE_UV_RUN=$USE_UV_RUN" >> "$GITHUB_OUTPUT"
           set +a  # Turn off automatic export
         shell: bash
 
@@ -83,13 +91,17 @@ jobs:
           source .venv/bin/activate
           
           NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
+          USE_UV_RUN="${{ needs.parse-env.outputs.use-uv-run }}"
           echo "Looking for notebooks in $NOTEBOOK_DIR"
+          echo "Using uv run: $USE_UV_RUN"
           
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            # use this to use the script section
-            # uv run "$notebook"
-            
-            # use this to run the plain notebook
-            python "$notebook"
+            if [ "$USE_UV_RUN" = "true" ]; then
+              # Use uv run to execute the script section of the notebook
+              uv run "$notebook"
+            else
+              # Use python to run the plain notebook
+              python "$notebook"
+            fi
           done
