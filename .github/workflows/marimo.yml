@@ -63,7 +63,7 @@ jobs:
         run: |
           set -e
           uv venv .venv
-          source .venv/bin/activate
+          source .venv/bin/activatec
           uv sync --all-extras
           uv pip install -e .
         shell: bash
@@ -71,7 +71,7 @@ jobs:
       - name: Run notebook with coverage
         run: |
           set -e
-          uv pip install coverage=='7.5.3'
+          uv pip install coverage
 
           source .venv/bin/activate
           NOTEBOOK="${{ matrix.notebook }}"
