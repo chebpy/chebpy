@@ -67,7 +67,8 @@ jobs:
           # Conditionally install the package in development mode if pyproject.toml exists
           if [ -f "pyproject.toml" ]; then
             echo "pyproject.toml found, installing editable package"
-            uv pip install -e .  # Install package in editable mode
+            uv sync --all-extras  # Install all extras
+            #uv pip install -e .  # Install package in editable mode
           else
             echo "No pyproject.toml found, skipping package install"
           fi
