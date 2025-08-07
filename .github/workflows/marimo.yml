@@ -63,7 +63,7 @@ jobs:
         run: |
           set -e
           uv venv .venv
-          source .venv/bin/activatec
+          source .venv/bin/activate
           uv sync --all-extras
           uv pip install -e .
         shell: bash
