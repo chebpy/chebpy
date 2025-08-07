@@ -61,31 +61,28 @@ jobs:
       # Create virtual environment and install required dependencies
       - name: Set up virtualenv and install dependencies
         run: |
-          uv venv .venv  # Create a virtual environment using uv
-          source .venv/bin/activate  # Activate the virtual environment
-
-          # Conditionally install the package in development mode if pyproject.toml exists
+          set -e  # Fail on error
+          uv venv .venv
+          source .venv/bin/activate
+          
           if [ -f "pyproject.toml" ]; then
-            echo "pyproject.toml found, installing editable package"
-            uv sync --all-extras  # Install all extras
-            # uv pip install -e .  # Install package in editable mode
+            echo "pyproject.toml found, installing with all extras"
+            uv sync --all-extras
           else
-            echo "No pyproject.toml found, skipping package install"
+            echo "No pyproject.toml found, skipping sync"
           fi
-
+          
           uv pip install marimo  # Install marimo for notebook execution
           uv pip list  # List installed packages
 
       # Execute all Marimo notebooks to verify they run without errors
       - name: Run Marimo notebooks
         run: |
-          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"  # Get notebook directory from env parsing job
+          set -e
+          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
           echo "Looking for notebooks in $NOTEBOOK_DIR"
-          # Find all Python files in the notebook directory and execute them
+          
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            #python "$notebook"  # Execute the notebook
-            uv pip list
-            uv run "$notebook"   # Execute the notebook using uv
-            uv pip list
+            uv run "$notebook"
           done
