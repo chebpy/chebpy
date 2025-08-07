@@ -8,6 +8,7 @@ app = marimo.App()
 with app.setup:
     import marimo as mo  # noqa: F401
 
+
 @app.cell
 def _():
     mo.md(
