@@ -68,6 +68,7 @@ jobs:
           if [ -f "pyproject.toml" ]; then
             echo "pyproject.toml found, installing with all extras"
             uv sync --all-extras
+            uv pip install -e .  # <-- THIS installs your chebpy package
           else
             echo "No pyproject.toml found, skipping sync"
           fi
