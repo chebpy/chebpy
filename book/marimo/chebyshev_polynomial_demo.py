@@ -1,4 +1,10 @@
 """Marimo ChebyshevPolynomial Demonstration."""
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "marimo==0.14.16"
+# ]
+# ///
 
 import marimo
 
@@ -10,7 +16,7 @@ with app.setup:
 
 
 @app.cell
-def _(mo):
+def _():
     mo.md(
         """
     # ChebyshevPolynomial Demonstration
