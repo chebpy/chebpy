@@ -1,5 +1,5 @@
 [project]
-name = 'chebfun'
+name = 'chebpy'
 version = "0.0.0"
 description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
