@@ -1,107 +1,120 @@
-# Workflow: Marimo
-# Purpose: This workflow tests and validates Marimo notebooks to ensure
-#          they function correctly and maintain compatibility with the latest dependencies.
-#
-# Trigger: This workflow runs on pushes to the main branch and pull requests
-#
-# Components:
-#   - 📚 Parse .env file for configuration
-#   - 🧪 Test Marimo notebooks execution
-#
-# Configuration:
-#   - USE_UV_RUN: Set to 'true' in .env file to use 'uv run' instead of 'python'
-#                 for executing notebooks (enables script section execution)
 name: "Marimo"
 
-# Trigger workflow on any push to the repository
 on:
   push
 
 jobs:
-  # Job: parse-env
-  # Purpose: Reads configuration from .env file and makes it available to other jobs
+  # Parse .env and build matrix of notebooks
   parse-env:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # Only needs read access to repository contents
     outputs:
-      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}  # Path to Marimo notebooks
-      use-uv-run: ${{ steps.export.outputs.USE_UV_RUN || 'false' }}  # Whether to use 'uv run' instead of 'python'
+      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
+      use-uv-run: ${{ steps.export.outputs.USE_UV_RUN || 'false' }}
+      notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
-      # Checkout the repository code
       - uses: actions/checkout@v4
 
       - name: Parse .env and export variables
         id: export
         run: |
-          set -a  # Export all variables automatically
-          source .env  # Load variables from .env file
-          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"  # Make MARIMO_FOLDER available as output
-          # Extract USE_UV_RUN from .env or default to 'false'
+          set -a
+          source .env
+          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
           USE_UV_RUN=${USE_UV_RUN:-false}
           echo "USE_UV_RUN=$USE_UV_RUN" >> "$GITHUB_OUTPUT"
-          set +a  # Turn off automatic export
+          set +a
         shell: bash
 
-  # Job: test-notebooks
-  # Purpose: Executes all Marimo notebooks to verify they run without errors
+      - name: Find notebooks and build matrix
+        id: notebooks
+        run: |
+          NOTEBOOK_DIR="${{ steps.export.outputs.MARIMO_FOLDER }}"
+          echo "Searching notebooks in: $NOTEBOOK_DIR"
+          notebooks=$(find "$NOTEBOOK_DIR" -name "*.py" -print0 | xargs -0 -n1 echo | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$notebooks" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+  # One job per notebook using matrix
   test-notebooks:
     runs-on: ubuntu-latest
-    needs: parse-env  # Depends on parse-env job to get the MARIMO_FOLDER path
-    permissions:
-      contents: read  # Only needs read access to repository contents
+    needs: parse-env
+    strategy:
+      matrix:
+        notebook: ${{ fromJson(needs.parse-env.outputs.notebook-list) }}
+    name: Run notebook ${{ matrix.notebook }}
     steps:
-      # Checkout the repository code
       - uses: actions/checkout@v4
 
-      # Set up Python environment with specific version
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'  # Use Python 3.13 for testing
+          python-version: '3.13'
 
-      # Install uv package manager for faster dependency installation
       - name: Install uv
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh  # Download and install uv
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"  # Add uv to PATH
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
-      # Create virtual environment and install required dependencies
       - name: Set up virtualenv and install dependencies
         run: |
-          set -e  # Fail on error
+          set -e
           uv venv .venv
           source .venv/bin/activate
-          
-          if [ -f "pyproject.toml" ]; then
-            echo "pyproject.toml found, installing with all extras"
-            uv sync --all-extras
-            uv pip install -e .  # <-- THIS installs your chebpy package
-          else
-            echo "No pyproject.toml found, skipping sync"
-          fi
-          
-          uv pip install marimo  # Install marimo for notebook execution
-          uv pip list  # List installed packages
+          uv sync --all-extras
+          uv pip install -e . coverage marimo
+          uv pip list
+        shell: bash
 
-      # Execute all Marimo notebooks to verify they run without errors
-      - name: Run Marimo notebooks
+      - name: Run notebook with coverage
         run: |
           set -e
           source .venv/bin/activate
+          NOTEBOOK="${{ matrix.notebook }}"
+          echo "Running $NOTEBOOK"
           
-          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
-          USE_UV_RUN="${{ needs.parse-env.outputs.use-uv-run }}"
-          echo "Looking for notebooks in $NOTEBOOK_DIR"
-          echo "Using uv run: $USE_UV_RUN"
-          
-          find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
-            echo "Running $notebook"
-            if [ "$USE_UV_RUN" = "true" ]; then
-              # Use uv run to execute the script section of the notebook
-              uv run "$notebook"
-            else
-              # Use python to run the plain notebook
-              python "$notebook"
-            fi
-          done
+          if [ "${{ needs.parse-env.outputs.use-uv-run }}" = "true" ]; then
+            coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
+          else
+            coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
+          fi
+        shell: bash
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.notebook }}
+          path: .coverage.*
+          if-no-files-found: error
+
+  # Combine and report test coverage
+  coverage-report:
+    runs-on: ubuntu-latest
+    needs: test-notebooks
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download all coverage data
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage_data
+          merge-multiple: true
+
+      - name: Combine and report coverage
+        run: |
+          pip install coverage
+          coverage combine coverage_data
+          coverage report
+          coverage xml
+        shell: bash
+
+      - name: Upload coverage XML (for Codecov or similar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
