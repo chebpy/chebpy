@@ -70,5 +70,5 @@ jobs:
           echo "Looking for notebooks in $NOTEBOOK_DIR"
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            marimo run "$notebook" --headless
+            python "$notebook"
           done
