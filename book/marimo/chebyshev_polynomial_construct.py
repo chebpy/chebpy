@@ -4,6 +4,7 @@ This notebook demonstrates the properties and methods of the ChebyshevPolynomial
 from the chebpy library. Each cell showcases a different aspect of working with
 Chebyshev polynomials.
 """
+
 import marimo
 
 __generated_with = "0.14.16"
