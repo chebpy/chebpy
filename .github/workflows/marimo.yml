@@ -65,12 +65,14 @@ jobs:
           uv venv .venv
           source .venv/bin/activate
           uv sync --all-extras
-          uv pip install -e . 'coverage==7.5.3'
+          uv pip install -e .
         shell: bash
 
       - name: Run notebook with coverage
         run: |
           set -e
+          uv pip install coverage=='7.5.3'
+
           source .venv/bin/activate
           NOTEBOOK="${{ matrix.notebook }}"
           echo "Running $NOTEBOOK"
@@ -78,9 +80,9 @@ jobs:
           SANITIZED_NAME=$(echo "$NOTEBOOK" | sed 's/[\/\.]/_/g')
           
           if [ "${{ needs.parse-env.outputs.use-uv-run }}" = "true" ]; then
-            uv run coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
+            coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
           else
-            uv run coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
+            coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
           fi
 
           mv .coverage ".coverage.$SANITIZED_NAME"
