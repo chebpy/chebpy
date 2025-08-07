@@ -80,11 +80,16 @@ jobs:
       - name: Run Marimo notebooks
         run: |
           set -e
+          source .venv/bin/activate
+          
           NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
           echo "Looking for notebooks in $NOTEBOOK_DIR"
           
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            #uv run "$notebook"
+            # use this to use the script section
+            # uv run "$notebook"
+            
+            # use this to run the plain notebook
             python "$notebook"
           done
