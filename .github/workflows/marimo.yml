@@ -9,66 +9,79 @@
 #   - 🧪 Test Marimo notebooks execution
 name: "Marimo"
 
+# Trigger workflow on any push to the repository
 on:
   push
 
 jobs:
+  # Job: parse-env
+  # Purpose: Reads configuration from .env file and makes it available to other jobs
   parse-env:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read  # Only needs read access to repository contents
     outputs:
-      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
+      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}  # Path to Marimo notebooks
     steps:
+      # Checkout the repository code
       - uses: actions/checkout@v4
 
       - name: Parse .env and export variables
         id: export
         run: |
-          set -a
-          source .env
-          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
-          set +a
+          set -a  # Export all variables automatically
+          source .env  # Load variables from .env file
+          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"  # Make MARIMO_FOLDER available as output
+          set +a  # Turn off automatic export
         shell: bash
 
+  # Job: test-notebooks
+  # Purpose: Executes all Marimo notebooks to verify they run without errors
   test-notebooks:
     runs-on: ubuntu-latest
-    needs: parse-env
+    needs: parse-env  # Depends on parse-env job to get the MARIMO_FOLDER path
     permissions:
-      contents: read
+      contents: read  # Only needs read access to repository contents
     steps:
+      # Checkout the repository code
       - uses: actions/checkout@v4
 
+      # Set up Python environment with specific version
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.13'  # Use Python 3.13 for testing
 
+      # Install uv package manager for faster dependency installation
       - name: Install uv
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          curl -LsSf https://astral.sh/uv/install.sh | sh  # Download and install uv
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"  # Add uv to PATH
 
+      # Create virtual environment and install required dependencies
       - name: Set up virtualenv and install dependencies
         run: |
-          uv venv .venv
-          source .venv/bin/activate
+          uv venv .venv  # Create a virtual environment using uv
+          source .venv/bin/activate  # Activate the virtual environment
 
+          # Conditionally install the package in development mode if pyproject.toml exists
           if [ -f "pyproject.toml" ]; then
             echo "pyproject.toml found, installing editable package"
-            uv pip install -e .
+            uv pip install -e .  # Install package in editable mode
           else
             echo "No pyproject.toml found, skipping package install"
           fi
 
-          uv pip install marimo
+          uv pip install marimo  # Install marimo for notebook execution
 
+      # Execute all Marimo notebooks to verify they run without errors
       - name: Run Marimo notebooks
         run: |
-          source .venv/bin/activate
-          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"
+          source .venv/bin/activate  # Activate the virtual environment
+          NOTEBOOK_DIR="${{ needs.parse-env.outputs.marimo-folder }}"  # Get notebook directory from env parsing job
           echo "Looking for notebooks in $NOTEBOOK_DIR"
+          # Find all Python files in the notebook directory and execute them
           find "$NOTEBOOK_DIR" -name "*.py" | while read -r notebook; do
             echo "Running $notebook"
-            python "$notebook"
+            python "$notebook"  # Execute the notebook
           done
