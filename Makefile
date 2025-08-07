@@ -95,11 +95,6 @@ clean: ## Clean generated files and directories
 
 ##@ Marimo
 
-marimo: install ## Start a Marimo server (use FILE=filename.py to specify a file)
-	@if [ -z "$(FILE)" ]; then \
-		echo "❌ FILE is required. Usage: make marimo FILE=demo.py" >&2; \
-		exit 1; \
-	fi
-
-	@printf "$(BLUE)Start Marimo server with $(MARIMO_FOLDER)/$(FILE)...$(RESET)\n"
-	@uv run marimo edit $(MARIMO_FOLDER)/$(FILE)
+marimo: install ## Start a Marimo server
+	@printf "$(BLUE)Start Marimo server with $(MARIMO_FOLDER)...$(RESET)\n"
+	@uv run marimo edit $(MARIMO_FOLDER)
