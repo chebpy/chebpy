@@ -67,5 +67,5 @@ jobs:
           uv pip install marimo
           for notebook in $(find ${{ needs.parse-env.outputs.marimo-folder }} -name "*.py"); do
             echo "Running $notebook"
-            uv run marimo run "$notebook" --headless --no-browser &
+            uv run marimo run "$notebook" --headless &
           done
