@@ -78,9 +78,9 @@ jobs:
           SANITIZED_NAME=$(echo "$NOTEBOOK" | sed 's/[\/\.]/_/g')
           
           if [ "${{ needs.parse-env.outputs.use-uv-run }}" = "true" ]; then
-            coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
+            uv run coverage run --source=chebpy --parallel-mode $(which uv) run "$NOTEBOOK"
           else
-            coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
+            uv run coverage run --source=chebpy --parallel-mode "$NOTEBOOK"
           fi
 
           mv .coverage ".coverage.$SANITIZED_NAME"
