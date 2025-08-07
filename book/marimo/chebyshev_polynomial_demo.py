@@ -6,7 +6,7 @@ __generated_with = "0.14.16"
 app = marimo.App()
 
 with app.setup:
-    pass
+    import marimo as mo
 
 
 @app.cell
