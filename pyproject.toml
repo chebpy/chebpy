@@ -29,13 +29,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["chebpy"]
+packages = ["src/chebpy"]
 
+<<<<<<< HEAD
 #[tool.hatch.build]
 #include = [
 #    "LICENSE.rst",    # Ensure the LICENSE file is included in your package
 #    "README.md",
-#    "chebpy"
+#    "src/chebpy"
 #]
 
 [tool.deptry]
