@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Sync config templates
-        uses: tschm/.config-templates@v0.4.6
+        uses: tschm/.config-templates@main
         with:
           branch: sync/update-configs
           commit-message: sync config files from .config-templates
