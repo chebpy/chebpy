@@ -1,6 +1,4 @@
 {
-  "onboarding": true,
-  "requireConfig": true,
   "extends": ["config:base"],
   "dependencyDashboard": true,
   "dependencyDashboardAutoclose": false,
