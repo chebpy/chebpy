@@ -11,7 +11,7 @@ jobs:
       marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
       notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Parse .env and export variables
         id: export
@@ -46,7 +46,7 @@ jobs:
         notebook: ${{ fromJson(needs.parse-env.outputs.notebook-list) }}
     name: Run notebook ${{ matrix.notebook }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
