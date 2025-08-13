@@ -1,6 +1,8 @@
 {
+  "onboarding": false,
+  "requireConfig": true,
+  "extends": ["config:base"],
   "dependencyDashboard": true,
-  "dependencyDashboardTitle": "Dependency Dashboard",
   "dependencyDashboardAutoclose": false,
   "recreateClosed": true
-
+}
