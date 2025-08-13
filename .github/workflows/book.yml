@@ -31,7 +31,7 @@ jobs:
       marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
       title: ${{ steps.export.outputs.TITLE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Parse .env and export variables
         id: export

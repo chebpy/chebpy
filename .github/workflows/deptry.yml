@@ -21,7 +21,7 @@ jobs:
     outputs:
       source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Parse .env and export variables
         id: export
