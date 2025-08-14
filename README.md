@@ -11,7 +11,7 @@
 ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), enabling symbolic-numeric computation with functions, not just numbers.
 
 <div align="center">
-  <img src="docs/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
+  <img src="book/marimo/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
 ---
