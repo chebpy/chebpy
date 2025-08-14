@@ -1,6 +1,9 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-toml
       - id: check-yaml
@@ -23,6 +26,9 @@ repos:
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2
     hooks:
+      - id: check-renovate
+        args: [ "--verbose" ]
+
       - id: check-github-workflows
         args: ["--verbose"]
 

@@ -1,3 +1,6 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 # Workflow: Deptry
 # Purpose: This workflow identifies missing and obsolete dependencies in the project.
 #          It helps maintain a clean dependency tree by detecting unused packages and
@@ -16,31 +19,39 @@ permissions:
     contents: read
 
 jobs:
-  parse-env:
+  check_pyproject:
+    name: Check pyproject.toml presence
     runs-on: ubuntu-latest
     outputs:
-      source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
+      pyproject_exists: ${{ steps.check_file.outputs.exists }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Parse .env and export variables
-        id: export
+      - name: Check for pyproject.toml
+        id: check_file
         run: |
-          set -a
-          source .env
-          echo "SOURCE_FOLDER=$SOURCE_FOLDER" >> "$GITHUB_OUTPUT"
-          set +a
-        shell: bash
+          if [ -f "pyproject.toml" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
-  # Job: Dependencies
-  # Purpose: Checks the project's dependency health using deptry
-  Analysis:
-    if: github.repository != 'tschm/.config-templates'
+  deptry_analysis:
+    name: Run deptry if pyproject.toml exists
+    needs: check_pyproject
     runs-on: ubuntu-latest
-    needs: parse-env
-
+    if: needs.check_pyproject.outputs.pyproject_exists == 'true'
     steps:
-      - name: Run deptry
-        uses: tschm/cradle/actions/deptry@v0.3.06
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
         with:
-          source-folder: ${{ needs.parse-env.outputs.source-folder }}
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run deptry
+        run: task quality:deptry

@@ -1,3 +1,6 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 # Manual Release Workflow for Python Package using Hatch and
 # Trusted Publisher (OIDC)
 #
@@ -48,7 +51,7 @@ jobs:
           git push origin ${{ github.event.inputs.tag }}
 
   build:
-    name: Build with Hatch
+    name: Build
     runs-on: ubuntu-latest
     needs: tag
     steps:
@@ -57,17 +60,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
         with:
-            python-version: '3.13'
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
-
-      - name: Set version from tag in pyproject.toml
+      - name: Build
+        if: hashFiles('pyproject.toml') != ''
         run: |
           version=${{ github.event.inputs.tag }}
           version=${version#v}
@@ -75,15 +78,15 @@ jobs:
           sed -i.bak "s/^version = .*/version = \"$version\"/" pyproject.toml
           rm pyproject.toml.bak
 
-      - name: Build Package
-        run: hatch build
+          task build:build -s
 
-      - name: Upload dist/
+      - name: Upload dist artifact
+        # not tested at runtime!
+        if: hashFiles('pyproject.toml') != ''
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
-
+          path: dist
 
   release:
     name: Create GitHub Release
@@ -91,16 +94,12 @@ jobs:
     needs: [tag, build]
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Download dist artifact (if any)
+      - name: Download dist artifact
         uses: actions/download-artifact@v5
         with:
           name: dist
           path: dist
+        continue-on-error: true
 
       - name: Create GitHub Release with artifacts
         uses: softprops/action-gh-release@v2.3.2
@@ -108,7 +107,7 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
           generate_release_notes: true
-          files: dist/*
+          files: "dist/**"
 
   pypi:
     name: Publish to PyPI
@@ -122,8 +121,20 @@ jobs:
         with:
           name: dist
           path: dist
+        continue-on-error: true
+
+      - name: Check if dist contains artifacts
+        id: check_dist
+        run: |
+          if [[ ! -d dist ]]; then
+            echo "::warning::No folder dist/. Skipping PyPI publish."
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish to PyPI
+        if: steps.check_dist.outputs.should_publish == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/

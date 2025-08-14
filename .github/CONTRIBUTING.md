@@ -11,9 +11,9 @@ Contributions are made through
 [pull requests](https://help.github.com/articles/using-pull-requests/).
 Before sending a pull request, make sure you do the following:
 
-- Run 'make check' to make sure your code adheres to our [coding style](#code-style) and
-all tests pass.
-- [Write unit tests](#writing-unit-tests) for the added functionality.
+- Run 'make check' to make sure your code adheres to our [coding style](#code-style)
+and all tests pass.
+- [Write unit tests](#writing-unit-tests) for new functionality added.
 
 
 ## Building from source
@@ -59,15 +59,16 @@ following:
 ## Code style
 
 We use ruff to enforce our Python coding style.
-Before sending us a pull request, navigate to the project root and run
+Before sending us a pull request, navigate to the project 
+root and run
 
 ```bash
-make fmt
-make lint
+make check
 ```
 
 to make sure that your changes abide by our style conventions.
-Please fix any errors that are reported before sending the pull request.
+Please fix any errors that are reported before sending
+the pull request.
 
 ## Writing unit tests
 

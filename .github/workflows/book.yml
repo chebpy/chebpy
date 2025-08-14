@@ -1,3 +1,6 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 # Workflow: Book
 # Purpose: This workflow builds and deploys comprehensive documentation for the project.
 #          It combines API documentation, test coverage reports, test results, and
@@ -16,91 +19,71 @@ name: "BOOK"
 
 on:
   push:
-    branches:
-      - master
-
+    branches: [ main ]
 
 jobs:
-  parse-env:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
-      tests-folder: ${{ steps.export.outputs.TESTS_FOLDER }}
-      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
-      title: ${{ steps.export.outputs.TITLE }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Parse .env and export variables
-        id: export
-        run: |
-          set -a
-          source .env
-          echo "SOURCE_FOLDER=$SOURCE_FOLDER" >> "$GITHUB_OUTPUT"
-          echo "TESTS_FOLDER=$TESTS_FOLDER" >> "$GITHUB_OUTPUT"
-          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
-          echo "TITLE=$TITLE" >> "$GITHUB_OUTPUT"
-          set +a
-        shell: bash
-
-  marimo:
-    runs-on: "ubuntu-latest"
-    needs: parse-env
-    permissions:
-      contents: read
-    steps:
-      - uses: jebel-quant/marimushka@v0.1.5
-        with:
-          notebooks: ${{ needs.parse-env.outputs.marimo-folder }}
-
-  pdoc:
-    runs-on: "ubuntu-latest"
-    needs: parse-env
-    permissions:
-      contents: read
-    steps:
-      - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.3.06
-
-      - uses: tschm/cradle/actions/pdoc@v0.3.06
-        with:
-          source-folder: ${{ needs.parse-env.outputs.source-folder }}
-
-  test:
-    runs-on: "ubuntu-latest"
-    needs: parse-env
-    permissions:
-      contents: read
-    steps:
-      - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.3.06
-
-      - uses: tschm/cradle/actions/coverage@v0.3.06
-        with:
-          tests-folder: ${{ needs.parse-env.outputs.tests-folder }}
-          source-folder: ${{ needs.parse-env.outputs.source-folder }}
-
   book:
     runs-on: "ubuntu-latest"
-    needs: [test, pdoc, marimo, parse-env]
 
     environment:
       name: github-pages  # 👈 this is the critical missing piece
 
     permissions:
+      contents: read
       pages: write            # Permission to deploy to Pages
       id-token: write         # Permission to verify deployment origin
 
     steps:
-      - uses: tschm/cradle/actions/book@v0.3.06
+      # Check out the repository code
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
         with:
-          title: ${{ needs.parse-env.outputs.title }}
-          links: |
-            {
-              "API": "./pdoc/index.html",
-              "Coverage": "./tests/html-coverage/index.html",
-              "Test Report": "./tests/html-report/report.html",
-              "Notebooks": "./marimushka/index.html"
-            }
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Make the docs"
+        run: |
+          task docs:docs
+
+      - name: "Make the tests"
+        run: |
+          task docs:test
+
+      - name: "Make the notebooks"
+        run: |
+          task docs:marimushka
+
+      - name: "Make the book"
+        run: |
+          task docs:book
+
+      # Step 4: Display the structure of the artifacts directory
+      # This helps with debugging by showing what files were generated
+      - name: Inspect artifacts
+        shell: bash
+        run: |
+          # Check if tree is installed, otherwise use find/ls as fallback
+          if command -v tree &> /dev/null; then
+            tree _book  # Show directory structure in tree format
+          else
+            echo "tree command not found, using fallback:"
+            find _book -type f | sort
+          fi
+
+      # Step 5: Package all artifacts for GitHub Pages deployment
+      # This prepares the combined outputs for deployment by creating a single artifact
+      - name: Upload static files as artifact
+        uses: actions/upload-pages-artifact@v3  # Official GitHub Pages artifact upload action
+        with:
+          path: _book/  # Path to the directory containing all artifacts to deploy
+
+      # Step 6: Deploy the packaged artifacts to GitHub Pages
+      # This step publishes the content to GitHub Pages
+      - name: Deploy to GitHub Pages
+        if: ${{ !github.event.repository.fork }}
+        uses: actions/deploy-pages@v4  # Official GitHub Pages deployment action
