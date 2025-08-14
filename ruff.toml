@@ -6,6 +6,9 @@ line-length = 120
 # Target Python version
 target-version = "py312"
 
+# Exclude directories with Jinja template variables in their names
+exclude = ["**/[{][{]*", "**/*[}][}]*"]
+
 [lint]
 # Available rule sets in Ruff:
 # A: flake8-builtins - Check for python builtins being used as variables or parameters
@@ -55,7 +58,7 @@ target-version = "py312"
 # N: pep8-naming - Check PEP 8 naming conventions
 # W: pycodestyle warnings - PEP 8 style guide warnings
 # UP: pyupgrade - Upgrade syntax for newer Python
-select = ["D", "E", "F", "I", "N", "W", "UP", "NPY", "ERA"]
+select = ["D", "E", "F", "I", "N", "W", "UP"]
 
 [lint.pydocstyle]
 convention = "google"

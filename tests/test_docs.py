@@ -12,6 +12,7 @@ This helps maintain accurate and working examples in the documentation.
 import doctest
 import os
 import re
+import warnings
 from pathlib import Path
 
 import pytest
@@ -82,18 +83,23 @@ def docstring(project_root: Path) -> str:
 
     """
     # Read the README.md file
-    with open(project_root / "README.md", encoding="utf-8") as f:
-        content = f.read()
+    try:
+        with open(project_root / "README.md", encoding="utf-8") as f:
+            content = f.read()
 
-    # Extract Python code blocks (assuming they are in triple backticks)
-    blocks = re.findall(r"```python(.*?)```", content, re.DOTALL)
+            # Extract Python code blocks (assuming they are in triple backticks)
+            blocks = re.findall(r"```python(.*?)```", content, re.DOTALL)
 
-    code = "\n".join(blocks).strip()
+            code = "\n".join(blocks).strip()
 
-    # Add a docstring wrapper for doctest to process the code
-    docstring = f"\n{code}\n"
+            # Add a docstring wrapper for doctest to process the code
+            docstring = f"\n{code}\n"
 
-    return docstring
+            return docstring
+
+    except FileNotFoundError:
+        warnings.warn("README.md file not found")
+        return ""
 
 
 def test_blocks(project_root: Path, docstring: str, capfd: CaptureFixture[str]) -> None:

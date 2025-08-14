@@ -15,7 +15,9 @@
 name: SYNC
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday at midnight
 
 permissions:
   contents: write  # Needed to create releases

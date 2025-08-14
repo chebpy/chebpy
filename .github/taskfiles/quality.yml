@@ -1,0 +1,41 @@
+version: '3'
+
+includes:
+  build:
+    taskfile: ./build.yml
+    internal: true
+
+
+tasks:
+  fmt:
+    desc: Format code using Ruff
+    cmds:
+      - task build:uv -s
+      - printf "${BLUE}[INFO] Running formatters...${RESET}\n"
+      - uvx ruff format .
+
+  lint:
+    desc: Run pre-commit hooks
+    cmds:
+      - task build:uv -s
+      - printf "${BLUE}[INFO] Running linters...${RESET}\n"
+      - uvx pre-commit run --all-files
+
+  deptry:
+    desc: Check for dependency issues
+    cmds:
+      - task build:uv -s
+      - printf "${BLUE}[INFO] Running deptry...${RESET}\n"
+      - |
+        if [ -f "pyproject.toml" ]; then
+          SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
+          uvx deptry $SOURCE_FOLDER {{.OPTIONS}}
+        else
+          printf "${YELLOW}[WARN] No pyproject.toml found, skipping deptry${RESET}\n"
+        fi
+  
+  check:
+    desc: Run all code quality checks
+    deps: [lint, fmt, deptry]
+    cmds:
+      - printf "${GREEN}[INFO] All checks passed!${RESET}\n"

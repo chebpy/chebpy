@@ -1,83 +1,79 @@
+# This workflow runs and tests all Marimo notebooks in the project
+# It creates a matrix of jobs, one for each notebook, and runs them in parallel
 name: "Marimo"
+permissions:
+  contents: read
 
 on:
   push
 
 jobs:
-  # Parse .env and build matrix of notebooks
-  parse-env:
+  # Parse .env file and build a matrix of notebooks to test
+  list-notebooks:
     runs-on: ubuntu-latest
     outputs:
-      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
       notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
+      # Check out the repository code
       - uses: actions/checkout@v5
 
-      - name: Parse .env and export variables
-        id: export
-        run: |
-          set -a
-          if [ -f .env ]; then
-            source .env
-          else
-            echo "WARNING: .env file not found"
-          fi
-          echo "MARIMO_FOLDER=${MARIMO_FOLDER:-book/marimo}" >> "$GITHUB_OUTPUT"
-          USE_UV_RUN=${USE_UV_RUN:-false}
-          echo "USE_UV_RUN=$USE_UV_RUN" >> "$GITHUB_OUTPUT"
-          set +a
-        shell: bash
-
+      # Find all Python files in the marimo folder and create a matrix for parallel execution
       - name: Find notebooks and build matrix
         id: notebooks
         run: |
-          NOTEBOOK_DIR="${{ steps.export.outputs.MARIMO_FOLDER }}"
+          NOTEBOOK_DIR="book/marimo"
           echo "Searching notebooks in: $NOTEBOOK_DIR"
-          notebooks=$(find "$NOTEBOOK_DIR" -name "*.py" -print0 | xargs -0 -n1 echo | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=$notebooks" >> "$GITHUB_OUTPUT"
+          # Check if directory exists
+          if [ ! -d "$NOTEBOOK_DIR" ]; then
+            echo "Directory $NOTEBOOK_DIR does not exist. Setting empty matrix."
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          # Find notebooks and handle empty results
+          if [ -z "$(find "$NOTEBOOK_DIR" -maxdepth 1 -name "*.py" 2>/dev/null)" ]; then
+            echo "No notebooks found in $NOTEBOOK_DIR. Setting empty matrix."
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            notebooks=$(find "$NOTEBOOK_DIR" -maxdepth 1 -name "*.py" -print0 | xargs -0 -n1 echo | jq -R -s -c 'split("\n")[:-1]')
+            echo "matrix=$notebooks" >> "$GITHUB_OUTPUT"
+          fi
         shell: bash
 
-  # One job per notebook using matrix
+  # Create one job per notebook using the matrix strategy for parallel execution
   test-notebooks:
+    if: needs.list-notebooks.outputs.notebook-list != '[]'
     runs-on: ubuntu-latest
-    needs: parse-env
+    needs: list-notebooks
     strategy:
       matrix:
-        notebook: ${{ fromJson(needs.parse-env.outputs.notebook-list) }}
+        notebook: ${{ fromJson(needs.list-notebooks.outputs.notebook-list) }}
+      # Don't fail the entire workflow if one notebook fails
+      fail-fast: false
     name: Run notebook ${{ matrix.notebook }}
     steps:
+      # Check out the repository code
       - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
+      # install uv
       - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        uses: astral-sh/setup-uv@v6
 
-      - name: Set up virtualenv and install dependencies
+      # install task
+      - name: Install task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install Python dependencies
+      - name: Install uv, uvx and the environment
         run: |
-          set -e
-          uv venv .venv
-          uv sync --all-extras
+          task build:install -s
         shell: bash
 
+      # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
         run: |
-          set -e
-          source .venv/bin/activate
-          NOTEBOOK="${{ matrix.notebook }}"
-          echo "Running $NOTEBOOK"
-          
-          # Check if the notebook contains a SCRIPT section
-          if grep -q "# /// script" "$NOTEBOOK"; then
-            echo "SCRIPT section found, using uv run"
-            uv run "$NOTEBOOK"
-          else
-            echo "No SCRIPT section found, using python"
-            python "$NOTEBOOK"
-          fi
+          uv run "${{ matrix.notebook }}"
         shell: bash
