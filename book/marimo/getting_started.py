@@ -3,19 +3,10 @@ import marimo
 __generated_with = "0.14.16"
 app = marimo.App()
 
-
-@app.cell
-def _():
-    import matplotlib.pyplot as plt
+with app.setup:
+    import marimo as mo
     import numpy as np
-
-    from chebpy import chebfun
-    return chebfun, np, plt
-
-
-@app.cell
-def _():
-    # optional plot settings
+    import matplotlib.pyplot as plt
     import matplotlib
     import seaborn as sns
 
@@ -23,16 +14,17 @@ def _():
     sns.set_style("whitegrid")
     sns.set_palette("deep")
     matplotlib.rc("figure", figsize=(9, 5), dpi=100)
-    return
+
+
+@app.cell
+def _():
+    from chebpy import chebfun
+    return (chebfun,)
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        The function ``chebfun`` behaves in essentially the same way as its MATLAB counterpart. A good way to begin is to type:
-        """
-    )
+def _():
+    mo.md(r"""The function ``chebfun`` behaves in essentially the same way as its MATLAB counterpart. A good way to begin is to type:""")
     return
 
 
@@ -44,31 +36,27 @@ def _(chebfun):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        What's happened here is we've instantiated a numerical representation of the identity function on the interval `[0,10]` and assigned this to a computer variable `x`. This particular representation has length 2, meaning that it is a degree one polynomial defined via two degrees of freedom (as you would expect of a linear function).
+    What's happened here is we've instantiated a numerical representation of the identity function on the interval `[0,10]` and assigned this to a computer variable `x`. This particular representation has length 2, meaning that it is a degree one polynomial defined via two degrees of freedom (as you would expect of a linear function).
 
-        An intuitive set of composition-like operations can now be performed. For instance here is the specification of a function `f` that oscillates with two modes:
-        """
+    An intuitive set of composition-like operations can now be performed. For instance here is the specification of a function `f` that oscillates with two modes:
+    """
     )
     return
 
 
 @app.cell
-def _(np, x):
+def _(x):
     f = np.sin(x) + np.sin(5 * x)
     f
     return (f,)
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        The zeros of f can be computed via `roots`, which behind the scenes is implemented via a recursive subdivision algorithm in which a number of Colleague Matrix eigenvalue sub-problems are solved:
-        """
-    )
+def _():
+    mo.md(r"""The zeros of f can be computed via `roots`, which behind the scenes is implemented via a recursive subdivision algorithm in which a number of Colleague Matrix eigenvalue sub-problems are solved:""")
     return
 
 
@@ -80,13 +68,13 @@ def _(f):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        By default ChebPy computations are accurate to machine precision, or approximately fifteen digits in double-precision arithmetic (see also the `UserPrefs` interface [here](./implementation.ipynb)).
+    By default ChebPy computations are accurate to machine precision, or approximately fifteen digits in double-precision arithmetic (see also the `UserPrefs` interface [here](./implementation.ipynb)).
 
-        We can verify this for the computed roots of `f` by typing:
-        """
+    We can verify this for the computed roots of `f` by typing:
+    """
     )
     return
 
@@ -98,18 +86,13 @@ def _(f, r):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        The function and its roots can be plotted together as follows:
-
-        """
-    )
+def _():
+    mo.md(r"""The function and its roots can be plotted together as follows:""")
     return
 
 
 @app.cell
-def _(f, plt, r):
+def _(f, r):
     _ax = f.plot(linewidth=3)
     _ax.plot(r, f(r), '.r', markersize=10)
     plt.show()
@@ -117,17 +100,13 @@ def _(f, plt, r):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        Calculus operations are natively possible with Chebfun objects. For example here is the derivative and indefinite integral of `f`:
-        """
-    )
+def _():
+    mo.md(r"""Calculus operations are natively possible with Chebfun objects. For example here is the derivative and indefinite integral of `f`:""")
     return
 
 
 @app.cell
-def _(f, plt):
+def _(f):
     Df = f.diff()
     If = f.cumsum()
     f.plot(linewidth=3)
@@ -138,19 +117,19 @@ def _(f, plt):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        One can verify analytically that the exact value of the definite integral here is `1.2 - cos(10) - 0.2cos(50)`.
+    One can verify analytically that the exact value of the definite integral here is `1.2 - cos(10) - 0.2cos(50)`.
 
-        This matches our numerical integral (via Clenshaw-Curtis quadrature), which is computable in ChebPy via the `sum` command.
-        """
+    This matches our numerical integral (via Clenshaw-Curtis quadrature), which is computable in ChebPy via the `sum` command.
+    """
     )
     return
 
 
 @app.cell
-def _(f, np):
+def _(f):
     I_ana = 1.2 - np.cos(10) - 0.2 * np.cos(50)
     I_num = f.sum()
     print(f"analytical : I={I_ana}")
@@ -159,13 +138,13 @@ def _(f, np):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        ## Discontinuities
+    ## Discontinuities
 
-        Chebfun is capable of handling certain classes of mathematical nonsmoothness. For example, here we compute the pointwise maximum of two functions, which results in a 'piecewise-smooth' concatenation of twelve individual pieces (in Chebfun & ChebPy terminology this is a collection of 'Funs'). The breakpoints between the pieces (Funs) have been determined by ChebPy in the background by solving the corresponding root-finding problem.
-        """
+    Chebfun is capable of handling certain classes of mathematical nonsmoothness. For example, here we compute the pointwise maximum of two functions, which results in a 'piecewise-smooth' concatenation of twelve individual pieces (in Chebfun & ChebPy terminology this is a collection of 'Funs'). The breakpoints between the pieces (Funs) have been determined by ChebPy in the background by solving the corresponding root-finding problem.
+    """
     )
     return
 
@@ -179,17 +158,13 @@ def _(f, x):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        Here's a plot of both `f` and `g`, and their maximum, `h`:
-        """
-    )
+def _():
+    mo.md(r"""Here's a plot of both `f` and `g`, and their maximum, `h`:""")
     return
 
 
 @app.cell
-def _(f, g, h, plt):
+def _(f, g, h):
     fig, _ax = plt.subplots()
     f.plot(ax=_ax, linewidth=3, linestyle='--', label='f')
     g.plot(ax=_ax, linewidth=3, linestyle='--', label='g')
@@ -201,17 +176,13 @@ def _(f, g, h, plt):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        The function `h` is a further Chebfun representation (Chebfun operations such as this are closures) and thus the same set of operations can be applied as normal. Here for instance is the exponential of `h` and its integral:
-        """
-    )
+def _():
+    mo.md(r"""The function `h` is a further Chebfun representation (Chebfun operations such as this are closures) and thus the same set of operations can be applied as normal. Here for instance is the exponential of `h` and its integral:""")
     return
 
 
 @app.cell
-def _(h, np, plt):
+def _(h):
     np.exp(h).plot(linewidth=3)
     plt.show()
     print(f"integral: {np.exp(h).sum()}")
@@ -219,19 +190,19 @@ def _(h, np, plt):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        ## Probability distributions
+    ## Probability distributions
 
-        Here's a further example, this time related to statistics. We consider the following Chebfun representation of the standardised Gaussian distribution, using a sufficiently wide interval as to facilitate a machine-precision representation. On this occasion we utlilise a slightly different (but still perfectly valid) approach to construction whereby we supply the function handle (in this case, a Python lambda, but more generally any object in possession of a `__call__` attribute) together with the interval of definition.
-        """
+    Here's a further example, this time related to statistics. We consider the following Chebfun representation of the standardised Gaussian distribution, using a sufficiently wide interval as to facilitate a machine-precision representation. On this occasion we utlilise a slightly different (but still perfectly valid) approach to construction whereby we supply the function handle (in this case, a Python lambda, but more generally any object in possession of a `__call__` attribute) together with the interval of definition.
+    """
     )
     return
 
 
 @app.cell
-def _(chebfun, np, plt):
+def _(chebfun):
     def gaussian(x):
         """Calculate the standard Gaussian probability density function.
 
@@ -251,12 +222,8 @@ def _(chebfun, np, plt):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        The integral of any probability density function should be unity, and this is the case for our numerical approximation:
-        """
-    )
+def _():
+    mo.md(r"""The integral of any probability density function should be unity, and this is the case for our numerical approximation:""")
     return
 
 
@@ -267,18 +234,18 @@ def _(pdf):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
-        Suppose we wish to generate quantiles of the distribution. This can be achieved as follows. First we form the cumulative distribution function,
-        computed as the indefinite integral (`cumsum`) of the density:
-        """
+    Suppose we wish to generate quantiles of the distribution. This can be achieved as follows. First we form the cumulative distribution function,
+    computed as the indefinite integral (`cumsum`) of the density:
+    """
     )
     return
 
 
 @app.cell
-def _(pdf, plt):
+def _(pdf):
     cdf = pdf.cumsum()
     _ax = cdf.plot(linewidth=3)
     _ax.set_ylim([-0.1, 1.1])
@@ -287,17 +254,13 @@ def _(pdf, plt):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        Then it is simply a case of utilising the `roots` command to determine the standardised score (sometimes known as 'z-score') corresponding to the quantile of interest. For example:
-        """
-    )
+def _():
+    mo.md(r"""Then it is simply a case of utilising the `roots` command to determine the standardised score (sometimes known as 'z-score') corresponding to the quantile of interest. For example:""")
     return
 
 
 @app.cell
-def _(cdf, np):
+def _(cdf):
     print("quantile    z-score ")
     print("--------------------")
     for quantile in np.arange(0.1, 0.0, -0.01):
@@ -307,12 +270,8 @@ def _(cdf, np):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        Other distributional properties are also computable. Here's how we can compute the first four normalised and centralised moments (Mean, Variance, Skew, Kurtosis):
-        """
-    )
+def _():
+    mo.md(r"""Other distributional properties are also computable. Here's how we can compute the first four normalised and centralised moments (Mean, Variance, Skew, Kurtosis):""")
     return
 
 
@@ -328,12 +287,6 @@ def _(pdf):
     print(f'    skew = {m3:+.15f}')
     print(f'kurtosis = {m4:+.15f}')
     return
-
-
-@app.cell
-def _():
-    import marimo as mo
-    return (mo,)
 
 
 if __name__ == "__main__":
