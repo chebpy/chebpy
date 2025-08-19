@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This code of conduct outlines expectations for behavior when participating in the chebpy project with the aim of fostering a constructive and professional engineering environment.
+This code of conduct outlines expectations for behavior when participating in the project with the aim of fostering a constructive and professional engineering environment.
 
 ## Expected Behavior
 

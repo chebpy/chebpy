@@ -8,19 +8,18 @@ to help out.
 ## Checklist
 
 Contributions are made through
-[pull requests](https://help.github.com/articles/using-pull-requests/).
+[pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 Before sending a pull request, make sure you do the following:
 
 - Run 'make check' to make sure your code adheres to our [coding style](#code-style)
 and all tests pass.
 - [Write unit tests](#writing-unit-tests) for new functionality added.
 
-
 ## Building from source
 
-You'll need to build the project locally in order to start editing code.
-To install from source, clone the Github
-repository, navigate to its root, and run the following command:
+You'll need to build the project locally to start editing code.
+To install from source, clone the repository from GitHub, 
+navigate to its root, and run the following command:
 
 ```bash
 make install
@@ -29,8 +28,8 @@ make install
 ## Contributing code
 
 To contribute to the project, send us pull requests.
-For those new to contributing, check out Github's
-[guide](https://help.github.com/articles/using-pull-requests/).
+For those new to contributing, check out GitHub's
+[guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
 Once you've made your pull request, a member of the
 development team will assign themselves to review it.
@@ -43,8 +42,8 @@ Python versions and different platforms. If these tests start failing,
 please
 fix your code and send another commit, which will re-trigger the tests.
 
-If you'd like to add a new feature, please do propose your
-change on a Github issue, to make sure
+If you'd like to add a new feature, please propose your
+change in a GitHub issue to make sure
 that your priorities align with ours.
 
 If you'd like to contribute code but don't know where to start,
