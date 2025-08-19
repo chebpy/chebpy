@@ -5,7 +5,7 @@ permissions:
   contents: read
 
 on:
-  push
+  - push
 
 jobs:
   # Parse .env file and build a matrix of notebooks to test

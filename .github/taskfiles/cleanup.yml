@@ -6,7 +6,8 @@ tasks:
     cmds:
       - |
         printf " ${BLUE}[INFO] Cleaning project...${RESET}\n"
-        git clean -d -X -f
+        # do not clean .env files
+        git clean -d -X -f -e .env -e '.env.*'
         rm -rf dist build *.egg-info .coverage .pytest_cache
         printf " ${BLUE}[INFO] Removing local branches with no remote counterpart...${RESET}\n"
         git fetch --prune

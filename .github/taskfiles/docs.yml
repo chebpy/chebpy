@@ -30,9 +30,17 @@ tasks:
       - |
         if [ -f "pyproject.toml" ]; then
           printf "${BLUE}[INFO] Building documentation...${RESET}\n"
-          SOURCE_FOLDER=src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1)
-          uv pip install pdoc
-          uv run pdoc -o _pdoc "$SOURCE_FOLDER"
+          if [ -d "src" ]; then
+            SOURCE_FOLDER=$(LC_ALL=C find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | sort | head -1)
+            if [ -z "$SOURCE_FOLDER" ]; then
+              printf "${YELLOW}[WARN] src/ exists but contains no top-level packages, skipping docs${RESET}\n"
+            else
+              uv pip install pdoc
+              uv run pdoc -o _pdoc "$SOURCE_FOLDER"
+            fi
+          else
+            printf "${YELLOW}[WARN] No src/ directory found, skipping docs${RESET}\n"
+          fi
         else
           printf "${YELLOW}[WARN] No pyproject.toml found, skipping docs${RESET}\n"
         fi
