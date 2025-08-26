@@ -78,7 +78,7 @@ jobs:
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
       - name: Upload static files as artifact
-        uses: actions/upload-pages-artifact@v3  # Official GitHub Pages artifact upload action
+        uses: actions/upload-pages-artifact@v4  # Official GitHub Pages artifact upload action
         with:
           path: _book/  # Path to the directory containing all artifacts to deploy
 
