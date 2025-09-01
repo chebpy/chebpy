@@ -20,7 +20,7 @@ dev = [
     "pytest>=8.4.1",
     "pre-commit>=4.2.0",
     "seaborn==0.13.2",
-    "marimo==0.15.0",
+    "marimo==0.15.2",
     "python-dotenv==1.1.1"
 ]
 
