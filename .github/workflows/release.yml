@@ -60,14 +60,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # Use the composite action to set up the project
+      - name: Setup the project
+        uses: ./.github/actions/setup-project
 
       - name: Build
         if: hashFiles('pyproject.toml') != ''

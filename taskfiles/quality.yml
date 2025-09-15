@@ -9,23 +9,20 @@ includes:
 tasks:
   fmt:
     desc: Format code using Ruff
+    deps: ['build:uv']
     cmds:
-      - task build:uv -s
-      - printf "${BLUE}[INFO] Running formatters...${RESET}\n"
       - uvx ruff format .
 
   lint:
     desc: Run pre-commit hooks
+    deps: ['build:uv']
     cmds:
-      - task build:uv -s
-      - printf "${BLUE}[INFO] Running linters...${RESET}\n"
       - uvx pre-commit run --all-files
 
   deptry:
     desc: Check for dependency issues
+    deps: ['build:uv']
     cmds:
-      - task build:uv -s
-      - printf "${BLUE}[INFO] Running deptry...${RESET}\n"
       - |
         if [ -f "pyproject.toml" ]; then
           SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
@@ -33,9 +30,11 @@ tasks:
         else
           printf "${YELLOW}[WARN] No pyproject.toml found, skipping deptry${RESET}\n"
         fi
-  
+
   check:
     desc: Run all code quality checks
-    deps: [lint, fmt, deptry]
     cmds:
-      - printf "${GREEN}[INFO] All checks passed!${RESET}\n"
+      - task: fmt
+      - task: lint
+      - task: deptry
+      - cmd: printf "${GREEN}[INFO] All checks passed!${RESET}\n"

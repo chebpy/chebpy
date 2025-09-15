@@ -130,7 +130,7 @@ tasks:
         printf "${BLUE}[INFO] Generated links.json:${RESET}\n"
         cat _book/links.json
         
-        uvx minibook@v0.0.16 --title "{{.BOOK_TITLE}}" --subtitle "{{.BOOK_SUBTITLE}}" --links "$(cat _book/links.json)" --output "_book"
+        uvx minibook --title "{{.BOOK_TITLE}}" --subtitle "{{.BOOK_SUBTITLE}}" --links "$(cat _book/links.json)" --output "_book"
         
         touch "_book/.nojekyll"
   

@@ -4,8 +4,10 @@ tasks:
   uv:
     desc: Install uv and uvx
     cmds:
-      - curl -sSf https://astral.sh/uv/install.sh | sh > /dev/null 2>&1 || (echo "${RED}Installation failed!${RESET}" >&2; exit 1)
-      - export PATH="$HOME/.cargo/bin:$PATH"
+      - |
+        # install uv and uvx
+        curl -sSf https://astral.sh/uv/install.sh | sh > /dev/null 2>&1 || { echo "${RED}Installation failed!${RESET}" >&2; exit 1; }
+        export PATH="$HOME/.local/bin:$PATH"
 
   install:
     desc: Install all dependencies using uv
@@ -39,9 +41,7 @@ tasks:
     cmds:
       - |
         if [ -f "pyproject.toml" ]; then
-          printf "${BLUE}[INFO] Building package...${RESET}\n"
-          uv pip install hatch
-          uv run hatch build
+          uvx hatch build
         else
           printf "${YELLOW}[WARN] No pyproject.toml found, skipping build${RESET}\n"
         fi

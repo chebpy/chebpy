@@ -9,7 +9,6 @@
 # Trigger: This workflow runs on every push to the main branch
 #
 # Components:
-#   - 📚 Parse .env file for configuration
 #   - 📓 Process Marimo notebooks
 #   - 📖 Generate API documentation with pdoc
 #   - 🧪 Run tests and generate coverage reports
@@ -36,15 +35,12 @@ jobs:
     steps:
       # Check out the repository code
       - uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          lfs: true
+
+      # Use the composite action to set up the project
+      - name: Setup the project
+        uses: ./.github/actions/setup-project
 
       - name: "Make the docs"
         run: |
@@ -61,19 +57,6 @@ jobs:
       - name: "Make the book"
         run: |
           task docs:book
-
-      # Step 4: Display the structure of the artifacts directory
-      # This helps with debugging by showing what files were generated
-      - name: Inspect artifacts
-        shell: bash
-        run: |
-          # Check if tree is installed, otherwise use find/ls as fallback
-          if command -v tree &> /dev/null; then
-            tree _book  # Show directory structure in tree format
-          else
-            echo "tree command not found, using fallback:"
-            find _book -type f | sort
-          fi
 
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
