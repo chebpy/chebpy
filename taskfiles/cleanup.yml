@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  clean:
+    desc: Clean generated files and directories
+    cmds:
+      - |
+        printf " ${BLUE}[INFO] Cleaning project...${RESET}\n"
+        # do not clean .env files
+        git clean -d -X -f -e .env -e '.env.*'
+        rm -rf dist build *.egg-info .coverage .pytest_cache
+        printf " ${BLUE}[INFO] Removing local branches with no remote counterpart...${RESET}\n"
+        git fetch --prune
+        git branch -vv \
+          | grep ': gone]' \
+          | awk '{print $1}' \
+          | xargs -r git branch -D 2>/dev/null || true

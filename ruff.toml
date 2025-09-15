@@ -4,7 +4,7 @@
 # Maximum line length for the entire project
 line-length = 120
 # Target Python version
-target-version = "py312"
+target-version = "py311"
 
 # Exclude directories with Jinja template variables in their names
 exclude = ["**/[{][{]*/", "**/*[}][}]*/"]

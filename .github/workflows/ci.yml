@@ -35,32 +35,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-
-      # This installs Python and uv for faster dependency management
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v6  # Official action for setting up uv
         with:
-          python-version: ${{ matrix.python-version }}  # Use the specified Python version
+          lfs: true
 
-
-      # task is needed as we test the taskfiles
-      - name: Install Task
-        uses: arduino/setup-task@v2
+      # Use the composite action to set up the project
+      - name: Setup the project
+        id: setup
+        uses: ./.github/actions/setup-project
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build the virtual environment
-        run: uv venv
-
-      - name: "Build the virtual environment for ${{ github.repository }}"
-        if: hashFiles('pyproject.toml') != ''
-        run:
-          uv sync --all-extras
-
-        #uses: tschm/cradle/actions/environment@v0.3.06
-        #with:
-        #  python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
 
       - name: "Run the tests"
         run: |

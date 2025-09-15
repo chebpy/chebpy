@@ -54,23 +54,12 @@ jobs:
     steps:
       # Check out the repository code
       - uses: actions/checkout@v5
-
-      # install uv
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      # install task
-      - name: Install task
-        uses: arduino/setup-task@v2
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          lfs: true
 
-      # Install Python dependencies
-      - name: Install uv, uvx and the environment
-        run: |
-          task build:install -s
-        shell: bash
+      # Use the composite action to set up the project
+      - name: Setup the project
+        uses: ./.github/actions/setup-project
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
