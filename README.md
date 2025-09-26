@@ -1,98 +1,205 @@
-# 📊 ChebPy - A Python implementation of Chebfun
+<div align="center">
+
+# 📊 ChebPy
+
+### *A Python implementation of Chebfun for numerical computing*
 
 [![CI](https://github.com/chebpy/chebpy/actions/workflows/ci.yml/badge.svg)](https://github.com/chebpy/chebpy/actions/workflows/ci.yml)
 [![Coverage](https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master)](https://coveralls.io/github/chebpy/chebpy?branch=master)
 [![Python](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://github.com/chebpy/chebpy/actions/workflows/unittest.yml)
+[![Codespaces](https://img.shields.io/badge/Codespaces-Open-blue.svg?logo=github)](https://codespaces.new/chebpy/chebpy)
 
-[![Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/chebpy/chebpy)
+**🔬 Numerical computing with Chebyshev series approximations in Python**
 
-**🔬 Numerical computing with Chebyshev series approximations in Python.**
+*ChebPy enables symbolic-numeric computation with functions, not just numbers*
 
-ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), enabling symbolic-numeric computation with functions, not just numbers.
-
-<div align="center">
-  <img src="book/marimo/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
+
+ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision.
+---
+
+## � Table of Contents
+
+- [✨ Features](#-features)
+- [📥 Installation](#-installation)
+- [🛠️ Development](#️-development)
+- [🚀 Quick Start](#-quick-start)
+- [📖 Documentation](#-documentation)
+- [📄 License](#-license)
+- [👥 Contributing](#-contributing)
 
 ---
 
-## 📥 Installation
+## ✨ Features
 
-To install ChebPy, simply run:
+> **Work with functions as easily as numbers**
+
+- 🔢 **Function Approximation**: Automatic Chebyshev polynomial approximation of smooth functions
+- 📐 **Calculus Operations**: Differentiation, integration, and root-finding with machine precision
+- 📊 **Plotting**: Beautiful function visualizations with matplotlib integration
+- 🧮 **Arithmetic**: Add, subtract, multiply, and compose functions naturally
+- 🎯 **Adaptive**: Automatically determines optimal polynomial degree for given tolerance
+- 🔗 **Interoperability**: Works seamlessly with NumPy and SciPy ecosystems
+
+---
+
+## �📥 Installation
+
+### Using pip (recommended)
 
 ```bash
 pip install chebpy
 ```
 
-To install the latest version from source:
+### From source (development)
 
 ```bash
 git clone https://github.com/chebpy/chebpy.git
 cd chebpy
-pip install .
+pip install -e .
 ```
+
+> **Note**: Use `-e` flag for editable installation during development
 
 ## 🛠️ Development
 
-Rather than installing Chebpy into your existing project
-you may want to work with the repository directly.
-Chebpy uses modern Python development tools:
+> **For contributors and advanced users**
+
+ChebPy uses modern Python development tools for a smooth developer experience:
 
 ```bash
-# Install development dependencies
+# 📦 Install development dependencies
 make install
 
-# Run tests
+# 🧪 Run tests with coverage
 make test
 
-# Format code
+# ✨ Format and lint code
 make fmt
 make lint
 
-# Start interactive notebooks
+# 📓 Start interactive notebooks
 make marimo
+
+# 🔍 View test coverage report
+make coverage
 ```
 
-## 🔧 Quick Start
+### Development Tools
 
-The figure above was generated with the following simple ChebPy code:
+- **Testing**: pytest with coverage reporting
+- **Formatting**: ruff for code formatting and linting
+- **Notebooks**: marimo for interactive development
+- **Task Management**: Taskfile for build automation
+
+## Quick Start
+
+<div align="center">
+  <img src="book/marimo/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
+</div>
+
+
+This figure was generated with the following simple ChebPy code:
 
 ```python
->>> # Import required libraries
->>> import numpy as np
->>> from chebpy import chebfun
+import numpy as np
+from chebpy import chebfun
 
->>> # Create first chebfun representing a sum of sine functions on interval [0, 10]
->>> f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
->>> # Create second chebfun representing a Gaussian function centered at x=5
->>> g = chebfun(lambda x: np.exp(-(x-5)**2/10), [0, 10])
+# Create functions as chebfuns on interval [0, 10]
+f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
+g = chebfun(lambda x: np.exp(-(x-5)**2/10), [0, 10])
 
->>> # Find the roots (zeros) of the difference between f and g
->>> # These are the points where the two functions intersect
->>> r = (f-g).roots()
+# Find intersection points
+roots = (f - g).roots()
 
->>> # Plot the first function
->>> ax = f.plot()
->>> # Add the second function to the same plot
->>> ax = g.plot(ax=ax)
->>> # Mark the intersection points with circles
->>> # The underscore (_) is used to suppress the output of the plot command
->>> _ = ax.plot(r, f(r), 'o')
+# Plot both functions and mark intersections
+ax = f.plot(label='f(x) = sin(x²) + sin²(x)')
+g.plot(ax=ax, label='g(x) = exp(-(x-5)²/10)')
+ax.plot(roots, f(roots), 'ro', markersize=8, label='Intersections')
+ax.legend()
+ax.grid(True, alpha=0.3)
 ```
 
-## 📄 License
+### More Examples
 
-Chebpy is licensed under the 3-Clause BSD License. 
-See the full license in the [LICENSE.rst](LICENSE.rst) file.
+```python
+# Differentiation and integration
+f = chebfun(lambda x: np.exp(x) * np.sin(x), [-1, 1])
+df_dx = f.diff()          # Derivative
+integral = f.sum()        # Definite integral
+
+# Root finding
+g = chebfun(lambda x: x**3 - 2*x - 5, [-3, 3])
+roots = g.roots()         # All roots in the domain
+
+# Function composition
+h = f + g                 # Addition
+product = f * g           # Multiplication
+```
+
+---
+
+## � Documentation
+
+- 📚 **[Interactive Notebooks](book/marimo/)**: Explore ChebPy features with hands-on examples
+- 🎯 **[API Reference](src/chebpy/)**: Complete function and class documentation
+- 🧪 **[Test Suite](tests/)**: Comprehensive examples of usage patterns
+- 🚀 **[Codespaces](https://codespaces.new/chebpy/chebpy)**: Try ChebPy in your browser
+
+---
+
+## �📄 License
+
+ChebPy is licensed under the **3-Clause BSD License**.
+
+📜 See the full license in the [LICENSE.rst](LICENSE.rst) file.
+
+---
 
 ## 👥 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+**We welcome contributions!** 🎉
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Whether you're fixing bugs, adding features, or improving documentation, your help makes ChebPy better for everyone.
 
-For more information, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+### Quick Start for Contributors
+
+1. 🍴 **Fork** the repository
+2. 🌿 **Create** your feature branch
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. ✨ **Make** your changes and add tests
+4. 🧪 **Test** your changes
+   ```bash
+   make test
+   ```
+5. 📝 **Commit** your changes
+   ```bash
+   git commit -m 'Add amazing feature'
+   ```
+6. 🚀 **Push** to your branch
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+7. 🎯 **Open** a Pull Request
+
+### Resources
+
+- 📋 [Contributing Guide](CONTRIBUTING.md)
+- 🤝 [Code of Conduct](CODE_OF_CONDUCT.md)
+- 🐛 [Issue Tracker](https://github.com/chebpy/chebpy/issues)
+
+## 🙏 Acknowledgments
+
+- [tschm/.config-templates](https://github.com/tschm/.config-templates) for standardised CI/CD templates and auto-syncing
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the ChebPy community**
+
+⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
+
+</div>
