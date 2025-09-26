@@ -18,7 +18,7 @@
 ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision.
 ---
 
-## � Table of Contents
+## Table of Contents
 
 - [✨ Features](#-features)
 - [📥 Installation](#-installation)
@@ -43,7 +43,7 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 
 ---
 
-## �📥 Installation
+## 📥 Installation
 
 ### Using pip (recommended)
 
@@ -139,7 +139,7 @@ product = f * g           # Multiplication
 
 ---
 
-## � Documentation
+## Documentation
 
 - 📚 **[Interactive Notebooks](book/marimo/)**: Explore ChebPy features with hands-on examples
 - 🎯 **[API Reference](src/chebpy/)**: Complete function and class documentation
@@ -148,7 +148,7 @@ product = f * g           # Multiplication
 
 ---
 
-## �📄 License
+## 📄 License
 
 ChebPy is licensed under the **3-Clause BSD License**.
 
