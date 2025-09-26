@@ -25,7 +25,8 @@ tasks:
     cmds:
       - |
         if [ -f "pyproject.toml" ]; then
-          SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
+          SOURCE_FOLDER="$(fd -td . src -d1 --exclude '.*' | head -1)" : "${SOURCE_FOLDER:=src}"
+          # SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
           uvx deptry $SOURCE_FOLDER {{.OPTIONS}}
         else
           printf "${YELLOW}[WARN] No pyproject.toml found, skipping deptry${RESET}\n"

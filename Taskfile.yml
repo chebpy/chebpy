@@ -30,6 +30,8 @@ env:
   LOG_SUCCESS: 'printf "${GREEN}[SUCCESS] %s${RESET}\n"'
   LOG_ERROR: 'printf "${RED}[ERROR] %s${RESET}\n"'
 
+  PATH: "{{.HOME}}/.local/bin:{{.PATH}}"
+
 # Include task groups
 includes:
   build:

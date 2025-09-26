@@ -9,21 +9,21 @@ RESET := \033[0m
 .PHONY: build clean book check
 
 install: ## install
-	task build:install
+	task build:install -s
 
 clean: ## clean
-	task cleanup:clean
+	task cleanup:clean -s
 
 test: install ## run all tests
-	task docs:test
+	task docs:test -s
 
 book: test ## compile the companion book
-	task docs:docs
-	task docs:marimushka
-	task docs:book
+	task docs:docs -s
+	task docs:marimushka -s
+	task docs:book -s
 
 check: install ## check the pre-commit hooks, the linting and deptry
-	task quality:check
+	task quality:check -s
 
 help: ## Display this help message
 	@printf "$(BOLD)Usage:$(RESET)\n"
