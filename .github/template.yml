@@ -1,0 +1,11 @@
+template-repository: "tschm/.config-templates"
+template-branch: "main"
+include: |
+    .devcontainer
+    .github
+    taskfiles
+    tests
+    .editorconfig
+    .pre-commit-config.yaml
+    Makefile
+    Taskfile.yml
