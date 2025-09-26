@@ -1,19 +1,38 @@
 {
-  "name": "Marimo Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:3.13",
-  "hostRequirements": {
-    "cpus": 4
-  },
-  "forwardPorts": [8080],
-  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && uv venv && ([ -f pyproject.toml ] && uv sync --all-extras || true) && uv pip install marimo",
-  "postStartCommand": "[ -f .venv/bin/activate ] && uv run marimo --yes edit --host=localhost --port=8080 --headless --no-token || echo '⚠️ Marimo failed to start'",
-  "remoteUser": "vscode",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "marimo-ai.marimo-vscode"
-      ]
-    }
-  }
+    "name": "Python 3.13",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "hostRequirements": {
+        "cpus": 4
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+    ],
+    "containerEnv": {
+        "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
+    },
+    "forwardPorts": [8080],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": ".venv/bin/python",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestArgs": ["."],
+                "python.terminal.activateEnvInCurrentTerminal": true,
+                "marimo.pythonPath": ".venv/bin/python",
+                "marimo.marimoPath": ".venv/bin/marimo"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "marimo-team.vscode-marimo"
+            ]
+        }
+    },
+    "onCreateCommand": ".devcontainer/startup.sh",
+    "remoteUser": "vscode"
 }
