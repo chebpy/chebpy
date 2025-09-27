@@ -14,7 +14,7 @@ tasks:
       - |
         # Find source folder
         SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
-        
+
         if [ -z "$SOURCE_FOLDER" ] || [ -z "{{.TESTS_FOLDER}}" ]; then
           printf "${YELLOW}[WARN] No valid source folder structure found, skipping tests${RESET}\n"
         else
@@ -44,7 +44,7 @@ tasks:
         else
           printf "${YELLOW}[WARN] No pyproject.toml found, skipping docs${RESET}\n"
         fi
-  
+
   marimushka:
     desc: Export Marimo notebooks to HTML
     cmds:
@@ -54,6 +54,7 @@ tasks:
         if [ ! -d "{{.MARIMO_FOLDER}}" ]; then
           printf "${YELLOW}[WARN] Directory '{{.MARIMO_FOLDER}}' does not exist. Skipping marimushka.${RESET}\n"
         else
+          uv pip install marimo
           mkdir -p _marimushka
           py_files=$(find "{{.MARIMO_FOLDER}}" -maxdepth 1 -name "*.py" | tr '\n' ' ')
           if [ -z "$py_files" ]; then
@@ -67,7 +68,7 @@ tasks:
               dir_path=$(dirname "$rel_path")
               base_name=$(basename "$rel_path" .py)
               mkdir -p "_marimushka/$dir_path"
-              uvx marimo export html --include-code --sandbox --output "_marimushka/$dir_path/$base_name.html" "$py_file"
+              uv run marimo export html --include-code --output "_marimushka/$dir_path/$base_name.html" "$py_file"
             done
             echo "<html><head><title>Marimo Notebooks</title></head><body><h1>Marimo Notebooks</h1><ul>" > _marimushka/index.html
             find _marimushka -name "*.html" -not -path "*index.html" | sort | while read html_file; do
@@ -79,7 +80,7 @@ tasks:
             touch _marimushka/.nojekyll
           fi
         fi
-  
+
   book:
     desc: Build the companion book with test results and notebooks
     cmds:
@@ -98,7 +99,7 @@ tasks:
         else
           echo '{}' > _book/links.json
         fi
-        
+
         printf "${BLUE}[INFO] Copy coverage report...${RESET}\n"
         if [ -d _tests/html-coverage ] && [ "$(ls -A _tests/html-coverage 2>/dev/null)" ]; then
           mkdir -p _book/tests/html-coverage
@@ -107,7 +108,7 @@ tasks:
         else
           printf "${YELLOW}[WARN] No coverage report found or directory is empty${RESET}\n"
         fi
-        
+
         printf "${BLUE}[INFO] Copy test report...${RESET}\n"
         if [ -d _tests/html-report ] && [ "$(ls -A _tests/html-report 2>/dev/null)" ]; then
           mkdir -p _book/tests/html-report
@@ -116,7 +117,7 @@ tasks:
         else
           printf "${YELLOW}[WARN] No test report found or directory is empty${RESET}\n"
         fi
-        
+
         printf "${BLUE}[INFO] Copy notebooks...${RESET}\n"
         if [ -d _marimushka ] && [ "$(ls -A _marimushka 2>/dev/null)" ]; then
           mkdir -p _book/marimushka
@@ -126,14 +127,14 @@ tasks:
         else
           printf "${YELLOW}[WARN] No notebooks found or directory is empty${RESET}\n"
         fi
-        
+
         printf "${BLUE}[INFO] Generated links.json:${RESET}\n"
         cat _book/links.json
-        
+
         uvx minibook --title "{{.BOOK_TITLE}}" --subtitle "{{.BOOK_SUBTITLE}}" --links "$(cat _book/links.json)" --output "_book"
-        
+
         touch "_book/.nojekyll"
-  
+
   marimo:
     desc: Start a Marimo server
     cmds:

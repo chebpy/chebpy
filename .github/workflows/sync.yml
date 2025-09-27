@@ -16,17 +16,13 @@ on:
   schedule:
     - cron: '0 0 * * 1'  # Weekly on Monday at midnight
 
-permissions:
-  contents: write        # Needed to create releases
-  pull-requests: write   # Needed to create pull requests
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Sync Template
         id: sync
-        uses: jebel-quant/sync_template@v0.3.1
+        uses: jebel-quant/sync_template@v0.3.2
         with:
           token: ${{ secrets.PAT_TOKEN }}
           source: ".github/template.yml"
