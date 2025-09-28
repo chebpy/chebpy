@@ -12,7 +12,7 @@ app = marimo.App()
 
 with app.setup:
     # Import the chebyshev module from chebpy
-    import chebpy.core.chebyshev as cheb
+    import chebpy.chebyshev as cheb
 
 
 @app.cell

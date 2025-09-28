@@ -8,8 +8,8 @@ restriction, simplification, and translation.
 import numpy as np
 import pytest
 
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Domain
+from chebpy.chebfun import Chebfun
+from chebpy.utilities import Domain
 
 from ..generic.class_usage import test_support, test_translate_empty  # noqa: F401
 from .conftest import eps

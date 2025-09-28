@@ -7,7 +7,7 @@ including the _chebpts method and the vals2coeffs and coeffs2vals transformation
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech
+from chebpy.chebtech import Chebtech
 
 from ..utilities import eps, scaled_tol
 

@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from chebpy.core.chebyshev import (
+from chebpy.chebyshev import (
     ChebyshevPolynomial,
     from_coefficients,
     from_constant,
@@ -11,7 +11,7 @@ from chebpy.core.chebyshev import (
     from_roots,
     from_values,
 )
-from chebpy.core.utilities import Interval
+from chebpy.utilities import Interval
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@ including from values, coefficients, constants, and functions.
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech
+from chebpy.chebtech import Chebtech
 
 from ..utilities import eps
 

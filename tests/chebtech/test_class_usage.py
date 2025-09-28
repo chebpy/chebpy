@@ -7,8 +7,8 @@ including emptiness, constantness, size, calling, prolongation, vscale, and copy
 import numpy as np
 import pytest
 
-from chebpy.core.algorithms import standard_chop
-from chebpy.core.chebtech import Chebtech
+from chebpy.algorithms import standard_chop
+from chebpy.chebtech import Chebtech
 
 from ..generic.class_usage import test_constfun_value  # noqa: F401
 from ..utilities import cos, eps, exp, pi, sin

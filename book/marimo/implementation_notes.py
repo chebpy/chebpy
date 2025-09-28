@@ -198,7 +198,7 @@ def _():
 
 @app.cell
 def _(f):
-    from chebpy.core.chebfun import Chebfun
+    from chebpy.chebfun import Chebfun
 
     Chebfun(f.funs)
     return (Chebfun,)
@@ -227,7 +227,7 @@ def _(f):
 
 @app.cell
 def _(f, plt):
-    from chebpy.core.utilities import Interval
+    from chebpy.utilities import Interval
 
     _, a, c = f.breakpoints
     b = 1
@@ -360,7 +360,7 @@ def _():
 @app.cell
 def _(chebfun, plt):
     from chebpy import UserPreferences
-    from chebpy.core.settings import DefaultPreferences
+    from chebpy.settings import DefaultPreferences
 
     user_prefs = UserPreferences()
 

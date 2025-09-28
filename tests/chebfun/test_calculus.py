@@ -7,7 +7,7 @@ including sum, diff, cumsum, and dot product.
 import numpy as np
 import pytest
 
-from chebpy.core.chebfun import Chebfun
+from chebpy.chebfun import Chebfun
 
 from ..utilities import exp, sin
 

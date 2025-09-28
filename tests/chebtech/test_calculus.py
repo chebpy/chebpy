@@ -7,7 +7,7 @@ including sum, cumsum, and diff methods.
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech
+from chebpy.chebtech import Chebtech
 
 from ..utilities import cos, eps, exp, pi, sin  # noqa: F401
 

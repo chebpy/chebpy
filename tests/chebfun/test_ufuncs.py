@@ -6,8 +6,8 @@ including absolute, trigonometric, exponential, and logarithmic functions.
 
 import numpy as np
 
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Interval
+from chebpy.chebfun import Chebfun
+from chebpy.utilities import Interval
 
 from ..generic.ufuncs import test_emptycase, ufunc_parameter  # noqa: F401
 from ..utilities import eps

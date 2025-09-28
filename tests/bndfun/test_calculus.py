@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.utilities import Interval
+from chebpy.bndfun import Bndfun
+from chebpy.utilities import Interval
 
 from ..generic.calculus import test_cumsum_empty, test_diff_empty, test_sum_empty  # noqa: F401
 from ..utilities import cos, eps, exp, pi, sin

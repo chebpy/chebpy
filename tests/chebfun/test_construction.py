@@ -7,15 +7,15 @@ including from functions, constants, and identity functions.
 import numpy as np
 import pytest
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.exceptions import (
+from chebpy.bndfun import Bndfun
+from chebpy.chebfun import Chebfun
+from chebpy.exceptions import (
     BadFunLengthArgument,
     IntervalGap,
     IntervalOverlap,
     InvalidDomain,
 )
-from chebpy.core.utilities import Interval
+from chebpy.utilities import Interval
 
 from ..utilities import eps, exp
 

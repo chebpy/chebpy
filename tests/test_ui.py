@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from chebpy import chebfun, pwc
-from chebpy.core.settings import DefaultPreferences
+from chebpy.settings import DefaultPreferences
 
 
 def test_chebfun_null_args() -> None:

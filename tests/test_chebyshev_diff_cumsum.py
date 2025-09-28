@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from chebpy.core.chebyshev import ChebyshevPolynomial, from_constant
+from chebpy.chebyshev import ChebyshevPolynomial, from_constant
 
 
 def test_diff_calculates_derivative_correctly():

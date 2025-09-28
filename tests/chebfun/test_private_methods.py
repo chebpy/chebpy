@@ -7,8 +7,8 @@ particularly the _break method which is used to modify the domain of a Chebfun.
 import numpy as np
 import pytest
 
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.utilities import Domain
+from chebpy.chebfun import Chebfun
+from chebpy.utilities import Domain
 
 from .conftest import eps
 

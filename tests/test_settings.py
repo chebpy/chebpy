@@ -6,7 +6,7 @@ to their default values.
 """
 
 from chebpy import UserPreferences
-from chebpy.core.settings import _preferences
+from chebpy.settings import _preferences
 
 
 def _user_pref(name: str) -> float:

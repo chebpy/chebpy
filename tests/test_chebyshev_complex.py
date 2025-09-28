@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from chebpy.core.chebyshev import ChebyshevPolynomial
+from chebpy.chebyshev import ChebyshevPolynomial
 
 
 def test_iscomplex_property_with_real_coefficients():

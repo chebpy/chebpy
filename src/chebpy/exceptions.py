@@ -56,7 +56,7 @@ class ChebpyBaseError(Exception, ABC):
 
 
 # ===============================================
-#    chebpy.core.utilities.Interval exceptions
+#    chebpy.utilities.Interval exceptions
 # ===============================================
 
 # Exception raised when two intervals overlap but should be disjoint
@@ -132,7 +132,7 @@ IntervalValues = type(
 
 
 # ===============================================
-#    chebpy.core.utilities.Domain exceptions
+#    chebpy.utilities.Domain exceptions
 # ===============================================
 
 # Exception raised when a domain is invalid

@@ -5,7 +5,7 @@ with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on common operations and properties of function objects.
 """
 
-from chebpy.core.utilities import Domain
+from chebpy.utilities import Domain
 
 
 def test_constfun_value(constfun):

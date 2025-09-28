@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from chebpy.core.settings import DefaultPreferences
+from chebpy.settings import DefaultPreferences
 
 # aliases
 pi = np.pi

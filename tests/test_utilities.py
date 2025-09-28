@@ -11,8 +11,8 @@ import numpy as np
 import pytest
 
 from chebpy import chebfun
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.exceptions import (
+from chebpy.bndfun import Bndfun
+from chebpy.exceptions import (
     IntervalGap,
     IntervalOverlap,
     IntervalValues,
@@ -20,8 +20,8 @@ from chebpy.core.exceptions import (
     NotSubdomain,
     SupportMismatch,
 )
-from chebpy.core.settings import DefaultPreferences
-from chebpy.core.utilities import Domain, Interval, check_funs, compute_breakdata, htol
+from chebpy.settings import DefaultPreferences
+from chebpy.utilities import Domain, Interval, check_funs, compute_breakdata, htol
 
 rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 eps = DefaultPreferences.eps
@@ -635,7 +635,7 @@ def test_domain_union_raises():
         dom_b.union(dom_a)
 
 
-"""Tests for the chebpy.core.utilities check_funs method"""
+"""Tests for the chebpy.utilities check_funs method"""
 
 
 @pytest.fixture
@@ -763,7 +763,7 @@ def test_check_funs_verify_gap(check_funs_fixtures):
         check_funs(funs_d)
 
 
-# tests for the chebpy.core.utilities compute_breakdata function
+# tests for the chebpy.utilities compute_breakdata function
 @pytest.fixture
 def compute_breakdata_fixtures():
     """Create Bndfun objects for testing compute_breakdata function.
