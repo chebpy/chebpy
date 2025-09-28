@@ -24,10 +24,10 @@ import matplotlib
 import numpy as np
 import pytest
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebfun import Chebfun
-from chebpy.core.chebtech import Chebtech
-from chebpy.core.utilities import Interval
+from chebpy.bndfun import Bndfun
+from chebpy.chebfun import Chebfun
+from chebpy.chebtech import Chebtech
+from chebpy.utilities import Interval
 
 if os.environ.get("CI") == "true":  # pragma: no cover
     matplotlib.use("Agg")
@@ -153,7 +153,7 @@ def constfun(request):
 
     if "bndfun" in module_name:
         # Bndfun requires an interval
-        from chebpy.core.utilities import Interval
+        from chebpy.utilities import Interval
 
         fun = Bndfun.initconst(1.0, Interval())
     elif "chebfun" in module_name:
@@ -190,7 +190,7 @@ def complexfun(request):
 
     if "bndfun" in module_name:
         # Bndfun requires an interval
-        from chebpy.core.utilities import Interval
+        from chebpy.utilities import Interval
 
         fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
     elif "chebfun" in module_name:

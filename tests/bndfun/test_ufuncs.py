@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.utilities import Interval
+from chebpy.bndfun import Bndfun
+from chebpy.utilities import Interval
 
 from ..generic.ufuncs import test_emptycase, ufunc_parameter  # noqa: F401
 from ..utilities import eps

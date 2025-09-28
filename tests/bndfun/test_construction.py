@@ -3,9 +3,9 @@
 import numpy as np
 import pytest
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.chebtech import Chebtech
-from chebpy.core.utilities import Interval
+from chebpy.bndfun import Bndfun
+from chebpy.chebtech import Chebtech
+from chebpy.utilities import Interval
 
 from ..utilities import cos, eps, exp, sin
 

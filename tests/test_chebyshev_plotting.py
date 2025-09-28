@@ -3,7 +3,7 @@
 import pytest
 from matplotlib import pyplot as plt
 
-from chebpy.core.chebyshev import from_coefficients
+from chebpy.chebyshev import from_coefficients
 from tests.generic.plotting import test_plot  # noqa: F401
 
 

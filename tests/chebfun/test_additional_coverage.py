@@ -3,7 +3,7 @@
 import numpy as np
 
 from chebpy.api import chebfun
-from chebpy.core.chebfun import Chebfun
+from chebpy.chebfun import Chebfun
 
 
 class TestAdditionalCoverage:

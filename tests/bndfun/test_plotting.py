@@ -3,8 +3,8 @@
 import matplotlib.pyplot as plt
 import pytest
 
-from chebpy.core.bndfun import Bndfun
-from chebpy.core.utilities import Interval
+from chebpy.bndfun import Bndfun
+from chebpy.utilities import Interval
 
 from ..generic.plotting import test_plot, test_plot_complex  # noqa: F401
 from ..utilities import cos, sin

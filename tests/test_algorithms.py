@@ -16,8 +16,8 @@ from typing import Any
 import numpy as np
 import pytest
 
-from chebpy.core.algorithms import bary, clenshaw, coeffmult
-from chebpy.core.chebtech import Chebtech
+from chebpy.algorithms import bary, clenshaw, coeffmult
+from chebpy.chebtech import Chebtech
 
 from .utilities import cos, eps, exp, scaled_tol
 

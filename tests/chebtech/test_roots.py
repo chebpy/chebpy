@@ -7,7 +7,7 @@ including empty, constant, and various polynomial and trigonometric functions.
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech
+from chebpy.chebtech import Chebtech
 
 from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
 from ..utilities import eps

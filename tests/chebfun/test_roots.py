@@ -7,7 +7,7 @@ including empty, constant, and various polynomial and trigonometric functions.
 import numpy as np
 import pytest
 
-from chebpy.core.chebfun import Chebfun
+from chebpy.chebfun import Chebfun
 
 from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
 from ..utilities import pi, sin

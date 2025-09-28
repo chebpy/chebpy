@@ -4,7 +4,7 @@ import numpy as np
 import numpy.linalg as la
 import numpy.polynomial.chebyshev as cheb
 
-from chebpy.core.chebyshev import ChebyshevPolynomial, from_roots
+from chebpy.chebyshev import ChebyshevPolynomial, from_roots
 
 
 def test_roots_of_quadratic_polynomial():

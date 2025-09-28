@@ -1,7 +1,7 @@
-"""Unit tests for the exception classes in chebpy.core.exceptions.
+"""Unit tests for the exception classes in chebpy.exceptions.
 
 This module contains tests that verify the behavior of all exception classes
-defined in the chebpy.core.exceptions module, including initialization with
+defined in the chebpy.exceptions module, including initialization with
 custom messages, default messages, and the abstract base class behavior.
 """
 
@@ -9,7 +9,7 @@ from abc import ABC
 
 import pytest
 
-from chebpy.core.exceptions import (
+from chebpy.exceptions import (
     BadFunLengthArgument,
     ChebpyBaseError,
     IntervalGap,
@@ -24,7 +24,7 @@ from chebpy.core.exceptions import (
 
 
 class TestExceptions:
-    """Test suite for exception classes in chebpy.core.exceptions."""
+    """Test suite for exception classes in chebpy.exceptions."""
 
     def test_exception_with_custom_message(self):
         """Test that exceptions can be initialized with a custom message."""

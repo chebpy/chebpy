@@ -8,7 +8,7 @@ breakpoints, and points outside the interval of definition.
 import numpy as np
 import pytest
 
-from chebpy.core.chebfun import Chebfun
+from chebpy.chebfun import Chebfun
 
 from ..utilities import cos, eps, exp, sin
 

@@ -4,10 +4,10 @@ This module provides the main interface for users to create Chebfun objects,
 which are the core data structure in ChebPy for representing functions.
 """
 
-from .core.bndfun import Bndfun
-from .core.chebfun import Chebfun
-from .core.settings import _preferences as prefs
-from .core.utilities import Domain
+from .bndfun import Bndfun
+from .chebfun import Chebfun
+from .settings import _preferences as prefs
+from .utilities import Domain
 
 
 def chebfun(f=None, domain=None, n=None):

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from chebpy.core.chebtech import Chebtech
+from chebpy.chebtech import Chebtech
 
 from ..generic.plotting import test_plot, test_plot_complex  # noqa: F401
 from ..utilities import cos, sin
