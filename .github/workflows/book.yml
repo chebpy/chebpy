@@ -18,7 +18,9 @@ name: "BOOK"
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - master
 
 jobs:
   book:
