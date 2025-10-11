@@ -6,7 +6,7 @@
 #          It combines API documentation, test coverage reports, test results, and
 #          interactive notebooks into a single GitHub Pages site.
 #
-# Trigger: This workflow runs on every push to the main branch
+# Trigger: This workflow runs on every push to the main or master branch
 #
 # Components:
 #   - 📓 Process Marimo notebooks

@@ -68,7 +68,15 @@ tasks:
               dir_path=$(dirname "$rel_path")
               base_name=$(basename "$rel_path" .py)
               mkdir -p "_marimushka/$dir_path"
-              uv run marimo export html --include-code --output "_marimushka/$dir_path/$base_name.html" "$py_file"
+
+              # Check if the file has a script header ("# /// script")
+              if grep -q "^# /// script" "$py_file"; then
+                printf " ${BLUE}[INFO] Script header detected, using --sandbox flag...${RESET}\n"
+                uvx marimo export html --sandbox --include-code --output "_marimushka/$dir_path/$base_name.html" "$py_file"
+              else
+                printf " ${BLUE}[INFO] No script header detected, using standard export...${RESET}\n"
+                uv run marimo export html --include-code --output "_marimushka/$dir_path/$base_name.html" "$py_file"
+              fi
             done
             echo "<html><head><title>Marimo Notebooks</title></head><body><h1>Marimo Notebooks</h1><ul>" > _marimushka/index.html
             find _marimushka -name "*.html" -not -path "*index.html" | sort | while read html_file; do
