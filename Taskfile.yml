@@ -30,7 +30,6 @@ env:
   LOG_SUCCESS: 'printf "${GREEN}[SUCCESS] %s${RESET}\n"'
   LOG_ERROR: 'printf "${RED}[ERROR] %s${RESET}\n"'
 
-  PATH: "{{.HOME}}/.local/bin:{{.PATH}}"
 
 # Include task groups
 includes:
@@ -53,10 +52,10 @@ tasks:
     desc: Display help information
     silent: true
     cmds:
-      - task --list
+      - ./bin/task --list
 
   help:
     desc: Display help information with all tasks
     silent: true
     cmds:
-      - task --list-all
+      - ./bin/task --list-all
