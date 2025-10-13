@@ -15,39 +15,43 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
-      with:
-        python-version: ${{ inputs.python-version }}
-        cache-dependency-glob: "**/*requirements*.txt,**/*requirements*.in,**/*constraints*.txt,**/*constraints*.in,**/pyproject.toml,**/uv.lock"
-      
-    - name: Install Task
-      uses: arduino/setup-task@v2
-      with:
-        version: 3.x
-        repo-token: ${{ github.token }}
-    
+    - name: Set up task, uv, uvx and the venv
+      shell: bash
+      run: |
+        mkdir -p bin
+
+        # Install Task
+        curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ./bin
+
+        # Install uv and uvx
+        curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh
+
+        # Verify installations
+        ./bin/task --version
+        ./bin/uv --version
+        ./bin/uvx --version
+
     - name: Render the project
       if: hashFiles('tests/resources/render.yml') != ''
       shell: bash
       run: |
         pip install copier
-        
+
         # Render the current folder in-place
         copier copy . . \
           --data-file ./tests/resources/render.yml \
           --force \
           --overwrite \
           --quiet
-        
+
         # Delete all remaining .jinja files
         find . -type f -name "*.jinja" -exec rm -f {} +
-        
+
         # Delete all folders that still contain {{ ... }}
         find . -depth -type d -name "*{{*}}*" -exec rm -rf {} +
-        
+
         ls -R
-        
+
     - name: Check for pyproject.toml
       id: check_pyproject
       shell: bash
@@ -60,13 +64,13 @@ runs:
 
     - name: Build the virtual environment
       shell: bash
-      run: uv venv --python ${{ inputs.python-version }}
+      run: ./bin/uv venv --python ${{ inputs.python-version }}
 
     - name: "Build the virtual environment for ${{ github.repository }}"
       shell: bash
       run: |
         if [ -f "pyproject.toml" ]; then
-          uv sync --all-extras
+          ./bin/uv sync --all-extras
         else
           echo "No pyproject.toml found, skipping package installation"
         fi

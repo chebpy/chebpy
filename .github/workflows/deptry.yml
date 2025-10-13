@@ -32,4 +32,4 @@ jobs:
 
       - name: Run deptry
         if: steps.setup.outputs.pyproject_exists == 'true'
-        run: task quality:deptry
+        run: ./bin/task quality:deptry

@@ -29,7 +29,7 @@ jobs:
             echo "matrix=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          
+
           # Find notebooks and handle empty results
           if [ -z "$(find "$NOTEBOOK_DIR" -maxdepth 1 -name "*.py" 2>/dev/null)" ]; then
             echo "No notebooks found in $NOTEBOOK_DIR. Setting empty matrix."
@@ -64,5 +64,5 @@ jobs:
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
         run: |
-          uv run "${{ matrix.notebook }}"
+          ./bin/uv run "${{ matrix.notebook }}"
         shell: bash

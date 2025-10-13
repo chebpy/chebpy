@@ -47,5 +47,5 @@ jobs:
 
       - name: "Run the tests"
         run: |
-          uv pip install pytest
-          uv run pytest tests
+          ./bin/uv pip install pytest
+          ./bin/uv run pytest tests
