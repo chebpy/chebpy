@@ -97,7 +97,7 @@ jobs:
         continue-on-error: true
 
       - name: Create GitHub Release with artifacts
-        uses: softprops/action-gh-release@v2.4.0
+        uses: softprops/action-gh-release@v2.4.1
         with:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
