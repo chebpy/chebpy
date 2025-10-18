@@ -2,10 +2,12 @@
 # (https://github.com/tschm/.config-templates).
 #
 # Workflow: Continuous Integration
+# 
 # Purpose: This workflow runs tests on multiple Python versions to ensure
 #          compatibility and code quality across different environments.
 #
-# Trigger: This workflow runs on every push
+# Trigger: This workflow runs on every push and on pull requests to main/master
+#          branches (including from forks)
 #
 # Components:
 #   - 🧪 Run tests on multiple Python versions
@@ -13,11 +15,13 @@
 
 name: "CI"
 
-on:
-- push
-
 permissions:
   contents: read
+
+on:
+  push:
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   test:
