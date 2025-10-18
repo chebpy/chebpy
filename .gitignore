@@ -14,6 +14,9 @@ _marimushka
 # .env file for configuration, e.g. OpenBB
 .env
 
+# folder used for task
+bin/
+
 quantstats.md
 
 # Byte-compiled / optimized / DLL files
