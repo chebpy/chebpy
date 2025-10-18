@@ -1,11 +1,18 @@
 # This workflow runs and tests all Marimo notebooks in the project
 # It creates a matrix of jobs, one for each notebook, and runs them in parallel
+#
+# Trigger: This workflow runs on every push and on pull requests to main/master
+#          branches (including from forks)
+
 name: "Marimo"
+
 permissions:
   contents: read
 
 on:
-  - push
+  push:
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   # Parse .env file and build a matrix of notebooks to test
