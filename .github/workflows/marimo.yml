@@ -1,8 +1,19 @@
-# This workflow runs and tests all Marimo notebooks in the project
-# It creates a matrix of jobs, one for each notebook, and runs them in parallel
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# Workflow: Marimo Notebooks
+#
+# Purpose: This workflow discovers and executes all Marimo notebooks in the
+#          repository. It builds a dynamic matrix to run each notebook in
+#          parallel to surface errors early and keep notebooks reproducible.
 #
 # Trigger: This workflow runs on every push and on pull requests to main/master
 #          branches (including from forks)
+#
+# Components:
+#   - 🔎 Discover notebooks in book/marimo
+#   - 🧪 Run each notebook in parallel using a matrix strategy
+#   - ✅ Fail-fast disabled to report all failing notebooks
 
 name: "Marimo"
 
@@ -15,7 +26,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # Parse .env file and build a matrix of notebooks to test
+  # Build a matrix of notebooks to test
   list-notebooks:
     runs-on: ubuntu-latest
     outputs:

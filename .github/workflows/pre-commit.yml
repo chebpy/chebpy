@@ -26,18 +26,10 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+
     steps:
-      # Check out the repository code
       - uses: actions/checkout@v5
-
-      # Use the composite action to render the project
-      - name: Setup the project
-        uses: ./.github/actions/setup-project
-
-      - name: Lint
-        run: |
-          ./bin/task quality:lint
-
-      - name: Format
-        run: |
-          ./bin/task quality:fmt
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: pre-commit/action@v3.0.1

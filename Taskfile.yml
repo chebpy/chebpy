@@ -1,6 +1,18 @@
 # This file is part of the tschm/.config-templates repository
 # (https://github.com/tschm/.config-templates).
 #
+# Taskfile: Root Taskfile
+#
+# Purpose: Provide a unified entry point for developer tasks by grouping
+#          build, quality, documentation, and cleanup commands. Exposes
+#          helpful default and help targets.
+#
+# Components:
+#   - includes: build, quality, docs, cleanup
+#   - tasks:
+#       - default: show top-level tasks
+#       - help: show all tasks including nested ones
+
 version: '3'
 
 # Variables
