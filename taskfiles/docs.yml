@@ -1,3 +1,18 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# Taskfile: Documentation and testing tasks
+#
+# Purpose: Provide tasks to run tests, generate API docs, export Marimo notebooks,
+#          assemble a combined documentation site ("book"), and run a Marimo server.
+#
+# Components:
+#   - test: run pytest with coverage and HTML report
+#   - docs: build API documentation with pdoc
+#   - marimushka: export Marimo notebooks to HTML and generate an index
+#   - book: assemble docs, test reports, and notebooks into a static site
+#   - marimo: start a Marimo server for interactive editing
+
 version: '3'
 
 includes:

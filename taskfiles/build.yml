@@ -1,3 +1,18 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# Taskfile: Build tasks
+#
+# Purpose: Provide build-related utilities for Python projects using uv, including:
+#   - Installing uv and uvx into a local ./bin directory
+#   - Creating a virtual environment and syncing dependencies
+#   - Building the package with Hatch when a pyproject.toml is present
+#
+# Components:
+#   - uv: install uv/uvx if missing
+#   - install: create venv and install dependencies (if pyproject.toml exists)
+#   - build: build the package with Hatch (if pyproject.toml exists)
+
 version: '3'
 
 dir: .

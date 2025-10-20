@@ -8,6 +8,7 @@
 BLUE := \033[36m
 BOLD := \033[1m
 GREEN := \033[32m
+RED := \033[31m
 RESET := \033[0m
 
 # Default goal when running `make` with no target
@@ -19,7 +20,6 @@ RESET := \033[0m
 ##@ Bootstrap
 install-task: ## ensure go-task (Taskfile) is installed
 	@mkdir -p ./bin;
-	export PATH=".bin:$$PATH"
 	# install task
 	@if command -v ./bin/task >/dev/null 2>&1; then \
 		printf "$(GREEN)task is already installed$(RESET)\n"; \
@@ -56,7 +56,6 @@ book: test ## compile the companion book
 	./bin/task docs:book
 
 fmt: install ## check the pre-commit hooks and the linting
-	./bin/task quality:fmt
 	./bin/task quality:lint
 
 deptry: install  ## check deptry
@@ -67,7 +66,7 @@ all: fmt deptry test book ## Run everything
 
 ##@ Meta
 help: ## Display this help message
-	@printf "$(BOLD)Usage:$(RESET)\n"
-	@printf "  make $(BLUE)<target>$(RESET)\n\n"
-	@printf "$(BOLD)Targets:$(RESET)\n"
-	@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	+@printf "$(BOLD)Usage:$(RESET)\n"
+	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
+	+@printf "$(BOLD)Targets:$(RESET)\n"
+	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)

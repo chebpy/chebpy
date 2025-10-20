@@ -1,3 +1,24 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# Action: Setup Project (composite action)
+#
+# Purpose: Bootstrap a Python project in GitHub Actions by:
+#   - Installing Task, uv, and uvx into a local ./bin directory
+#   - Optionally rendering the repository from a Copier template for tests
+#   - Detecting presence of pyproject.toml and exposing it as an output
+#   - Creating a virtual environment with uv and syncing dependencies
+#
+# Inputs:
+#   - python-version: Python version used for the virtual environment (default: 3.12)
+#
+# Outputs:
+#   - pyproject_exists: "true" if pyproject.toml exists, otherwise "false"
+#
+# Notes:
+#   - Safe to run in repositories without pyproject.toml; dependency sync will be skipped.
+#   - Used by workflows such as CI, Book, Marimo, and Release.
+
 name: 'Setup Project'
 description: 'Setup the project'
 

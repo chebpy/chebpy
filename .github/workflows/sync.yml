@@ -1,8 +1,14 @@
-# Workflow: Sync
-# Purpose: This workflow synchronizes configuration files from the template repository
-#          to other repositories, creating a pull request with the changes.
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
 #
-# Trigger: This workflow runs manually via workflow_dispatch
+# Workflow: Sync
+#
+# Purpose: This workflow synchronizes configuration files from the template
+#          repository to other repositories, creating a pull request with the
+#          changes to keep them up to date.
+#
+# Trigger: This workflow runs manually via workflow_dispatch and on a weekly
+#          schedule to ensure regular synchronization.
 #
 # Components:
 #   - 📥 Checkout the target repository
