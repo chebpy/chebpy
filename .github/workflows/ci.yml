@@ -2,7 +2,7 @@
 # (https://github.com/tschm/.config-templates).
 #
 # Workflow: Continuous Integration
-# 
+#
 # Purpose: This workflow runs tests on multiple Python versions to ensure
 #          compatibility and code quality across different environments.
 #
@@ -33,7 +33,7 @@ jobs:
       matrix:
         # mongo container action only supported on Linux
         os: [ ubuntu-latest ]
-        python-version: [ '3.11', '3.12', '3.13' ]
+        python-version: [ '3.11', '3.12', '3.13', '3.14']
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -51,5 +51,9 @@ jobs:
 
       - name: "Run the tests"
         run: |
-          ./bin/uv pip install pytest
-          ./bin/uv run pytest tests
+          # if there is a tests/requirements.txt file, install it
+          if [ -f "tests/requirements.txt" ]; then
+            uv pip install -r tests/requirements.txt
+          fi
+          uv pip install pytest
+          uv run pytest tests

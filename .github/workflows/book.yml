@@ -46,19 +46,19 @@ jobs:
 
       - name: "Make the docs"
         run: |
-          ./bin/task docs:docs
+          task docs:docs
 
       - name: "Make the tests"
         run: |
-          ./bin/task docs:test
+          task docs:test
 
       - name: "Make the notebooks"
         run: |
-          ./bin/task docs:marimushka
+          task docs:marimushka
 
       - name: "Make the book"
         run: |
-          ./bin/task docs:book
+          task docs:book
 
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact

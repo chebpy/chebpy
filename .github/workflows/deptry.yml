@@ -26,15 +26,21 @@ jobs:
     name: Check dependencies with deptry
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/astral-sh/uv:0.9.4-python3.12-trixie
+      image: ghcr.io/astral-sh/uv:0.9.5-python3.12-trixie
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Run deptry
         run: |
+          set -euo pipefail
           if [ -f "pyproject.toml" ]; then
-            uvx deptry src  # Run deptry on the src directory
+            if [ -d "src" ]; then
+              SOURCE_FOLDER="src"
+            else
+              SOURCE_FOLDER="."
+            fi
+            uvx deptry "$SOURCE_FOLDER"
           else
-            echo "pyproject.toml not found, skipping deptry analysis"
+            printf "${YELLOW:-}[WARN] No pyproject.toml found, skipping deptry${RESET:-}\n"
           fi

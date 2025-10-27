@@ -78,7 +78,7 @@ jobs:
       - name: Upload dist artifact
         # not tested at runtime!
         if: hashFiles('pyproject.toml') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dist
           path: dist
@@ -90,11 +90,12 @@ jobs:
 
     steps:
       - name: Download dist artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: dist
-        continue-on-error: true
+        # Fail fast if dist artifact is missing; don’t create empty releases.
+        # continue-on-error: true
 
       - name: Create GitHub Release with artifacts
         uses: softprops/action-gh-release@v2.4.1
@@ -112,7 +113,7 @@ jobs:
 
     steps:
       - name: Download dist artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: dist

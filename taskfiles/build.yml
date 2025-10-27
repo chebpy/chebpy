@@ -20,41 +20,42 @@ dir: .
 tasks:
   uv:
     desc: Install uv and uvx
+    env:
+      UV_INSTALL_DIR: ./bin
     cmds:
       - |
-        echo "PWD: $PWD"
-        # install uv and uvx
-        if [ -f "./bin/uv" ] && [ -x "./bin/uv" ]; then
-          printf "{{.BLUE}}[INFO] uv already present in ./bin, skipping installation{{.RESET}}\n"
-        else
-          printf "{{.BLUE}}Installing uv{{.RESET}}\n"
-          curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh || { printf "{{.RED}}[ERROR] Failed to install uv{{.RESET}}\n"; exit 1; }
+        if [ -x "${UV_INSTALL_DIR}/uv" ] && [ -x "${UV_INSTALL_DIR}/uvx" ]; then
+          # already installed — stay quiet
+          exit 0
         fi
+        printf "${BLUE}Installing uv${RESET}\n"
+        curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || { printf "${RED}[ERROR] Failed to install uv ${RESET}\n"; exit 1; }
+
 
   install:
     desc: Install all dependencies using uv
     deps: [uv]
+    env:
+      UV_VENV_CLEAR: 1
     cmds:
       - |
-        # Check if .venv folder already exists
-        if [ -d ".venv" ]; then
-          printf "${BLUE}[INFO] Virtual environment already exists, skipping installation${RESET}\n"
+        # we need the virtual environment at least for the tests to work
+        # even if we don't install anything
+
+        printf "${BLUE}[INFO] Creating virtual environment...${RESET}\n"
+
+        # Create the virtual environment
+        ./bin/uv venv --python 3.12 || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }
+
+        if [ -f "tests/requirements.txt" ]; then
+          ./bin/uv pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }
+        fi
+
+        if [ -f "pyproject.toml" ]; then
+          printf "${BLUE}[INFO] Installing dependencies${RESET}\n"
+          ./bin/uv sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }
         else
-          # we need the virtual environment at least for the tests to work
-          # even if we don't install anything
-
-          # Create the virtual environment
-          printf "${BLUE}[INFO] Creating virtual environment...${RESET}\n"
-
-          # Create the virtual environment
-          ./bin/uv venv --python 3.12 || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }
-
-          if [ -f "pyproject.toml" ]; then
-            printf "${BLUE}[INFO] Installing dependencies${RESET}\n"
-            ./bin/uv sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }
-          else
-            printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"
-          fi
+          printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"
         fi
 
   build:

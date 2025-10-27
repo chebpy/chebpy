@@ -17,11 +17,11 @@ tasks:
     desc: Clean generated files and directories
     cmds:
       - |
-        printf " ${BLUE}[INFO] Cleaning project...${RESET}\n"
+        printf "${BLUE}Cleaning project...${RESET}\n"
         # do not clean .env files
         git clean -d -X -f -e .env -e '.env.*'
         rm -rf dist build *.egg-info .coverage .pytest_cache
-        printf " ${BLUE}[INFO] Removing local branches with no remote counterpart...${RESET}\n"
+        printf "${BLUE}Removing local branches with no remote counterpart...${RESET}\n"
         git fetch --prune
         git branch -vv \
           | grep ': gone]' \
