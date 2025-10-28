@@ -33,8 +33,14 @@ jobs:
 
       - name: Run deptry
         run: |
+          set -euo pipefail
           if [ -f "pyproject.toml" ]; then
-            uvx deptry src  # Run deptry on the src directory
+            if [ -d "src" ]; then
+              SOURCE_FOLDER="src"
+            else
+              SOURCE_FOLDER="."
+            fi
+            uvx deptry "$SOURCE_FOLDER"
           else
-            echo "pyproject.toml not found, skipping deptry analysis"
+            printf "${YELLOW:-}[WARN] No pyproject.toml found, skipping deptry${RESET:-}\n"
           fi
