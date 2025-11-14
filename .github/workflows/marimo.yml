@@ -82,5 +82,5 @@ jobs:
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
         run: |
-          ./bin/uv run "${{ matrix.notebook }}"
+          uv run "${{ matrix.notebook }}"
         shell: bash

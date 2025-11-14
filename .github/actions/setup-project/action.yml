@@ -41,16 +41,25 @@ runs:
       run: |
         mkdir -p bin
 
+        # Add ./bin to the PATH
+        echo "Adding ./bin to PATH"
+        echo "$(pwd)/bin" >> $GITHUB_PATH
+
         # Install Task
         curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ./bin
 
         # Install uv and uvx
         curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh
 
-        # Verify installations
-        ./bin/task --version
-        ./bin/uv --version
-        ./bin/uvx --version
+    - name: Check version for task
+      shell: bash
+      run: |
+        task --version
+
+    - name: Check version for uv
+      shell: bash
+      run: |
+        uv --version
 
     - name: Render the project
       if: hashFiles('tests/resources/render.yml') != ''
@@ -85,13 +94,13 @@ runs:
 
     - name: Build the virtual environment
       shell: bash
-      run: ./bin/uv venv --python ${{ inputs.python-version }}
+      run: uv venv --python ${{ inputs.python-version }}
 
-    - name: "Build the virtual environment for ${{ github.repository }}"
+    - name: "Sync the virtual environment for ${{ github.repository }} if pyproject.toml exists"
       shell: bash
       run: |
         if [ -f "pyproject.toml" ]; then
-          ./bin/uv sync --all-extras
+          uv sync --all-extras
         else
           echo "No pyproject.toml found, skipping package installation"
         fi
