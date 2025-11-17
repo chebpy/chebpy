@@ -1,8 +1,10 @@
-"""Tests for the Makefile targets and help output.
+"""Tests for the Makefile targets and help output using safe dry‑runs.
 
-These tests validate that the Makefile exposes expected targets and
-emits the correct commands without actually executing them by using
-`make -n` (dry-run). This keeps tests fast and avoids network calls.
+These tests validate that the Makefile exposes expected targets and emits
+the correct commands without actually executing them, by invoking `make -n`
+(dry-run). We also pass `-s` to reduce noise in CI logs. This approach keeps
+tests fast, portable, and free of side effects like network or environment
+changes.
 """
 
 from __future__ import annotations

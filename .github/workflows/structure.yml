@@ -1,0 +1,73 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# GitHub Actions workflow: repository structure advisory checks
+# Purpose: Soft-check the presence of common scaffolding (src/, tests/, and key dotfiles)
+# and print WARN messages if something is missing. This workflow is advisory:
+# it never fails the job based on these checks; it only surfaces helpful hints
+# for template consumers.
+#
+# Triggers: on push and pull requests targeting main/master.
+# Permissions: read-only; no writes or tokens required. LFS enabled to support
+# repositories that track large files.
+# Notes: The shell steps use printf with optional color variables (e.g., YELLOW,
+# RESET). If these env vars are unset in the runner, the parameter expansion
+# defaults ensure plain text output without ANSI colors.
+name: "STRUCTURE"
+
+# Minimal read permission is sufficient; the workflow does not modify the repo
+permissions:
+  contents: read
+
+# Run on pushes and pull requests to the default branches
+on:
+  push:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # Single job that performs presence checks and emits WARN lines (warn-only)
+  structure_check:
+    runs-on: "ubuntu-latest"
+
+    permissions:
+      contents: read
+
+    steps:
+      # Check out the repository code (with Git LFS files, if any)
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      # Check there is a src folder
+      - name: Check src folder exists
+        run: |
+          if [ ! -d "src" ]; then
+            printf "${YELLOW:-}[WARN] No src folder found, skipping structure check${RESET:-}\n"
+          fi
+
+      # Check there is a tests folder
+      - name: Check tests folder exists
+        run: |
+          if [ ! -d "tests" ]; then
+            printf "${YELLOW:-}[WARN] No tests folder found, skipping structure check${RESET:-}\n"
+          fi
+
+      # Check there is a .editorconfig, .gitignore, .pre-commit-config.yaml and Makefile file
+      - name: Check .editorconfig and .gitignore files exist
+        run: |
+          if [ ! -f ".editorconfig" ]; then
+            printf "${YELLOW:-}[WARN] No .editorconfig file found, skipping structure check${RESET:-}\n"
+          fi
+
+          if [ ! -f ".gitignore" ]; then
+            printf "${YELLOW:-}[WARN] No .gitignore file found, skipping structure check${RESET:-}\n"
+          fi
+
+          if [ ! -f ".pre-commit-config.yaml" ]; then
+            printf "${YELLOW:-}[WARN] No .pre-commit-config file found, skipping structure check${RESET:-}\n"
+          fi
+
+          if [ ! -f "Makefile" ]; then
+            printf "${YELLOW:-}[WARN] No Makefile found, skipping structure check${RESET:-}\n"
+          fi
