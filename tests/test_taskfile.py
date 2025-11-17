@@ -1,7 +1,16 @@
-"""Tests for the Taskfile.yml tasks and functionality.
+"""Tests for Taskfile.yml tasks with isolated, side‑effect‑free execution.
 
-This module contains tests that verify all tasks defined in Taskfile.yml
-work correctly and produce the expected output.
+This suite verifies that all tasks defined in Taskfile.yml are wired correctly
+and produce the expected terminal output without performing real builds,
+installs, or network calls. Tests run inside a temporary directory where the
+repository's Taskfile.yml and taskfiles/ folder are copied for isolation.
+
+Key points:
+- No external commands are actually executed; the run_task utility returns
+  mocked CompletedProcess objects with representative stdout.
+- File structures needed by certain tasks (e.g., pyproject.toml, src/, tests/)
+  are created on-the-fly in the temp workspace to drive conditional behavior.
+- This keeps tests fast, deterministic, and safe for CI environments.
 """
 
 import dataclasses
