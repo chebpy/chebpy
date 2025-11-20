@@ -17,6 +17,7 @@ homepage = "https://chebpy.github.io/chebpy/"
 [project.optional-dependencies]
 dev = [
     "pytest-cov>=6.2.1",
+    "pytest-html>=4.1.1",
     "pre-commit>=4.2.0",
     "seaborn==0.13.2",
     "marimo==0.17.7",
@@ -37,6 +38,7 @@ pep621_dev_dependency_groups = ["dev"]
 [tool.deptry.package_module_name_map]
 "pre-commit" = "pre_commit"
 "pytest-cov" = "pytest_cov"
+"pytest-html" = "pytest_html"
 matplotlib = "matplotlib"
 seaborn = "seaborn"
 marimo = "marimo"

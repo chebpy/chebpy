@@ -76,7 +76,6 @@ make test
 
 # ✨ Format and lint code
 make fmt
-make lint
 
 # 📓 Start interactive notebooks
 make marimo

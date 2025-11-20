@@ -45,7 +45,7 @@ class Chebtech(Smoothfun, ABC):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
-    of the core operational functionality is defined this level.
+    of the core operational functionality is defined at this level.
 
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
