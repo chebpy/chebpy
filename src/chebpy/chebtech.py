@@ -417,7 +417,7 @@ class Chebtech(Smoothfun, ABC):
         """
 
         # Executed when __div__(f, self) fails, which is to say whenever f
-        # is not a Chebtech. We proceeed on the assumption f is a scalar.
+        # is not a Chebtech. We proceed on the assumption f is a scalar.
         def constfun(x):
             return 0.0 * x + f
 
