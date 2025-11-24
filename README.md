@@ -120,6 +120,12 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 ```
 
+Expected output:
+
+```result
+
+```
+
 ### More Examples
 
 ```python
@@ -135,6 +141,10 @@ roots = g.roots()         # All roots in the domain
 # Function composition
 h = f + g                 # Addition
 product = f * g           # Multiplication
+```
+
+```result
+
 ```
 
 ---
