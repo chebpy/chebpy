@@ -33,7 +33,7 @@ jobs:
       notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
       # Check out the repository code
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Find all Python files in the marimo folder and create a matrix for parallel execution
       - name: Find notebooks and build matrix
@@ -71,7 +71,7 @@ jobs:
     name: Run notebook ${{ matrix.notebook }}
     steps:
       # Check out the repository code
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           lfs: true
 

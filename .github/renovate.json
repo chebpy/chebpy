@@ -12,7 +12,8 @@
         "pep621",
         "pre-commit",
         "github-actions",
-        "devcontainer"
+        "devcontainer",
+        "dockerfile"
     ],
     "timezone": "Asia/Dubai",
     "schedule": [
