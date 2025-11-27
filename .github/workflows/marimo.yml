@@ -15,7 +15,7 @@
 #   - 🧪 Run each notebook in parallel using a matrix strategy
 #   - ✅ Fail-fast disabled to report all failing notebooks
 
-name: "Marimo"
+name: "MARIMO"
 
 permissions:
   contents: read

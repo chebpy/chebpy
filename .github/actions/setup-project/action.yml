@@ -36,7 +36,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up task, uv, uvx and the venv
+    - name: Set up uv, uvx and the venv
       shell: bash
       run: |
         mkdir -p bin
@@ -45,16 +45,8 @@ runs:
         echo "Adding ./bin to PATH"
         echo "$(pwd)/bin" >> $GITHUB_PATH
 
-        # Install Task
-        curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ./bin
-
         # Install uv and uvx
         curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh
-
-    - name: Check version for task
-      shell: bash
-      run: |
-        task --version
 
     - name: Check version for uv
       shell: bash
