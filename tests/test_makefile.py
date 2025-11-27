@@ -23,7 +23,7 @@ def setup_tmp_makefile(tmp_path: Path):
 
     We rely on `make -n` so that no real commands are executed.
     """
-    project_root = Path(os.getcwd())
+    project_root = Path(__file__).parent.parent
 
     # Copy the Makefile into the temporary working directory
     shutil.copy(project_root / "Makefile", tmp_path / "Makefile")
@@ -78,34 +78,31 @@ class TestMakefile:
         assert "Bootstrap" in out or "Meta" in out  # section headers
 
     def test_fmt_target_dry_run(self):
-        """Fmt target should call the quality:lint task in dry-run output."""
+        """Fmt target should invoke pre-commit via uvx in dry-run output."""
         proc = run_make(["fmt"])
         out = proc.stdout
-        assert "./bin/task quality:lint" in out
+        assert "./bin/uvx pre-commit run --all-files" in out
 
     def test_deptry_target_dry_run(self):
-        """Deptry target should call the quality:deptry task in dry-run."""
+        """Deptry target should invoke deptry via uvx in dry-run output."""
         proc = run_make(["deptry"])
         out = proc.stdout
-        assert "./bin/task quality:deptry" in out
+        assert './bin/uvx deptry "src"' in out
 
     def test_test_target_dry_run(self):
-        """Test target should invoke docs:test in dry-run output."""
+        """Test target should invoke pytest via uv with coverage and HTML outputs in dry-run output."""
         proc = run_make(["test"])
         out = proc.stdout
-        assert "./bin/task docs:test" in out
+        # Expect key steps
+        assert "mkdir -p _tests/html-coverage _tests/html-report" in out
+        assert "./bin/uv run pytest" in out
 
     def test_book_target_dry_run(self):
-        """Book target should run all three docs-related commands in order."""
+        """Book target should run inline commands to assemble the book without go-task."""
         proc = run_make(["book"])
         out = proc.stdout
-        # The composite target should run all dependent commands
-        for expected_cmd in [
-            "./bin/task docs:docs",
-            "./bin/task docs:marimushka",
-            "./bin/task docs:book",
-        ]:
-            assert expected_cmd in out
+        # Expect marimushka export to install marimo and minibook to be invoked
+        assert "./bin/uvx minibook" in out
 
     def test_all_target_dry_run(self):
         """All target echoes a composite message in dry-run output."""
@@ -113,10 +110,3 @@ class TestMakefile:
         out = proc.stdout
         # The composite target should echo a message
         assert "Run fmt, deptry, test and book" in out
-
-    def test_install_task_dry_run_shows_expected_commands(self):
-        """install-task target should show task installer and version check."""
-        proc = run_make(["install-task"])
-        out = proc.stdout
-        # ensure key steps of install are present in the dry run output
-        assert "curl --location https://taskfile.dev/install.sh" in out
