@@ -1,0 +1,137 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
+# Devcontainer CI Workflow
+#
+# Purpose:
+#   Validates that the devcontainer image builds successfully when devcontainer-related
+#   files are changed. This workflow does NOT publish/push the image to any registry.
+#
+# Trigger Conditions:
+#   - Push to any branch when files in .devcontainer/ change
+#   - Pull requests to main/master when files in .devcontainer/ change
+#   - Changes to this workflow file itself
+#
+# Image Configuration:
+#   - Registry: Defaults to ghcr.io (override with DEVCONTAINER_REGISTRY variable)
+#   - Image name: {registry}/{owner}/{repository}/devcontainer
+#   - Image tag: {branch}-{commit-sha} (e.g., main-abc123def456)
+#   - Config file: Always .devcontainer/devcontainer.json
+#
+# Safeguards:
+#   - Checks if .devcontainer/devcontainer.json exists before building
+#   - Skips gracefully with a warning if devcontainer.json is not found
+#   - Converts repository owner to lowercase for Docker compatibility
+#
+# Publishing:
+#   Publishing only happens during releases via release.yml when the
+#   PUBLISH_DEVCONTAINER repository variable is set to "true".
+#
+# For repos without devcontainers:
+#   This workflow won't trigger unless .devcontainer/ files exist and are modified,
+#   or this workflow file itself is changed (in which case it skips gracefully).
+
+
+name: DEVCONTAINER
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - ".devcontainer/**"
+      - ".github/workflows/devcontainer.yml"
+
+  pull_request:
+    branches: [ main, master ]  
+    paths:
+      - ".devcontainer/**"
+      - ".github/workflows/devcontainer.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build Devcontainer Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set registry
+        id: registry
+        run: |
+          REGISTRY="${{ vars.DEVCONTAINER_REGISTRY }}"
+          if [ -z "$REGISTRY" ]; then
+            REGISTRY="ghcr.io"
+          fi
+          echo "registry=$REGISTRY" >> $GITHUB_OUTPUT
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.registry.outputs.registry }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Additional gate to skip build if no devcontainer.json exists
+      - name: Check devcontainer exists
+        id: check
+        run: |
+          if [ ! -f ".devcontainer/devcontainer.json" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::No .devcontainer/devcontainer.json found, skipping build"
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+      # repository owner to lowercase for Docker image naming, as devcontainers/ci does not safeguard
+      - name: Get lowercase repository owner
+        id: repo_owner
+        run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
+      - name: Get Image Name
+        if: steps.check.outputs.exists == 'true'
+        id: image_name
+        run: |
+          # Check if custom name is provided, otherwise use default
+          if [ -z "${{ vars.DEVCONTAINER_IMAGE_NAME }}" ]; then
+            REPO_NAME_LC=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+            # Sanitize repo name: replace invalid characters with hyphens
+            # Docker image names must match [a-z0-9]+([._-][a-z0-9]+)*
+            # Replace leading dots and multiple consecutive separators
+            REPO_NAME_SANITIZED=$(echo "$REPO_NAME_LC" | sed 's/^[._-]*//; s/[._-][._-]*/-/g')
+            IMAGE_NAME="$REPO_NAME_SANITIZED/devcontainer"
+            echo "Using default image name component: $IMAGE_NAME"
+          else
+            IMAGE_NAME="${{ vars.DEVCONTAINER_IMAGE_NAME }}"
+            echo "Using custom image name component: $IMAGE_NAME"
+          fi
+          
+          # Validate the image component matches [a-z0-9]+([._-][a-z0-9]+)* with optional / separators
+          if ! echo "$IMAGE_NAME" | grep -qE '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*$'; then
+            echo "::error::Invalid image name component: $IMAGE_NAME"
+            echo "::error::Each component must match [a-z0-9]+([._-][a-z0-9]+)* separated by /"
+            exit 1
+          fi
+          
+          IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$IMAGE_NAME"
+          echo "✅ Final image name: $IMAGE_NAME"
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT 
+      
+      - name: Sanitize Image Tag
+        if: steps.check.outputs.exists == 'true'
+        id: sanitized_tag
+        run: |
+          SANITIZED_TAG=$(echo "${{ github.ref_name }}-${{ github.sha }}" | tr '/' '-')
+          echo "sanitized_tag=$SANITIZED_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Build Devcontainer Image
+        uses: devcontainers/ci@v0.3
+        if: steps.check.outputs.exists == 'true'
+        with:
+          configFile: .devcontainer/devcontainer.json
+          push: never
+          imageName: ${{ steps.image_name.outputs.image_name }}
+          imageTag: ${{ steps.sanitized_tag.outputs.sanitized_tag }}
