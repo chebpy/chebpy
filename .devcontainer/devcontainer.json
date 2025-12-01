@@ -1,5 +1,5 @@
 {
-    "name": "Python 3.13",
+    "name": "Python 3.14",
     "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "hostRequirements": {
         "cpus": 4

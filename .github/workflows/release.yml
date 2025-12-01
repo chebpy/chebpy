@@ -1,54 +1,103 @@
 # This file is part of the tschm/.config-templates repository
 # (https://github.com/tschm/.config-templates).
 #
-# Manual Release Workflow for Python Package using Hatch and
-# Trusted Publisher (OIDC)
+# Release Workflow for Python Packages with Optional Devcontainer Publishing
 #
-# This workflow implements a secure, maintainable release pipeline
-# by separating concerns:
-#   - 🔖 Tagging the release (Git tag)
-#   - 🏗️ Building the package with Hatch
-#   - 🚀 Publishing to PyPI using OIDC (no passwords or secrets)
+# This workflow implements a secure, maintainable release pipeline with distinct phases:
+#
+# 📋 Pipeline Phases:
+#   1. 🔍 Validate Tag - Check tag format and ensure release doesn't already exist
+#   2. 🏗️  Build - Build Python package with Hatch (if pyproject.toml exists)
+#   3. 📝 Draft Release - Create draft GitHub release with build artifacts
+#   4. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
+#   5. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
+#   6. ✅ Finalize Release - Publish the GitHub release with links
+#
+# 🐳 Devcontainer Publishing:
+#   - Only occurs when PUBLISH_DEVCONTAINER repository variable is set to "true"
+#   - Requires .devcontainer directory to exist
+#   - Uses the release tag (e.g., v1.2.3) as the image tag
+#   - Image name: {registry}/{owner}/{repository}/devcontainer
+#   - Registry defaults to ghcr.io (override with DEVCONTAINER_REGISTRY variable)
+#   - Config file: Always .devcontainer/devcontainer.json
+#   - Adds devcontainer image link to GitHub release notes
+#
+# 🚀 PyPI Publishing:
+#   - Skipped if no dist/ artifacts exist
+#   - Skipped if pyproject.toml contains "Private :: Do Not Upload"
+#   - Uses Trusted Publishing (OIDC) for PyPI (no stored credentials)
+#   - For custom feeds, use PYPI_REPOSITORY_URL and PYPI_TOKEN secrets
+#   - Adds PyPI/custom feed link to GitHub release notes
 #
 # 🔐 Security:
-#   - No PyPI credentials are stored; relies on Trusted Publishing via GitHub OIDC.
+#   - No PyPI credentials stored; relies on Trusted Publishing via GitHub OIDC
+#   - For custom feeds, PYPI_TOKEN secret is used with default username __token__
+#   - Container registry uses GITHUB_TOKEN for authentication
 #
 # 📄 Requirements:
-#   - `pyproject.toml` with a top-level `version = "..."`
-#   - Package is registered on PyPI as a Trusted Publisher with this repository
+#   - pyproject.toml with top-level version field (for Python packages)
+#   - Package registered on PyPI as Trusted Publisher (for PyPI publishing)
+#   - PUBLISH_DEVCONTAINER variable set to "true" (for devcontainer publishing)
+#   - .devcontainer/devcontainer.json file (for devcontainer publishing)
 #
-# ✅ To trigger:
-#   - Go to the "Actions" tab
-#   - Run this workflow manually with a tag input like `v1.2.3`
+# ✅ To Trigger:
+#   Create and push a version tag:
+#     git tag v1.2.3
+#     git push origin v1.2.3
+#
+# 🎯 For repos without Python packages:
+#   The workflow gracefully skips Python-related steps if pyproject.toml doesn't exist.
+#
+# 🎯 For repos without devcontainers:
+#   The workflow gracefully skips devcontainer steps if PUBLISH_DEVCONTAINER is not
+#   set to "true" or .devcontainer directory doesn't exist.
 
-name: Release Workflow
+
+name: RELEASE
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g. v1.2.3)'
-        required: true
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write  # Needed to create releases
   id-token: write  # Needed for OIDC authentication with PyPI
+  packages: write  # Needed to publish devcontainer image
 
 jobs:
   tag:
-    name: Create Git Tag
+    name: Validate Tag
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set_tag.outputs.tag }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
 
-      - name: Create Git Tag
+      - name: Set Tag Variable
+        id: set_tag
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git tag ${{ github.event.inputs.tag }}
-          git push origin ${{ github.event.inputs.tag }}
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Validate Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.set_tag.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            DRAFT_STATUS=$(gh release view "$TAG" --json isDraft --jq '.isDraft')
+            if [ "$DRAFT_STATUS" != "true" ]; then
+              echo "::error::Release '$TAG' already exists and is not a draft. Please use a new tag."
+              exit 1
+            else
+              echo "::warning::Release '$TAG' exists as a draft. Will proceed to update it."
+            fi
+          fi
 
   build:
     name: Build
@@ -59,20 +108,28 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
 
       # Use the composite action to set up the project
       - name: Setup the project
         uses: ./.github/actions/setup-project
 
+      - name: Verify version matches tag
+        if: hashFiles('pyproject.toml') != ''
+        run: |
+          TAG_VERSION="${{ needs.tag.outputs.tag }}"
+          TAG_VERSION=${TAG_VERSION#v}
+          PROJECT_VERSION=$(uv version --short)
+          
+          if [[ "$PROJECT_VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::Version mismatch: pyproject.toml has '$PROJECT_VERSION' but tag is '$TAG_VERSION'"
+            exit 1
+          fi
+          echo "Version verified: $PROJECT_VERSION matches tag"
+
       - name: Build
         if: hashFiles('pyproject.toml') != ''
         run: |
-          version=${{ github.event.inputs.tag }}
-          version=${version#v}
-          echo "Setting version to $version"
-          sed -i.bak "s/^version = .*/version = \"$version\"/" pyproject.toml
-          rm pyproject.toml.bak
-
           printf "[INFO] Building package...\n"
           uvx hatch build
 
@@ -85,8 +142,8 @@ jobs:
           name: dist
           path: dist
 
-  release:
-    name: Create GitHub Release
+  draft-release:
+    name: Draft GitHub Release
     runs-on: ubuntu-latest
     needs: [tag, build]
 
@@ -100,23 +157,29 @@ jobs:
         # continue-on-error: true
 
       - name: Create GitHub Release with artifacts
-        uses: softprops/action-gh-release@v2.4.2
+        uses: softprops/action-gh-release@v2.5.0
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          name: ${{ github.event.inputs.tag }}
+          tag_name: ${{ needs.tag.outputs.tag }}
+          name: ${{ needs.tag.outputs.tag }}
           generate_release_notes: true
           files: "dist/**"
+          draft: true
 
-  # Parse .env and decide at step-level whether to publish
+  # Decide at step-level whether to publish
   pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
     environment: release
-    needs: [build, tag]
+    needs: [tag, build, draft-release]
+    outputs:
+      should_publish: ${{ steps.check_dist.outputs.should_publish }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
 
       - name: Download dist artifact
         uses: actions/download-artifact@v6
@@ -141,9 +204,168 @@ jobs:
           cat $GITHUB_OUTPUT
 
       # this should not take place, as "Private :: Do Not Upload" set in pyproject.toml
+      # repository-url and password only used for custom feeds, not for PyPI with OIDC
       - name: Publish to PyPI
         if: ${{ steps.check_dist.outputs.should_publish == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
           skip-existing: true
+          repository-url: ${{ vars.PYPI_REPOSITORY_URL }}
+          password: ${{ secrets.PYPI_TOKEN }}
+
+  devcontainer:
+    name: Publish Devcontainer Image
+    runs-on: ubuntu-latest
+    environment: release
+    needs: [tag, build, draft-release]
+    outputs:
+      should_publish: ${{ steps.check_publish.outputs.should_publish }}
+      image_name: ${{ steps.image_name.outputs.image_name }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Check if devcontainer should be published
+        id: check_publish
+        env:
+          PUBLISH_DEVCONTAINER: ${{ vars.PUBLISH_DEVCONTAINER }}
+        run: |
+          if [[ "$PUBLISH_DEVCONTAINER" == "true" ]] && [[ -d ".devcontainer" ]]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "🚀 Will build and publish devcontainer image"
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "⏭️  Skipping devcontainer publish (PUBLISH_DEVCONTAINER not true or .devcontainer missing)"
+          fi
+
+      - name: Set registry
+        if: steps.check_publish.outputs.should_publish == 'true'
+        id: registry
+        run: |
+          REGISTRY="${{ vars.DEVCONTAINER_REGISTRY }}"
+          if [ -z "$REGISTRY" ]; then
+            REGISTRY="ghcr.io"
+          fi
+          echo "registry=$REGISTRY" >> $GITHUB_OUTPUT
+
+      - name: Login to Container Registry
+        if: steps.check_publish.outputs.should_publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.registry.outputs.registry }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get lowercase repository owner
+        if: steps.check_publish.outputs.should_publish == 'true'
+        id: repo_owner
+        run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
+      - name: Get Image Name
+        if: steps.check_publish.outputs.should_publish == 'true'
+        id: image_name
+        run: |
+          # Check if custom name is provided, otherwise use default
+          if [ -z "${{ vars.DEVCONTAINER_IMAGE_NAME }}" ]; then
+            REPO_NAME_LC=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+            # Sanitize repo name: replace invalid characters with hyphens
+            # Docker image names must match [a-z0-9]+([._-][a-z0-9]+)*
+            # Replace leading dots and multiple consecutive separators
+            REPO_NAME_SANITIZED=$(echo "$REPO_NAME_LC" | sed 's/^[._-]*//; s/[._-][._-]*/-/g')
+            IMAGE_NAME="$REPO_NAME_SANITIZED/devcontainer"
+            echo "Using default image name component: $IMAGE_NAME"
+          else
+            IMAGE_NAME="${{ vars.DEVCONTAINER_IMAGE_NAME }}"
+            echo "Using custom image name component: $IMAGE_NAME"
+          fi
+          
+          # Validate the image component matches [a-z0-9]+([._-][a-z0-9]+)* with optional / separators
+          if ! echo "$IMAGE_NAME" | grep -qE '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*$'; then
+            echo "::error::Invalid image name component: $IMAGE_NAME"
+            echo "::error::Each component must match [a-z0-9]+([._-][a-z0-9]+)* separated by /"
+            exit 1
+          fi
+          
+          IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$IMAGE_NAME"
+          echo "✅ Final image name: $IMAGE_NAME"
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT    
+
+      - name: Build and Publish Devcontainer Image
+        if: steps.check_publish.outputs.should_publish == 'true'
+        uses: devcontainers/ci@v0.3
+        with:
+          configFile: .devcontainer/devcontainer.json
+          push: always
+          imageName: ${{ steps.image_name.outputs.image_name }}
+          imageTag: ${{ needs.tag.outputs.tag }}
+
+  finalise-release:
+    name: Finalise Release
+    runs-on: ubuntu-latest
+    needs: [tag, pypi, devcontainer]
+    if: needs.pypi.result == 'success' || needs.devcontainer.result == 'success'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Generate Devcontainer Link
+        id: devcontainer_link
+        if: needs.devcontainer.outputs.should_publish == 'true' && needs.devcontainer.result == 'success'
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          FULL_IMAGE="${{ needs.devcontainer.outputs.image_name }}:${{ needs.tag.outputs.tag }}"
+          {
+            echo "message<<EOF"
+            echo "### Devcontainer Image"
+            echo ""
+            echo "\`$FULL_IMAGE\`"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Generate PyPI Link
+        id: pypi_link
+        if: needs.pypi.outputs.should_publish == 'true' && needs.pypi.result == 'success'
+        run: |
+          PACKAGE_NAME=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
+          VERSION="${{ needs.tag.outputs.tag }}"
+          VERSION=${VERSION#v}
+
+          REPO_URL="${{ vars.PYPI_REPOSITORY_URL || '' }}"
+          if [ -z "$REPO_URL" ]; then
+             LINK="https://pypi.org/project/$PACKAGE_NAME/$VERSION/"
+             NAME="PyPI Package"
+          else
+             LINK="$REPO_URL"
+             NAME="Custom Feed Package"
+          fi
+
+          {
+            echo "message<<EOF"
+            echo "### $NAME"
+            echo ""
+            echo "[$PACKAGE_NAME]($LINK)"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2.5.0
+        with:
+          tag_name: ${{ needs.tag.outputs.tag }}
+          draft: false
+          append_body: true
+          body: |
+            ${{ steps.devcontainer_link.outputs.message }}
+            ${{ steps.pypi_link.outputs.message }}
+

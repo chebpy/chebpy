@@ -110,3 +110,27 @@ class TestMakefile:
         out = proc.stdout
         # The composite target should echo a message
         assert "Run fmt, deptry, test and book" in out
+
+    def test_uv_no_modify_path_is_exported(self):
+        """`UV_NO_MODIFY_PATH` should be set to `1` in the Makefile."""
+        proc = run_make(["print-UV_NO_MODIFY_PATH"])
+        out = proc.stdout
+        assert "UV_NO_MODIFY_PATH = 1" in out
+
+    def test_uv_install_dir_is_bin(self):
+        """`UV_INSTALL_DIR` should point to `./bin`."""
+        proc = run_make(["print-UV_INSTALL_DIR"])
+        out = proc.stdout
+        assert "UV_INSTALL_DIR = ./bin" in out
+
+    def test_uv_bin_is_bin_uv(self):
+        """`UV_BIN` should point to `./bin/uv`."""
+        proc = run_make(["print-UV_BIN"])
+        out = proc.stdout
+        assert "UV_BIN = ./bin/uv" in out
+
+    def test_uvx_bin_is_bin_uvx(self):
+        """`UVX_BIN` should point to `./bin/uvx`."""
+        proc = run_make(["print-UVX_BIN"])
+        out = proc.stdout
+        assert "UVX_BIN = ./bin/uvx" in out
