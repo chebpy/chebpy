@@ -17,9 +17,11 @@ RESET := \033[0m
 .DEFAULT_GOAL := help
 
 # Declare phony targets (they don't produce files)
-.PHONY: install-uv install clean test marimo marimushka book fmt deptry docs help all
+.PHONY: install-uv install clean test marimo marimushka book fmt deptry docs release release-dry-run post-release help all
 
 UV_INSTALL_DIR := ./bin
+UV_BIN := ${UV_INSTALL_DIR}/uv
+UVX_BIN := ${UV_INSTALL_DIR}/uvx
 MARIMO_FOLDER := book/marimo
 TESTS_FOLDER := tests
 SOURCE_FOLDER := src
@@ -45,23 +47,34 @@ install-uv: ## ensure uv/uvx is installed
 	  fi; \
 	fi
 
-install: install-uv ## install
+install-extras: ## run custom build script (if exists)
+	@if [ -x ".github/scripts/build-extras.sh" ]; then \
+		printf "${BLUE}[INFO] Running custom build script...${RESET}\n"; \
+		./.github/scripts/build-extras.sh; \
+	elif [ -f ".github/scripts/build-extras.sh" ]; then \
+		printf "${BLUE}[INFO] Running custom build script...${RESET}\n"; \
+		/bin/sh .github/scripts/build-extras.sh; \
+	else \
+		printf "${BLUE}[INFO] No custom build script found, skipping...${RESET}\n"; \
+	fi
+
+install: install-uv install-extras ## install
 	# Create the virtual environment only if it doesn't exist
 	@if [ ! -d ".venv" ]; then \
-	  ./bin/uv venv --python 3.12 || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }; \
+	  ${UV_BIN} venv --python 3.12 || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }; \
 	else \
 	  printf "${BLUE}[INFO] Using existing virtual environment at .venv, skipping creation${RESET}\n"; \
 	fi
 
 	# Check if there is requirements.txt file in the tests folder
 	@if [ -f "tests/requirements.txt" ]; then \
-	  ./bin/uv pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }; \
+	  ${UV_BIN} pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }; \
 	fi
 
 	# Install the dependencies from pyproject.toml (if it exists)
 	@if [ -f "pyproject.toml" ]; then \
 	  printf "${BLUE}[INFO] Installing dependencies${RESET}\n"; \
-	  ./bin/uv sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	  ${UV_BIN} sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
 	else \
 	  printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"; \
 	fi
@@ -83,8 +96,8 @@ clean: ## clean
 test: install ## run all tests
 	@if [ -d ${SOURCE_FOLDER} ] && [ -d ${TESTS_FOLDER} ]; then \
 	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ./bin/uv pip install pytest pytest-cov pytest-html; \
-	  ./bin/uv run pytest ${TESTS_FOLDER} --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --html=_tests/html-report/report.html; \
+	  ${UV_BIN} pip install pytest pytest-cov pytest-html; \
+	  ${UV_BIN} run pytest ${TESTS_FOLDER} --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --html=_tests/html-report/report.html; \
 	else \
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} or tests folder ${TESTS_FOLDER} not found, skipping tests${RESET}\n"; \
 	fi
@@ -93,8 +106,8 @@ marimo: install ## fire up Marimo server
 	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
 	  printf " ${YELLOW}[WARN] Marimo folder '${MARIMO_FOLDER}' not found, skipping start${RESET}\n"; \
 	else \
-	  ./bin/uv pip install marimo; \
-	  ./bin/uv run marimo edit "${MARIMO_FOLDER}"; \
+	  ${UV_BIN} pip install marimo; \
+	  ${UV_BIN} run marimo edit "${MARIMO_FOLDER}"; \
 	fi
 
 marimushka: install ## export Marimo notebooks to HTML
@@ -102,13 +115,13 @@ marimushka: install ## export Marimo notebooks to HTML
 	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
 	  printf "${YELLOW}[WARN] Directory '${MARIMO_FOLDER}' does not exist. Skipping marimushka.${RESET}\n"; \
 	else \
-	  ./bin/uv pip install marimo; \
-	  MARIMO_FOLDER="${MARIMO_FOLDER}" UV_BIN="./bin/uv" UVX_BIN="./bin/uvx" /bin/sh .github/scripts/marimushka.sh; \
+	  ${UV_BIN} pip install marimo; \
+	  MARIMO_FOLDER="${MARIMO_FOLDER}" UV_BIN="${UV_BIN}" UVX_BIN="${UVX_BIN}" /bin/sh .github/scripts/marimushka.sh; \
 	fi
 
 deptry: install-uv ## run deptry if pyproject.toml exists
 	@if [ -f "pyproject.toml" ]; then \
-	  ./bin/uvx deptry "${SOURCE_FOLDER}"; \
+	  ${UVX_BIN} deptry "${SOURCE_FOLDER}"; \
 	else \
 	  printf "${YELLOW} No pyproject.toml found, skipping deptry${RESET}\n"; \
 	fi
@@ -116,23 +129,71 @@ deptry: install-uv ## run deptry if pyproject.toml exists
 ##@ Documentation
 docs: install-uv ## create documentation with pdoc
 	@if [ -d ${SOURCE_FOLDER} ]; then \
-  	  ./bin/uv pip install pdoc; \
-	  ./bin/uv run pdoc -o _pdoc ${SOURCE_FOLDER}/*; \
+  	  ${UV_BIN} pip install pdoc; \
+	  ${UV_BIN} run pdoc -o _pdoc ${SOURCE_FOLDER}/*; \
 	else \
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping docs${RESET}\n"; \
 	fi
 
 book: test docs marimushka ## compile the companion book
-	@./bin/uv pip install marimo
+	@${UV_BIN} pip install marimo
 	@/bin/sh .github/scripts/book.sh
-	@./bin/uvx minibook --title "${BOOK_TITLE}" --subtitle "${BOOK_SUBTITLE}" --links "$$(python3 -c 'import json,sys; print(json.dumps(json.load(open("_book/links.json"))))')" --output "_book"
+	@${UVX_BIN} minibook --title "${BOOK_TITLE}" --subtitle "${BOOK_SUBTITLE}" --links "$$(python3 -c 'import json,sys; print(json.dumps(json.load(open("_book/links.json"))))')" --output "_book"
 	@touch "_book/.nojekyll"
 
 fmt: install-uv ## check the pre-commit hooks and the linting
-	@./bin/uvx pre-commit run --all-files
+	@${UVX_BIN} pre-commit run --all-files
 
 all: fmt deptry book ## Run everything
 	echo "Run fmt, deptry, test and book"
+
+##@ Release
+release: install-uv ## bump version and create release tag (usage: make release VERSION=1.2.3 or BUMP=patch [BRANCH=main])
+	@if [ -z "$(VERSION)" ] && [ -z "$(BUMP)" ]; then \
+	  printf "${RED}[ERROR] VERSION or BUMP is required.${RESET}\n"; \
+	  printf "Examples:\n"; \
+	  printf "  make release VERSION=1.2.3\n"; \
+	  printf "  make release BUMP=patch\n"; \
+	  printf "  make release BUMP=minor\n"; \
+	  printf "  make release BUMP=major\n"; \
+	  printf "  make release BUMP=patch BRANCH=main\n"; \
+	  exit 1; \
+	fi
+	@ARGS=""; \
+	if [ -n "$(BRANCH)" ]; then ARGS="$$ARGS --branch $(BRANCH)"; fi; \
+	if [ -n "$(BUMP)" ]; then \
+	  UV_BIN="${UV_BIN}" /bin/sh .github/scripts/release.sh --bump "$(BUMP)" $$ARGS; \
+	else \
+	  UV_BIN="${UV_BIN}" /bin/sh .github/scripts/release.sh "$(VERSION)" $$ARGS; \
+	fi
+
+release-dry-run: install-uv ## preview release changes without applying (usage: make release-dry-run VERSION=1.2.3 or BUMP=patch [BRANCH=main])
+	@if [ -z "$(VERSION)" ] && [ -z "$(BUMP)" ]; then \
+	  printf "${RED}[ERROR] VERSION or BUMP is required.${RESET}\n"; \
+	  printf "Examples:\n"; \
+	  printf "  make release-dry-run VERSION=1.2.3\n"; \
+	  printf "  make release-dry-run BUMP=patch\n"; \
+	  printf "  make release-dry-run BUMP=patch BRANCH=main\n"; \
+	  exit 1; \
+	fi
+	@ARGS="--dry-run"; \
+	if [ -n "$(BRANCH)" ]; then ARGS="$$ARGS --branch $(BRANCH)"; fi; \
+	if [ -n "$(BUMP)" ]; then \
+	  UV_BIN="${UV_BIN}" /bin/sh .github/scripts/release.sh --bump "$(BUMP)" $$ARGS; \
+	else \
+	  UV_BIN="${UV_BIN}" /bin/sh .github/scripts/release.sh "$(VERSION)" $$ARGS; \
+	fi
+
+post-release: install-uv ## perform post-release tasks (usage: make post-release)
+	@if [ -x ".github/scripts/post-release.sh" ]; then \
+		printf "${BLUE}[INFO] Running post-release script...${RESET}\n"; \
+		./.github/scripts/post-release.sh; \
+	elif [ -f ".github/scripts/post-release.sh" ]; then \
+		printf "${BLUE}[INFO] Running post-release script...${RESET}\n"; \
+		/bin/sh .github/scripts/post-release.sh; \
+	else \
+		printf "${BLUE}[INFO] No post-release script found, skipping...${RESET}\n"; \
+	fi
 
 ##@ Meta
 help: ## Display this help message
@@ -140,3 +201,7 @@ help: ## Display this help message
 	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
 	+@printf "$(BOLD)Targets:$(RESET)\n"
 	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+
+# debugger tools
+print-% :
+	@echo $* = $($*)
