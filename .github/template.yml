@@ -1,11 +1,11 @@
 template-repository: "tschm/.config-templates"
 template-branch: "main"
 include: |
-    .devcontainer
-    .github
-    taskfiles
-    tests
+    .devcontainer/
+    .github/
+    tests/
     .editorconfig
     .pre-commit-config.yaml
     Makefile
-    Taskfile.yml
+exclude: |
+  .github/workflows/docker.yml
