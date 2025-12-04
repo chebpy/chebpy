@@ -27,9 +27,18 @@
                 "marimo.marimoPath": ".venv/bin/marimo"
             },
             "extensions": [
+                // Python Development
                 "ms-python.python",
                 "ms-python.vscode-pylance",
-                "marimo-team.vscode-marimo"
+                // Marimo/Notebooks
+                "marimo-team.vscode-marimo",
+                "marimo-ai.marimo-vscode",
+                // Linting and Formatting
+                "charliermarsh.ruff",
+                "tamasfe.even-better-toml",
+                // AI Assistance
+                "github.copilot-chat",
+                "github.copilot"
             ]
         }
     },

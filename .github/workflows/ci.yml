@@ -32,8 +32,12 @@ jobs:
     strategy:
       matrix:
         # mongo container action only supported on Linux
-        os: [ ubuntu-latest ]
-        python-version: [ '3.11', '3.12', '3.13', '3.14']
+        os: [ubuntu-latest]
+        # Python version matrix - configurable via PYTHON_MAX_VERSION variable
+        # Set PYTHON_MAX_VERSION to '3.13' or '3.12' to exclude newer versions
+        python-version: ${{ vars.PYTHON_MAX_VERSION == '3.13' && fromJSON('["3.11", "3.12", "3.13"]') ||
+                            vars.PYTHON_MAX_VERSION == '3.12' && fromJSON('["3.11", "3.12"]') ||
+                            vars.PYTHON_MAX_VERSION == '3.11' && fromJSON('["3.11"]') || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
