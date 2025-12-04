@@ -134,3 +134,15 @@ class TestMakefile:
         proc = run_make(["print-UVX_BIN"])
         out = proc.stdout
         assert "UVX_BIN = ./bin/uvx" in out
+
+    def test_script_folder_is_github_scripts(self):
+        """`SCRIPTS_FOLDER` should point to `.github/scripts`."""
+        proc = run_make(["print-SCRIPTS_FOLDER"])
+        out = proc.stdout
+        assert "SCRIPTS_FOLDER = .github/scripts" in out
+
+    def test_custom_scripts_folder_is_set(self):
+        """`CUSTOM_SCRIPTS_FOLDER` should point to `.github/scripts/customisations`."""
+        proc = run_make(["print-CUSTOM_SCRIPTS_FOLDER"])
+        out = proc.stdout
+        assert "CUSTOM_SCRIPTS_FOLDER = .github/scripts/customisations" in out
