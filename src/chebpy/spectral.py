@@ -18,20 +18,31 @@ from .utilities import Interval
 def cheb_points_scaled(n, domain):
     """Compute Chebyshev points of the second kind on an arbitrary interval.
 
+    NAMING CONVENTION:
+        n = "number of interior degrees of freedom"
+        Returns n+1 points (including both endpoints)
+
+        This convention matches Chebyshev collocation where an n-th degree
+        polynomial has n+1 coefficients and is specified by n+1 point values.
+
+    POINT ORDERING:
+        Points are returned in ASCENDING order from left to right:
+        pts[0] = a (left endpoint), pts[-1] = b (right endpoint)
+
     Args:
-        n (int): Number of points (will return n+1 points).
+        n (int): Number of interior degrees of freedom (returns n+1 points).
         domain (array-like): Two-element array [a, b] defining the interval.
 
     Returns:
-        numpy.ndarray: Array of n+1 Chebyshev points on [a, b].
+        numpy.ndarray: Array of n+1 Chebyshev points on [a, b] in ascending order.
 
     Examples:
-        >>> pts = cheb_points_scaled(4, [0, 1])
+        >>> pts = cheb_points_scaled(4, [0, 1])  # n=4 gives 5 points
         >>> len(pts)
         5
-        >>> pts[0]  # Should be at left endpoint
+        >>> pts[0]  # Left endpoint
         0.0
-        >>> pts[-1]  # Should be at right endpoint
+        >>> pts[-1]  # Right endpoint
         1.0
     """
     # Get standard Chebyshev points on [-1, 1]
@@ -54,12 +65,18 @@ def cheb_points_scaled(n, domain):
 def diff_matrix(n, domain, order=1):
     """Construct Chebyshev differentiation matrix of given order.
 
+    NAMING CONVENTION:
+        n = "number of interior degrees of freedom"
+        Returns (n+1) × (n+1) matrix operating on n+1 point values
+
+        This matches the convention where n degrees of freedom → n+1 points.
+
     This function constructs the spectral differentiation matrix that
     approximates the derivative of a function represented by values at
     Chebyshev points. The matrix is scaled appropriately for the given domain.
 
     Args:
-        n (int): Number of points (matrix will be (n+1) × (n+1)).
+        n (int): Number of interior degrees of freedom (matrix will be (n+1) × (n+1)).
         domain (array-like): Two-element array [a, b] defining the interval.
         order (int, optional): Order of differentiation (1, 2, 3, ...). Defaults to 1.
 
@@ -72,7 +89,7 @@ def diff_matrix(n, domain, order=1):
         - Matrices become increasingly ill-conditioned for high orders
 
     Examples:
-        >>> D = diff_matrix(4, [-1, 1])
+        >>> D = diff_matrix(4, [-1, 1])  # n=4 gives 5×5 matrix
         >>> D.shape
         (5, 5)
     """
