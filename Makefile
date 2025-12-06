@@ -1,7 +1,8 @@
-## Makefile for config-templates: developer tasks orchestrated via go-task
+## Makefile for tschm/.config-templates
+# (https://github.com/tschm/.config-templates)
 #
-# This Makefile wraps the Taskfile.yml commands and provides a friendly
-# `make help` index. Lines with `##` after a target are parsed into help text,
+# Purpose: Developer tasks using uv/uvx (install, test, docs, marimushka, book).
+# Lines with `##` after a target are parsed into help text,
 # and lines starting with `##@` create section headers in the help output.
 #
 # Colors for pretty output in help messages
@@ -9,13 +10,14 @@ BLUE := \033[36m
 BOLD := \033[1m
 GREEN := \033[32m
 RED := \033[31m
+YELLOW := \033[33m
 RESET := \033[0m
 
 # Default goal when running `make` with no target
 .DEFAULT_GOAL := help
 
 # Declare phony targets (they don't produce files)
-.PHONY: install-task install clean test marimo book fmt deptry help all
+.PHONY: install-uv install clean test marimo marimushka book fmt deptry docs release release-dry-run post-release sync help all
 
 ##@ Bootstrap
 install-task: ## ensure go-task (Taskfile) is installed
@@ -87,16 +89,152 @@ deptry: ## run deptry if pyproject.toml exists
 		printf "$(YELLOW) ⚠ Skipping deptry (no pyproject.toml)$(RESET)\n"; \
 	fi
 
-all: fmt deptry test book ## Run everything
+marimo: install ## fire up Marimo server
+	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
+	  printf " ${YELLOW}[WARN] Marimo folder '${MARIMO_FOLDER}' not found, skipping start${RESET}\n"; \
+	else \
+	  ${UV_BIN} pip install marimo; \
+	  ${UV_BIN} run marimo edit "${MARIMO_FOLDER}"; \
+	fi
+
+marimushka: install ## export Marimo notebooks to HTML
+	@printf "${BLUE}[INFO] Exporting notebooks from ${MARIMO_FOLDER}...${RESET}\n"
+	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
+	  printf "${YELLOW}[WARN] Directory '${MARIMO_FOLDER}' does not exist. Skipping marimushka.${RESET}\n"; \
+	else \
+	  ${UV_BIN} pip install marimo; \
+	  MARIMO_FOLDER="${MARIMO_FOLDER}" UV_BIN="${UV_BIN}" UVX_BIN="${UVX_BIN}" /bin/sh "${SCRIPTS_FOLDER}/marimushka.sh"; \
+	fi
+
+deptry: install-uv ## run deptry if pyproject.toml exists
+	@if [ -f "pyproject.toml" ]; then \
+	  ${UVX_BIN} deptry "${SOURCE_FOLDER}"; \
+	else \
+	  printf "${YELLOW} No pyproject.toml found, skipping deptry${RESET}\n"; \
+	fi
+
+##@ Documentation
+docs: install-uv ## create documentation with pdoc
+	@if [ -d "${SOURCE_FOLDER}" ]; then \
+	  PKGS=""; for d in "${SOURCE_FOLDER}"/*; do [ -d "$$d" ] && PKGS="$$PKGS $$(basename "$$d")"; done; \
+	  if [ -z "$$PKGS" ]; then \
+	    printf "${YELLOW}[WARN] No packages found under ${SOURCE_FOLDER}, skipping docs${RESET}\n"; \
+	  else \
+	    ${UV_BIN} pip install pdoc && \
+	    PYTHONPATH="${SOURCE_FOLDER}" ${UV_BIN} run pdoc --docformat google --output-dir _pdoc $$PKGS; \
+	  fi; \
+	else \
+	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping docs${RESET}\n"; \
+	fi
+
+book: test docs marimushka ## compile the companion book
+	@${UV_BIN} pip install marimo
+	@/bin/sh "${SCRIPTS_FOLDER}/book.sh"
+	@${UVX_BIN} minibook --title "${BOOK_TITLE}" --subtitle "${BOOK_SUBTITLE}" --links "$$(python3 -c 'import json,sys; print(json.dumps(json.load(open("_book/links.json"))))')" --output "_book"
+	@touch "_book/.nojekyll"
+
+fmt: install-uv ## check the pre-commit hooks and the linting
+	@${UVX_BIN} pre-commit run --all-files
+
+all: fmt deptry book ## Run everything
 	echo "Run fmt, deptry, test and book"
 
+##@ Releasing and Versioning
+bump: install-uv ## bump version (usage: make bump TYPE=patch [COMMIT=true] [COMMIT_MSG="message"])
+	@if [ -z "$(VERSION)" ] && [ -z "$(TYPE)" ]; then \
+		printf "${RED}[ERROR] VERSION or TYPE is required.${RESET}\n"; \
+		printf "Examples:\n"; \
+		printf "  ${BLUE}Bump version (no commit):${RESET}\n"; \
+		printf "    make bump TYPE=patch\n"; \
+		printf "    make bump TYPE=minor\n"; \
+		printf "    make bump TYPE=major\n"; \
+		printf "    make bump VERSION=1.2.3\n"; \
+		printf "  ${BLUE}Bump and commit with default message:${RESET}\n"; \
+		printf "    make bump TYPE=patch COMMIT=true\n"; \
+		printf "  ${BLUE}Bump and commit with custom message:${RESET}\n"; \
+		printf "    make bump TYPE=minor COMMIT=true COMMIT_MSG='feat: new feature release'\n"; \
+		exit 1; \
+	fi
+	@ARGS="bump"; \
+	if [ -n "$(TYPE)" ]; then \
+		ARGS="$$ARGS --type $(TYPE)"; \
+	else \
+		ARGS="$$ARGS --version $(VERSION)"; \
+	fi; \
+	if [ -n "$(COMMIT)" ] && [ "$(COMMIT)" = "true" ]; then \
+		ARGS="$$ARGS --commit"; \
+		if [ -n "$(COMMIT_MSG)" ]; then \
+			ARGS="$$ARGS --message \"$(COMMIT_MSG)\""; \
+		fi; \
+	fi; \
+	UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh" $$ARGS
+
+patch: ## alias bump via patch (usage: make patch [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=patch $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+minor: ## alias bump via minor (usage: make minor [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=minor $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+major: ## alias bump via major (usage: make major [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=major $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+
+publish: ## bump version, commit, tag and push (usage: make publish TYPE=patch|minor|major [VERSION=x.y.z] [COMMIT_MSG="..."])
+	@printf "${YELLOW}[WARN] This will bump the version, commit changes, create a tag, and PUSH to remote.${RESET}\n"
+	@printf "${YELLOW}[WARN] Ensure you are on the correct branch and have pulled latest changes.${RESET}\n"
+	@$(MAKE) bump COMMIT=true $(if $(TYPE),TYPE=$(TYPE)) $(if $(VERSION),VERSION=$(VERSION)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+	@$(MAKE) release
+
+release: install-uv ## create tag and push to remote with prompts (usage: make release)
+	@UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh" release
+
+post-release: install-uv ## perform post-release tasks (usage: make post-release)
+	@if [ -x "${CUSTOM_SCRIPTS_FOLDER}/post-release.sh" ]; then \
+		printf "${BLUE}[INFO] Running post-release script from customisations folder...${RESET}\n"; \
+		"${CUSTOM_SCRIPTS_FOLDER}"/post-release.sh; \
+	elif [ -f "${CUSTOM_SCRIPTS_FOLDER}/post-release.sh" ]; then \
+		printf "${BLUE}[INFO] Running post-release script from customisations folder...${RESET}\n"; \
+		/bin/sh "${CUSTOM_SCRIPTS_FOLDER}/post-release.sh"; \
+	else \
+		printf "${BLUE}[INFO] No post-release script in ${CUSTOM_SCRIPTS_FOLDER}, skipping...${RESET}\n"; \
+	fi
+
 ##@ Meta
+sync: ## sync with template repository as defined in .github/template.yml
+	@/bin/sh "${SCRIPTS_FOLDER}/sync.sh"
+
 help: ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"
 	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
 	+@printf "$(BOLD)Targets:$(RESET)\n"
 	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 
+<<<<<<< HEAD
 # Debug targets for tests
 print-%:
 	@echo '$* = $($*)'
+=======
+customisations: ## list available customisation scripts
+	@printf "${BLUE}${BOLD}Customisation scripts available in ${CUSTOM_SCRIPTS_FOLDER}:$(RESET)\n"
+	@if [ -d "${CUSTOM_SCRIPTS_FOLDER}" ]; then \
+		ls -1 "${CUSTOM_SCRIPTS_FOLDER}"/*.sh 2>/dev/null || printf "  (none)\n"; \
+	else \
+		printf "${YELLOW}[INFO] No customisations found in ${CUSTOM_SCRIPTS_FOLDER}${RESET}\n"; \
+	fi
+
+# debugger tools
+custom-%: ## run a custom script (usage: make custom-scriptname)
+	@SCRIPT="${CUSTOM_SCRIPTS_FOLDER}/$*.sh"; \
+	if [ -x "$$SCRIPT" ]; then \
+		printf "${BLUE}[INFO] Running custom script $$SCRIPT...${RESET}\n"; \
+		"$$SCRIPT"; \
+	elif [ -f "$$SCRIPT" ]; then \
+		printf "${BLUE}[INFO] Running custom script $$SCRIPT with /bin/sh...${RESET}\n"; \
+		/bin/sh "$$SCRIPT"; \
+	else \
+		printf "${RED}[ERROR] Custom script '$$SCRIPT' not found.${RESET}\n"; \
+		printf "Available scripts:\n"; \
+		ls -1 "${CUSTOM_SCRIPTS_FOLDER}"/*.sh 2>/dev/null | xargs -n1 basename | sed 's/\.sh$$//' | sed 's/^/  - /'; \
+		exit 1; \
+	fi
+
+print-% :
+	@echo $* = $($*)
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184

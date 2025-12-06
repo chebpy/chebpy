@@ -45,6 +45,7 @@ def chebfun(f=None, domain=None, n=None, splitting=None):
         >>> f = chebfun()
         >>>
         >>> # Function from a lambda
+        >>> import numpy as np
         >>> f = chebfun(lambda x: np.sin(x), domain=[-np.pi, np.pi])
         >>>
         >>> # Identity function

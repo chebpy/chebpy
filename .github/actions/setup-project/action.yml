@@ -11,6 +11,7 @@
 #
 # Inputs:
 #   - python-version: Python version used for the virtual environment (default: 3.12)
+#     Can be overridden by setting PYTHON_DEFAULT_VERSION repository variable
 #
 # Outputs:
 #   - pyproject_exists: "true" if pyproject.toml exists, otherwise "false"
@@ -25,8 +26,7 @@ description: 'Setup the project'
 inputs:
   python-version:
     description: 'Python version to use'
-    required: false
-    default: '3.12'
+    required: true
 
 outputs:
   pyproject_exists:
@@ -36,7 +36,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up task, uv, uvx and the venv
+    - name: Set up uv, uvx and the venv
       shell: bash
       run: |
         # Install Task to a temporary location and move to system path
@@ -45,11 +45,6 @@ runs:
 
         # Install uv and uvx to default location
         curl -fsSL https://astral.sh/uv/install.sh | sh
-
-    - name: Check version for task
-      shell: bash
-      run: |
-        task --version
 
     - name: Check version for uv
       shell: bash

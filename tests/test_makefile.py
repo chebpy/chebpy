@@ -81,13 +81,21 @@ class TestMakefile:
         """Fmt target should invoke pre-commit via uvx in dry-run output."""
         proc = run_make(["fmt"])
         out = proc.stdout
+<<<<<<< HEAD
         assert "uvx pre-commit run --all-files" in out
+=======
+        assert "./bin/uvx pre-commit run --all-files" in out
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184
 
     def test_deptry_target_dry_run(self):
         """Deptry target should invoke deptry via uvx in dry-run output."""
         proc = run_make(["deptry"])
         out = proc.stdout
+<<<<<<< HEAD
         assert "uvx deptry src" in out
+=======
+        assert './bin/uvx deptry "src"' in out
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184
 
     def test_test_target_dry_run(self):
         """Test target should invoke pytest via uv with coverage and HTML outputs in dry-run output."""
@@ -95,14 +103,22 @@ class TestMakefile:
         out = proc.stdout
         # Expect key steps
         assert "mkdir -p _tests/html-coverage _tests/html-report" in out
+<<<<<<< HEAD
         assert "uv run pytest" in out
+=======
+        assert "./bin/uv run pytest" in out
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184
 
     def test_book_target_dry_run(self):
         """Book target should run inline commands to assemble the book without go-task."""
         proc = run_make(["book"])
         out = proc.stdout
         # Expect marimushka export to install marimo and minibook to be invoked
+<<<<<<< HEAD
         assert "uvx minibook" in out
+=======
+        assert "./bin/uvx minibook" in out
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184
 
     def test_all_target_dry_run(self):
         """All target echoes a composite message in dry-run output."""
@@ -117,6 +133,7 @@ class TestMakefile:
         out = proc.stdout
         assert "UV_NO_MODIFY_PATH = 1" in out
 
+<<<<<<< HEAD
     def test_uv_bin_is_uv(self):
         """`UV_BIN` should point to `uv`."""
         proc = run_make(["print-UV_BIN"])
@@ -128,6 +145,25 @@ class TestMakefile:
         proc = run_make(["print-UVX_BIN"])
         out = proc.stdout
         assert "UVX_BIN = uvx" in out
+=======
+    def test_uv_install_dir_is_bin(self):
+        """`UV_INSTALL_DIR` should point to `./bin`."""
+        proc = run_make(["print-UV_INSTALL_DIR"])
+        out = proc.stdout
+        assert "UV_INSTALL_DIR = ./bin" in out
+
+    def test_uv_bin_is_bin_uv(self):
+        """`UV_BIN` should point to `./bin/uv`."""
+        proc = run_make(["print-UV_BIN"])
+        out = proc.stdout
+        assert "UV_BIN = ./bin/uv" in out
+
+    def test_uvx_bin_is_bin_uvx(self):
+        """`UVX_BIN` should point to `./bin/uvx`."""
+        proc = run_make(["print-UVX_BIN"])
+        out = proc.stdout
+        assert "UVX_BIN = ./bin/uvx" in out
+>>>>>>> 5cec5fc80166f35632624cc5a9e892a7cac47184
 
     def test_script_folder_is_github_scripts(self):
         """`SCRIPTS_FOLDER` should point to `.github/scripts`."""

@@ -32,10 +32,10 @@ jobs:
     steps:
       - name: Sync Template
         id: sync
-        uses: jebel-quant/sync_template@v0.4.1
+        uses: jebel-quant/sync_template@v0.4.2
         with:
           token: ${{ secrets.PAT_TOKEN }}
           source: ".github/template.yml"
           branch: "template-updates"
           commit-message: "chore: sync template files"
-          automerge: true
+          automerge: false

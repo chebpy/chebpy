@@ -119,6 +119,10 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 ```
 
+```result
+
+```
+
 ### More Examples
 
 ```python
@@ -132,10 +136,13 @@ g = chebfun(lambda x: x**3 - 2*x - 5, [-3, 3])
 roots = g.roots()         # All roots in the domain
 
 # Function composition
-h = f + g                 # Addition
-product = f * g           # Multiplication
+# h = f + g                 # Addition
+# product = f * g           # Multiplication
 ```
 
+```result
+
+```
 ---
 
 ## Documentation
@@ -189,7 +196,7 @@ Whether you're fixing bugs, adding features, or improving documentation, your he
 - 🤝 [Code of Conduct](CODE_OF_CONDUCT.md)
 - 🐛 [Issue Tracker](https://github.com/chebpy/chebpy/issues)
 
-### Acknowledgments 🙏 
+### Acknowledgments 🙏
 
 - [tschm/.config-templates](https://github.com/tschm/.config-templates) for standardised CI/CD templates and auto-syncing
 
