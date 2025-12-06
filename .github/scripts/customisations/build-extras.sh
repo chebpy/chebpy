@@ -15,7 +15,7 @@
 #
 # How to use:
 #   1. Add your custom installation commands below
-#   2. Make sure the script is executable: chmod +x .github/scripts/build-extras.sh
+#   2. Make sure the script is executable: chmod +x .github/scripts/customisations/build-extras.sh
 #   3. Commit to your repository
 #
 # Examples:

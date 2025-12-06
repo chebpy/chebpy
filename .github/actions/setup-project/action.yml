@@ -11,6 +11,7 @@
 #
 # Inputs:
 #   - python-version: Python version used for the virtual environment (default: 3.12)
+#     Can be overridden by setting PYTHON_DEFAULT_VERSION repository variable
 #
 # Outputs:
 #   - pyproject_exists: "true" if pyproject.toml exists, otherwise "false"
@@ -25,8 +26,7 @@ description: 'Setup the project'
 inputs:
   python-version:
     description: 'Python version to use'
-    required: false
-    default: '3.12'
+    required: true
 
 outputs:
   pyproject_exists:

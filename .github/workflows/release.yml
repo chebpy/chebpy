@@ -113,14 +113,16 @@ jobs:
       # Use the composite action to set up the project
       - name: Setup the project
         uses: ./.github/actions/setup-project
-
+        with:
+          python-version: ${{ vars.PYTHON_DEFAULT_VERSION || '3.14' }}
+  
       - name: Verify version matches tag
         if: hashFiles('pyproject.toml') != ''
         run: |
           TAG_VERSION="${{ needs.tag.outputs.tag }}"
           TAG_VERSION=${TAG_VERSION#v}
           PROJECT_VERSION=$(uv version --short)
-          
+
           if [[ "$PROJECT_VERSION" != "$TAG_VERSION" ]]; then
             echo "::error::Version mismatch: pyproject.toml has '$PROJECT_VERSION' but tag is '$TAG_VERSION'"
             exit 1
@@ -142,27 +144,19 @@ jobs:
           name: dist
           path: dist
 
+  # Don't try to upload artifacts to GitHub Release at all
   draft-release:
     name: Draft GitHub Release
     runs-on: ubuntu-latest
     needs: [tag, build]
 
-    steps:
-      - name: Download dist artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: dist
-          path: dist
-        # Fail fast if dist artifact is missing; don’t create empty releases.
-        # continue-on-error: true
-
+    steps:      
       - name: Create GitHub Release with artifacts
         uses: softprops/action-gh-release@v2.5.0
         with:
           tag_name: ${{ needs.tag.outputs.tag }}
           name: ${{ needs.tag.outputs.tag }}
           generate_release_notes: true
-          files: "dist/**"
           draft: true
 
   # Decide at step-level whether to publish
@@ -186,6 +180,7 @@ jobs:
         with:
           name: dist
           path: dist
+        # Continue if dist folder is not found. Don't fail the job.
         continue-on-error: true
 
       - name: Check if dist contains artifacts and not marked as private
@@ -264,7 +259,7 @@ jobs:
         if: steps.check_publish.outputs.should_publish == 'true'
         id: repo_owner
         run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-      
+
       - name: Get Image Name
         if: steps.check_publish.outputs.should_publish == 'true'
         id: image_name
@@ -282,17 +277,17 @@ jobs:
             IMAGE_NAME="${{ vars.DEVCONTAINER_IMAGE_NAME }}"
             echo "Using custom image name component: $IMAGE_NAME"
           fi
-          
+
           # Validate the image component matches [a-z0-9]+([._-][a-z0-9]+)* with optional / separators
           if ! echo "$IMAGE_NAME" | grep -qE '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*$'; then
             echo "::error::Invalid image name component: $IMAGE_NAME"
             echo "::error::Each component must match [a-z0-9]+([._-][a-z0-9]+)* separated by /"
             exit 1
           fi
-          
+
           IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$IMAGE_NAME"
           echo "✅ Final image name: $IMAGE_NAME"
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT    
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Build and Publish Devcontainer Image
         if: steps.check_publish.outputs.should_publish == 'true'
@@ -314,11 +309,12 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
-      
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.14'
+          # Use PYTHON_DEFAULT_VERSION variable if set, otherwise default to '3.14'
+          python-version: ${{ vars.PYTHON_DEFAULT_VERSION || '3.14' }}
 
       - name: Generate Devcontainer Link
         id: devcontainer_link
