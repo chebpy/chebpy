@@ -65,10 +65,10 @@ tasks:
     desc: Display help information
     silent: true
     cmds:
-      - ./bin/task --list
+      - task --list
 
   help:
     desc: Display help information with all tasks
     silent: true
     cmds:
-      - ./bin/task --list-all
+      - task --list-all

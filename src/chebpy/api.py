@@ -4,13 +4,16 @@ This module provides the main interface for users to create Chebfun objects,
 which are the core data structure in ChebPy for representing functions.
 """
 
+import numpy as np
+
 from .bndfun import Bndfun
 from .chebfun import Chebfun
+from .chebop import Chebop
 from .settings import _preferences as prefs
 from .utilities import Domain
 
 
-def chebfun(f=None, domain=None, n=None):
+def chebfun(f=None, domain=None, n=None, splitting=None):
     """Create a Chebfun object representing a function.
 
     A Chebfun object represents a function using Chebyshev polynomials. This constructor
@@ -27,6 +30,9 @@ def chebfun(f=None, domain=None, n=None):
             specified in preferences.
         n: Optional number of points to use in the discretization. If None, adaptive
             construction is used.
+        splitting: Enable automatic domain splitting for functions with discontinuities
+            or singularities. If None, uses the value from preferences. If True, enables
+            splitting. If False, disables splitting.
 
     Returns:
         Chebfun: A Chebfun object representing the function.
@@ -46,6 +52,9 @@ def chebfun(f=None, domain=None, n=None):
         >>>
         >>> # Constant function
         >>> c = chebfun(3.14)
+        >>>
+        >>> # With automatic splitting for discontinuous functions
+        >>> f = chebfun(lambda x: np.abs(x), domain=[-1, 1], splitting=True)
     """
     # Empty via chebfun()
     if f is None:
@@ -55,12 +64,12 @@ def chebfun(f=None, domain=None, n=None):
 
     # Callable fct in chebfun(lambda x: f(x), ... )
     if hasattr(f, "__call__"):
-        return Chebfun.initfun(f, domain, n)
+        return Chebfun.initfun(f, domain, n, splitting=splitting)
 
     # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():
         if n:
-            return Chebfun.initfun(lambda x: x, domain, n)
+            return Chebfun.initfun(lambda x: x, domain, n, splitting=splitting)
         else:
             return Chebfun.initidentity(domain)
 
@@ -97,3 +106,41 @@ def pwc(domain=[-1, 0, 1], values=[0, 1]):
     for interval, value in zip(intervals, values):
         funs.append(Bndfun.initconst(value, interval))
     return Chebfun(funs)
+
+
+def chebop(*args, **kwargs):
+    """Create a Chebop (differential operator) object.
+
+    A Chebop represents a linear or nonlinear differential operator with
+    boundary conditions, used for solving boundary value problems (BVPs)
+    and eigenvalue problems.
+
+    Args:
+        *args: Positional arguments for domain specification. Can be:
+            - Single argument: domain as [a, b] or Domain object
+            - Two arguments: either (a, b) for domain endpoints,
+              or (op, domain) / (domain, op) for operator and domain
+        **kwargs: Keyword arguments including:
+            domain: Domain specification (can also be passed as keyword arg)
+            op: Operator function taking (x, u, u', u'', ...)
+            lbc: Left boundary condition function
+            rbc: Right boundary condition function
+            bc: List of boundary conditions
+            rhs: Right-hand side function f(x) for Chebop @ u = rhs
+            init: Initial guess for nonlinear problems
+            point_constraints: Point constraints for specific locations
+
+    Returns:
+        Chebop: A differential operator object.
+
+    Examples:
+        >>> # Create operator on [-1, 1] with no BCs
+        >>> N = chebop([-1, 1])
+        >>>
+        >>> # Create d/dx operator with BCs
+        >>> N = chebop(lambda x, u: u.diff(), domain=[-1, 1], lbc=0, rbc=0)
+        >>>
+        >>> # Using shorthand domain specification
+        >>> N = chebop(-1, 1)
+    """
+    return Chebop(*args, **kwargs)
