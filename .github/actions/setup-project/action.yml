@@ -1,3 +1,4 @@
+
 # This file is part of the tschm/.config-templates repository
 # (https://github.com/tschm/.config-templates).
 #
@@ -39,12 +40,14 @@ runs:
     - name: Set up uv, uvx and the venv
       shell: bash
       run: |
-        # Install Task to a temporary location and move to system path
-        curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ~/.local/bin
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        mkdir -p bin
 
-        # Install uv and uvx to default location
-        curl -fsSL https://astral.sh/uv/install.sh | sh
+        # Add ./bin to the PATH
+        echo "Adding ./bin to PATH"
+        echo "$(pwd)/bin" >> $GITHUB_PATH
+
+        # Install uv and uvx
+        curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh
 
     - name: Check version for uv
       shell: bash

@@ -5,6 +5,7 @@ Based on MATLAB Chebfun's test_splitting.m and test_constructor_splitting.m.
 
 import numpy as np
 import pytest
+
 from chebpy import chebfun
 from chebpy.settings import _preferences
 
@@ -48,28 +49,28 @@ class TestAutomaticSplitting:
         """Test splitting on abs(x)^5."""
         with _preferences:
             _preferences.splitting = True
-            f = chebfun(lambda x: np.abs(x)**5, [-1, 1])
+            f = chebfun(lambda x: np.abs(x) ** 5, [-1, 1])
 
             # Should split at x=0
             assert len(f.funs) >= 2
 
             # Check accuracy
             x = np.linspace(-1, 1, 100)
-            err = np.max(np.abs(f(x) - np.abs(x)**5))
+            err = np.max(np.abs(f(x) - np.abs(x) ** 5))
             assert err < 1e-12
 
     def test_abs_sin(self):
         """Test splitting on abs(sin(10*x))."""
         with _preferences:
             _preferences.splitting = True
-            f = chebfun(lambda x: np.abs(np.sin(10*x)), [-1, 1])
+            f = chebfun(lambda x: np.abs(np.sin(10 * x)), [-1, 1])
 
             # Should split at zeros of sin(10*x)
             assert len(f.funs) >= 2
 
             # Check accuracy
             x = np.linspace(-1, 1, 200)
-            err = np.max(np.abs(f(x) - np.abs(np.sin(10*x))))
+            err = np.max(np.abs(f(x) - np.abs(np.sin(10 * x))))
             assert err < 1e-9  # Multiple discontinuities, relaxed tolerance
 
     def test_sqrt_singularity(self):
@@ -98,7 +99,7 @@ class TestAutomaticSplitting:
             # Construct the power function directly with splitting
             # This is the recommended approach for functions with singularities
             def lennard_jones(x):
-                r = 25 - 0.2*x**2
+                r = 25 - 0.2 * x**2
                 r_scaled = r / 12
                 return r_scaled ** (-6)
 
@@ -120,8 +121,9 @@ class TestAutomaticSplitting:
             zero_crossing = np.sqrt(125.0)  # x where r(x) = 0
             breakpoints = r_power.breakpoints
             # Should have a breakpoint near the zero crossing
-            assert np.any(np.abs(breakpoints - zero_crossing) < 1.0), \
+            assert np.any(np.abs(breakpoints - zero_crossing) < 1.0), (
                 f"No breakpoint near singularity at x={zero_crossing:.2f}, got {breakpoints}"
+            )
 
             # Check accuracy at safe test points away from singularity
             # MATLAB crashes and gives wrong values for this function, so we use
@@ -133,8 +135,7 @@ class TestAutomaticSplitting:
             for x_val, expected in test_points_good:
                 actual = r_power(x_val)
                 rel_err = abs(actual - expected) / expected
-                assert rel_err < 1e-4, \
-                    f"At x={x_val}: got {actual:.6e}, expected {expected:.6e}, rel_err={rel_err:.2e}"
+                assert rel_err < 1e-4, f"At x={x_val}: got {actual:.6e}, expected {expected:.6e}, rel_err={rel_err:.2e}"
 
     def test_smooth_function_no_split(self):
         """Test that smooth functions don't split unnecessarily."""
@@ -154,14 +155,14 @@ class TestAutomaticSplitting:
         """Test that polynomials don't split unnecessarily."""
         with _preferences:
             _preferences.splitting = True
-            f = chebfun(lambda x: x**4 - 2*x**2 + 1, [-2, 2])
+            f = chebfun(lambda x: x**4 - 2 * x**2 + 1, [-2, 2])
 
             # Should not split for polynomial
             assert len(f.funs) == 1
 
             # Check accuracy
             x = np.linspace(-2, 2, 100)
-            expected = x**4 - 2*x**2 + 1
+            expected = x**4 - 2 * x**2 + 1
             err = np.max(np.abs(f(x) - expected))
             assert err < 1e-13
 
@@ -180,7 +181,7 @@ class TestAutomaticSplitting:
         with _preferences:
             _preferences.splitting = True
             # sign(x - 0.1) * abs(x + 0.2) has discontinuities at x=-0.2 and x=0.1
-            f = chebfun(lambda x: np.sign(x - 0.1) * np.abs(x + 0.2) * np.sin(3*x), [-1, 1])
+            f = chebfun(lambda x: np.sign(x - 0.1) * np.abs(x + 0.2) * np.sin(3 * x), [-1, 1])
 
             # Should split at both discontinuities
             assert len(f.funs) >= 3
@@ -207,12 +208,13 @@ class TestAutomaticSplitting:
         """Test function that blows up in interior of domain."""
         with _preferences:
             _preferences.splitting = True
+
             # 1/(x-0.5)^2 has singularity at x=0.5
             def f_op(x):
                 # Protect against division by zero
                 x = np.asarray(x)
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    result = 1.0 / (x - 0.5)**2
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    result = 1.0 / (x - 0.5) ** 2
                     # Handle both scalar and array inputs
                     if result.shape == ():
                         if np.abs(x - 0.5) < 1e-10:
@@ -226,8 +228,7 @@ class TestAutomaticSplitting:
             # Should split near x=0.5
             assert len(f.funs) >= 2
             bp = f.breakpoints
-            assert np.any(np.abs(bp - 0.5) < 0.1), \
-                f"Should split near singularity at x=0.5, got breakpoints {bp}"
+            assert np.any(np.abs(bp - 0.5) < 0.1), f"Should split near singularity at x=0.5, got breakpoints {bp}"
 
 
 class TestSplittingPreferences:
@@ -254,7 +255,7 @@ class TestSplittingPreferences:
         # This test will pass once splitting is implemented in constructor
         # For now, just test that the argument is accepted
         try:
-            f = chebfun(lambda x: x**2, [-1, 1], splitting=False)
+            chebfun(lambda x: x**2, [-1, 1], splitting=False)
             assert True  # Argument accepted
         except TypeError:
             pytest.skip("splitting argument not yet implemented in constructor")
@@ -269,11 +270,11 @@ class TestSplittingAccuracy:
             _preferences.splitting = True
 
             # Function that should split
-            f = chebfun(lambda x: np.abs(x)**3, [-1, 1])
+            f = chebfun(lambda x: np.abs(x) ** 3, [-1, 1])
 
             # Test accuracy across entire domain
             x = np.linspace(-1, 1, 500)
-            expected = np.abs(x)**3
+            expected = np.abs(x) ** 3
             actual = f(x)
             err = np.abs(actual - expected)
 
@@ -286,7 +287,7 @@ class TestSplittingAccuracy:
             _preferences.splitting = True
 
             # abs(x)^3 has derivative 3*x^2*sign(x)
-            f = chebfun(lambda x: np.abs(x)**3, [-1, 1])
+            f = chebfun(lambda x: np.abs(x) ** 3, [-1, 1])
             df = f.diff()
 
             # Test away from singularity at x=0
@@ -294,8 +295,8 @@ class TestSplittingAccuracy:
             x_right = np.linspace(0.1, 1, 50)
 
             # Derivative is -3*x^2 for x<0, +3*x^2 for x>0
-            err_left = np.max(np.abs(df(x_left) - (-3*x_left**2)))
-            err_right = np.max(np.abs(df(x_right) - (3*x_right**2)))
+            err_left = np.max(np.abs(df(x_left) - (-3 * x_left**2)))
+            err_right = np.max(np.abs(df(x_right) - (3 * x_right**2)))
 
             assert max(err_left, err_right) < 1e-11
 
@@ -322,10 +323,11 @@ class TestEdgeCases:
         Python ChebPy also raises InvalidDomain for this case.
         """
         from chebpy.exceptions import InvalidDomain
+
         with _preferences:
             _preferences.splitting = True
             with pytest.raises(InvalidDomain):
-                f = chebfun(lambda x: x**2, [0, 0])
+                chebfun(lambda x: x**2, [0, 0])
 
     def test_very_small_interval(self):
         """Test splitting on very small intervals."""

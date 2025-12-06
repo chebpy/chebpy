@@ -4,8 +4,6 @@ This module provides the main interface for users to create Chebfun objects,
 which are the core data structure in ChebPy for representing functions.
 """
 
-import numpy as np
-
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .chebop import Chebop

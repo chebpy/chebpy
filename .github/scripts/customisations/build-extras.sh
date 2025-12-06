@@ -26,7 +26,7 @@
 # Note: If you customize this file in your repository, add it to the exclude list
 #       in action.yml to prevent it from being overwritten by template updates:
 #       exclude: |
-#         .github/scripts/build-extras.sh
+#         .github/scripts/customisations/build-extras.sh
 #
 
 set -euo pipefail

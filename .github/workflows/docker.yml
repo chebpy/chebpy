@@ -1,0 +1,63 @@
+# GitHub Actions workflow: Lint Dockerfile with hadolint and build the image
+#
+# This workflow runs on pushes and pull requests. It performs two main tasks:
+#  - Lints docker/Dockerfile using hadolint (fails the job on lint errors)
+#  - Builds the container image with Docker Buildx to ensure the Dockerfile is valid
+#
+# Notes:
+#  - The image is built locally for validation only; it is not pushed to any registry.
+#  - Permissions are minimized (read-only) since no repository writes occur.
+name: DOCKER
+
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint_and_build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Detect docker/Dockerfile presence
+        id: check_dockerfile
+        run: |
+          if [ -f docker/Dockerfile ]; then
+            echo "docker_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip notice (no docker/Dockerfile present)
+        if: ${{ steps.check_dockerfile.outputs.docker_present != 'true' }}
+        run: echo "No docker/Dockerfile found; skipping hadolint and image build."
+
+      - name: Lint Dockerfile with hadolint
+        if: ${{ steps.check_dockerfile.outputs.docker_present == 'true' }}
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: docker/Dockerfile
+          # Fail on any error-level findings (default behavior). Adjust if needed:
+          # failure-threshold: error
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.check_dockerfile.outputs.docker_present == 'true' }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image with Docker Buildx (validation only)
+        if: ${{ steps.check_dockerfile.outputs.docker_present == 'true' }}
+        run: |
+          # Derive image tag from repository name and sanitize (remove '.' and '_')
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          REPO_NAME="${REPO_NAME//[._]/}"
+          docker buildx build \
+            --file docker/Dockerfile \
+            --tag "${REPO_NAME}:ci" \
+            --load \
+            .
