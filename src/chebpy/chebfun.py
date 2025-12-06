@@ -10,6 +10,7 @@ similar functionality for working with functions rather than numbers.
 """
 
 import operator
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +20,8 @@ from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, InvalidDomain, SupportMismatch
 from .plotting import plotfun
 from .settings import _preferences as prefs
-from .utilities import Domain, check_funs, compute_breakdata, generate_funs
+from .trigtech import Trigtech
+from .utilities import Domain, Interval, check_funs, compute_breakdata, generate_funs
 
 
 class Chebfun:
@@ -220,7 +222,6 @@ class Chebfun:
         """
         # Check if any fun uses Trigtech - if so, always use complex dtype
         # since Trigtech operations may produce complex intermediate results
-        from .trigtech import Trigtech
 
         uses_trigtech = any(isinstance(fun.onefun, Trigtech) for fun in self if hasattr(fun, "onefun"))
 
@@ -1052,8 +1053,6 @@ class Chebfun:
         Returns:
             Chebfun with potentially multiple pieces
         """
-        import warnings
-
         # Constants from MATLAB Chebfun
         split_max_length = 6000  # Maximum total points (MATLAB default: prevent pathological subdivision)
         split_length = 160  # Target points per piece for splitting
@@ -1196,8 +1195,6 @@ class Chebfun:
         Returns:
             tuple: (fun, is_happy, updated_vscale)
         """
-        from .utilities import Interval
-
         # Check for tiny interval - treat as constant
         interval_width = b - a
         if interval_width < 4 * np.finfo(float).eps * hscale:
@@ -1223,32 +1220,10 @@ class Chebfun:
 
             # Attempt construction
             with np.errstate(all="ignore"):
-                try:
-                    fun = Bndfun.initfun_adaptive(f, interval)
-                    # Check if construction converged (happy = size < max possible)
-                    max_size = 2**maxpow2 + 1
-                    is_happy = fun.size < max_size
-                except (ValueError, RuntimeError, ZeroDivisionError, OverflowError, FloatingPointError):
-                    # Construction failed - create a simple approximation
-                    try:
-                        # Try to at least evaluate at endpoints
-                        fa = float(f(a))
-                        fb = float(f(b))
-                        if not np.isfinite(fa):
-                            fa = 0.0
-                        if not np.isfinite(fb):
-                            fb = 0.0
-                        # Create linear approximation
-                        from .chebtech import Chebtech2
-
-                        coeffs = np.array([(fa + fb) / 2, (fb - fa) / 2])
-                        onefun = Chebtech2(coeffs)
-                        fun = Bndfun(onefun, interval)
-                        is_happy = False
-                    except Exception:
-                        # Last resort - zero function
-                        fun = Bndfun.initconst(0, interval)
-                        is_happy = False
+                fun = Bndfun.initfun_adaptive(f, interval)
+                # Check if construction converged (happy = size < max possible)
+                max_size = 2**maxpow2 + 1
+                is_happy = fun.size < max_size
 
             # Update vscale
             new_vscale = max(vscale, fun.vscale)
