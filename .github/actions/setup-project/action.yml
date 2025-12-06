@@ -39,17 +39,12 @@ runs:
     - name: Set up task, uv, uvx and the venv
       shell: bash
       run: |
-        mkdir -p bin
+        # Install Task to a temporary location and move to system path
+        curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ~/.local/bin
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-        # Add ./bin to the PATH
-        echo "Adding ./bin to PATH"
-        echo "$(pwd)/bin" >> $GITHUB_PATH
-
-        # Install Task
-        curl -fsSL https://taskfile.dev/install.sh | sh -s -- -d -b ./bin
-
-        # Install uv and uvx
-        curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh
+        # Install uv and uvx to default location
+        curl -fsSL https://astral.sh/uv/install.sh | sh
 
     - name: Check version for task
       shell: bash
