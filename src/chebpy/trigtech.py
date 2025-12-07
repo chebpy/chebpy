@@ -98,8 +98,13 @@ class Trigtech(Smoothfun):
             n (int): Number of degrees of freedom (points).
             interval (list, optional): Interval [a, b]. Defaults to [0, 2π].
         """
+        interval = interval if interval is not None else [0, 2 * np.pi]
+        interval = Interval(*interval)
         points = cls._trigpts(n)
-        values = fun(points)
+        # Map points from [0, 2π] to the actual interval [a, b]
+        a, b = interval
+        points_mapped = a + (b - a) * points / (2 * np.pi)
+        values = fun(points_mapped)
         coeffs = cls._vals2coeffs(values)
         return cls(coeffs, interval=interval)
 
@@ -117,7 +122,7 @@ class Trigtech(Smoothfun):
         """
         interval = interval if interval is not None else [0, 2 * np.pi]
         interval = Interval(*interval)
-        coeffs = cls._adaptive_trig(fun, hscale=interval.hscale, minpow2=minpow2)
+        coeffs = cls._adaptive_trig(fun, hscale=interval.hscale, minpow2=minpow2, interval=interval)
         return cls(coeffs, interval=interval)
 
     @classmethod
@@ -175,7 +180,7 @@ class Trigtech(Smoothfun):
         return doubled
 
     @classmethod
-    def _adaptive_trig(cls, fun, hscale=1, maxpow2=None, minpow2=None):
+    def _adaptive_trig(cls, fun, hscale=1, maxpow2=None, minpow2=None, interval=None):
         """Adaptive constructor for Trigtech using Fourier points.
 
         Implements MATLAB's standardCheck happiness criterion using standardChop
@@ -186,6 +191,7 @@ class Trigtech(Smoothfun):
             hscale (float): Scale factor for tolerance
             maxpow2 (int): Maximum power of 2 to try
             minpow2 (int): Minimum power of 2 to try (default 4 for n=16)
+            interval (Interval): Interval [a, b] for mapping points
 
         Returns:
             np.ndarray: Fourier coefficients
@@ -196,10 +202,17 @@ class Trigtech(Smoothfun):
         maxpow2 = maxpow2 if maxpow2 is not None else min(prefs.maxpow2, 12)
         epslevel = prefs.eps * max(hscale, 1)
 
+        # Set up interval mapping
+        if interval is None:
+            interval = Interval(0, 2 * np.pi)
+        a, b = interval
+
         for k in range(minpow2, max(minpow2, maxpow2) + 1):
             n = 2**k
             points = cls._trigpts(n)
-            values = fun(points)
+            # Map points from [0, 2π] to the actual interval [a, b]
+            points_mapped = a + (b - a) * points / (2 * np.pi)
+            values = fun(points_mapped)
 
             # Check for zero function
             vscale = np.max(np.abs(values))
@@ -507,6 +520,17 @@ class Trigtech(Smoothfun):
                 return self.copy()
             if self.isempty:
                 return f.copy()
+
+            # Handle mixing with other Smoothfun types (e.g., Chebtech)
+            # This should ideally not happen - periodic problems should use Trigtech throughout
+            # But if it does, convert the other operand to Trigtech by resampling
+            if not isinstance(f, cls):
+                # Convert f to Trigtech by sampling at enough points
+                # Use fixed-length to avoid adaptive convergence issues
+                target_size = 2 * max(self.size, getattr(f, 'size', 16))
+                target_size = min(target_size, 512)  # Cap to avoid excessive computation
+                f = cls.initfun(lambda x: f(x), n=target_size, interval=self.interval)
+
             g = self
             n, m = g.size, f.size
             if n < m:

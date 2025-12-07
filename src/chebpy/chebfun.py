@@ -511,7 +511,15 @@ class Chebfun:
         """
         if hasattr(f, "isempty") and f.isempty:
             return f
-        if np.isscalar(f):
+
+        # Check if f is scalar-like (including objects with __float__ like PointEval)
+        is_scalar = np.isscalar(f)
+        if not is_scalar and hasattr(f, "__float__") and hasattr(f, "ndim") and f.ndim == 0:
+            # Treat as scalar if it can be converted to float and has ndim=0
+            f = float(f)
+            is_scalar = True
+
+        if is_scalar:
             chbfn1 = self
             chbfn2 = f * np.ones(self.funs.size)
             simplify = False

@@ -360,9 +360,9 @@ class OrderTracerAST(ASTNode):
         elif isinstance(other, ASTNode):
             return other
         else:
-            # Treat any other object (including Chebfun) as a constant coefficient
-            # For order detection, we don't care about the actual values
-            return ConstNode(0)
+            # Wrap in ConstNode but preserve the actual object
+            # This allows operator_compiler to extract chebfun coefficients
+            return ConstNode(other)
 
     def _create_result(self, root: ASTNode) -> "OrderTracerAST":
         """Create a new OrderTracerAST with the given root."""

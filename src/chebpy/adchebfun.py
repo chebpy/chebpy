@@ -342,8 +342,16 @@ class AdChebfun:
         return self._apply_unary_op(np.log1p, lambda x: 1.0 / (1.0 + x))
 
     def abs(self) -> "AdChebfun":
-        """Absolute value - NOT Fréchet differentiable!"""
-        raise ValueError("abs() is not Fréchet differentiable")
+        """Absolute value with autodifferentiation.
+
+        Uses sign(u) as the derivative (valid almost everywhere).
+        At u=0, we use 0 as the derivative by convention.
+        """
+        return self._apply_unary_op(np.abs, np.sign)
+
+    def __abs__(self) -> "AdChebfun":
+        """Support abs() and np.abs()."""
+        return self.abs()
 
 
 class AdChebfunScalar:
