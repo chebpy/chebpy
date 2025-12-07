@@ -1,13 +1,6 @@
 """Automatic differentiation for chebfuns with operator block Jacobians.
 
-This module implements MATLAB Chebfun's adchebfun approach: track the Jacobian
-as discrete operator blocks (matrices) rather than functionals.
-
-Key difference from previous approach:
-- OLD: jacobian = lambda v: <compute something with v>
-- NEW: jacobian = sparse matrix that discretizes the linear operator
-
-This eliminates numerical errors from basis function probing.
+This module tracks the Jacobian as discrete operator blocks (matrices).
 """
 
 from collections.abc import Callable
@@ -35,6 +28,32 @@ def _jacobian_to_row(jac):
         return jac.toarray().ravel()
     else:
         return np.atleast_1d(jac).ravel()
+
+
+def _extract_residual_jacobian(bc_elem, x_bc, n):
+    """Extract residual and jacobian row from a BC element.
+
+    Handles AdChebfun, AdChebfunScalar, and scalar constants uniformly.
+
+    Args:
+        bc_elem: BC element (AdChebfun, AdChebfunScalar, or scalar)
+        x_bc: Boundary point for evaluation
+        n: Discretization size
+
+    Returns:
+        (residual, jacobian_row) tuple
+    """
+    if isinstance(bc_elem, AdChebfun):
+        # Still a function - evaluate at boundary point
+        bc_at_pt = bc_elem(np.array([x_bc]))
+        return _extract_scalar(bc_at_pt.value), _jacobian_to_row(bc_at_pt.jacobian)
+    elif isinstance(bc_elem, AdChebfunScalar):
+        # Already evaluated
+        return _extract_scalar(bc_elem.value), _jacobian_to_row(bc_elem.jacobian)
+    else:
+        # Constant
+        residual = float(bc_elem) if np.isscalar(bc_elem) else 0.0
+        return residual, np.zeros(n + 1)
 
 
 class AdChebfun:
@@ -435,50 +454,12 @@ def linearize_bc_matrix(bc_func: Callable, u: Chebfun, n: int, x_bc: float | Non
         jacobian_rows = []
 
         for bc_elem in result:
-            # Recursively linearize each element
-            # Use same linearization function but on individual elements
-            if isinstance(bc_elem, AdChebfun):
-                # Still a function - need to evaluate at boundary point
-                bc_at_pt = bc_elem(np.array([x_bc]))
-                res = _extract_scalar(bc_at_pt.value)
-                jac_row = _jacobian_to_row(bc_at_pt.jacobian)
-
-                residuals.append(res)
-                jacobian_rows.append(jac_row)
-
-            elif isinstance(bc_elem, AdChebfunScalar):
-                # Already evaluated
-                res = _extract_scalar(bc_elem.value)
-                jac_row = _jacobian_to_row(bc_elem.jacobian)
-
-                residuals.append(res)
-                jacobian_rows.append(jac_row)
-
-            else:
-                # Constant (shouldn't happen)
-                residuals.append(float(bc_elem) if not isinstance(bc_elem, (list, tuple)) else 0.0)
-                jacobian_rows.append(np.zeros(n + 1))
+            res, jac_row = _extract_residual_jacobian(bc_elem, x_bc, n)
+            residuals.append(res)
+            jacobian_rows.append(jac_row)
 
         # Return list of residuals and stacked Jacobian rows
         return residuals, np.vstack(jacobian_rows)
 
-    # Extract residual and Jacobian matrix (single constraint)
-    if isinstance(result, AdChebfun):
-        # Result is still a function - need to evaluate at boundary point
-        # This handles BCs like: lambda f: f.diff() - 1
-        result_at_bc = result(np.array([x_bc]))
-        residual = _extract_scalar(result_at_bc.value)
-        jacobian_row = _jacobian_to_row(result_at_bc.jacobian)
-        return residual, jacobian_row
-
-    elif isinstance(result, AdChebfunScalar):
-        # Result is already evaluated (BC explicitly evaluated at a point)
-        residual = _extract_scalar(result.value)
-        jacobian_row = _jacobian_to_row(result.jacobian)
-        return residual, jacobian_row
-
-    else:
-        # Constant BC (shouldn't happen with proper AD)
-        residual = result
-        jacobian_row = np.zeros(n + 1)
-        return residual, jacobian_row
+    # Single constraint: extract and return
+    return _extract_residual_jacobian(result, x_bc, n)

@@ -1497,23 +1497,8 @@ class Chebop:
         # Get initial guess
         if self.init is not None:
             u = self.init
-            print("\n[Newton DEBUG] Initial guess before projection:")
-            print(f"  u: {u}")
-            print(f"  u.funs[0].size: {u.funs[0].size}")
-            x_test = np.array(
-                [self.domain.support[0], (self.domain.support[0] + self.domain.support[1]) / 2, self.domain.support[1]]
-            )
-            u_test = u(x_test)
-            print(f"  u at test points: {u_test}")
-
             # Project user-provided initial guess to satisfy BCs if needed
             u = self._project_to_satisfy_bcs(u)
-
-            print("\n[Newton DEBUG] Initial guess AFTER projection:")
-            print(f"  u: {u}")
-            print(f"  u.funs[0].size: {u.funs[0].size}")
-            u_test_after = u(x_test)
-            print(f"  u at test points: {u_test_after}")
         else:
             # Default initial guess: Create one that satisfies BCs from the start
             # This is much better than creating a random guess and projecting
@@ -1566,20 +1551,6 @@ class Chebop:
             # The residual chebfun may have very few points (e.g., 2) if u is coarse,
             # but we need accurate residual values at all discretization points.
             if hasattr(jacobian_linop, "_jacobian_computer"):
-                # DEBUG: Check what u is before capturing
-                print("\n[Newton DEBUG] Before creating residual_evaluator:")
-                print(f"  u: {u}")
-                print(f"  u.funs[0].size: {u.funs[0].size}")
-                x_debug = np.array(
-                    [
-                        self.domain.support[0],
-                        (self.domain.support[0] + self.domain.support[1]) / 2,
-                        self.domain.support[1],
-                    ]
-                )
-                u_debug = u(x_debug)
-                print(f"  u at debug points: {u_debug}")
-
                 # Store a residual evaluator function that will be called at discretization time
                 # This ensures we get accurate residual values at the collocation points
                 # CRITICAL: Capture u and self.rhs by value to avoid closure issues
@@ -1590,32 +1561,17 @@ class Chebop:
                 def residual_evaluator(x_pts):
                     """Evaluate residual at given points by recomputing operator."""
                     # Evaluate N(u) at the requested points
-                    print("\n  >> residual_evaluator DEBUG:")
-                    print(f"     u_current: {u_current}")
-                    print(f"     u_current.funs[0].size: {u_current.funs[0].size}")
-                    # Sample u at a few points to see what it is
-                    x_sample = np.array([x_pts[0], x_pts[len(x_pts) // 2], x_pts[-1]])
-                    u_sample = u_current(x_sample)
-                    print(f"     u_current at sample points: {u_sample}")
-
                     Nu = op_current(u_current)
-                    print(f"     Nu: {Nu}")
-                    print(f"     Nu.funs[0].size: {Nu.funs[0].size}")
-
                     Nu_vals = Nu(x_pts)
-                    print(f"     Nu_vals min/max: [{np.min(Nu_vals):.6e}, {np.max(Nu_vals):.6e}]")
 
                     # Evaluate RHS at the requested points
                     if rhs_current is not None:
                         rhs_vals = rhs_current(x_pts)
-                        print(f"     rhs_vals min/max: [{np.min(rhs_vals):.6e}, {np.max(rhs_vals):.6e}]")
                     else:
                         rhs_vals = np.zeros_like(x_pts)
-                        print("     rhs_vals: all zeros")
+
                     # Return negative residual: -(N(u) - rhs) = rhs - N(u)
-                    result = rhs_vals - Nu_vals
-                    print(f"     result (rhs - Nu) min/max: [{np.min(result):.6e}, {np.max(result):.6e}]")
-                    return result
+                    return rhs_vals - Nu_vals
 
                 jacobian_linop._residual_evaluator = residual_evaluator
 

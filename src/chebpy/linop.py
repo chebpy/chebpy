@@ -924,25 +924,8 @@ class LinOp:
 
                 A, b = self.assemble_system(discretization)
 
-                # DEBUG: Check system properties for AdChebfun path
-                if hasattr(self, "_jacobian_computer"):
-                    print("\n  >> Linear System Debug:")
-                    try:
-                        cond_A = np.linalg.cond(A.toarray() if sparse.issparse(A) else A)
-                        print(f"     A shape: {A.shape}, cond(A): {cond_A:.2e}")
-                    except Exception:
-                        print(f"     A shape: {A.shape}, cond(A): [failed to compute]")
-                    print(f"     b shape: {b.shape}, ||b||: {np.linalg.norm(b):.2e}")
-
                 try:
                     u = self.solve_linear_system(A, b)
-
-                    # DEBUG: Check solution for AdChebfun path
-                    if hasattr(self, "_jacobian_computer"):
-                        residual = A @ u - b
-                        print(f"     u shape: {u.shape}, ||u||: {np.linalg.norm(u):.2e}")
-                        print(f"     ||A*u - b||: {np.linalg.norm(residual):.2e}")
-                        print(f"     u min/max: [{np.min(u):.2e}, {np.max(u):.2e}]")
 
                 except Exception as e:
                     if n is not None:
