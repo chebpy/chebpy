@@ -22,6 +22,7 @@ from .algorithms import clencurt_weights
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .chebtech import Chebtech
+from .sparse_utils import extract_scalar, is_nearly_zero, prune_sparse
 from .spectral import (
     barycentric_matrix,
     cheb_points_scaled,
@@ -60,56 +61,6 @@ class OpDiscretization:
             row[0, idx] = val
         return row.tocsr()
 
-    @staticmethod
-    def _is_zero_row(row, threshold: float = 1e-12) -> bool:
-        """Check if a row is essentially zero.
-
-        Args:
-            row: Row vector (array or sparse matrix)
-            threshold: Threshold below which values are considered zero
-
-        Returns:
-            True if norm of row is below threshold
-        """
-        if sparse.issparse(row):
-            return np.linalg.norm(row.toarray()) < threshold
-        return np.linalg.norm(row) < threshold
-
-    @staticmethod
-    def _prune_sparse_row(row: sparse.spmatrix, threshold: float = 1e-14) -> sparse.spmatrix:
-        """Prune tiny coefficients from sparse row for numerical stability.
-
-        Args:
-            row: Sparse row matrix
-            threshold: Values below this are set to zero
-
-        Returns:
-            Pruned sparse row in CSR format
-        """
-        row = row.tocsr()
-        row.data[np.abs(row.data) < threshold] = 0
-        row.eliminate_zeros()
-        return row
-
-    @staticmethod
-    def _extract_scalar_value(value, negate: bool = False) -> float:
-        """Extract a scalar float value from various types.
-
-        Args:
-            value: Value to extract (scalar, list, array, or callable)
-            negate: If True, negate the extracted value
-
-        Returns:
-            Extracted float value
-        """
-        if isinstance(value, (list, np.ndarray)):
-            scalar = float(value[0] if len(value) > 0 else 0.0)
-        elif np.isscalar(value):
-            scalar = float(value)
-        else:
-            scalar = 0.0
-
-        return -scalar if negate else scalar
 
     @staticmethod
     def _setup_linearization_point(linop, u_current, block_interval_obj=None):
@@ -476,29 +427,22 @@ class OpDiscretization:
                 # Check if BC returned multiple constraints
                 if isinstance(residual, (list, tuple)):
                     for res_i, row_i in zip(residual, constraint_row):
-                        if OpDiscretization._is_zero_row(row_i):
+                        if is_nearly_zero(row_i):
                             continue
 
                         row = sparse.lil_matrix((1, total_size))
                         row[0, block_offset : block_offset + block_n] = row_i
                         bc_rows.append(row.tocsr())
-                        bc_rhs.append(OpDiscretization._extract_scalar_value(res_i, negate=True))
+                        bc_rhs.append(extract_scalar(res_i, negate=True))
                 else:
                     # Single constraint
-                    if OpDiscretization._is_zero_row(constraint_row):
+                    if is_nearly_zero(constraint_row):
                         return bc_rows, bc_rhs
 
                     row = sparse.lil_matrix((1, total_size))
                     row[0, block_offset : block_offset + block_n] = constraint_row
                     bc_rows.append(row.tocsr())
-                    bc_rhs.append(OpDiscretization._extract_scalar_value(residual, negate=True))
-
-            except Exception as e:
-                warnings.warn(f"{endpoint_name} BC linearization failed: {e}. Using Dirichlet fallback.")
-                row = sparse.lil_matrix((1, total_size))
-                row[0, endpoint_idx] = 1.0
-                bc_rows.append(row.tocsr())
-                bc_rhs.append(0.0)
+                    bc_rhs.append(extract_scalar(residual, negate=True))
         else:
             # Numeric value: u^(k)(endpoint) = bc_value
             row = sparse.lil_matrix((1, total_size))
@@ -625,12 +569,12 @@ class OpDiscretization:
                         if hasattr(bc_result, "__call__"):
                             val = bc_result(np.array([a_val]))[0]
                         else:
-                            val = OpDiscretization._extract_scalar_value(bc_result)
+                            val = extract_scalar(bc_result)
 
                         constraint_row[i] = val
 
                     # Check if BC is essentially zero
-                    if OpDiscretization._is_zero_row(constraint_row):
+                    if is_nearly_zero(constraint_row):
                         continue
 
                     # Build sparse row for full system
@@ -644,12 +588,8 @@ class OpDiscretization:
                     if hasattr(bc_zero, "__call__"):
                         rhs_val = bc_zero(np.array([a_val]))[0]
                     else:
-                        rhs_val = OpDiscretization._extract_scalar_value(bc_zero)
+                        rhs_val = extract_scalar(bc_zero)
                     bc_rhs.append(rhs_val)
-
-                except Exception as e:
-                    warnings.warn(f"General BC linearization failed: {e}. Skipping this BC.")
-                    continue
 
         return bc_rows, bc_rhs
 
@@ -741,7 +681,7 @@ class OpDiscretization:
                     # Derivative at first point minus derivative at last point
                     row[0, offset : offset + n_block] = D[0, :] - D[-1, :]
 
-                    continuity_rows.append(OpDiscretization._prune_sparse_row(row))
+                    continuity_rows.append(prune_sparse(row))
                     continuity_rhs.append(0.0)
 
                 continue  # Skip to next constraint
@@ -789,7 +729,7 @@ class OpDiscretization:
                 row[0, offset_left : offset_left + n_left] = D_left[-1, :]
                 row[0, offset_right : offset_right + n_right] = -D_right[0, :]
 
-                continuity_rows.append(OpDiscretization._prune_sparse_row(row))
+                continuity_rows.append(prune_sparse(row))
                 continuity_rhs.append(0.0)
 
         return continuity_rows, continuity_rhs

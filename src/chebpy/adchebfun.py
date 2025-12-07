@@ -10,24 +10,8 @@ from scipy import sparse
 
 from .chebfun import Chebfun
 from .spectral import barycentric_matrix, diff_matrix, identity_matrix, mult_matrix
+from .sparse_utils import extract_scalar, jacobian_to_row
 from .utilities import Interval, is_scalar_type
-
-
-def _extract_scalar(res):
-    """Extract scalar value from residual (handling AdChebfunScalar wrapping)."""
-    if isinstance(res, AdChebfunScalar):
-        res = res.value
-    if isinstance(res, np.ndarray):
-        res = res.item() if res.size == 1 else res[0]
-    return res
-
-
-def _jacobian_to_row(jac):
-    """Convert Jacobian (sparse or dense) to a dense row vector."""
-    if sparse.issparse(jac):
-        return jac.toarray().ravel()
-    else:
-        return np.atleast_1d(jac).ravel()
 
 
 def _extract_residual_jacobian(bc_elem, x_bc, n):
@@ -46,10 +30,10 @@ def _extract_residual_jacobian(bc_elem, x_bc, n):
     if isinstance(bc_elem, AdChebfun):
         # Still a function - evaluate at boundary point
         bc_at_pt = bc_elem(np.array([x_bc]))
-        return _extract_scalar(bc_at_pt.value), _jacobian_to_row(bc_at_pt.jacobian)
+        return extract_scalar(bc_at_pt.value), jacobian_to_row(bc_at_pt.jacobian)
     elif isinstance(bc_elem, AdChebfunScalar):
         # Already evaluated
-        return _extract_scalar(bc_elem.value), _jacobian_to_row(bc_elem.jacobian)
+        return extract_scalar(bc_elem.value), jacobian_to_row(bc_elem.jacobian)
     else:
         # Constant
         residual = float(bc_elem) if np.isscalar(bc_elem) else 0.0
@@ -255,7 +239,7 @@ class AdChebfun:
 
             new_jacobian = M_g_inv @ self.jacobian - M_f_over_g2 @ other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
-        elif isinstance(other, (int, float)):
+        elif is_scalar_type(other):
             new_func = self.func / other
             new_jacobian = self.jacobian / other
             return AdChebfun(new_func, self.n, new_jacobian)
@@ -267,7 +251,7 @@ class AdChebfun:
 
         J_{f^n} = n * f^(n-1) * J_f
         """
-        if isinstance(exponent, (int, float)):
+        if is_scalar_type(exponent):
             new_func = self.func**exponent
 
             # Chain rule: d/dε[(u+εv)^n] = n*u^(n-1)*v
@@ -382,7 +366,7 @@ class AdChebfunScalar:
 
     def __mul__(self, other):
         """Multiply: self * other."""
-        if isinstance(other, (int, float)):
+        if is_scalar_type(other):
             return AdChebfunScalar(self.value * other, self.n, self.domain, other * self.jacobian)
         else:
             return NotImplemented

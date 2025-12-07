@@ -927,9 +927,9 @@ class LinOp:
                 try:
                     u = self.solve_linear_system(A, b)
 
-                except Exception as e:
+                except (np.linalg.LinAlgError, RuntimeError, ValueError) as e:
                     if n is not None:
-                        raise RuntimeError(f"Failed to solve at n={n}: {e}")
+                        raise RuntimeError(f"Failed to solve at n={n}: {e}") from e
                     continue
 
                 solution = self.reconstruct_solution(u, discretization["n_per_block"])

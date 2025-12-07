@@ -117,11 +117,11 @@ class Chebop:
             domain = args[0]
         elif len(args) == 2:
             # Two arguments: could be (a, b) or (op, domain) or (domain, op)
-            if callable(args[0]) and (isinstance(args[1], (list, tuple, np.ndarray)) or hasattr(args[1], "__iter__")):
+            if callable(args[0]) and isinstance(args[1], (list, tuple, np.ndarray)):
                 # Chebop(op, domain) style
                 kwargs.setdefault("op", args[0])
                 domain = args[1]
-            elif callable(args[1]) and (isinstance(args[0], (list, tuple, np.ndarray)) or hasattr(args[0], "__iter__")):
+            elif callable(args[1]) and isinstance(args[0], (list, tuple, np.ndarray)):
                 # Chebop(domain, op) style
                 domain = args[0]
                 kwargs.setdefault("op", args[1])
@@ -1599,7 +1599,7 @@ class Chebop:
             # Solve for Newton correction
             try:
                 delta = jacobian_linop.solve()
-            except Exception as e:
+            except (np.linalg.LinAlgError, RuntimeError, ValueError) as e:
                 if self.verbose:
                     print(f"  Iteration {iteration}: Failed to solve for Newton correction: {e}")
                 give_up = True
@@ -1795,7 +1795,7 @@ class Chebop:
             # Evaluate operator at trial point (MATLAB lines 111-125)
             try:
                 residual_trial = self._compute_residual(u_trial)
-            except Exception:
+            except (ValueError, RuntimeError, np.linalg.LinAlgError):
                 # Residual computation failed - reduce lambda and try again
                 if self.verbose:
                     print(f"    Damping iter {damping_iter}: Residual eval failed at lambda={lambda_val:.4f}, reducing")
