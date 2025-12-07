@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # This file is part of the tschm/.config-templates repository
 # (https://github.com/tschm/.config-templates).
@@ -26,7 +27,7 @@
 # Note: If you customize this file in your repository, add it to the exclude list
 #       in action.yml to prevent it from being overwritten by template updates:
 #       exclude: |
-#         .github/scripts/customisations/build-extras.sh
+#         .github/scripts/build-extras.sh
 #
 
 set -euo pipefail
