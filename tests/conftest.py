@@ -1,189 +1,247 @@
-"""Pytest configuration and fixtures for setting up a mock git repository with versioning and GPG signing."""
+"""Configuration and fixtures for pytest.
 
+This module contains global pytest configuration and fixtures that are
+available to all test modules. It handles special configurations needed
+for different environments.
+
+Specifically, it:
+- Sets the matplotlib backend to 'Agg' (a non-interactive backend) when
+  running in a CI environment, which is necessary for running tests that
+  generate plots without a display.
+- Provides a generic emptyfun fixture that can return different types of
+  empty function objects based on the class name.
+
+Note:
+    The 'Agg' backend is used because it doesn't require a graphical display,
+    making it suitable for headless CI environments.
+"""
+
+import dataclasses
+import operator
 import os
-import shutil
-import subprocess
-from pathlib import Path
 
+import matplotlib
+import numpy as np
 import pytest
 
-# Path to the workspace root
-WORKSPACE_ROOT = Path(__file__).parent.parent
+from chebpy.bndfun import Bndfun
+from chebpy.chebfun import Chebfun
+from chebpy.chebtech import Chebtech
+from chebpy.utilities import Interval
 
-MOCK_UV_SCRIPT = """#!/usr/bin/env python3
-import sys
-import re
+if os.environ.get("CI") == "true":  # pragma: no cover
+    matplotlib.use("Agg")
 
-def get_version():
-    with open("pyproject.toml", "r") as f:
-        content = f.read()
-    match = re.search(r'version = "(.*?)"', content)
-    return match.group(1) if match else "0.0.0"
 
-def set_version(new_version):
-    with open("pyproject.toml", "r") as f:
-        content = f.read()
-    new_content = re.sub(r'version = ".*?"', f'version = "{new_version}"', content)
-    with open("pyproject.toml", "w") as f:
-        f.write(new_content)
+@pytest.fixture(scope="session", autouse=True)
+def testfunctions() -> list:
+    """Create a collection of test functions used throughout the test suite.
 
-def bump_version(current, bump_type):
-    major, minor, patch = map(int, current.split('.'))
-    if bump_type == "major":
-        return f"{major + 1}.0.0"
-    elif bump_type == "minor":
-        return f"{major}.{minor + 1}.0"
-    elif bump_type == "patch":
-        return f"{major}.{minor}.{patch + 1}"
-    return current
+    Each function is represented as a tuple containing:
+    1. The function itself
+    2. A name for the function (used in test printouts)
+    3. The Matlab chebfun adaptive degree on [-1,1]
+    4. A boolean indicating whether the function has roots on the real line
 
-def main():
-    args = sys.argv[1:]
-    # Expected invocations from release.sh start with 'version'
-    if not args or args[0] != "version":
-        sys.exit(1)
+    These functions are used to test various aspects of the chebpy library,
+    particularly the approximation and evaluation capabilities.
 
-    # uv version --short
-    if "--short" in args and "--bump" not in args:
-        print(get_version())
-        return
+    Returns:
+        list: List of tuples, each containing a test function and its metadata.
+    """
+    test_functions = []
+    fun_details = [
+        # Use the convention:
+        #  function,
+        #  name for the test printouts,
+        #  Matlab chebfun adaptive degree on [-1,1],
+        #  Any roots on the real line?
+        (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)", 4, True),
+        (lambda x: np.exp(x), "exp(x)", 15, False),
+        (lambda x: np.sin(x), "sin(x)", 14, True),
+        (lambda x: 0.2 + 0.1 * np.sin(x), "(.2+.1*sin(x))", 14, False),
+        (lambda x: np.cos(20 * x), "cos(20x)", 51, True),
+        (lambda x: 0.0 * x + 1.0, "constfun", 1, False),
+        (lambda x: 0.0 * x, "zerofun", 1, True),
+    ]
+    for k, items in enumerate(fun_details):
+        fun = items[0]
+        fun.__name__ = items[1]
+        test_functions.append((fun, items[2], items[3]))
 
-    # uv version --bump <type> --dry-run --short
-    if "--bump" in args and "--dry-run" in args and "--short" in args:
-        bump_idx = args.index("--bump") + 1
-        bump_type = args[bump_idx]
-        current = get_version()
-        print(bump_version(current, bump_type))
-        return
-
-    # uv version --bump <type> (actual update)
-    if "--bump" in args and "--dry-run" not in args:
-        bump_idx = args.index("--bump") + 1
-        bump_type = args[bump_idx]
-        current = get_version()
-        new_ver = bump_version(current, bump_type)
-        set_version(new_ver)
-        return
-
-    # uv version <version> --dry-run
-    if len(args) >= 2 and not args[1].startswith("-") and "--dry-run" in args:
-        # Just exit 0 if valid
-        return
-
-    # uv version <version> (actual update)
-    if len(args) == 2 and not args[1].startswith("-"):
-        set_version(args[1])
-        return
-
-if __name__ == "__main__":
-    main()
-"""
+    return test_functions
 
 
 @pytest.fixture
-def git_repo(tmp_path, monkeypatch):
-    """Sets up a remote bare repo and a local clone with necessary files."""
-    remote_dir = tmp_path / "remote.git"
-    local_dir = tmp_path / "local"
-    gnupg_home = tmp_path / "gnupg"
+def random_points() -> np.ndarray:
+    """Create an array of random points in [-1, 1] for testing.
 
-    # 1. Create bare remote
-    remote_dir.mkdir()
-    subprocess.run(["git", "init", "--bare", str(remote_dir)], check=True)
-    # Ensure the remote's default HEAD points to master for predictable behavior
-    subprocess.run(["git", "symbolic-ref", "HEAD", "refs/heads/master"], cwd=remote_dir, check=True)
+    This fixture creates an array of 1000 random points in the interval [-1, 1]
+    that can be used for evaluating and testing Chebtech objects.
 
-    # 2. Clone to local
-    subprocess.run(["git", "clone", str(remote_dir), str(local_dir)], check=True)
+    Returns:
+        numpy.ndarray: Array of 1000 random points in [-1, 1]
+    """
+    # Ensure reproducibility
+    rng = np.random.default_rng(0)
 
-    # Use monkeypatch to safely change cwd for the duration of the test
-    monkeypatch.chdir(local_dir)
+    return -1 + 2 * rng.random(1000)
 
-    # Ensure local default branch is 'master' to match test expectations
-    subprocess.run(["git", "checkout", "-b", "master"], check=True)
 
-    # Create pyproject.toml
-    with open("pyproject.toml", "w") as f:
-        f.write('[project]\nname = "test-project"\nversion = "0.1.0"\n')
+@pytest.fixture()
+def binops():
+    """Binary operators for testing algebraic operations."""
+    return [operator.add, operator.mul, operator.sub, operator.truediv]
 
-    # Create dummy uv.lock
-    with open("uv.lock", "w") as f:
-        f.write("")
 
-    # Create bin/uv mock
-    bin_dir = local_dir / "bin"
-    bin_dir.mkdir()
+@pytest.fixture()
+def div_binops():
+    """Binary operators for testing division."""
+    return (operator.truediv,)
 
-    uv_path = bin_dir / "uv"
-    with open(uv_path, "w") as f:
-        f.write(MOCK_UV_SCRIPT)
-    uv_path.chmod(0o755)
 
-    # Create bin/gpg mock and add bin to PATH
-    gpg_path = bin_dir / "gpg"
-    with open(gpg_path, "w") as f:
-        f.write("""#!/bin/sh
-# Mock gpg that produces a dummy signature for git tag -s
-echo "ARGS: $@" >> /tmp/gpg_args.log
+@pytest.fixture
+def emptyfun(request):
+    """Create an empty function object for testing.
 
-# Check if we are signing (look for -s or -b or -bsau)
-SIGN=0
-for arg in "$@"; do
-    case "$arg" in
-        *-bsau*) SIGN=1 ;;
-        *-s*)    SIGN=1 ;;
-        *-b*)    SIGN=1 ;;
-    esac
-done
+    This generic fixture creates an empty function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
 
-if [ "$SIGN" = "1" ]; then
-    # Output status to stderr (fd 2) as requested by --status-fd=2
-    echo "[GNUPG:] SIG_CREATED D 1 2 00 1234567890 1" >&2
+    Args:
+        request: The pytest request object, used to determine the calling module
 
-    # Output signature to stdout
-    echo "-----BEGIN PGP SIGNATURE-----"
-    echo ""
-    echo "Dummy Signature"
-    echo "-----END PGP SIGNATURE-----"
-fi
-exit 0
-""")
-    gpg_path.chmod(0o755)
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech]: An empty function object of the appropriate type
+    """
+    module_name = request.module.__name__
 
-    # Also provide a gpgv shim that delegates to our gpg mock (git may use gpgv for verification)
-    gpgv_path = bin_dir / "gpgv"
-    with open(gpgv_path, "w") as f:
-        f.write("#!/bin/sh\nexit 0\n")
-    gpgv_path.chmod(0o755)
+    if "bndfun" in module_name:
+        fun = Bndfun.initempty()
+    elif "chebfun" in module_name:
+        fun = Chebfun.initempty()
+    elif "chebtech" in module_name:
+        fun = Chebtech.initempty()
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initempty()
 
-    # Ensure our bin comes first on PATH so 'gpg' and 'uv' resolve to mocks
-    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ.get('PATH', '')}")
+    assert not fun.isconst
+    assert fun.isempty
+    assert fun.vscale == 0.0
+    assert fun.roots().size == 0
 
-    # Provide a git shim to make `git tag -v` succeed in this mocked environment
-    git_wrapper = bin_dir / "git"
-    with open(git_wrapper, "w") as f:
-        f.write('#!/bin/sh\nif [ "$1" = "tag" ] && [ "$2" = "-v" ]; then exit 0; fi\nexec /usr/bin/git "$@"\n')
-    git_wrapper.chmod(0o755)
+    return fun
 
-    # Copy scripts
-    script_dir = local_dir / ".github" / "scripts"
-    script_dir.mkdir(parents=True)
 
-    shutil.copy(WORKSPACE_ROOT / ".github" / "scripts" / "release.sh", script_dir / "release.sh")
-    shutil.copy(WORKSPACE_ROOT / ".github" / "scripts" / "bump.sh", script_dir / "bump.sh")
+@pytest.fixture
+def constfun(request):
+    """Create a constant function object for testing.
 
-    (script_dir / "release.sh").chmod(0o755)
-    (script_dir / "bump.sh").chmod(0o755)
+    This generic fixture creates a constant function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
+    The constant value is set to 1.0.
 
-    # Set up a test GPG key for tag signing
-    gnupg_home.mkdir(mode=0o700)
-    monkeypatch.setenv("GNUPGHOME", str(gnupg_home))
+    Args:
+        request: The pytest request object, used to determine the calling module
 
-    # Commit and push initial state
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True)
-    subprocess.run(["git", "config", "user.name", "Test User"], check=True)
-    subprocess.run(["git", "add", "."], check=True)
-    subprocess.run(["git", "commit", "-m", "Initial commit"], check=True)
-    subprocess.run(["git", "push", "origin", "master"], check=True)
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech]: A constant function object of the appropriate type
+    """
+    module_name = request.module.__name__
 
-    yield local_dir
+    if "bndfun" in module_name:
+        # Bndfun requires an interval
+        from chebpy.utilities import Interval
+
+        fun = Bndfun.initconst(1.0, Interval())
+    elif "chebfun" in module_name:
+        fun = Chebfun.initconst(1.0)
+    elif "chebtech" in module_name:
+        fun = Chebtech.initconst(1.0)
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initconst(1.0)
+
+    assert fun.isconst
+    assert not fun.isempty
+    assert fun.roots().size == 0
+
+    return fun
+
+
+@pytest.fixture
+def complexfun(request):
+    """Create a complex function object for testing.
+
+    This generic fixture creates a complex function object of the appropriate type
+    based on the test module that requests it. It automatically determines the
+    correct class (Bndfun, Chebfun, or Chebtech) based on the module name.
+    The complex function is set to exp(π·i·x).
+
+    Args:
+        request: The pytest request object, used to determine the calling module
+
+    Returns:
+        Union[Bndfun, Chebfun, Chebtech]: A complex function object of the appropriate type
+    """
+    module_name = request.module.__name__
+
+    if "bndfun" in module_name:
+        # Bndfun requires an interval
+        from chebpy.utilities import Interval
+
+        fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
+    elif "chebfun" in module_name:
+        fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
+    elif "chebtech" in module_name:
+        fun = Chebtech.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
+    else:
+        # Default to Chebfun if the module name doesn't match any specific type
+        fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
+
+    assert fun.iscomplex
+    assert not fun.isempty
+    assert not fun.isconst
+    assert fun.roots().size == 0
+
+    return fun
+
+
+@dataclasses.dataclass(frozen=True)
+class TestFunction:
+    """Container for test functions."""
+
+    cheb: Chebfun | Chebtech | Bndfun
+    raw: callable
+    degree: int
+    has_roots: bool
+
+
+@pytest.fixture
+def ttt(request, testfunctions):
+    """Create a collection of test functions for testing."""
+    module_name = request.module.__name__
+
+    t_functions = []
+
+    if "bndfun" in module_name:
+        interval = Interval()
+        for fun, degree, roots in testfunctions:
+            bndfun = Bndfun.initfun_adaptive(fun, interval)
+            bndfun.name = fun.__name__
+            t_functions.append(TestFunction(cheb=bndfun, raw=fun, degree=degree, has_roots=roots))
+
+    if "chebfun" in module_name:
+        for fun, degree, roots in testfunctions:
+            chebfun = Chebfun.initfun_adaptive(fun, [-1, 1])
+            chebfun.name = fun.__name__
+            t_functions.append(TestFunction(cheb=chebfun, raw=fun, degree=degree, has_roots=roots))
+
+    if "chebtech" in module_name:
+        for fun, degree, roots in testfunctions:
+            chebtech = Chebtech.initfun_adaptive(fun)
+            chebtech.name = fun.__name__
+            t_functions.append(TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots))
+    return t_functions

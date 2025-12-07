@@ -1,3 +1,4 @@
+
 ## Makefile for tschm/.config-templates
 # (https://github.com/tschm/.config-templates)
 #
@@ -95,11 +96,11 @@ clean: ## clean
 	  | xargs -r git branch -D 2>/dev/null || true
 
 ##@ Development and Testing
-test: install ## run all tests
+test: install ## run all tests (skips slow tests exceeding 1s timeout)
 	@if [ -d ${SOURCE_FOLDER} ] && [ -d ${TESTS_FOLDER} ]; then \
 	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ${UV_BIN} pip install pytest pytest-cov pytest-html; \
-	  ${UV_BIN} run pytest ${TESTS_FOLDER} --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --html=_tests/html-report/report.html; \
+	  ${UV_BIN} pip install pytest pytest-cov pytest-html pytest-timeout; \
+	  ${UV_BIN} run pytest ${TESTS_FOLDER} -n auto -m "not slow" --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --html=_tests/html-report/report.html; \
 	else \
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} or tests folder ${TESTS_FOLDER} not found, skipping tests${RESET}\n"; \
 	fi
@@ -155,13 +156,52 @@ all: fmt deptry book ## Run everything
 	echo "Run fmt, deptry, test and book"
 
 ##@ Releasing and Versioning
-bump: install-uv ## bump version
-	@UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/bump.sh"
+bump: install-uv ## bump version (usage: make bump TYPE=patch [COMMIT=true] [COMMIT_MSG="message"])
+	@if [ -z "$(VERSION)" ] && [ -z "$(TYPE)" ]; then \
+		printf "${RED}[ERROR] VERSION or TYPE is required.${RESET}\n"; \
+		printf "Examples:\n"; \
+		printf "  ${BLUE}Bump version (no commit):${RESET}\n"; \
+		printf "    make bump TYPE=patch\n"; \
+		printf "    make bump TYPE=minor\n"; \
+		printf "    make bump TYPE=major\n"; \
+		printf "    make bump VERSION=1.2.3\n"; \
+		printf "  ${BLUE}Bump and commit with default message:${RESET}\n"; \
+		printf "    make bump TYPE=patch COMMIT=true\n"; \
+		printf "  ${BLUE}Bump and commit with custom message:${RESET}\n"; \
+		printf "    make bump TYPE=minor COMMIT=true COMMIT_MSG='feat: new feature release'\n"; \
+		exit 1; \
+	fi
+	@ARGS="bump"; \
+	if [ -n "$(TYPE)" ]; then \
+		ARGS="$$ARGS --type $(TYPE)"; \
+	else \
+		ARGS="$$ARGS --version $(VERSION)"; \
+	fi; \
+	if [ -n "$(COMMIT)" ] && [ "$(COMMIT)" = "true" ]; then \
+		ARGS="$$ARGS --commit"; \
+		if [ -n "$(COMMIT_MSG)" ]; then \
+			ARGS="$$ARGS --message \"$(COMMIT_MSG)\""; \
+		fi; \
+	fi; \
+	UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh" $$ARGS
 
-release: install-uv ## create tag and push to remote with prompts
-	@UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh"
+patch: ## alias bump via patch (usage: make patch [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=patch $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+minor: ## alias bump via minor (usage: make minor [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=minor $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+major: ## alias bump via major (usage: make major [COMMIT=true] [COMMIT_MSG="message"])
+	@$(MAKE) bump TYPE=major $(if $(COMMIT),COMMIT=$(COMMIT)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
 
-post-release: install-uv ## perform post-release tasks
+publish: ## bump version, commit, tag and push (usage: make publish TYPE=patch|minor|major [VERSION=x.y.z] [COMMIT_MSG="..."])
+	@printf "${YELLOW}[WARN] This will bump the version, commit changes, create a tag, and PUSH to remote.${RESET}\n"
+	@printf "${YELLOW}[WARN] Ensure you are on the correct branch and have pulled latest changes.${RESET}\n"
+	@$(MAKE) bump COMMIT=true $(if $(TYPE),TYPE=$(TYPE)) $(if $(VERSION),VERSION=$(VERSION)) $(if $(COMMIT_MSG),COMMIT_MSG="$(COMMIT_MSG)")
+	@$(MAKE) release
+
+release: install-uv ## create tag and push to remote with prompts (usage: make release)
+	@UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh" release
+
+post-release: install-uv ## perform post-release tasks (usage: make post-release)
 	@if [ -x "${CUSTOM_SCRIPTS_FOLDER}/post-release.sh" ]; then \
 		printf "${BLUE}[INFO] Running post-release script from customisations folder...${RESET}\n"; \
 		"${CUSTOM_SCRIPTS_FOLDER}"/post-release.sh; \
