@@ -17,8 +17,6 @@ appears in any branch of the expression tree.
 from abc import ABC, abstractmethod
 from typing import Any
 
-import numpy as np
-
 
 class ASTNode(ABC):
     """Base class for expression tree nodes."""
@@ -266,9 +264,7 @@ class BinOpNode(ASTNode):
             return BinOpNode("-", left_diff, right_diff)
         elif self.op == "*":
             # Product rule
-            return BinOpNode("+",
-                           BinOpNode("*", left_diff, self.right),
-                           BinOpNode("*", self.left, right_diff))
+            return BinOpNode("+", BinOpNode("*", left_diff, self.right), BinOpNode("*", self.left, right_diff))
         else:
             # For other operations, take max order
             return BinOpNode(self.op, left_diff, right_diff)
@@ -345,7 +341,6 @@ class OrderTracerAST(ASTNode):
         """Domain property for Chebfun compatibility."""
         return self._domain
 
-
     def _break(self, targetdomain):
         """Stub for Chebfun compatibility - returns iterable of self."""
         return [self]
@@ -369,7 +364,7 @@ class OrderTracerAST(ASTNode):
             # For order detection, we don't care about the actual values
             return ConstNode(0)
 
-    def _create_result(self, root: ASTNode) -> 'OrderTracerAST':
+    def _create_result(self, root: ASTNode) -> "OrderTracerAST":
         """Create a new OrderTracerAST with the given root."""
         new_tracer = OrderTracerAST(self.name, domain=self._domain)
         new_tracer._root = root

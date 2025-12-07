@@ -17,10 +17,7 @@ from .chebfun import Chebfun
 
 
 def check_coefficient_singularities(
-    coeffs: list[Chebfun],
-    diff_order: int,
-    domain,
-    tol: float = 1e-8
+    coeffs: list[Chebfun], diff_order: int, domain, tol: float = 1e-8
 ) -> tuple[bool, list[str]]:
     """Check for singularities in operator coefficients.
 
@@ -111,7 +108,7 @@ def check_coefficient_singularities(
         # Coefficient changes sign - check where
         sign_changes = []
         for i in range(len(a_vals) - 1):
-            if a_vals[i] * a_vals[i+1] < 0:
+            if a_vals[i] * a_vals[i + 1] < 0:
                 sign_changes.append(x_test[i])
 
         if sign_changes:
@@ -128,10 +125,7 @@ def check_coefficient_singularities(
 
 
 def check_coefficient_oscillation(
-    coeffs: list[Chebfun],
-    diff_order: int,
-    domain,
-    min_points_per_wavelength: int = 10
+    coeffs: list[Chebfun], diff_order: int, domain, min_points_per_wavelength: int = 10
 ) -> tuple[bool, list[str], int | None]:
     """Check if coefficients are highly oscillatory and estimate required resolution.
 
@@ -161,7 +155,7 @@ def check_coefficient_oscillation(
         # Check resolution of coefficient representation
         # If coefficient needs many points, it's oscillatory
         coeff_size = 0
-        if hasattr(coeff, 'funs'):
+        if hasattr(coeff, "funs"):
             for fun in coeff.funs:
                 coeff_size = max(coeff_size, fun.size)
 
@@ -179,7 +173,7 @@ def check_coefficient_oscillation(
 
             # For higher derivative orders, need even more resolution
             # because differentiation amplifies high-frequency errors
-            suggested_n *= (1 + diff_order // 2)
+            suggested_n *= 1 + diff_order // 2
 
             max_n_required = max(max_n_required, suggested_n)
 
@@ -194,20 +188,14 @@ def check_coefficient_oscillation(
 
     if is_oscillatory:
         warnings_list.append(
-            f"\nRECOMMENDATION: Set max_n >= {max_n_required} for this problem.\n"
-            f"Example: L.max_n = {max_n_required}"
+            f"\nRECOMMENDATION: Set max_n >= {max_n_required} for this problem.\nExample: L.max_n = {max_n_required}"
         )
 
     return is_oscillatory, warnings_list, max_n_required if is_oscillatory else None
 
 
 def check_operator_wellposedness(
-    coeffs: list[Chebfun],
-    diff_order: int,
-    lbc,
-    rbc,
-    domain,
-    bc=None
+    coeffs: list[Chebfun], diff_order: int, lbc, rbc, domain, bc=None
 ) -> tuple[bool, list[str]]:
     """Check if operator with given BCs is well-posed.
 
@@ -230,7 +218,7 @@ def check_operator_wellposedness(
     warnings_list = []
 
     # Check for periodic BCs - these provide diff_order constraints
-    is_periodic = isinstance(bc, str) and bc.lower() == 'periodic'
+    is_periodic = isinstance(bc, str) and bc.lower() == "periodic"
     if is_periodic:
         # Periodic BCs provide diff_order constraints automatically
         # No additional checks needed - periodic is always well-posed for the given order
@@ -293,7 +281,7 @@ def check_periodic_compatibility(linop) -> tuple[bool, list[str]]:
     warnings_list = []
 
     # Only check if periodic BCs
-    is_periodic = isinstance(linop.bc, str) and linop.bc.lower() == 'periodic'
+    is_periodic = isinstance(linop.bc, str) and linop.bc.lower() == "periodic"
     if not is_periodic:
         return True, warnings_list
 
@@ -302,7 +290,7 @@ def check_periodic_compatibility(linop) -> tuple[bool, list[str]]:
         return True, warnings_list
 
     block = linop.blocks[0]
-    diff_order = block['diff_order']
+    diff_order = block["diff_order"]
 
     if diff_order != 2:
         # For other orders, compatibility is more complex - skip for now
@@ -358,15 +346,13 @@ def diagnose_linop(linop, verbose: bool = True) -> bool:
 
     # Get coefficients from first block (typically single-interval problems)
     block = linop.blocks[0]
-    coeffs = block['coeffs']
-    diff_order = block['diff_order']
+    coeffs = block["coeffs"]
+    diff_order = block["diff_order"]
 
     has_any_issues = False
 
     # Check 1: Singularities
-    has_sing, sing_warnings = check_coefficient_singularities(
-        coeffs, diff_order, linop.domain
-    )
+    has_sing, sing_warnings = check_coefficient_singularities(coeffs, diff_order, linop.domain)
     if has_sing:
         has_any_issues = True
         if verbose:
@@ -374,9 +360,7 @@ def diagnose_linop(linop, verbose: bool = True) -> bool:
                 warnings.warn(msg, UserWarning, stacklevel=2)
 
     # Check 2: Oscillation
-    is_osc, osc_warnings, suggested_n = check_coefficient_oscillation(
-        coeffs, diff_order, linop.domain
-    )
+    is_osc, osc_warnings, suggested_n = check_coefficient_oscillation(coeffs, diff_order, linop.domain)
     if is_osc:
         has_any_issues = True
         if verbose:
@@ -389,7 +373,8 @@ def diagnose_linop(linop, verbose: bool = True) -> bool:
                 warnings.warn(
                     f"Automatically increasing max_n from {linop.max_n} to {suggested_n} "
                     f"to handle oscillatory coefficients.",
-                    UserWarning, stacklevel=2
+                    UserWarning,
+                    stacklevel=2,
                 )
             linop.max_n = suggested_n
 

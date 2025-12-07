@@ -232,162 +232,6 @@ class Chebop:
         domain = spec.get("domain", [-1, 1])
         return cls(domain, **{k: v for k, v in spec.items() if k != "domain"})
 
-    @staticmethod
-    def _maxnorm(f):
-        """Compute maximum norm of a Chebfun.
-
-        Args:
-            f: Chebfun object
-
-        Returns:
-            Maximum absolute value of coefficients, or inf if f is None
-        """
-        if f is None:
-            return np.inf
-        return max(np.max(np.abs(fun.coeffs)) for fun in f)
-
-    @staticmethod
-    def _create_zero_funs(a, b, num_vars):
-        """Create array of zero functions for linearization.
-
-        Args:
-            a: Left endpoint
-            b: Right endpoint
-            num_vars: Number of variables
-
-        Returns:
-            List of zero Chebfun objects
-        """
-        return [Chebfun.initfun(lambda x: np.zeros_like(x), [a, b]) for _ in range(num_vars)]
-
-    @staticmethod
-    def _create_ad_variables(zero_funs, n, num_vars, block_size, total_cols):
-        """Create AdChebfun variables with proper Jacobian structure.
-
-        Args:
-            zero_funs: List of zero Chebfun objects
-            n: Discretization size
-            num_vars: Number of variables
-            block_size: Size of each block (n+1)
-            total_cols: Total number of columns in Jacobian
-
-        Returns:
-            List of AdChebfun variables
-        """
-        ad_vars = []
-        for j in range(num_vars):
-            jac = sparse.lil_matrix((block_size, total_cols))
-            jac[:, j * block_size : (j + 1) * block_size] = sparse.identity(block_size)
-            jac = jac.tocsr()
-            ad_vars.append(AdChebfun(zero_funs[j], n=n, jacobian=jac))
-        return ad_vars
-
-    @staticmethod
-    def _normalize_bc(bc):
-        """Normalize boundary condition to (count, values_list) format.
-
-        Args:
-            bc: Boundary condition (scalar, list, tuple, or None)
-
-        Returns:
-            Tuple of (count, values_list)
-        """
-        if bc is None:
-            return 0, []
-        if isinstance(bc, (list, tuple)):
-            return len(bc), list(bc)
-        return 1, [bc]
-
-    def _process_system_bc(
-        self, is_left, bc, n, num_vars, num_eqs, block_size, total_cols, a, b, bc_rows, bc_cols, bc_vals, rhs_vec
-    ):
-        """Process system boundary conditions (left or right).
-
-        Args:
-            is_left: True for left BC, False for right BC
-            bc: Boundary condition (callable, list/tuple, or scalar)
-            n: Discretization size
-            num_vars: Number of variables
-            num_eqs: Number of equations
-            block_size: Size of each block (n+1)
-            total_cols: Total number of columns
-            a: Left endpoint
-            b: Right endpoint
-            bc_rows: List to append BC row indices
-            bc_cols: List to append BC column indices
-            bc_vals: List to append BC values
-            rhs_vec: RHS vector to modify
-        """
-        if bc is None:
-            return
-
-        if callable(bc):
-            zero_funs = self._create_zero_funs(a, b, num_vars)
-            ad_vars = self._create_ad_variables(zero_funs, n, num_vars, block_size, total_cols)
-
-            bc_results = bc(*ad_vars)
-            if not isinstance(bc_results, (list, tuple)):
-                bc_results = [bc_results]
-
-            bc_row_counters = [0] * num_eqs
-            for bc_idx, bc_constraint in enumerate(bc_results):
-                if bc_constraint is None:
-                    continue
-                if not isinstance(bc_constraint, AdChebfun):
-                    raise TypeError("Functional BC must return AdChebfun")
-
-                # Extract constraint row from appropriate end
-                constraint_row = bc_constraint.jacobian[0 if is_left else -1, :].toarray().ravel()
-                eq_idx = bc_idx % num_eqs
-                row_within_eq = bc_row_counters[eq_idx]
-                bc_row_counters[eq_idx] += 1
-
-                # Compute row index based on side
-                if is_left:
-                    eq_row_idx = eq_idx * block_size + row_within_eq
-                    if eq_row_idx >= (eq_idx + 1) * block_size:
-                        raise ValueError("Too many BCs")
-                else:
-                    eq_row_idx = (eq_idx + 1) * block_size - 1 - row_within_eq
-                    if eq_row_idx < eq_idx * block_size:
-                        raise ValueError("Too many BCs")
-
-                for col_idx in range(total_cols):
-                    if constraint_row[col_idx] != 0:
-                        bc_rows.append(eq_row_idx)
-                        bc_cols.append(col_idx)
-                        bc_vals.append(constraint_row[col_idx])
-
-                rhs_vec[eq_row_idx] = -bc_constraint.func(a if is_left else b)
-
-        elif isinstance(bc, (list, tuple)):
-            for var_idx, bc_val in enumerate(bc):
-                if bc_val is None:
-                    continue
-                if is_left:
-                    eq_row_idx = var_idx * block_size
-                    var_col_idx = var_idx * block_size
-                else:
-                    eq_row_idx = (var_idx + 1) * block_size - 1
-                    var_col_idx = (var_idx + 1) * block_size - 1
-                bc_rows.append(eq_row_idx)
-                bc_cols.append(var_col_idx)
-                bc_vals.append(1.0)
-                rhs_vec[eq_row_idx] = float(bc_val) if np.isscalar(bc_val) else bc_val
-        else:
-            # Scalar BC
-            for var_idx in range(num_vars):
-                if is_left:
-                    eq_row_idx = var_idx * block_size
-                    var_col_idx = var_idx * block_size
-                else:
-                    eq_row_idx = (var_idx + 1) * block_size - 1
-                    var_col_idx = (var_idx + 1) * block_size - 1
-                bc_rows.append(eq_row_idx)
-                bc_cols.append(var_col_idx)
-                bc_vals.append(1.0)
-                rhs_vec[eq_row_idx] = float(bc)
-
     def analyze_operator(self):
         """Analyze the operator to determine linearity, order, and coefficients.
 
@@ -747,12 +591,17 @@ class Chebop:
                 N_sum = self.op(*u_sum)
                 err2_list = [N_sum[i] - (N_u1[i] + N_u2[i]) for i in range(self._num_equations)]
 
+                def maxnorm(f):
+                    if f is None:
+                        return np.inf
+                    return max(np.max(np.abs(fun.coeffs)) for fun in f)
+
                 # Check all equations pass linearity test
                 for i in range(self._num_equations):
-                    err1_norm = self._maxnorm(err1_list[i])
-                    err2_norm = self._maxnorm(err2_list[i])
-                    denom1 = self._maxnorm(alpha * N_u1[i])
-                    denom2 = self._maxnorm(N_u1[i] + N_u2[i])
+                    err1_norm = maxnorm(err1_list[i])
+                    err2_norm = maxnorm(err2_list[i])
+                    denom1 = maxnorm(alpha * N_u1[i])
+                    denom2 = maxnorm(N_u1[i] + N_u2[i])
 
                     pass1 = (err1_norm < abs_tol) or (err1_norm / (denom1 + 1e-14) < rel_tol)
                     pass2 = (err2_norm < abs_tol) or (err2_norm / (denom2 + 1e-14) < rel_tol)
@@ -780,10 +629,15 @@ class Chebop:
                 # Additivity: N(u1 + u2) = N(u1) + N(u2)
                 err2 = self._evaluate_operator_safe(u1 + u2) - (N_u1 + N_u2)
 
-                err1_norm = self._maxnorm(err1)
-                err2_norm = self._maxnorm(err2)
-                denom1 = self._maxnorm(alpha * N_u1)
-                denom2 = self._maxnorm(N_u1 + N_u2)
+                def maxnorm(f):
+                    if f is None:
+                        return np.inf
+                    return max(np.max(np.abs(fun.coeffs)) for fun in f)
+
+                err1_norm = maxnorm(err1)
+                err2_norm = maxnorm(err2)
+                denom1 = maxnorm(alpha * N_u1)
+                denom2 = maxnorm(N_u1 + N_u2)
 
                 # Check both relative and absolute errors
                 # If denominator is very small, use absolute tolerance
@@ -986,7 +840,7 @@ class Chebop:
         a, b = self.domain.support
 
         # Create array of zero functions (linearization point)
-        zero_funs = self._create_zero_funs(a, b, self._num_variables)
+        zero_funs = [Chebfun.initfun(lambda x: np.zeros_like(x), [a, b]) for _ in range(self._num_variables)]
 
         # Choose discretization size
         if n is None:
@@ -1003,7 +857,15 @@ class Chebop:
         block_size = n + 1
         total_size = self._num_variables * block_size
 
-        ad_vars = self._create_ad_variables(zero_funs, n, self._num_variables, block_size, total_size)
+        ad_vars = []
+        for j in range(self._num_variables):
+            # Create Jacobian block for variable j
+            # It's an identity matrix in the j-th block position
+            jac = sparse.lil_matrix((block_size, total_size))
+            jac[:, j * block_size : (j + 1) * block_size] = sparse.identity(block_size)
+            jac = jac.tocsr()
+
+            ad_vars.append(AdChebfun(zero_funs[j], n=n, jacobian=jac))
 
         # Evaluate operator to get equations
         try:
@@ -1389,13 +1251,119 @@ class Chebop:
         bc_vals = []
         bc_cols = []
 
-        # Process left and right BCs using helper
-        self._process_system_bc(
-            True, self.lbc, n, num_vars, num_eqs, block_size, total_cols, a, b, bc_rows, bc_cols, bc_vals, rhs_vec
-        )
-        self._process_system_bc(
-            False, self.rbc, n, num_vars, num_eqs, block_size, total_cols, a, b, bc_rows, bc_cols, bc_vals, rhs_vec
-        )
+        # Left BCs
+        if self.lbc is not None:
+            if callable(self.lbc):
+                zero_funs = [Chebfun.initfun(lambda x: np.zeros_like(x), [a, b]) for _ in range(num_vars)]
+                ad_vars = []
+                for j in range(num_vars):
+                    jac = sparse.lil_matrix((block_size, total_cols))
+                    jac[:, j * block_size : (j + 1) * block_size] = sparse.identity(block_size)
+                    jac = jac.tocsr()
+                    ad_vars.append(AdChebfun(zero_funs[j], n=n, jacobian=jac))
+
+                bc_results = self.lbc(*ad_vars)
+                if not isinstance(bc_results, (list, tuple)):
+                    bc_results = [bc_results]
+
+                bc_row_counters = [0] * num_eqs
+                for bc_idx, bc_constraint in enumerate(bc_results):
+                    if bc_constraint is None:
+                        continue
+                    if not isinstance(bc_constraint, AdChebfun):
+                        raise TypeError("Functional BC must return AdChebfun")
+
+                    constraint_row = bc_constraint.jacobian[0, :].toarray().ravel()
+                    eq_idx = bc_idx % num_eqs
+                    row_within_eq = bc_row_counters[eq_idx]
+                    bc_row_counters[eq_idx] += 1
+                    eq_row_idx = eq_idx * block_size + row_within_eq
+
+                    if eq_row_idx >= total_rows:
+                        raise ValueError("Too many BCs")
+
+                    for col_idx in range(total_cols):
+                        if constraint_row[col_idx] != 0:
+                            bc_rows.append(eq_row_idx)
+                            bc_cols.append(col_idx)
+                            bc_vals.append(constraint_row[col_idx])
+
+                    rhs_vec[eq_row_idx] = -bc_constraint.func(a)
+            elif isinstance(self.lbc, (list, tuple)):
+                for var_idx, bc_val in enumerate(self.lbc):
+                    if bc_val is None:
+                        continue
+                    eq_row_idx = var_idx * block_size
+                    var_col_idx = var_idx * block_size
+                    bc_rows.append(eq_row_idx)
+                    bc_cols.append(var_col_idx)
+                    bc_vals.append(1.0)
+                    rhs_vec[eq_row_idx] = float(bc_val) if np.isscalar(bc_val) else bc_val
+            else:
+                for var_idx in range(num_vars):
+                    eq_row_idx = var_idx * block_size
+                    var_col_idx = var_idx * block_size
+                    bc_rows.append(eq_row_idx)
+                    bc_cols.append(var_col_idx)
+                    bc_vals.append(1.0)
+                    rhs_vec[eq_row_idx] = float(self.lbc)
+
+        # Right BCs
+        if self.rbc is not None:
+            if callable(self.rbc):
+                zero_funs = [Chebfun.initfun(lambda x: np.zeros_like(x), [a, b]) for _ in range(num_vars)]
+                ad_vars = []
+                for j in range(num_vars):
+                    jac = sparse.lil_matrix((block_size, total_cols))
+                    jac[:, j * block_size : (j + 1) * block_size] = sparse.identity(block_size)
+                    jac = jac.tocsr()
+                    ad_vars.append(AdChebfun(zero_funs[j], n=n, jacobian=jac))
+
+                bc_results = self.rbc(*ad_vars)
+                if not isinstance(bc_results, (list, tuple)):
+                    bc_results = [bc_results]
+
+                bc_row_counters = [0] * num_eqs
+                for bc_idx, bc_constraint in enumerate(bc_results):
+                    if bc_constraint is None:
+                        continue
+                    if not isinstance(bc_constraint, AdChebfun):
+                        raise TypeError("Functional BC must return AdChebfun")
+
+                    constraint_row = bc_constraint.jacobian[-1, :].toarray().ravel()
+                    eq_idx = bc_idx % num_eqs
+                    row_within_eq = bc_row_counters[eq_idx]
+                    bc_row_counters[eq_idx] += 1
+                    eq_row_idx = (eq_idx + 1) * block_size - 1 - row_within_eq
+
+                    if eq_row_idx < eq_idx * block_size:
+                        raise ValueError("Too many BCs")
+
+                    for col_idx in range(total_cols):
+                        if constraint_row[col_idx] != 0:
+                            bc_rows.append(eq_row_idx)
+                            bc_cols.append(col_idx)
+                            bc_vals.append(constraint_row[col_idx])
+
+                    rhs_vec[eq_row_idx] = -bc_constraint.func(b)
+            elif isinstance(self.rbc, (list, tuple)):
+                for var_idx, bc_val in enumerate(self.rbc):
+                    if bc_val is None:
+                        continue
+                    eq_row_idx = (var_idx + 1) * block_size - 1
+                    var_col_idx = (var_idx + 1) * block_size - 1
+                    bc_rows.append(eq_row_idx)
+                    bc_cols.append(var_col_idx)
+                    bc_vals.append(1.0)
+                    rhs_vec[eq_row_idx] = float(bc_val) if np.isscalar(bc_val) else bc_val
+            else:
+                for var_idx in range(num_vars):
+                    eq_row_idx = (var_idx + 1) * block_size - 1
+                    var_col_idx = (var_idx + 1) * block_size - 1
+                    bc_rows.append(eq_row_idx)
+                    bc_cols.append(var_col_idx)
+                    bc_vals.append(1.0)
+                    rhs_vec[eq_row_idx] = float(self.rbc)
 
         # Apply BCs
 
@@ -2365,9 +2333,26 @@ class Chebop:
         Returns:
             Chebfun that satisfies the BCs
         """
-        # Extract BC values using helper
-        num_lbc, lbc_vals = self._normalize_bc(self.lbc)
-        num_rbc, rbc_vals = self._normalize_bc(self.rbc)
+        # Extract BC values
+        num_lbc = 0
+        lbc_vals = []
+        if self.lbc is not None:
+            if isinstance(self.lbc, (list, tuple)):
+                num_lbc = len(self.lbc)
+                lbc_vals = list(self.lbc)
+            else:
+                num_lbc = 1
+                lbc_vals = [self.lbc]
+
+        num_rbc = 0
+        rbc_vals = []
+        if self.rbc is not None:
+            if isinstance(self.rbc, (list, tuple)):
+                num_rbc = len(self.rbc)
+                rbc_vals = list(self.rbc)
+            else:
+                num_rbc = 1
+                rbc_vals = [self.rbc]
 
         # If no BCs, return zero function
         if num_lbc == 0 and num_rbc == 0:

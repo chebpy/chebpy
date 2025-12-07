@@ -8,7 +8,7 @@ TWO-PHASE DESIGN PATTERN:
 LinOp works in concert with op_discretization using a two-phase approach:
 
 This separation allows LinOp to focus on mathematical problem structure while
-delegating numerical implementation to opDiscretization.
+delegating numerical implementation to OpDiscretization.
 
 The LinOp class handles:
 - Domain splitting and continuity constraint specification
@@ -21,7 +21,7 @@ The LinOp class handles:
 - Matrix operators (expm, null, svd, cond, inv, norm, etc.)
 """
 
-import sys
+import logging
 import traceback
 import warnings
 from collections.abc import Callable
@@ -30,7 +30,6 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
-from scipy import sparse as sp
 from scipy.linalg import cholesky, eig, lu_factor, lu_solve, qr
 from scipy.sparse.linalg import LinearOperator, lsmr
 from scipy.sparse.linalg import eigs as sp_eigs
@@ -41,11 +40,14 @@ from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .chebtech import Chebtech
 from .linop_diagnostics import diagnose_linop
-from .op_discretization import opDiscretization
+from .op_discretization import OpDiscretization
 from .order_detection_ast import OrderTracerAST
 from .spectral import cheb_points_scaled
 from .trigtech import Trigtech
 from .utilities import Domain, Interval
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 
 class LinOp:
@@ -151,6 +153,87 @@ class LinOp:
         self.blocks = None  # List of block specifications (one per subinterval)
         self.continuity_constraints = None  # List of continuity constraint specifications
 
+    @property
+    def is_periodic(self) -> bool:
+        """Check if this operator uses periodic boundary conditions.
+
+        Returns:
+            True if bc is the string "periodic", False otherwise.
+        """
+        return isinstance(self.bc, str) and self.bc.lower() == "periodic"
+
+    @staticmethod
+    def _to_dense(mat):
+        """Convert sparse matrix to dense array if needed.
+
+        Args:
+            mat: Matrix (sparse or dense)
+
+        Returns:
+            Dense numpy array
+        """
+        if hasattr(mat, "toarray"):
+            return mat.toarray()
+        return np.asarray(mat)
+
+    @staticmethod
+    def _filter_eigenvalues(vals_all, vecs_all, k, sigma=None):
+        """Filter and sort eigenvalues from dense solver output.
+
+        Filters out infinite/NaN eigenvalues and returns the k eigenvalues
+        closest to the target (sigma if provided, else smallest by magnitude).
+
+        Args:
+            vals_all: All eigenvalues from solver
+            vecs_all: All eigenvectors from solver
+            k: Number of eigenvalues to return
+            sigma: Target value (if None, use smallest magnitude)
+
+        Returns:
+            tuple: (vals, vecs) - filtered eigenvalues and eigenvectors, or (None, None) if no finite eigenvalues
+        """
+        # Filter out infinite/nan eigenvalues
+        finite_mask = np.isfinite(vals_all)
+        vals_finite = vals_all[finite_mask]
+        vecs_finite = vecs_all[:, finite_mask]
+
+        # Return None if no finite eigenvalues
+        if len(vals_finite) == 0:
+            return None, None
+
+        # Sort by magnitude or distance from sigma and take k smallest/nearest
+        if sigma is not None and sigma != 0:
+            idx_sort = np.argsort(np.abs(vals_finite - sigma))
+        else:
+            idx_sort = np.argsort(np.abs(vals_finite))
+
+        k_actual = min(k, len(vals_finite))
+        vals = vals_finite[idx_sort[:k_actual]]
+        vecs = vecs_finite[:, idx_sort[:k_actual]]
+
+        return vals, vecs
+
+    @staticmethod
+    def _assemble_constraint_rows(rows, rhs, total_size):
+        """Assemble constraint rows into sparse matrix and RHS vector.
+
+        Args:
+            rows: List of constraint row matrices
+            rhs: List of constraint RHS values
+            total_size: Total number of columns in assembled matrix
+
+        Returns:
+            tuple: (A, b) - sparse matrix and RHS vector (empty if no constraints)
+        """
+        n = len(rows)
+        if n > 0:
+            A = sparse.vstack(rows, format="csr")
+            b_vec = np.array(rhs)
+        else:
+            A = sparse.csr_matrix((0, total_size))
+            b_vec = np.array([])
+        return A, b_vec
+
     def _count_bc_conditions(self, bc):
         """Count how many conditions a BC specification represents.
 
@@ -206,7 +289,7 @@ class LinOp:
         n_rbc = self._count_bc_conditions(self.rbc)
 
         # Handle periodic BCs separately
-        if isinstance(self.bc, str) and self.bc.lower() == "periodic":
+        if self.is_periodic:
             # Periodic BCs provide diff_order constraints
             n_general_bc = self.diff_order
         else:
@@ -269,11 +352,8 @@ class LinOp:
         intervals = list(self.domain.intervals)
         n_intervals = len(intervals)
 
-        # Check for periodic BCs
-        is_periodic = isinstance(self.bc, str) and self.bc.lower() == "periodic"
-
         # Validate that periodic BCs are not mixed with lbc/rbc
-        if is_periodic:
+        if self.is_periodic:
             if self.lbc is not None or self.rbc is not None:
                 raise ValueError(
                     "Periodic boundary conditions cannot be used together with lbc or rbc. "
@@ -281,7 +361,7 @@ class LinOp:
                 )
 
         # Periodic BCs require single interval
-        if is_periodic and n_intervals > 1:
+        if self.is_periodic and n_intervals > 1:
             raise ValueError("Periodic boundary conditions require a single interval domain")
 
         # Create block specifications for each subinterval
@@ -299,7 +379,7 @@ class LinOp:
         # At each internal breakpoint, enforce continuity of u and its derivatives up to diff order - 1.
         self.continuity_constraints = []
 
-        if is_periodic:
+        if self.is_periodic:
             # For periodic BCs, enforce u^(k)(a) = u^(k)(b) for k = 0, ..., diff_order-1
             # This is similar to continuity but connects endpoints of the single interval
             interval = intervals[0]
@@ -356,19 +436,19 @@ class LinOp:
         J = self._jacobian_computer(n)
 
         # Convert to sparse matrix if needed (AdChebfun returns dense numpy array)
-        if not sp.issparse(J):
-            J = sp.csr_matrix(J)
+        if not sparse.issparse(J):
+            J = sparse.csr_matrix(J)
 
         # The Jacobian should be square with size matching n+1 collocation points
         actual_size = J.shape[0]
         if J.shape[0] != J.shape[1]:
             raise ValueError(f"Jacobian matrix is not square: {J.shape}")
 
-        print(f"\n{'=' * 60}")
-        print(f"AdChebfun Discretization Debug (n={n})")
-        print(f"{'=' * 60}")
-        print(f"Jacobian matrix shape: {J.shape}")
-        print(f"Actual size (n+1 collocation points): {actual_size}")
+        logger.debug("=" * 60)
+        logger.debug("AdChebfun Discretization Debug (n=%d)", n)
+        logger.debug("=" * 60)
+        logger.debug("Jacobian matrix shape: %s", J.shape)
+        logger.debug("Actual size (n+1 collocation points): %d", actual_size)
 
         # For single-interval problems, use the matrix as a single block
         # For multi-interval, this approach needs extension (TODO)
@@ -378,44 +458,41 @@ class LinOp:
 
         # Build BC rows using op_discretization
         # We still need to discretize BCs normally
-        print("\nCalling opDiscretization._build_bc_rows...")
+        logger.debug("Calling OpDiscretization._build_bc_rows...")
         try:
-            bc_rows, bc_rhs = opDiscretization._build_bc_rows(self, [actual_size], self.u_current)
-            print("  ✓ BC discretization succeeded")
+            bc_rows, bc_rhs = OpDiscretization._build_bc_rows(self, [actual_size], self.u_current)
+            logger.debug("  BC discretization succeeded")
         except Exception as e:
-            print(f"  ✗ BC discretization FAILED: {type(e).__name__}: {e}")
-
+            logger.error("  BC discretization FAILED: %s: %s", type(e).__name__, e)
             traceback.print_exc()
             raise
 
-        print("\nBoundary Conditions:")
-        print(f"  Number of BC rows: {len(bc_rows)}")
+        logger.debug("Boundary Conditions:")
+        logger.debug("  Number of BC rows: %d", len(bc_rows))
         if bc_rows:
             for i, row in enumerate(bc_rows):
                 if hasattr(row, "shape"):
-                    print(f"  BC row {i} shape: {row.shape}")
+                    logger.debug("  BC row %d shape: %s", i, row.shape)
                 elif hasattr(row, "size"):
-                    print(f"  BC row {i} size: {row.size}")
+                    logger.debug("  BC row %d size: %s", i, row.size)
                 else:
-                    print(f"  BC row {i} type: {type(row)}, len: {len(row) if hasattr(row, '__len__') else 'N/A'}")
-        print(f"  BC RHS length: {len(bc_rhs) if hasattr(bc_rhs, '__len__') else 'scalar'}")
+                    logger.debug(
+                        "  BC row %d type: %s, len: %s", i, type(row), len(row) if hasattr(row, "__len__") else "N/A"
+                    )
+        logger.debug("  BC RHS length: %s", len(bc_rhs) if hasattr(bc_rhs, "__len__") else "scalar")
 
         # Build RHS: sample the RHS function at collocation points
         # For Newton iteration, self.rhs is the negative residual (-residual) set by Chebop
         # We need to evaluate this chebfun at the collocation points
-        print("\nBuilding RHS...")
-
-        sys.stdout.flush()
+        logger.debug("Building RHS...")
 
         try:
             # Check if we have a residual evaluator function (from AdChebfun path)
             if hasattr(self, "_residual_evaluator"):
-                print("  Getting collocation points for residual evaluator...")
-                sys.stdout.flush()
+                logger.debug("  Getting collocation points for residual evaluator...")
                 x_pts = cheb_points_scaled(n, Interval(self.domain.support[0], self.domain.support[1]))
 
-                print(f"  Calling residual evaluator at {len(x_pts)} points...")
-                sys.stdout.flush()
+                logger.debug("  Calling residual evaluator at %d points...", len(x_pts))
 
                 # Use the residual evaluator to get accurate RHS values at collocation points
                 # This evaluates N(u) directly at the requested points rather than
@@ -423,40 +500,35 @@ class LinOp:
                 rhs_vals = self._residual_evaluator(x_pts)
                 b_block = rhs_vals
 
-                print("\nRHS Construction (from residual evaluator):")
-                print(f"  x_pts length: {len(x_pts)}")
-                print(f"  rhs_vals shape: {rhs_vals.shape if hasattr(rhs_vals, 'shape') else len(rhs_vals)}")
-                print(f"  rhs_vals min/max: [{np.min(rhs_vals):.2e}, {np.max(rhs_vals):.2e}]")
+                logger.debug("RHS Construction (from residual evaluator):")
+                logger.debug("  x_pts length: %d", len(x_pts))
+                logger.debug("  rhs_vals shape: %s", rhs_vals.shape if hasattr(rhs_vals, "shape") else len(rhs_vals))
+                logger.debug("  rhs_vals min/max: [%.2e, %.2e]", np.min(rhs_vals), np.max(rhs_vals))
 
             elif self.rhs is not None:
-                print("  Getting collocation points...")
-                sys.stdout.flush()
+                logger.debug("  Getting collocation points...")
                 x_pts = cheb_points_scaled(n, Interval(self.domain.support[0], self.domain.support[1]))
 
-                print(f"  Evaluating RHS chebfun at {len(x_pts)} points...")
-                sys.stdout.flush()
+                logger.debug("  Evaluating RHS chebfun at %d points...", len(x_pts))
 
                 # The RHS is a chebfun (set to -residual by Newton iteration)
                 # Evaluate it at collocation points
                 rhs_vals = self.rhs(x_pts)
                 b_block = rhs_vals
 
-                print("\nRHS Construction (from chebfun):")
-                print(f"  x_pts length: {len(x_pts)}")
-                print(f"  rhs_vals shape: {rhs_vals.shape if hasattr(rhs_vals, 'shape') else len(rhs_vals)}")
-                print(f"  rhs_vals min/max: [{np.min(rhs_vals):.2e}, {np.max(rhs_vals):.2e}]")
+                logger.debug("RHS Construction (from chebfun):")
+                logger.debug("  x_pts length: %d", len(x_pts))
+                logger.debug("  rhs_vals shape: %s", rhs_vals.shape if hasattr(rhs_vals, "shape") else len(rhs_vals))
+                logger.debug("  rhs_vals min/max: [%.2e, %.2e]", np.min(rhs_vals), np.max(rhs_vals))
             else:
                 b_block = np.zeros(actual_size)
-                print("\nRHS Construction (zero):")
-                print(f"  Using zero RHS with size {actual_size}")
+                logger.debug("RHS Construction (zero):")
+                logger.debug("  Using zero RHS with size %d", actual_size)
 
-            print("  ✓ RHS construction succeeded")
-            sys.stdout.flush()
+            logger.debug("  RHS construction succeeded")
         except Exception as e:
-            print(f"  ✗ RHS construction FAILED: {type(e).__name__}: {e}")
-
+            logger.error("  RHS construction FAILED: %s: %s", type(e).__name__, e)
             traceback.print_exc()
-            sys.stdout.flush()
             raise
 
         # Create discretization dictionary
@@ -475,12 +547,12 @@ class LinOp:
             "bc_enforcement": bc_enforcement,
         }
 
-        print("\nDiscretization Dictionary Summary:")
-        print(f"  blocks[0] shape: {J.shape}")
-        print(f"  rhs_blocks[0] shape: {b_block.shape if hasattr(b_block, 'shape') else len(b_block)}")
-        print(f"  n_per_block: {[actual_size]}")
-        print(f"  bc_enforcement: {bc_enforcement}")
-        print(f"{'=' * 60}\n")
+        logger.debug("Discretization Dictionary Summary:")
+        logger.debug("  blocks[0] shape: %s", J.shape)
+        logger.debug("  rhs_blocks[0] shape: %s", b_block.shape if hasattr(b_block, "shape") else len(b_block))
+        logger.debug("  n_per_block: %s", [actual_size])
+        logger.debug("  bc_enforcement: %s", bc_enforcement)
+        logger.debug("=" * 60)
 
         return discretization
 
@@ -756,7 +828,7 @@ class LinOp:
 
         # Check if we're using periodic BCs (Fourier collocation)
 
-        use_fourier = opDiscretization._is_periodic(self) and len(self.blocks) == 1
+        use_fourier = OpDiscretization._is_periodic(self) and len(self.blocks) == 1
 
         # Split solution vector into per-block pieces
         pieces = []
@@ -846,7 +918,7 @@ class LinOp:
                     discretization = self._build_discretization_from_jacobian(n_current, bc_enforcement)
                 else:
                     # Standard coefficient-based discretization
-                    discretization = opDiscretization.build_discretization(
+                    discretization = OpDiscretization.build_discretization(
                         self, n_current, self.u_current, bc_enforcement=bc_enforcement
                     )
 
@@ -882,7 +954,7 @@ class LinOp:
                 # Skip simplify() for periodic problems with Trigtech, as it uses
                 # linear interpolation which destroys spectral accuracy.
                 # For Trigtech, the solution is already at the correct resolution.
-                is_periodic = opDiscretization._is_periodic(self)
+                is_periodic = OpDiscretization._is_periodic(self)
                 if not is_periodic:
                     solution = solution.simplify()
 
@@ -1070,7 +1142,7 @@ class LinOp:
         n_actual = self._discretization_size(n)
         # Use BC row replacement for high-order operators where exact BCs are critical
         bc_enforcement = "replace" if self.diff_order >= 4 else "append"
-        disc = opDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
+        disc = OpDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
         A, _ = self.assemble_system(disc)
         return A.toarray(), disc
 
@@ -1093,7 +1165,7 @@ class LinOp:
         n_actual = self._discretization_size(n)
         # Use BC row replacement for high-order operators where exact BCs are critical
         bc_enforcement = "replace" if self.diff_order >= 4 else "append"
-        disc = opDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
+        disc = OpDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
         n_per_block = disc["n_per_block"]
         total_n = sum(n_per_block)
 
@@ -1242,7 +1314,7 @@ class LinOp:
         for n in n_list:
             # Use BC row replacement for high-order operators where exact BCs are critical
             bc_enforcement = "replace" if self.diff_order >= 4 else "append"
-            disc = opDiscretization.build_discretization(
+            disc = OpDiscretization.build_discretization(
                 self,
                 n,
                 rectangularization=rectangularization,
@@ -1381,7 +1453,7 @@ class LinOp:
                     # Discretize mass matrix at same resolution
                     # Use BC row replacement for high-order operators where exact BCs are critical
                     bc_enforcement = "replace" if mass_matrix.diff_order >= 4 else "append"
-                    M_disc = opDiscretization.build_discretization(
+                    M_disc = OpDiscretization.build_discretization(
                         mass_matrix, n, rectangularization=rectangularization, bc_enforcement=bc_enforcement
                     )
                     M_op_sparse = sparse.block_diag(M_disc["blocks"], format="csr")
@@ -1498,36 +1570,16 @@ class LinOp:
                             )
 
                             vals_all, vecs_all = eig(A_eig, M_eig)
-
-                            # Filter out infinite/nan eigenvalues
-                            finite_mask = np.isfinite(vals_all)
-                            vals_finite = vals_all[finite_mask]
-                            vecs_finite = vecs_all[:, finite_mask]
-
-                            # Sort by magnitude and take k smallest
-                            if len(vals_finite) == 0:
+                            vals, vecs = self._filter_eigenvalues(vals_all, vecs_all, k_actual)
+                            if vals is None:
                                 continue
-                            idx_sort = np.argsort(np.abs(vals_finite))
-                            k_actual = min(k_actual, len(vals_finite))
-                            vals = vals_finite[idx_sort[:k_actual]]
-                            vecs = vecs_finite[:, idx_sort[:k_actual]]
                     else:
                         # Small problem - use dense solver
 
                         vals_all, vecs_all = eig(A_eig, M_eig)
-
-                        # Filter out infinite/nan eigenvalues
-                        finite_mask = np.isfinite(vals_all)
-                        vals_finite = vals_all[finite_mask]
-                        vecs_finite = vecs_all[:, finite_mask]
-
-                        # Sort by magnitude and take k smallest
-                        if len(vals_finite) == 0:
+                        vals, vecs = self._filter_eigenvalues(vals_all, vecs_all, k_actual)
+                        if vals is None:
                             continue
-                        idx_sort = np.argsort(np.abs(vals_finite))
-                        k_actual = min(k_actual, len(vals_finite))
-                        vals = vals_finite[idx_sort[:k_actual]]
-                        vecs = vecs_finite[:, idx_sort[:k_actual]]
                 else:
                     # Standard eigenvalue problem
 
@@ -1541,24 +1593,9 @@ class LinOp:
                         # Use dense solver for small matrices or rectangular discretization
 
                         vals_all, vecs_all = eig(A_eig)
-
-                        # Filter out infinite/nan eigenvalues
-                        finite_mask = np.isfinite(vals_all)
-                        vals_finite = vals_all[finite_mask]
-                        vecs_finite = vecs_all[:, finite_mask]
-
-                        if len(vals_finite) == 0:
+                        vals, vecs = self._filter_eigenvalues(vals_all, vecs_all, k_actual, sigma)
+                        if vals is None:
                             continue
-
-                        # Sort by magnitude or distance from sigma and take k smallest/nearest
-                        if sigma is not None and sigma != 0:
-                            idx_sort = np.argsort(np.abs(vals_finite - sigma))
-                        else:
-                            idx_sort = np.argsort(np.abs(vals_finite))
-
-                        k_actual = min(k_actual, len(vals_finite))
-                        vals = vals_finite[idx_sort[:k_actual]]
-                        vecs = vecs_finite[:, idx_sort[:k_actual]]
                     else:
                         # Use sparse solver for large square matrices
                         if sigma is not None:
