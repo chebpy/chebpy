@@ -73,6 +73,7 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - np.abs(np.sin(10 * x))))
             assert err < 1e-9  # Multiple discontinuities, relaxed tolerance
 
+    @pytest.mark.slow
     def test_sqrt_singularity(self):
         """Test splitting on sqrt(x) which has singularity at x=0."""
         with _preferences:
@@ -87,6 +88,7 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - np.sqrt(x)))
             assert err < 1e-11
 
+    @pytest.mark.slow
     def test_power_near_singularity(self):
         """Test the Lennard-Jones power operation case: (r/12)^(-6) where r crosses zero.
 
@@ -166,6 +168,7 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - expected))
             assert err < 1e-13
 
+    @pytest.mark.slow
     def test_splitting_off_by_default(self):
         """Test that splitting is off by default (matches current behavior)."""
         # Default preferences should have splitting = True as set in settings.py
@@ -176,6 +179,7 @@ class TestAutomaticSplitting:
         # (may be unhappy but won't split)
         assert len(f.funs) == 1
 
+    @pytest.mark.slow
     def test_multiple_discontinuities(self):
         """Test function with multiple discontinuities."""
         with _preferences:
@@ -204,6 +208,7 @@ class TestAutomaticSplitting:
             assert np.abs(f(-0.5)) < 1e-10
             assert np.abs(f(0.5) - 1.0) < 1e-10
 
+    @pytest.mark.slow
     def test_split_at_interior_singularity(self):
         """Test function that blows up in interior of domain."""
         with _preferences:

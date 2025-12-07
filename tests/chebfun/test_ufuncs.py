@@ -5,6 +5,7 @@ including absolute, trigonometric, exponential, and logarithmic functions.
 """
 
 import numpy as np
+import pytest
 
 from chebpy.chebfun import Chebfun
 from chebpy.utilities import Interval
@@ -23,6 +24,7 @@ def test_abs_absolute_alias():
 
 
 # Generate test functions for ufuncs
+@pytest.mark.slow
 def test_ufuncs():
     """Test ufunc operations on Chebfun objects.
 

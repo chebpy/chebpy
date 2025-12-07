@@ -73,29 +73,58 @@ if __name__ == "__main__":
     test_order(lambda u: u.diff(2) + np.sin(u.diff()), 2, "u'' + sin(u')")
 
     print("\n10. Super-hard edge cases:")
+    test_order(lambda u: (1 + u.diff()**2) * u.diff(4) + np.sin(u.diff(3)) * (u.diff(2)**2), 4, "Mixed high orders with nonlinear coefficients (order 4)")
+
+    test_order(lambda u: np.exp(u.diff(5) * u.diff(2)), 5, "Exp of product mixing 5th and 2nd derivatives (order 5)")
+
+    test_order(lambda u: u.diff(2).diff(3) + u.diff(4)**2, 5, "Chained diffs and high-order power (order 5)")
+
+    test_order(lambda u: u.diff(3) - u.diff(3) + u.diff(1), 3, "Apparent cancellation: u''' - u''' + u' (order 3)")
+
+    print("\n11. Numerical Probing Examples (fallback detection):")
+    # These trigger the numerical fallback because they raise exceptions during AST tracing
+
+    test_order(lambda u: np.linspace(-1, 1, 100) * u.diff(2), 2, "Raw numpy array multiplication (triggers probing)")
+
+    test_order(lambda u: u.diff() / (1 + np.sin(np.linspace(-1, 1, 50))**2), 1, "Division by raw numpy expression (triggers probing)")
+
+    test_order(lambda u: u.diff(2) + np.arange(10), 2, "Addition with raw numpy array (triggers probing)")
+
+    print("\n12. Some LLM examples:")
+    # Here's what ChatGPT said about this example:
+    # This is truly pathological - order 4 hidden by Gaussian envelope in order 3
+    # The envelope suppresses signal where u''' is large (which happens at high freq)
+    # But at low freq, u''' is small so envelope allows signal through weakly
+    # Probing must find the narrow frequency band where order 4 emerges
     test_order(
-        lambda u: (1 + u.diff()**2) * u.diff(4) + np.sin(u.diff(3)) * (u.diff(2)**2),
+        lambda u: u.diff(4) * np.exp(-100 * u.diff(3)**2 / (1 + u.diff(2)**2)),
         4,
-        "Mixed high orders with nonlinear coefficients (order 4)"
+        "Gaussian-suppressed 4th derivative (numerically pathological, barely detectable)"
     )
 
+    # ChatGPT comment:
+    # Force numerical probing with array mixing + extreme suppression
+    # Denominator grows as ω^4, numerator as ω^2 → norm_high < norm_low
     test_order(
-        lambda u: np.exp(u.diff(5) * u.diff(2)),
-        5,
-        "Exp of product mixing 5th and 2nd derivatives (order 5)"
+        lambda u: (u.diff(2) + np.zeros(10)) / np.maximum(u.diff(2)**2 + 100*u.diff()**2, 1e-10),
+        2,
+        "Order-2 with inverted frequency response (norm_high < norm_low tricks probing)"
     )
 
-    test_order(
-        lambda u: u.diff(2).diff(3) + u.diff(4)**2,
-        5,
-        "Chained diffs and high-order power (order 5)"
-    )
-
-    test_order(
-        lambda u: u.diff(3) - u.diff(3) + u.diff(1),
-        3,
-        "Apparent cancellation: u''' - u''' + u' (order 3)"
-    )
+    # Claude comment:
+    # This WILL fail because:
+    # 1. float(u(0.5)) raises TypeError during AST → forces numerical probing
+    # 2. np.tanh(u'' * 100) saturates at ±1 for ANY significant derivative
+    # 3. At ω=2: tanh(4*100) = tanh(400) ≈ 1.0
+    # 4. At ω=20: tanh(400*100) = tanh(40000) ≈ 1.0
+    # 5. Ratio = 1, log(1)/log(10) = 0, detected order = 0
+    # 6. TRUE ORDER = 2, but probing sees 0!
+    # The "+ 0*float(u(0.5))" is a no-op mathematically but breaks AST tracing
+    # test_order(
+    #     lambda u: np.tanh(u.diff(2) * 100) + 0 * float(u(0.5)),
+    #     2,
+    #     "GUARANTEED FAIL: tanh saturation makes order-2 invisible (detected as 0)"
+    # )
 
     if not failures:
         print(f"{GREEN}All tests passed{RESET}")

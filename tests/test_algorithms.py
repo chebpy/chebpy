@@ -202,6 +202,7 @@ def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: 
     return np.max(np.abs(a - b)) < tol  # inf_norm_less_than_tol(a, b, tol)
 
 
+@pytest.mark.slow
 def test_bary(testfunctions: list) -> None:
     """Test barycentric interpolation algorithm.
 
