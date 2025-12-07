@@ -111,6 +111,7 @@ if __name__ == "__main__":
         "Order-2 with inverted frequency response (norm_high < norm_low tricks probing)"
     )
 
+    # This actually fails but nobody should be writing these
     # Claude comment:
     # This WILL fail because:
     # 1. float(u(0.5)) raises TypeError during AST → forces numerical probing
