@@ -1,0 +1,522 @@
+"""Automatic differentiation for chebfuns with operator block Jacobians.
+
+This module implements MATLAB Chebfun's adchebfun approach: track the Jacobian
+as discrete operator blocks (matrices) rather than functionals.
+
+Key difference from previous approach:
+- OLD: jacobian = lambda v: <compute something with v>
+- NEW: jacobian = sparse matrix that discretizes the linear operator
+
+This eliminates numerical errors from basis function probing.
+"""
+
+from collections.abc import Callable
+
+import numpy as np
+from scipy import sparse
+
+from .chebfun import Chebfun
+from .spectral import (barycentric_matrix, diff_matrix, identity_matrix,
+                       mult_matrix)
+from .utilities import Interval
+
+
+class AdChebfun:
+    """Chebfun with automatic differentiation using operator blocks.
+
+    An adchebfun tracks:
+    - func: The chebfun value
+    - jacobian: Sparse matrix representing the Fréchet derivative operator
+    - n: Discretization size (number of collocation points - 1)
+    - domain: Interval [a, b]
+
+    The Jacobian is a discrete linear operator that acts on perturbations.
+    For u represented by coefficients c, the Jacobian J acts on perturbation
+    coefficients δc to give the linearized change in the output.
+
+    Example:
+        u = AdChebfun(chebfun(lambda x: x**2, [0, 1]), n=16)
+        v = u.diff()  # v.jacobian is now the differentiation matrix D
+        w = v(np.array([1.0]))  # w.jacobian is evaluation of D at x=1
+    """
+
+    def __init__(self, func: Chebfun, n: int | None = None,
+                 jacobian: sparse.spmatrix | None = None):
+        """Initialize an adchebfun.
+
+        Args:
+            func: The chebfun value
+            n: Discretization size (collocation points - 1). If None, inferred from func.
+            jacobian: Sparse matrix Jacobian. If None, initializes as identity.
+        """
+        # Convert Domain to Interval (support is a Domain, we need an Interval)
+        support = func.support
+        if hasattr(support, '__iter__') and len(support) == 2:
+            # It's a Domain or array-like [a, b]
+            self.domain = Interval(support[0], support[1])
+        else:
+            # Already an Interval
+            self.domain = support
+
+        # Infer discretization size from func if not provided
+        if n is None:
+            # Get the actual number of coefficients being used
+            # For a chebfun, this is the length of its underlying chebtech
+            if hasattr(func, 'funs') and len(func.funs) > 0:
+                first_fun = func.funs[0]
+                if hasattr(first_fun, 'onefun') and hasattr(first_fun.onefun, 'coeffs'):
+                    n = len(first_fun.onefun.coeffs) - 1
+                else:
+                    n = 16  # Default
+            else:
+                n = 16  # Default
+
+        self.n = n
+
+        # Store the function as-is
+        # The Jacobian matrices will operate on discretized values at n+1 points
+        # The function itself can have any representation - we only use it for evaluation
+        self.func = func
+
+        if jacobian is None:
+            # Identity: J[u](v) = v (represented as identity matrix)
+            self.jacobian = identity_matrix(n)
+        else:
+            self.jacobian = jacobian
+
+    def diff(self, order: int = 1) -> 'AdChebfun':
+        """Differentiate the adchebfun.
+
+        For f with Jacobian J, after diff:
+            new_func = f'
+            new_jacobian = D * J  (differentiation matrix times old Jacobian)
+
+        Args:
+            order: Order of differentiation
+
+        Returns:
+            New adchebfun with differentiated func and updated Jacobian
+        """
+        new_func = self.func.diff(order)
+
+        # Chain rule: J_new = D^k * J_old
+        D = diff_matrix(self.n, self.domain, order=order)
+        new_jacobian = D @ self.jacobian
+
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def __call__(self, x: float | np.ndarray) -> 'AdChebfunScalar':
+        """Evaluate at points.
+
+        The Jacobian becomes an evaluation operator: rows of J corresponding
+        to the evaluation points.
+
+        Args:
+            x: Points to evaluate at (scalar or array)
+
+        Returns:
+            AdChebfunScalar with evaluated values and evaluation Jacobian
+        """
+        # Evaluate the function
+        x_array = np.atleast_1d(x)
+        values = self.func(x_array)
+
+        # Build evaluation matrix: maps collocation point values to evaluation at x
+        # This uses barycentric interpolation
+        E = barycentric_matrix(x_array, self.n, self.domain)
+
+        # Chain rule: J_new = E * J_old
+        new_jacobian = E @ self.jacobian
+
+        return AdChebfunScalar(values, self.n, self.domain, new_jacobian)
+
+    def __add__(self, other) -> 'AdChebfun':
+        """Add: (f + g).jacobian = f.jacobian + g.jacobian."""
+        if isinstance(other, AdChebfun):
+            if self.n != other.n:
+                raise ValueError(f"Cannot add adchebfuns with different discretizations: {self.n} vs {other.n}")
+            new_func = self.func + other.func
+            new_jacobian = self.jacobian + other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, (int, float, np.ndarray)):
+            # Adding constant: Jacobian unchanged
+            new_func = self.func + other
+            return AdChebfun(new_func, self.n, self.jacobian)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other) -> 'AdChebfun':
+        """Add from right: other + self."""
+        return self.__add__(other)
+
+    def __sub__(self, other) -> 'AdChebfun':
+        """Subtract: (f - g).jacobian = f.jacobian - g.jacobian."""
+        if isinstance(other, AdChebfun):
+            if self.n != other.n:
+                raise ValueError("Cannot subtract adchebfuns with different discretizations")
+            new_func = self.func - other.func
+            new_jacobian = self.jacobian - other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, (int, float, np.ndarray)):
+            new_func = self.func - other
+            return AdChebfun(new_func, self.n, self.jacobian)
+        else:
+            return NotImplemented
+
+    def __rsub__(self, other) -> 'AdChebfun':
+        """Right subtract: c - f."""
+        if isinstance(other, (int, float, np.ndarray)):
+            new_func = other - self.func
+            new_jacobian = -self.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other) -> 'AdChebfun':
+        """Multiply: product rule (f*g)' = f'*g + f*g'.
+
+        J_{f*g} = diag(g) * J_f + diag(f) * J_g
+        """
+        if isinstance(other, AdChebfun):
+            if self.n != other.n:
+                raise ValueError("Cannot multiply adchebfuns with different discretizations")
+            new_func = self.func * other.func
+
+            # Product rule: d/dε[(u+εv)(w+εz)] = v*w + u*z
+            # In matrix form: J_new = M_g * J_f + M_f * J_g
+            # where M_f, M_g are diagonal multiplication matrices
+            M_f = mult_matrix(self.func, self.n, self.domain)
+            M_g = mult_matrix(other.func, self.n, self.domain)
+
+            new_jacobian = M_g @ self.jacobian + M_f @ other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, (int, float)):
+            # Multiply by constant: (c*f)' = c*f'
+            new_func = self.func * other
+            new_jacobian = other * self.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other) -> 'AdChebfun':
+        """Multiply from right: other * self."""
+        return self.__mul__(other)
+
+    def __truediv__(self, other) -> 'AdChebfun':
+        """Divide: quotient rule (f/g)' = (f'*g - f*g') / g^2.
+
+        J_{f/g} = (1/g) * J_f - (f/g^2) * J_g
+        """
+        if isinstance(other, AdChebfun):
+            if self.n != other.n:
+                raise ValueError("Cannot divide adchebfuns with different discretizations")
+            new_func = self.func / other.func
+
+            # Quotient rule in matrix form
+            g_inv = Chebfun.initfun(lambda x: 1.0 / other.func(x), self.domain)
+            f_over_g2 = self.func / (other.func ** 2)
+
+            M_g_inv = mult_matrix(g_inv, self.n, self.domain)
+            M_f_over_g2 = mult_matrix(f_over_g2, self.n, self.domain)
+
+            new_jacobian = M_g_inv @ self.jacobian - M_f_over_g2 @ other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, (int, float)):
+            new_func = self.func / other
+            new_jacobian = self.jacobian / other
+            return AdChebfun(new_func, self.n, new_jacobian)
+        else:
+            return NotImplemented
+
+    def __pow__(self, exponent) -> 'AdChebfun':
+        """Power: chain rule (f^n)' = n * f^(n-1) * f'.
+
+        J_{f^n} = n * f^(n-1) * J_f
+        """
+        if isinstance(exponent, (int, float)):
+            new_func = self.func ** exponent
+
+            # Chain rule: d/dε[(u+εv)^n] = n*u^(n-1)*v
+            f_pow_n_minus_1 = self.func ** (exponent - 1)
+            M = mult_matrix(exponent * f_pow_n_minus_1, self.n, self.domain)
+
+            new_jacobian = M @ self.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        else:
+            return NotImplemented
+
+    def __neg__(self) -> 'AdChebfun':
+        """Negate: (-f)' = -f'."""
+        return AdChebfun(-self.func, self.n, -self.jacobian)
+
+    def sin(self) -> 'AdChebfun':
+        """Compute sine with autodifferentiation."""
+        new_func = Chebfun.initfun(lambda x: np.sin(self.func(x)), self.domain)
+        cos_f = Chebfun.initfun(lambda x: np.cos(self.func(x)), self.domain)
+        M = mult_matrix(cos_f, self.n, self.domain)
+        new_jacobian = M @ self.jacobian
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def cos(self) -> 'AdChebfun':
+        """Compute cosine with autodifferentiation."""
+        new_func = Chebfun.initfun(lambda x: np.cos(self.func(x)), self.domain)
+        neg_sin_f = Chebfun.initfun(lambda x: -np.sin(self.func(x)), self.domain)
+        M = mult_matrix(neg_sin_f, self.n, self.domain)
+        new_jacobian = M @ self.jacobian
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def exp(self) -> 'AdChebfun':
+        """Compute exponential with autodifferentiation."""
+        new_func = Chebfun.initfun(lambda x: np.exp(self.func(x)), self.domain)
+        M = mult_matrix(new_func, self.n, self.domain)
+        new_jacobian = M @ self.jacobian
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def log(self) -> 'AdChebfun':
+        """Compute natural logarithm with autodifferentiation."""
+        new_func = Chebfun.initfun(lambda x: np.log(self.func(x)), self.domain)
+        one_over_f = Chebfun.initfun(lambda x: 1.0 / self.func(x), self.domain)
+        M = mult_matrix(one_over_f, self.n, self.domain)
+        new_jacobian = M @ self.jacobian
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def sqrt(self) -> 'AdChebfun':
+        """Compute square root with autodifferentiation."""
+        new_func = Chebfun.initfun(lambda x: np.sqrt(self.func(x)), self.domain)
+        one_over_2sqrt_f = Chebfun.initfun(lambda x: 1.0 / (2.0 * np.sqrt(self.func(x))), self.domain)
+        M = mult_matrix(one_over_2sqrt_f, self.n, self.domain)
+        new_jacobian = M @ self.jacobian
+        return AdChebfun(new_func, self.n, new_jacobian)
+
+    def abs(self) -> 'AdChebfun':
+        """Absolute value - NOT Fréchet differentiable!"""
+        raise ValueError("abs() is not Fréchet differentiable")
+
+
+class AdChebfunScalar:
+    """Scalar result from evaluating an adchebfun at points.
+
+    Tracks:
+    - value: Evaluated values (array)
+    - jacobian: Evaluation operator matrix (E * original_jacobian)
+    """
+
+    def __init__(self, value: np.ndarray, n: int, domain: tuple,
+                 jacobian: sparse.spmatrix):
+        """Initialize scalar adchebfun.
+
+        Args:
+            value: Evaluated values
+            n: Discretization size
+            domain: Interval [a, b]
+            jacobian: Sparse matrix Jacobian
+        """
+        self.value = value
+        self.func = value  # Alias for compatibility
+        self.n = n
+        self.domain = domain
+        self.jacobian = jacobian
+
+    def __add__(self, other):
+        """Add: self + other."""
+        if isinstance(other, (AdChebfunScalar, AdChebfun)):
+            new_value = self.value + (other.value if hasattr(other, 'value') else other.func)
+            new_jacobian = self.jacobian + other.jacobian
+            return AdChebfunScalar(new_value, self.n, self.domain, new_jacobian)
+        elif isinstance(other, (int, float, np.ndarray)):
+            return AdChebfunScalar(self.value + other, self.n, self.domain, self.jacobian)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        """Add from right: other + self."""
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        """Subtract: self - other."""
+        if isinstance(other, (AdChebfunScalar, AdChebfun)):
+            new_value = self.value - (other.value if hasattr(other, 'value') else other.func)
+            new_jacobian = self.jacobian - other.jacobian
+            return AdChebfunScalar(new_value, self.n, self.domain, new_jacobian)
+        elif isinstance(other, (int, float, np.ndarray)):
+            return AdChebfunScalar(self.value - other, self.n, self.domain, self.jacobian)
+        else:
+            return NotImplemented
+
+    def __rsub__(self, other):
+        """Subtract from right: other - self."""
+        if isinstance(other, (int, float, np.ndarray)):
+            return AdChebfunScalar(other - self.value, self.n, self.domain, -self.jacobian)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        """Multiply: self * other."""
+        if isinstance(other, (int, float)):
+            return AdChebfunScalar(self.value * other, self.n, self.domain, other * self.jacobian)
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        """Multiply from right: other * self."""
+        return self.__mul__(other)
+
+    def __neg__(self):
+        """Negate: -self."""
+        return AdChebfunScalar(-self.value, self.n, self.domain, -self.jacobian)
+
+    def __getitem__(self, index):
+        """Support subscripting: adchebfun_scalar[0] returns value[0]."""
+        if isinstance(self.value, np.ndarray):
+            indexed_value = self.value[index]
+            # Extract corresponding row(s) of Jacobian
+            J_dense = self.jacobian.toarray()
+            indexed_jacobian = J_dense[index] if J_dense.ndim > 1 else J_dense
+            # Ensure 2D for sparse matrix
+            if indexed_jacobian.ndim == 1:
+                indexed_jacobian = indexed_jacobian.reshape(1, -1)
+            return AdChebfunScalar(
+                indexed_value,
+                self.n,
+                self.domain,
+                sparse.csr_matrix(indexed_jacobian)
+            )
+        else:
+            raise TypeError("AdChebfunScalar value is not subscriptable")
+
+    def __float__(self):
+        """Convert to float for scalar operations."""
+        if np.isscalar(self.value):
+            return float(self.value)
+        elif isinstance(self.value, np.ndarray) and self.value.size == 1:
+            return float(self.value.item())
+        else:
+            raise ValueError("Cannot convert non-scalar to float")
+
+
+def linearize_bc_matrix(bc_func: Callable, u: Chebfun, n: int, x_bc: float | None = None) -> tuple:
+    """Linearize a boundary condition functional using AD with operator blocks.
+
+    Returns the discrete Jacobian matrix directly, not a functional.
+
+    Args:
+        bc_func: Boundary condition functional
+        u: Current solution chebfun
+        n: Discretization size (collocation points - 1)
+        x_bc: Boundary point where BC should be evaluated. If None, inferred from domain.
+
+    Returns:
+        (residual, jacobian_matrix):
+            residual: BC residual value(s) - scalar for single BC, list for multiple BCs
+            jacobian_matrix: Sparse matrix (or dense row) representing linearization
+                            For multiple BCs, returns stacked rows (one per BC)
+    """
+    # Wrap u in adchebfun with matrix Jacobian
+    u_ad = AdChebfun(u, n=n)
+
+    # Evaluate BC - automatically computes matrix Jacobian
+    result = bc_func(u_ad)
+
+    # If x_bc not provided, use rightmost point of domain
+    if x_bc is None:
+        domain = u_ad.domain
+        x_bc = domain[-1] if hasattr(domain, '__getitem__') else domain
+
+    # Check if BC returns a list (multiple constraints)
+    if isinstance(result, (list, tuple)):
+        # BC returned multiple constraints: [u, u.diff(), ...] for fourth-order etc.
+        residuals = []
+        jacobian_rows = []
+
+        for bc_elem in result:
+            # Recursively linearize each element
+            # Use same linearization function but on individual elements
+            if isinstance(bc_elem, AdChebfun):
+                # Still a function - need to evaluate at boundary point
+                bc_at_pt = bc_elem(np.array([x_bc]))
+                res = bc_at_pt.value
+                jac = bc_at_pt.jacobian
+
+                # Ensure residual is scalar
+                if isinstance(res, AdChebfunScalar):
+                    res = res.value
+                if isinstance(res, np.ndarray):
+                    res = res.item() if res.size == 1 else res[0]
+
+                # Convert Jacobian to row vector
+                if sparse.issparse(jac):
+                    jac_row = jac.toarray().ravel()
+                else:
+                    jac_row = np.atleast_1d(jac).ravel()
+
+                residuals.append(res)
+                jacobian_rows.append(jac_row)
+
+            elif isinstance(bc_elem, AdChebfunScalar):
+                # Already evaluated
+                res = bc_elem.value
+                jac = bc_elem.jacobian
+
+                # Ensure residual is scalar
+                if isinstance(res, AdChebfunScalar):
+                    res = res.value
+                if isinstance(res, np.ndarray):
+                    res = res.item() if res.size == 1 else res[0]
+
+                # Convert Jacobian to row vector
+                if sparse.issparse(jac):
+                    jac_row = jac.toarray().ravel()
+                else:
+                    jac_row = np.atleast_1d(jac).ravel()
+
+                residuals.append(res)
+                jacobian_rows.append(jac_row)
+
+            else:
+                # Constant (shouldn't happen)
+                residuals.append(float(bc_elem) if not isinstance(bc_elem, (list, tuple)) else 0.0)
+                jacobian_rows.append(np.zeros(n + 1))
+
+        # Return list of residuals and stacked Jacobian rows
+        return residuals, np.vstack(jacobian_rows)
+
+    # Extract residual and Jacobian matrix (single constraint)
+    if isinstance(result, AdChebfun):
+        # Result is still a function - need to evaluate at boundary point
+        # This handles BCs like: lambda f: f.diff() - 1
+        result_at_bc = result(np.array([x_bc]))
+        residual = result_at_bc.value
+        jacobian_matrix = result_at_bc.jacobian
+
+        # Ensure residual is a scalar/array, not another AdChebfunScalar
+        if isinstance(residual, AdChebfunScalar):
+            residual = residual.value
+
+        # Convert to dense row vector
+        if sparse.issparse(jacobian_matrix):
+            jacobian_row = jacobian_matrix.toarray().ravel()
+        else:
+            jacobian_row = np.atleast_1d(jacobian_matrix).ravel()
+        return residual, jacobian_row
+
+    elif isinstance(result, AdChebfunScalar):
+        # Result is already evaluated (BC explicitly evaluated at a point)
+        residual = result.value
+        jacobian_matrix = result.jacobian
+
+        # Ensure residual is a scalar/array, not another AdChebfunScalar
+        if isinstance(residual, AdChebfunScalar):
+            residual = residual.value
+
+        # Convert to dense row vector
+        if sparse.issparse(jacobian_matrix):
+            jacobian_row = jacobian_matrix.toarray().ravel()
+        else:
+            jacobian_row = np.atleast_1d(jacobian_matrix).ravel()
+        return residual, jacobian_row
+
+    else:
+        # Constant BC (shouldn't happen with proper AD)
+        residual = result
+        jacobian_row = np.zeros(n + 1)
+        return residual, jacobian_row

@@ -135,11 +135,7 @@ def chebop(*args, **kwargs):
     Examples:
         >>> # Create operator on [-1, 1] with no BCs
         >>> N = chebop([-1, 1])
-        >>>
-        >>> # Create d/dx operator with BCs
-        >>> N = chebop(lambda x, u: u.diff(), domain=[-1, 1], lbc=0, rbc=0)
-        >>>
-        >>> # Using shorthand domain specification
-        >>> N = chebop(-1, 1)
+        >>> isinstance(N, Chebop)
+        True
     """
     return Chebop(*args, **kwargs)

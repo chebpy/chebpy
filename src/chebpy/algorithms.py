@@ -401,8 +401,8 @@ def clencurt_weights(n: int) -> np.ndarray:
         >>> w = clencurt_weights(2)
         >>> np.allclose(w, [1/3, 4/3, 1/3])
         True
-        >>> np.sum(clencurt_weights(4))  # Should equal 2 (length of [-1,1])
-        2.0
+        >>> np.allclose(np.sum(clencurt_weights(4)), 2.0)  # Should equal 2
+        True
     """
     if n == 0:
         return np.array([2.0])

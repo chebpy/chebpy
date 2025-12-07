@@ -128,7 +128,6 @@ class Chebtech(Smoothfun, ABC):
             coeffs (array-like): The coefficients of the Chebyshev series.
             interval (array-like, optional): The interval on which the function
                 is defined. Defaults to None, which uses the default interval
-                from preferences.
         """
         interval = interval if interval is not None else prefs.domain
         self._coeffs = np.array(coeffs)

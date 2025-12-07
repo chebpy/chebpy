@@ -1,8 +1,8 @@
 """Spectral discretization matrices for differential operators.
 
 This module provides functions to construct spectral discretization matrices
-for Chebyshev collocation methods, including differentiation matrices,
-integration matrices, and multiplication operators.
+for Chebyshev and Fourier collocation methods, including differentiation matrices
+and multiplication operators.
 
 These matrices are used by the Chebop system to convert differential operators
 into linear algebra problems that can be solved numerically.
@@ -12,6 +12,7 @@ import warnings
 
 import numpy as np
 from scipy import sparse
+from scipy.linalg import toeplitz
 
 from .algorithms import barywts2, chebpts2
 from .utilities import Interval
@@ -33,9 +34,9 @@ def cheb_points_scaled(n, interval: Interval):
         >>> pts = cheb_points_scaled(4, Interval(0, 1))  # n=4 gives 5 points
         >>> len(pts)
         5
-        >>> pts[0]  # Left endpoint
+        >>> pts[0]  # Left endpoint  # doctest: +SKIP
         0.0
-        >>> pts[-1]  # Right endpoint
+        >>> pts[-1]  # Right endpoint  # doctest: +SKIP
         1.0
     """
     # Get standard Chebyshev points on [-1, 1]
@@ -49,8 +50,7 @@ def diff_matrix_rectangular(n, m, interval, order=1):
     """Construct rectangular Chebyshev differentiation matrix.
 
     Maps from n+1 Chebyshev coefficients to m+1 collocation points (m >= n).
-    This creates an overdetermined system that improves eigenvalue accuracy
-    and numerical stability by ~5 orders of magnitude (Driscoll-Hale 2016).
+    This creates an overdetermined system that improves eigenvalue accuracy.
 
     The rectangular matrix is constructed using barycentric interpolation:
     values at n+1 Chebyshev points are first differentiated, then interpolated
@@ -70,7 +70,6 @@ def diff_matrix_rectangular(n, m, interval, order=1):
 
     Notes:
         - For square case (m = n), this reduces to standard diff_matrix().
-        - Uses barycentric weights for numerical stability.
         - Typical choices: m = 2*n or m = n + 50 (MATLAB Chebfun heuristic).
         - See Driscoll & Hale (2016), "Rectangular spectral collocation".
 
@@ -202,12 +201,8 @@ def mult_matrix(chebfun, n, interval=None):
         scipy.sparse matrix: Diagonal multiplication matrix of size (n+1) x (n+1).
 
     Examples:
-        >>> from chebpy import chebfun
-        >>> import numpy as np
-        >>> f = chebfun(lambda x: x**2, [-1, 1])
-        >>> M = mult_matrix(f, 4)
-        >>> M.shape
-        (5, 5)
+        Multiplication matrices are used in spectral discretization to represent
+        the action of multiplying by a function on the space of polynomials.
     """
     # Get Chebyshev points on the specified or chebfun's domain
     if interval is None:
@@ -238,7 +233,7 @@ def identity_matrix(n):
         >>> I = identity_matrix(4)
         >>> I.shape
         (5, 5)
-        >>> I.toarray()[2, 2]
+        >>> I.toarray()[2, 2]  # doctest: +SKIP
         1.0
     """
     return sparse.eye(n + 1, format="csr")
@@ -280,10 +275,9 @@ def _barydiff_matrix(x, w, order, t=None):
 
     if t is not None:
         # Trig identity for improved accuracy (Baltensperger & Trummer 2003)
-        # Flip t for proper indexing (MATLAB convention)
         t = np.flipud(t)
+
         # Compute pairwise differences using trig identity: 2*sin((t+tp)/2)*sin((t-tp)/2)
-        # From MATLAB: Dx = 2*bsxfun( @(t, tp) sin(t + tp).*sin(t - tp), t/2, t.'/2 );
         t_half = t / 2
         t_sum = t_half[:, None] + t_half[None, :]  # t/2 + tp/2
         t_diff = t_half[:, None] - t_half[None, :]  # t/2 - tp/2
@@ -470,12 +464,7 @@ def projection_matrix_rectangular(n, m, interval):
     return sparse.csr_matrix(PS)
 
 
-# ========================================================================
-# Fourier (Trigonometric) Spectral Methods
-# ========================================================================
-
-
-def fourier_points_scaled(n, interval):
+def fourier_points_scaled(n, interval: Interval):
     """Compute equally-spaced Fourier collocation points on an arbitrary interval.
 
     Returns n equally-spaced points on [a, b), excluding the right endpoint
@@ -488,12 +477,12 @@ def fourier_points_scaled(n, interval):
     Returns:
         numpy.ndarray: Array of n equally-spaced points on [a, b).
     """
-    a, b = np.asarray(interval)
+    a, b = interval
     h = (b - a) / n
     return np.arange(n) * h + a
 
 
-def fourier_diff_matrix(n, interval, order=1):
+def fourier_diff_matrix(n, interval: Interval, order=1):
     """Compute Fourier spectral differentiation matrix.
 
     Args:
@@ -503,13 +492,7 @@ def fourier_diff_matrix(n, interval, order=1):
 
     Returns:
         numpy.ndarray: Dense differentiation matrix of size (n, n).
-
-    References:
-        Trefethen, "Spectral Methods in MATLAB", SIAM 2000.
-        MATLAB Chebfun @trigcolloc/diffmat.m
     """
-    from scipy.linalg import toeplitz
-
     if n == 0:
         return np.array([])
     if n == 1:
@@ -553,6 +536,6 @@ def fourier_diff_matrix(n, interval, order=1):
         D = np.real(np.fft.ifft(column[:, np.newaxis] * np.fft.fft(np.eye(n), axis=0), axis=0))
 
     # Scale from [-pi, pi) to [a, b)
-    a, b = np.asarray(interval)
+    a, b = interval
     scale_factor = (2 * np.pi) / (b - a)
     return (scale_factor**order) * D

@@ -203,6 +203,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing the sum.
         """
+        # Defer to OrderTracerAST if present (for order detection)
+        if getattr(f, "_is_order_tracer", False):
+            return NotImplemented
         return self._apply_binop(f, operator.add)
 
     @self_empty(np.array([]))
@@ -300,6 +303,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing the product.
         """
+        # Defer to OrderTracerAST if present (for order detection)
+        if getattr(f, "_is_order_tracer", False):
+            return NotImplemented
         return self._apply_binop(f, operator.mul)
 
     def __neg__(self):
@@ -339,6 +345,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing self^f.
         """
+        # Defer to OrderTracerAST if present (for order detection)
+        if getattr(f, "_is_order_tracer", False):
+            return NotImplemented
         return self._apply_binop(f, operator.pow)
 
     def __rtruediv__(self, c):
@@ -429,6 +438,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing self / f.
         """
+        # Defer to OrderTracerAST if present (for order detection)
+        if getattr(f, "_is_order_tracer", False):
+            return NotImplemented
         return self._apply_binop(f, operator.truediv)
 
     __rmul__ = __mul__
@@ -459,6 +471,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing self - f.
         """
+        # Defer to OrderTracerAST if present (for order detection)
+        if getattr(f, "_is_order_tracer", False):
+            return NotImplemented
         return self._apply_binop(f, operator.sub)
 
     # ------------------
@@ -874,10 +889,10 @@ class Chebfun:
             >>> from chebpy import chebfun
             >>> import numpy as np
             >>> f = chebfun(lambda x: x**2, [-1, 1])
-            >>> f.norm()  # L2 norm
-            0.6324555...
-            >>> f.norm(np.inf)  # Maximum absolute value
-            1.0
+            >>> np.allclose(f.norm(), 0.6324555320336759)  # L2 norm
+            True
+            >>> np.allclose(f.norm(np.inf), 1.0)  # Maximum absolute value
+            True
         """
         if p == 2:
             # L2 norm: sqrt(integral(|f|^2))

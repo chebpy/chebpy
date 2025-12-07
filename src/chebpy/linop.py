@@ -5,14 +5,14 @@ and solving linear boundary value problems using spectral collocation.
 
 TWO-PHASE DESIGN PATTERN:
 -------------------------
-LinOp works in concert with OpDiscretization using a two-phase approach:
+LinOp works in concert with op_discretization using a two-phase approach:
 
 This separation allows LinOp to focus on mathematical problem structure while
-delegating numerical implementation to OpDiscretization.
+delegating numerical implementation to opDiscretization.
 
 The LinOp class handles:
 - Domain splitting and continuity constraint specification
-- Discretization via OpDiscretization
+- Discretization via op_discretization
 - Global system assembly
 - QR/SVD solving of rectangular systems
 - Solution reconstruction as Chebfun objects
@@ -21,20 +21,31 @@ The LinOp class handles:
 - Matrix operators (expm, null, svd, cond, inv, norm, etc.)
 """
 
+import sys
+import traceback
 import warnings
-from typing import List, Optional, Callable, Tuple, Dict
+from collections.abc import Callable
+from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
-from scipy.sparse.linalg import lsqr, eigs as sp_eigs
-from scipy.linalg import expm as scipy_expm
+from scipy import sparse as sp
+from scipy.linalg import cholesky, eig, lu_factor, lu_solve, qr
+from scipy.sparse.linalg import LinearOperator, lsmr
+from scipy.sparse.linalg import eigs as sp_eigs
+from scipy.special import comb
 
-from .chebfun import Chebfun
-from .utilities import Domain
-from .opDiscretization import OpDiscretization
-from .chebtech import Chebtech
+from .algorithms import standard_chop
 from .bndfun import Bndfun
-from .algorithms import chebpts2
+from .chebfun import Chebfun
+from .chebtech import Chebtech
+from .linop_diagnostics import diagnose_linop
+from .op_discretization import opDiscretization
+from .order_detection_ast import OrderTracerAST
+from .spectral import cheb_points_scaled
+from .trigtech import Trigtech
+from .utilities import Domain, Interval
 
 
 class LinOp:
@@ -59,15 +70,15 @@ class LinOp:
 
     def __init__(
         self,
-        coeffs: List[Chebfun],
+        coeffs: list[Chebfun],
         domain: Domain,
         diff_order: int,
-        lbc: Optional[Callable] = None,
-        rbc: Optional[Callable] = None,
-        bc: Optional[List] = None,
-        rhs: Optional[Chebfun] = None,
+        lbc: Callable | None = None,
+        rbc: Callable | None = None,
+        bc: list | None = None,
+        rhs: Chebfun | None = None,
         tol: float = 1e-10,
-        point_constraints: Optional[List[Dict]] = None
+        point_constraints: list[dict] | None = None,
     ):
         """Initialize a LinOp.
 
@@ -106,7 +117,8 @@ class LinOp:
             if actual_len < expected_len and actual_len != 0:
                 warnings.warn(
                     f"Coefficient list length ({actual_len}) is less than diff_order+1 ({expected_len}). "
-                    f"This may cause incorrect results. Expected at least {expected_len} coefficients for order-{diff_order} operator."
+                    f"This may cause incorrect results. Expected at least {expected_len} coefficients "
+                    f"for order-{diff_order} operator."
                 )
 
         # Integral constraints
@@ -115,7 +127,7 @@ class LinOp:
         # None weight means ∫u dx, otherwise ∫weight*u dx
         self.integral_constraint = None
 
-        # Discretization state TODO: Have a chebop options later?
+        # Discretization state TODO: Have a Chebop options later?
         self.n_current = 16  # Initial grid size
 
         # Cap max_n based on differential order to avoid catastrophic ill-conditioning
@@ -133,7 +145,7 @@ class LinOp:
         self.u_current = None
 
         # Domain splitting and continuity specifications
-        # These are public attributes accessed by OpDiscretization during the
+        # These are public attributes accessed by op_discretization during the
         # discretization phase. They store specifications (metadata) that get
         # compiled into concrete constraint matrices.
         self.blocks = None  # List of block specifications (one per subinterval)
@@ -160,7 +172,6 @@ class LinOp:
         if callable(bc):
             try:
                 # Trace the BC to see if it returns a list
-                from .order_detection_ast import OrderTracerAST
                 tracer = OrderTracerAST("u", domain=self.domain)
                 traced_result = bc(tracer)
 
@@ -188,14 +199,14 @@ class LinOp:
         Raises:
             Warning: If the number of BCs does not match the differential order.
         """
-        n_intervals = len(list(self.domain.intervals))
+        len(list(self.domain.intervals))
 
         # Count user-provided boundary conditions using proper tracing
         n_lbc = self._count_bc_conditions(self.lbc)
         n_rbc = self._count_bc_conditions(self.rbc)
 
         # Handle periodic BCs separately
-        if isinstance(self.bc, str) and self.bc.lower() == 'periodic':
+        if isinstance(self.bc, str) and self.bc.lower() == "periodic":
             # Periodic BCs provide diff_order constraints
             n_general_bc = self.diff_order
         else:
@@ -259,7 +270,7 @@ class LinOp:
         n_intervals = len(intervals)
 
         # Check for periodic BCs
-        is_periodic = isinstance(self.bc, str) and self.bc.lower() == 'periodic'
+        is_periodic = isinstance(self.bc, str) and self.bc.lower() == "periodic"
 
         # Validate that periodic BCs are not mixed with lbc/rbc
         if is_periodic:
@@ -277,10 +288,10 @@ class LinOp:
         self.blocks = []
         for i, interval in enumerate(intervals):
             block_spec = {
-                'interval': interval,
-                'index': i,
-                'coeffs': self.coeffs,  # Coefficient functions (global)
-                'diff_order': self.diff_order
+                "interval": interval,
+                "index": i,
+                "coeffs": self.coeffs,  # Coefficient functions (global)
+                "diff_order": self.diff_order,
             }
             self.blocks.append(block_spec)
 
@@ -296,11 +307,11 @@ class LinOp:
 
             for deriv_order in range(self.diff_order):
                 constraint = {
-                    'type': 'periodic',
-                    'location_left': a,
-                    'location_right': b,
-                    'block': 0,  # Single block for periodic
-                    'derivative_order': deriv_order
+                    "type": "periodic",
+                    "location_left": a,
+                    "location_right": b,
+                    "block": 0,  # Single block for periodic
+                    "derivative_order": deriv_order,
                 }
                 self.continuity_constraints.append(constraint)
         elif n_intervals > 1:
@@ -314,18 +325,166 @@ class LinOp:
                 # Add continuity constraints for u and derivatives
                 for deriv_order in range(self.diff_order):
                     constraint = {
-                        'type': 'continuity',
-                        'location': bp,
-                        'left_block': left_idx,
-                        'right_block': right_idx,
-                        'derivative_order': deriv_order
+                        "type": "continuity",
+                        "location": bp,
+                        "left_block": left_idx,
+                        "right_block": right_idx,
+                        "derivative_order": deriv_order,
                     }
                     self.continuity_constraints.append(constraint)
 
         # Check well-posedness
         self._check_well_posedness()
 
-    def assemble_system(self, discretization: Dict) -> Tuple[np.ndarray, np.ndarray]:
+    def _build_discretization_from_jacobian(self, n: int, bc_enforcement: str = "append") -> dict:
+        """Build discretization dictionary using AdChebfun Jacobian computer.
+
+        This method is used when AdChebfun can compute the Jacobian matrix
+        at any requested discretization size. This avoids coefficient explosion
+        by working directly with sampled operators instead of constructing
+        explicit coefficient functions.
+
+        Args:
+            n: Discretization size to use
+            bc_enforcement: BC enforcement strategy ('append' or 'replace')
+
+        Returns:
+            Discretization dictionary compatible with assemble_system()
+        """
+        # Compute the Jacobian matrix at the requested discretization size
+        # Note: AdChebfun uses n to mean n+1 collocation points
+        J = self._jacobian_computer(n)
+
+        # Convert to sparse matrix if needed (AdChebfun returns dense numpy array)
+        if not sp.issparse(J):
+            J = sp.csr_matrix(J)
+
+        # The Jacobian should be square with size matching n+1 collocation points
+        actual_size = J.shape[0]
+        if J.shape[0] != J.shape[1]:
+            raise ValueError(f"Jacobian matrix is not square: {J.shape}")
+
+        print(f"\n{'=' * 60}")
+        print(f"AdChebfun Discretization Debug (n={n})")
+        print(f"{'=' * 60}")
+        print(f"Jacobian matrix shape: {J.shape}")
+        print(f"Actual size (n+1 collocation points): {actual_size}")
+
+        # For single-interval problems, use the matrix as a single block
+        # For multi-interval, this approach needs extension (TODO)
+        n_intervals = len(list(self.domain.intervals))
+        if n_intervals > 1:
+            raise NotImplementedError("AdChebfun-based solving not yet supported for multi-interval problems")
+
+        # Build BC rows using op_discretization
+        # We still need to discretize BCs normally
+        print("\nCalling opDiscretization._build_bc_rows...")
+        try:
+            bc_rows, bc_rhs = opDiscretization._build_bc_rows(self, [actual_size], self.u_current)
+            print("  ✓ BC discretization succeeded")
+        except Exception as e:
+            print(f"  ✗ BC discretization FAILED: {type(e).__name__}: {e}")
+
+            traceback.print_exc()
+            raise
+
+        print("\nBoundary Conditions:")
+        print(f"  Number of BC rows: {len(bc_rows)}")
+        if bc_rows:
+            for i, row in enumerate(bc_rows):
+                if hasattr(row, "shape"):
+                    print(f"  BC row {i} shape: {row.shape}")
+                elif hasattr(row, "size"):
+                    print(f"  BC row {i} size: {row.size}")
+                else:
+                    print(f"  BC row {i} type: {type(row)}, len: {len(row) if hasattr(row, '__len__') else 'N/A'}")
+        print(f"  BC RHS length: {len(bc_rhs) if hasattr(bc_rhs, '__len__') else 'scalar'}")
+
+        # Build RHS: sample the RHS function at collocation points
+        # For Newton iteration, self.rhs is the negative residual (-residual) set by Chebop
+        # We need to evaluate this chebfun at the collocation points
+        print("\nBuilding RHS...")
+
+        sys.stdout.flush()
+
+        try:
+            # Check if we have a residual evaluator function (from AdChebfun path)
+            if hasattr(self, "_residual_evaluator"):
+                print("  Getting collocation points for residual evaluator...")
+                sys.stdout.flush()
+                x_pts = cheb_points_scaled(n, Interval(self.domain.support[0], self.domain.support[1]))
+
+                print(f"  Calling residual evaluator at {len(x_pts)} points...")
+                sys.stdout.flush()
+
+                # Use the residual evaluator to get accurate RHS values at collocation points
+                # This evaluates N(u) directly at the requested points rather than
+                # using a coarse chebfun representation
+                rhs_vals = self._residual_evaluator(x_pts)
+                b_block = rhs_vals
+
+                print("\nRHS Construction (from residual evaluator):")
+                print(f"  x_pts length: {len(x_pts)}")
+                print(f"  rhs_vals shape: {rhs_vals.shape if hasattr(rhs_vals, 'shape') else len(rhs_vals)}")
+                print(f"  rhs_vals min/max: [{np.min(rhs_vals):.2e}, {np.max(rhs_vals):.2e}]")
+
+            elif self.rhs is not None:
+                print("  Getting collocation points...")
+                sys.stdout.flush()
+                x_pts = cheb_points_scaled(n, Interval(self.domain.support[0], self.domain.support[1]))
+
+                print(f"  Evaluating RHS chebfun at {len(x_pts)} points...")
+                sys.stdout.flush()
+
+                # The RHS is a chebfun (set to -residual by Newton iteration)
+                # Evaluate it at collocation points
+                rhs_vals = self.rhs(x_pts)
+                b_block = rhs_vals
+
+                print("\nRHS Construction (from chebfun):")
+                print(f"  x_pts length: {len(x_pts)}")
+                print(f"  rhs_vals shape: {rhs_vals.shape if hasattr(rhs_vals, 'shape') else len(rhs_vals)}")
+                print(f"  rhs_vals min/max: [{np.min(rhs_vals):.2e}, {np.max(rhs_vals):.2e}]")
+            else:
+                b_block = np.zeros(actual_size)
+                print("\nRHS Construction (zero):")
+                print(f"  Using zero RHS with size {actual_size}")
+
+            print("  ✓ RHS construction succeeded")
+            sys.stdout.flush()
+        except Exception as e:
+            print(f"  ✗ RHS construction FAILED: {type(e).__name__}: {e}")
+
+            traceback.print_exc()
+            sys.stdout.flush()
+            raise
+
+        # Create discretization dictionary
+        discretization = {
+            "blocks": [J],  # Single block with Jacobian matrix
+            "bc_rows": bc_rows,
+            "bc_rhs": bc_rhs,
+            "continuity_rows": [],  # No continuity for single interval
+            "continuity_rhs": [],
+            "integral_rows": [],  # TODO: Handle integral constraints
+            "integral_rhs": [],
+            "point_rows": [],  # TODO: Handle point constraints
+            "point_rhs": [],
+            "rhs_blocks": [b_block],
+            "n_per_block": [actual_size],  # Use actual matrix size, not n
+            "bc_enforcement": bc_enforcement,
+        }
+
+        print("\nDiscretization Dictionary Summary:")
+        print(f"  blocks[0] shape: {J.shape}")
+        print(f"  rhs_blocks[0] shape: {b_block.shape if hasattr(b_block, 'shape') else len(b_block)}")
+        print(f"  n_per_block: {[actual_size]}")
+        print(f"  bc_enforcement: {bc_enforcement}")
+        print(f"{'=' * 60}\n")
+
+        return discretization
+
+    def assemble_system(self, discretization: dict) -> tuple[np.ndarray, np.ndarray]:
         """Assemble global linear system from discretization.
 
         Two strategies for BC enforcement:
@@ -356,25 +515,25 @@ class LinOp:
         Returns:
             (A, b): Global system matrix and RHS vector
         """
-        blocks = discretization['blocks']
-        bc_rows = discretization['bc_rows']
-        continuity_rows = discretization['continuity_rows']
-        integral_rows = discretization['integral_rows']
-        point_rows = discretization['point_rows']
-        mean_zero_rows = discretization.get('mean_zero_rows', [])
-        rhs_blocks = discretization['rhs_blocks']
-        bc_rhs = discretization['bc_rhs']
-        continuity_rhs = discretization['continuity_rhs']
-        integral_rhs = discretization['integral_rhs']
-        point_rhs = discretization['point_rhs']
-        mean_zero_rhs = discretization.get('mean_zero_rhs', [])
-        n_per_block = discretization['n_per_block']
-        bc_enforcement = discretization.get('bc_enforcement', 'append')
+        blocks = discretization["blocks"]
+        bc_rows = discretization["bc_rows"]
+        continuity_rows = discretization["continuity_rows"]
+        integral_rows = discretization["integral_rows"]
+        point_rows = discretization["point_rows"]
+        mean_zero_rows = discretization.get("mean_zero_rows", [])
+        rhs_blocks = discretization["rhs_blocks"]
+        bc_rhs = discretization["bc_rhs"]
+        continuity_rhs = discretization["continuity_rhs"]
+        integral_rhs = discretization["integral_rhs"]
+        point_rhs = discretization["point_rhs"]
+        mean_zero_rhs = discretization.get("mean_zero_rhs", [])
+        n_per_block = discretization["n_per_block"]
+        bc_enforcement = discretization.get("bc_enforcement", "append")
 
         total_size = sum(n_per_block)
 
         # Stack operator blocks into block-diagonal structure
-        A_blocks = sparse.block_diag(blocks, format='csr')
+        A_blocks = sparse.block_diag(blocks, format="csr")
 
         # Stack RHS blocks
         b_blocks = np.concatenate(rhs_blocks)
@@ -387,42 +546,42 @@ class LinOp:
         n_mean_zero = len(mean_zero_rows)
 
         if n_bc > 0:
-            A_bc = sparse.vstack(bc_rows, format='csr')
+            A_bc = sparse.vstack(bc_rows, format="csr")
             b_bc_vec = np.array(bc_rhs)
         else:
             A_bc = sparse.csr_matrix((0, total_size))
             b_bc_vec = np.array([])
 
         if n_cont > 0:
-            A_cont = sparse.vstack(continuity_rows, format='csr')
+            A_cont = sparse.vstack(continuity_rows, format="csr")
             b_cont_vec = np.array(continuity_rhs)
         else:
             A_cont = sparse.csr_matrix((0, total_size))
             b_cont_vec = np.array([])
 
         if n_int > 0:
-            A_int = sparse.vstack(integral_rows, format='csr')
+            A_int = sparse.vstack(integral_rows, format="csr")
             b_int_vec = np.array(integral_rhs)
         else:
             A_int = sparse.csr_matrix((0, total_size))
             b_int_vec = np.array([])
 
         if n_point > 0:
-            A_point = sparse.vstack(point_rows, format='csr')
+            A_point = sparse.vstack(point_rows, format="csr")
             b_point_vec = np.array(point_rhs)
         else:
             A_point = sparse.csr_matrix((0, total_size))
             b_point_vec = np.array([])
 
         if n_mean_zero > 0:
-            A_mean_zero = sparse.vstack(mean_zero_rows, format='csr')
+            A_mean_zero = sparse.vstack(mean_zero_rows, format="csr")
             b_mean_zero_vec = np.array(mean_zero_rhs)
         else:
             A_mean_zero = sparse.csr_matrix((0, total_size))
             b_mean_zero_vec = np.array([])
 
         # Assemble system based on BC enforcement strategy
-        if bc_enforcement == 'replace' and n_bc > 0:
+        if bc_enforcement == "replace" and n_bc > 0:
             # MATLAB Chebfun approach: Replace operator rows with BC rows
             # This creates a square system where BCs are satisfied to machine precision
 
@@ -431,12 +590,11 @@ class LinOp:
 
             # Get dimensions
             n_rows_op = A_blocks.shape[0]
-            n_cols = A_blocks.shape[1]
+            A_blocks.shape[1]
 
             if n_constraints > n_rows_op:
                 raise ValueError(
-                    f"Too many constraints ({n_constraints}) for system size ({n_rows_op}). "
-                    f"System is over-constrained."
+                    f"Too many constraints ({n_constraints}) for system size ({n_rows_op}). System is over-constrained."
                 )
 
             # Strategy: Remove rows uniformly from operator matrix
@@ -460,16 +618,16 @@ class LinOp:
                 b_proj = b_blocks
 
             # Stack: BC rows first, then projected operator, then continuity
-            A = sparse.vstack([A_bc, A_int, A_point, A_mean_zero, A_proj, A_cont], format='csr')
+            A = sparse.vstack([A_bc, A_int, A_point, A_mean_zero, A_proj, A_cont], format="csr")
             b = np.concatenate([b_bc_vec, b_int_vec, b_point_vec, b_mean_zero_vec, b_proj, b_cont_vec])
         else:
             # Default 'append' strategy: Stack everything (overdetermined, least squares)
-            A = sparse.vstack([A_blocks, A_bc, A_cont, A_int, A_point, A_mean_zero], format='csr')
+            A = sparse.vstack([A_blocks, A_bc, A_cont, A_int, A_point, A_mean_zero], format="csr")
             b = np.concatenate([b_blocks, b_bc_vec, b_cont_vec, b_int_vec, b_point_vec, b_mean_zero_vec])
 
         return A, b
 
-    def solve_linear_system(self, A: sparse.spmatrix, b: np.ndarray) -> np.ndarray:
+    def solve_linear_system(self, mat: sparse.spmatrix, b: np.ndarray) -> np.ndarray:
         """Solve linear system A*u = b using appropriate method based on system shape.
 
         For square systems (m == n):
@@ -486,7 +644,7 @@ class LinOp:
         which is critical for higher-order spectral methods.
 
         Args:
-            A: System matrix (sparse or dense)
+            mat: System matrix (sparse or dense)
             b: Right-hand side vector
 
         Returns:
@@ -496,9 +654,7 @@ class LinOp:
             - Driscoll & Hale (2016), "Rectangular spectral collocation"
             - Fong & Saunders (2011), "LSMR: An iterative algorithm for sparse least-squares problems"
         """
-        from scipy.linalg import lu_factor, lu_solve
-
-        m, n = A.shape
+        m, n = mat.shape
 
         # Overdetermined system: choose solver based on size
         # For moderate-sized systems (n < 1000), use direct lstsq for better accuracy
@@ -507,10 +663,10 @@ class LinOp:
             # Small to moderate systems: use direct lstsq (more accurate)
             if n < 1000:
                 # Convert to dense if sparse
-                if hasattr(A, 'toarray'):
-                    A_dense = A.toarray()
+                if hasattr(mat, "toarray"):
+                    A_dense = mat.toarray()
                 else:
-                    A_dense = np.asarray(A)
+                    A_dense = np.asarray(mat)
 
                 # Direct least squares for best accuracy
                 # Use rcond=None (machine precision default) for better handling of ill-conditioned systems
@@ -520,34 +676,33 @@ class LinOp:
 
             # Large systems: use iterative LSMR for memory efficiency
             else:
-                from scipy.sparse.linalg import lsmr
-
                 # Convert to sparse if not already
-                if not hasattr(A, 'toarray'):
-                    A = sparse.csr_matrix(A)
+                if not hasattr(mat, "toarray"):
+                    mat_sp = sparse.csr_matrix(mat)
+                else:
+                    mat_sp = mat
 
                 # LSMR for sparse overdetermined least squares
                 # atol, btol: convergence tolerances for ||A'r|| and ||r||
                 # Use tighter tolerances for spectral accuracy
-                result = lsmr(A, b, atol=self.tol, btol=self.tol, show=False)
+                result = lsmr(mat_sp, b, atol=self.tol, btol=self.tol, show=False)
                 u, istop, itn, normr, normar, normA, condA, normx = result
 
                 # Check convergence
                 # istop codes: 1-3 indicate successful convergence
                 if istop not in [1, 2, 3]:
                     warnings.warn(
-                        f"LSMR convergence issue (istop={istop}). "
-                        f"Residual norm: {normr:.2e}, ||A'r||: {normar:.2e}"
+                        f"LSMR convergence issue (istop={istop}). Residual norm: {normr:.2e}, ||A'r||: {normar:.2e}"
                     )
 
                 return u
 
         # Square or underdetermined system: use existing approach
         # Convert to dense for LU decomposition
-        if hasattr(A, 'toarray'):
-            A_dense = A.toarray()
+        if hasattr(mat, "toarray"):
+            A_dense = mat.toarray()
         else:
-            A_dense = np.asarray(A)
+            A_dense = np.asarray(mat)
 
         # Row scaling to improve accuracy (MATLAB @valsDiscretization/mldivide.m:19-20)
         # s = 1 / max(1, max(abs(A), [], 2))
@@ -578,14 +733,13 @@ class LinOp:
             # (adding any constant to a periodic solution gives another periodic solution)
             # The least-squares solver correctly finds the minimum-norm solution.
             # Suppress warning for periodic case to avoid confusion.
-            is_periodic = isinstance(self.bc, str) and self.bc.lower() == 'periodic'
+            is_periodic = isinstance(self.bc, str) and self.bc.lower() == "periodic"
             if not is_periodic:
-                warnings.warn(f"System is rank deficient: rank={rank}, min(m,n)={min(m,n)}")
+                warnings.warn(f"System is rank deficient: rank={rank}, min(m,n)={min(m, n)}")
 
         return u
 
-
-    def reconstruct_solution(self, u: np.ndarray, n_per_block: List[int]) -> Chebfun:
+    def reconstruct_solution(self, u: np.ndarray, n_per_block: list[int]) -> Chebfun:
         """Reconstruct Chebfun solution from nodal values.
 
         Takes nodal solution vector and creates piecewise Chebfun.
@@ -601,20 +755,19 @@ class LinOp:
             raise RuntimeError("Must call prepare_domain() before reconstruction")
 
         # Check if we're using periodic BCs (Fourier collocation)
-        from .opDiscretization import OpDiscretization
-        use_fourier = OpDiscretization._is_periodic(self) and len(self.blocks) == 1
+
+        use_fourier = opDiscretization._is_periodic(self) and len(self.blocks) == 1
 
         # Split solution vector into per-block pieces
         pieces = []
         offset = 0
         for i, n_block in enumerate(n_per_block):
-            u_block = u[offset:offset + n_block]
-            interval = self.blocks[i]['interval']
+            u_block = u[offset : offset + n_block]
+            interval = self.blocks[i]["interval"]
 
             # Create tech from values, then wrap in Bndfun
             # Use Trigtech for periodic (Fourier), Chebtech otherwise
             if use_fourier:
-                from .trigtech import Trigtech
                 tech_piece = Trigtech.initvalues(u_block, interval=interval)
                 piece = Bndfun(tech_piece, interval)
             else:
@@ -627,7 +780,7 @@ class LinOp:
         solution = Chebfun(pieces)
         return solution
 
-    def solve(self, n: Optional[int] = None, rhs: Optional[Chebfun] = None) -> Chebfun:
+    def solve(self, n: int | None = None, rhs: Chebfun | None = None) -> Chebfun:
         """Solve the linear BVP with adaptive refinement.
 
         Args:
@@ -651,7 +804,7 @@ class LinOp:
 
             # Run diagnostics to detect potential issues
             # This will warn about singularities, oscillatory coefficients, etc.
-            from .linop_diagnostics import diagnose_linop
+
             diagnose_linop(self, verbose=True)
 
             # Determine discretization sequence
@@ -671,12 +824,9 @@ class LinOp:
                     pow_vec = np.arange(min_pow, max_pow + 0.5, 0.5)
                 else:
                     # Hybrid: powers of 2 up to 512, then half powers
-                    pow_vec = np.concatenate([
-                        np.arange(min_pow, 9 + 1, 1.0),
-                        np.arange(9.5, max_pow + 0.5, 0.5)
-                    ])
+                    pow_vec = np.concatenate([np.arange(min_pow, 9 + 1, 1.0), np.arange(9.5, max_pow + 0.5, 0.5)])
 
-                n_values = np.round(2.0 ** pow_vec).astype(int).tolist()
+                n_values = np.round(2.0**pow_vec).astype(int).tolist()
 
             prev_solution = None
             solution = None  # Initialize to handle early loop exits
@@ -687,27 +837,52 @@ class LinOp:
                 # Use BC row replacement ('replace') for high-order operators (>= 4)
                 # For lower order, 'append' mode works well and avoids row projection issues
                 # High-order operators critically need exact BC enforcement
-                bc_enforcement = 'replace' if self.diff_order >= 4 else 'append'
+                bc_enforcement = "replace" if self.diff_order >= 4 else "append"
 
-                discretization = OpDiscretization.build_discretization(
-                    self, n_current, self.u_current, bc_enforcement=bc_enforcement
-                )
+                # Check if we have a Jacobian computer function from AdChebfun
+                if hasattr(self, "_jacobian_computer"):
+                    # Use AdChebfun-based Jacobian computation
+                    # This bypasses coefficient-based discretization and avoids coefficient explosion
+                    discretization = self._build_discretization_from_jacobian(n_current, bc_enforcement)
+                else:
+                    # Standard coefficient-based discretization
+                    discretization = opDiscretization.build_discretization(
+                        self, n_current, self.u_current, bc_enforcement=bc_enforcement
+                    )
 
                 A, b = self.assemble_system(discretization)
 
+                # DEBUG: Check system properties for AdChebfun path
+                if hasattr(self, "_jacobian_computer"):
+                    print("\n  >> Linear System Debug:")
+                    try:
+                        cond_A = np.linalg.cond(A.toarray() if sparse.issparse(A) else A)
+                        print(f"     A shape: {A.shape}, cond(A): {cond_A:.2e}")
+                    except Exception:
+                        print(f"     A shape: {A.shape}, cond(A): [failed to compute]")
+                    print(f"     b shape: {b.shape}, ||b||: {np.linalg.norm(b):.2e}")
+
                 try:
                     u = self.solve_linear_system(A, b)
+
+                    # DEBUG: Check solution for AdChebfun path
+                    if hasattr(self, "_jacobian_computer"):
+                        residual = A @ u - b
+                        print(f"     u shape: {u.shape}, ||u||: {np.linalg.norm(u):.2e}")
+                        print(f"     ||A*u - b||: {np.linalg.norm(residual):.2e}")
+                        print(f"     u min/max: [{np.min(u):.2e}, {np.max(u):.2e}]")
+
                 except Exception as e:
                     if n is not None:
                         raise RuntimeError(f"Failed to solve at n={n}: {e}")
                     continue
 
-                solution = self.reconstruct_solution(u, discretization['n_per_block'])
+                solution = self.reconstruct_solution(u, discretization["n_per_block"])
 
                 # Skip simplify() for periodic problems with Trigtech, as it uses
                 # linear interpolation which destroys spectral accuracy.
                 # For Trigtech, the solution is already at the correct resolution.
-                is_periodic = OpDiscretization._is_periodic(self)
+                is_periodic = opDiscretization._is_periodic(self)
                 if not is_periodic:
                     solution = solution.simplify()
 
@@ -716,14 +891,13 @@ class LinOp:
                 relres = np.linalg.norm(residual) / (np.linalg.norm(b) + 1e-16)
 
                 # Accept solution if residual is small enough
-                is_last_n = (n_current == n_values[-1])
+                is_last_n = n_current == n_values[-1]
 
                 # MATLAB Chebfun approach: happinessCheck via standardCheck
                 # Checks if cutoff < n where cutoff = standardChop(coeffs, tol)
                 # NO residual check - only coefficient decay!
                 # See _remove/chebfun/@chebtech/standardCheck.m lines 70-73
 
-                from .algorithms import standard_chop
                 solution_is_happy = False
                 for fun in solution.funs:
                     # Get coefficients of the solution piece
@@ -733,7 +907,7 @@ class LinOp:
                         # This matches MATLAB @trigtech/standardCheck.m lines 36-43
                         # Without pairing, standard_chop sees large values at both ends with
                         # noise in between, confusing the plateau detection
-                        from .trigtech import Trigtech
+
                         if isinstance(fun.onefun, Trigtech):
                             coeffs_to_check = Trigtech._pair_fourier_coeffs(coeffs)
                         else:
@@ -820,7 +994,7 @@ class LinOp:
                     else:
                         # Check if RHS is non-smooth by looking at how many points it needed
                         rhs_is_nonsmooth = False
-                        if self.rhs is not None and hasattr(self.rhs, 'funs'):
+                        if self.rhs is not None and hasattr(self.rhs, "funs"):
                             for fun in self.rhs.funs:
                                 if fun.size > 1000:  # Needed many points to represent
                                     rhs_is_nonsmooth = True
@@ -832,8 +1006,7 @@ class LinOp:
                     if relres < threshold:
                         if relres > 1e-4:
                             warnings.warn(
-                                f"Returning solution at max n={self.max_n} with "
-                                f"relative residual {relres:.2e}"
+                                f"Returning solution at max n={self.max_n} with relative residual {relres:.2e}"
                             )
                         return solution
                     else:
@@ -857,7 +1030,7 @@ class LinOp:
             if original_rhs is not None:
                 self.rhs = original_rhs
 
-    def _discretization_size(self, n: Optional[int] = None) -> int:
+    def _discretization_size(self, n: int | None = None) -> int:
         """Compute appropriate discretization size for this operator.
 
         The size scales with operator order to ensure sufficient resolution:
@@ -879,7 +1052,7 @@ class LinOp:
         size = max(base, self.n_current)
         return min(max(self.min_n, size), self.max_n)
 
-    def _discretize(self, n: Optional[int] = None) -> Tuple[np.ndarray, Dict]:
+    def _discretize(self, n: int | None = None) -> tuple[np.ndarray, dict]:
         """Discretize the operator and return the assembled system matrix.
 
         This is the common setup used by most matrix analysis functions.
@@ -896,12 +1069,12 @@ class LinOp:
 
         n_actual = self._discretization_size(n)
         # Use BC row replacement for high-order operators where exact BCs are critical
-        bc_enforcement = 'replace' if self.diff_order >= 4 else 'append'
-        disc = OpDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
+        bc_enforcement = "replace" if self.diff_order >= 4 else "append"
+        disc = opDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
         A, _ = self.assemble_system(disc)
         return A.toarray(), disc
 
-    def _discretize_operator_only(self, n: Optional[int] = None) -> Tuple[np.ndarray, Dict]:
+    def _discretize_operator_only(self, n: int | None = None) -> tuple[np.ndarray, dict]:
         """Discretize and return only the square operator matrix (no BC rows).
 
         Useful for eigenvalue problems and matrix exponential where we need
@@ -919,17 +1092,19 @@ class LinOp:
 
         n_actual = self._discretization_size(n)
         # Use BC row replacement for high-order operators where exact BCs are critical
-        bc_enforcement = 'replace' if self.diff_order >= 4 else 'append'
-        disc = OpDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
-        n_per_block = disc['n_per_block']
+        bc_enforcement = "replace" if self.diff_order >= 4 else "append"
+        disc = opDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
+        n_per_block = disc["n_per_block"]
         total_n = sum(n_per_block)
 
-        A_op = sparse.block_diag(disc['blocks'], format='csr').toarray()
+        A_op = sparse.block_diag(disc["blocks"], format="csr").toarray()
         # Ensure square by taking only the operator part
         A_op = A_op[:total_n, :total_n]
         return A_op, disc
 
-    def _check_eigenvalue_spurious(self, val: float, efun: Chebfun, mass_matrix: Optional['LinOp'] = None) -> Tuple[bool, str]:
+    def _check_eigenvalue_spurious(
+        self, val: float, efun: Chebfun, mass_matrix: Optional["LinOp"] = None
+    ) -> tuple[bool, str]:
         """Check if an eigenvalue/eigenfunction pair is spurious.
 
         An eigenvalue is considered potentially spurious if:
@@ -950,9 +1125,9 @@ class LinOp:
         # If the last 10 coefficients are a significant fraction of the total,
         # the eigenfunction is not well-resolved
         try:
-            if hasattr(efun, 'funs') and len(efun.funs) > 0:
+            if hasattr(efun, "funs") and len(efun.funs) > 0:
                 for fun in efun.funs:
-                    if hasattr(fun, 'onefun') and hasattr(fun.onefun, 'coeffs'):
+                    if hasattr(fun, "onefun") and hasattr(fun.onefun, "coeffs"):
                         coeffs = fun.onefun.coeffs
                         n = len(coeffs)
                         if n > 10:
@@ -1002,11 +1177,11 @@ class LinOp:
     def eigs(
         self,
         k: int = 6,
-        sigma: Optional[float] = None,
-        mass_matrix: Optional['LinOp'] = None,
+        sigma: float | None = None,
+        mass_matrix: Optional["LinOp"] = None,
         rectangularization: bool = False,
-        **kwargs
-    ) -> Tuple[np.ndarray, List[Chebfun]]:
+        **kwargs,
+    ) -> tuple[np.ndarray, list[Chebfun]]:
         """Compute k eigenvalues and eigenfunctions of the operator.
 
         Solves the eigenvalue problem L[u] = lambda * M[u] subject to boundary conditions.
@@ -1063,24 +1238,26 @@ class LinOp:
         prev_vals = None
         final_disc = None
         final_vecs = None
-        final_free_idx = None
 
         for n in n_list:
             # Use BC row replacement for high-order operators where exact BCs are critical
-            bc_enforcement = 'replace' if self.diff_order >= 4 else 'append'
-            disc = OpDiscretization.build_discretization(
-                self, n, rectangularization=rectangularization,
-                for_eigenvalue_problem=True, bc_enforcement=bc_enforcement
+            bc_enforcement = "replace" if self.diff_order >= 4 else "append"
+            disc = opDiscretization.build_discretization(
+                self,
+                n,
+                rectangularization=rectangularization,
+                for_eigenvalue_problem=True,
+                bc_enforcement=bc_enforcement,
             )
-            n_per_block = disc['n_per_block']
-            m_per_block = disc.get('m_per_block', n_per_block)
+            n_per_block = disc["n_per_block"]
+            m_per_block = disc.get("m_per_block", n_per_block)
             total_dofs = sum(n_per_block)
-            is_rectangular = disc.get('rectangularization', False)
+            is_rectangular = disc.get("rectangularization", False)
 
             # Build operator matrix
             # For rectangular: blocks are (m+1) x (n+1), need to extract (n+1) x (n+1) subspace
             # For square: blocks are (n+1) x (n+1), use as-is
-            A_op_sparse = sparse.block_diag(disc['blocks'], format='csr')
+            A_op_sparse = sparse.block_diag(disc["blocks"], format="csr")
 
             if is_rectangular:
                 # Rectangular case: operator is (sum(m_per_block)) x (sum(n_per_block))
@@ -1093,8 +1270,8 @@ class LinOp:
                 A_op = A_op_sparse.toarray()[:total_dofs, :total_dofs]
 
             # Get BC rows and continuity rows (includes periodic constraints)
-            bc_rows_list = disc.get('bc_rows', [])
-            continuity_rows_list = disc.get('continuity_rows', [])
+            bc_rows_list = disc.get("bc_rows", [])
+            continuity_rows_list = disc.get("continuity_rows", [])
 
             # Combine all constraint rows (BCs + continuity/periodic constraints)
             all_constraint_rows = bc_rows_list + continuity_rows_list
@@ -1105,12 +1282,12 @@ class LinOp:
                     # Rectangular without BCs: Solve generalized eigenvalue problem
                     # A_rect @ v = λ * PS.T @ v
                     # Following MATLAB's approach where PS projects solution space
-                    PS_matrices = disc.get('projection_matrices', [])
+                    PS_matrices = disc.get("projection_matrices", [])
                     if not PS_matrices:
                         raise RuntimeError("Rectangular discretization missing projection matrices")
 
                     # Build block-diagonal PS matrix
-                    PS = sparse.block_diag(PS_matrices, format='csr')
+                    PS = sparse.block_diag(PS_matrices, format="csr")
 
                     # A_rect is the rectangular operator (m+1) x (n+1)
                     # PS is the projection matrix (n+1) x (m+1)
@@ -1118,11 +1295,11 @@ class LinOp:
                     # This is equivalent to: (PS @ A_rect) @ v = λ * (PS @ PS.T) @ v
                     # The projected system is square (n+1) x (n+1)
                     A_eig_sparse = PS @ A_op_rect
-                    A_eig = A_eig_sparse.toarray() if hasattr(A_eig_sparse, 'toarray') else np.asarray(A_eig_sparse)
+                    A_eig = A_eig_sparse.toarray() if hasattr(A_eig_sparse, "toarray") else np.asarray(A_eig_sparse)
 
                     # Mass matrix: PS @ PS.T projects the identity
                     M_eig_sparse = PS @ PS.T
-                    M_eig = M_eig_sparse.toarray() if hasattr(M_eig_sparse, 'toarray') else np.asarray(M_eig_sparse)
+                    M_eig = M_eig_sparse.toarray() if hasattr(M_eig_sparse, "toarray") else np.asarray(M_eig_sparse)
 
                     # No BC projection needed
                     bc_proj = np.eye(total_dofs)
@@ -1146,8 +1323,8 @@ class LinOp:
                     # Use QR decomposition for numerical stability
                     # Q, R, P = qr(BC.T, pivoting=True)
                     # Nullspace is last (n - rank) columns of Q
-                    from scipy.linalg import qr
-                    Q, R, P = qr(BC.T, mode='full', pivoting=True)
+
+                    Q, R, P = qr(BC.T, mode="full", pivoting=True)
 
                     # Determine rank
                     tol_rank = max(BC.shape) * np.abs(R[0, 0]) * np.finfo(float).eps if R.size > 0 else 1e-10
@@ -1173,18 +1350,22 @@ class LinOp:
                     # See _remove/chebfun/@linop/eigs.m lines 348-378 and @chebcolloc/reduce.m
 
                     # Get projection matrices PS (barycentric interpolation m+1 -> n+1)
-                    PS_matrices = disc.get('projection_matrices', [])
+                    PS_matrices = disc.get("projection_matrices", [])
                     if not PS_matrices:
                         raise RuntimeError("Rectangular discretization missing projection matrices")
 
                     # Build block-diagonal PS matrix
-                    PS = sparse.block_diag(PS_matrices, format='csr')
+                    PS = sparse.block_diag(PS_matrices, format="csr")
 
                     # Project rectangular operator: PA = PS @ A_rect
                     # A_rect is (m+1) x (n+1), PS is (n+1) x (m+1)
                     # Result: PA is (n+1) x (n+1) - square!
                     A_projected_sparse = PS @ A_op_rect
-                    A_projected = A_projected_sparse.toarray() if hasattr(A_projected_sparse, 'toarray') else np.asarray(A_projected_sparse)
+                    A_projected = (
+                        A_projected_sparse.toarray()
+                        if hasattr(A_projected_sparse, "toarray")
+                        else np.asarray(A_projected_sparse)
+                    )
 
                     # Now project onto BC-satisfying subspace
                     # bc_proj is the nullspace of BCs in the coefficient space
@@ -1199,25 +1380,29 @@ class LinOp:
                 if mass_matrix is not None:
                     # Discretize mass matrix at same resolution
                     # Use BC row replacement for high-order operators where exact BCs are critical
-                    bc_enforcement = 'replace' if mass_matrix.diff_order >= 4 else 'append'
-                    M_disc = OpDiscretization.build_discretization(
+                    bc_enforcement = "replace" if mass_matrix.diff_order >= 4 else "append"
+                    M_disc = opDiscretization.build_discretization(
                         mass_matrix, n, rectangularization=rectangularization, bc_enforcement=bc_enforcement
                     )
-                    M_op_sparse = sparse.block_diag(M_disc['blocks'], format='csr')
+                    M_op_sparse = sparse.block_diag(M_disc["blocks"], format="csr")
 
                     if is_rectangular:
                         # Get projection matrices for mass matrix
-                        M_PS_matrices = M_disc.get('projection_matrices', [])
+                        M_PS_matrices = M_disc.get("projection_matrices", [])
                         if not M_PS_matrices:
                             raise RuntimeError("Mass matrix rectangular discretization missing projection matrices")
 
-                        M_PS = sparse.block_diag(M_PS_matrices, format='csr')
-                        M_total_rows = sum(M_disc.get('m_per_block', M_disc['n_per_block']))
+                        M_PS = sparse.block_diag(M_PS_matrices, format="csr")
+                        M_total_rows = sum(M_disc.get("m_per_block", M_disc["n_per_block"]))
                         M_op_rect = M_op_sparse.toarray()[:M_total_rows, :total_dofs]
 
                         # Project mass matrix: M_projected = M_PS @ M_rect
                         M_projected_sparse = M_PS @ M_op_rect
-                        M_projected = M_projected_sparse.toarray() if hasattr(M_projected_sparse, 'toarray') else np.asarray(M_projected_sparse)
+                        M_projected = (
+                            M_projected_sparse.toarray()
+                            if hasattr(M_projected_sparse, "toarray")
+                            else np.asarray(M_projected_sparse)
+                        )
 
                         # Project onto BC-satisfying subspace
                         M_eig = bc_proj.T @ M_projected @ bc_proj
@@ -1229,11 +1414,15 @@ class LinOp:
                     # No explicit mass matrix: use PS @ PS.T as mass matrix for rectangular
                     # This follows MATLAB: PB = [zeros(size(C)); PS] (line 358 of eigs.m)
                     if is_rectangular:
-                        PS_matrices = disc.get('projection_matrices', [])
-                        PS = sparse.block_diag(PS_matrices, format='csr')
+                        PS_matrices = disc.get("projection_matrices", [])
+                        PS = sparse.block_diag(PS_matrices, format="csr")
                         # Mass matrix in coefficient space: PS @ PS.T (projects identity)
                         M_projected_sparse = PS @ PS.T
-                        M_projected = M_projected_sparse.toarray() if hasattr(M_projected_sparse, 'toarray') else np.asarray(M_projected_sparse)
+                        M_projected = (
+                            M_projected_sparse.toarray()
+                            if hasattr(M_projected_sparse, "toarray")
+                            else np.asarray(M_projected_sparse)
+                        )
                         # Project onto BC-satisfying subspace
                         M_eig = bc_proj.T @ M_projected @ bc_proj
                     else:
@@ -1256,10 +1445,10 @@ class LinOp:
                         # Convert to standard form: M^{-1} A v = λ v
                         try:
                             # Try Cholesky factorization if M is positive definite
-                            from scipy.linalg import cholesky, cho_solve
+
                             try:
                                 # Attempt Cholesky factorization (assumes M is positive definite)
-                                L = cholesky(M_eig, lower=True)
+                                cholesky(M_eig, lower=True)
                                 # Solve M v = A v for eigenvalue λ by converting to standard form
                                 # M^{-1} A v = λ v
                                 # Use shift-invert: (A - σM)^{-1} M v = (λ - σ)^{-1} v
@@ -1269,7 +1458,6 @@ class LinOp:
                                 sigma_shift = 0.0 if sigma is None else sigma
 
                                 # Create operator for shift-invert: solve (A - σM)x = b
-                                from scipy.sparse.linalg import LinearOperator
 
                                 def matvec(v):
                                     # Solve (A - σM)x = M*v for x
@@ -1283,7 +1471,7 @@ class LinOp:
 
                                 # Use sparse eigensolver
                                 # Extract 'which' from kwargs if provided, default to 'LM' for shift-invert
-                                which = kwargs.pop('which', 'LM')
+                                which = kwargs.pop("which", "LM")
                                 vals_inv, vecs = sp_eigs(op, k=k_actual, which=which, **kwargs)
 
                                 # Convert back: λ = σ + 1/μ where μ are the computed eigenvalues
@@ -1292,7 +1480,6 @@ class LinOp:
                             except np.linalg.LinAlgError:
                                 # Cholesky failed - M might not be positive definite
                                 # Fall back to LU factorization approach
-                                from scipy.linalg import lu_factor, lu_solve
 
                                 # Solve M^{-1} A as standard eigenvalue problem
                                 # For small k, it's better to use dense solver on M^{-1}A
@@ -1300,7 +1487,7 @@ class LinOp:
 
                                 # Use sparse eigensolver on the standard form
                                 # Extract 'which' from kwargs if provided, default to 'SM'
-                                which = kwargs.pop('which', 'SM')
+                                which = kwargs.pop("which", "SM")
                                 vals, vecs = sp_eigs(M_inv_A, k=k_actual, which=which, **kwargs)
 
                         except Exception as e:
@@ -1309,7 +1496,7 @@ class LinOp:
                                 f"Sparse solver failed for generalized eigenvalue problem "
                                 f"({A_eig.shape[0]} DOFs): {e}. Falling back to dense solver."
                             )
-                            from scipy.linalg import eig
+
                             vals_all, vecs_all = eig(A_eig, M_eig)
 
                             # Filter out infinite/nan eigenvalues
@@ -1326,7 +1513,7 @@ class LinOp:
                             vecs = vecs_finite[:, idx_sort[:k_actual]]
                     else:
                         # Small problem - use dense solver
-                        from scipy.linalg import eig
+
                         vals_all, vecs_all = eig(A_eig, M_eig)
 
                         # Filter out infinite/nan eigenvalues
@@ -1352,7 +1539,7 @@ class LinOp:
 
                     if A_eig.shape[0] <= 500 or is_rectangular:
                         # Use dense solver for small matrices or rectangular discretization
-                        from scipy.linalg import eig
+
                         vals_all, vecs_all = eig(A_eig)
 
                         # Filter out infinite/nan eigenvalues
@@ -1378,9 +1565,9 @@ class LinOp:
                             vals, vecs = sp_eigs(A_eig, k=k_actual, sigma=sigma, **kwargs)
                         else:
                             # Extract 'which' from kwargs if provided, default to 'SM'
-                            which = kwargs.pop('which', 'SM')
+                            which = kwargs.pop("which", "SM")
                             vals, vecs = sp_eigs(A_eig, k=k_actual, which=which, **kwargs)
-            except Exception as e:
+            except Exception:
                 continue
 
             # Sort by magnitude
@@ -1409,15 +1596,14 @@ class LinOp:
                 # Check if Chebyshev/Fourier coefficients have decayed sufficiently
                 # This is the key difference from checking eigenvalue convergence
                 try:
-                    from .algorithms import standard_chop
                     # Get the function values and convert to Chebyshev/Fourier coefficients
-                    if hasattr(ef_combined, 'funs') and len(ef_combined.funs) > 0:
+                    if hasattr(ef_combined, "funs") and len(ef_combined.funs) > 0:
                         # For piecewise functions, check each piece using standard_chop
                         all_resolved = True
                         for fun_idx, fun in enumerate(ef_combined.funs):
-                            if hasattr(fun, 'onefun'):
+                            if hasattr(fun, "onefun"):
                                 # Check for Chebyshev coefficients (Chebtech)
-                                if hasattr(fun.onefun, 'coeffs'):
+                                if hasattr(fun.onefun, "coeffs"):
                                     coeffs = fun.onefun.coeffs
                                     # Use standard_chop to determine if coefficients have decayed
                                     # If cutoff < len(coeffs), we're happy (coefficients have decayed)
@@ -1428,12 +1614,12 @@ class LinOp:
                                         all_resolved = False
                                         break
                                 # Check for Fourier coefficients (Trigtech)
-                                elif hasattr(fun.onefun, 'fourier_coeffs'):
+                                elif hasattr(fun.onefun, "fourier_coeffs"):
                                     # For Fourier collocation, use eigenvalue convergence instead
                                     # Fourier coefficients don't decay the same way as Chebyshev
                                     rel_err = np.abs(vals - prev_vals) / (np.abs(prev_vals) + 1e-14)
-                                    eigs_tol = kwargs.get('tol', max(self.tol, 1e-8))
-                                    converged = (np.max(rel_err) < eigs_tol)
+                                    eigs_tol = kwargs.get("tol", max(self.tol, 1e-8))
+                                    converged = np.max(rel_err) < eigs_tol
                                     # Exit the loop early - we're using eigenvalue convergence
                                     break
                         else:
@@ -1442,13 +1628,13 @@ class LinOp:
                     else:
                         # Fallback to eigenvalue convergence if can't check coefficients
                         rel_err = np.abs(vals - prev_vals) / (np.abs(prev_vals) + 1e-14)
-                        eigs_tol = kwargs.get('tol', max(self.tol, 1e-8))
-                        converged = (np.max(rel_err) < eigs_tol)
+                        eigs_tol = kwargs.get("tol", max(self.tol, 1e-8))
+                        converged = np.max(rel_err) < eigs_tol
                 except Exception:
                     # Fallback to eigenvalue convergence on error
                     rel_err = np.abs(vals - prev_vals) / (np.abs(prev_vals) + 1e-14)
-                    eigs_tol = kwargs.get('tol', max(self.tol, 1e-8))
-                    converged = (np.max(rel_err) < eigs_tol)
+                    eigs_tol = kwargs.get("tol", max(self.tol, 1e-8))
+                    converged = np.max(rel_err) < eigs_tol
 
                 if converged:
                     break
@@ -1458,7 +1644,7 @@ class LinOp:
             raise RuntimeError("eigs failed to converge")
 
         # Reconstruct eigenfunctions
-        n_per_block = final_disc['n_per_block']
+        n_per_block = final_disc["n_per_block"]
         total_dofs = sum(n_per_block)
         eigenfunctions = []
 
@@ -1485,7 +1671,7 @@ class LinOp:
 
         return np.real_if_close(prev_vals), eigenfunctions
 
-    def expm(self, t: float = 1.0, u0: Optional[Chebfun] = None, num_eigs: int = 50) -> Chebfun:
+    def expm(self, t: float = 1.0, u0: Chebfun | None = None, num_eigs: int = 50) -> Chebfun:
         """Apply the matrix exponential exp(t*L) to an initial function.
 
         Computes u(t) = exp(t*L) * u0, which solves du/dt = L[u] with u(0) = u0,
@@ -1512,12 +1698,11 @@ class LinOp:
         """
         # Create default u0 if not provided
         if u0 is None:
-            from .chebfun import chebfun
-            u0 = chebfun(lambda x: np.ones_like(x), list(self.domain))
+            u0 = Chebfun.initfun(lambda x: np.ones_like(x), list(self.domain))
 
         # Special case: t=0 means identity
         if abs(t) < 1e-15:
-            return u0.copy() if hasattr(u0, 'copy') else u0
+            return u0.copy() if hasattr(u0, "copy") else u0
 
         # Compute eigenpairs of BC-constrained operator
         try:
@@ -1549,7 +1734,7 @@ class LinOp:
 
         if rel_truncation > 0.01:  # 1% truncation error
             warnings.warn(
-                f"Eigenfunction expansion may be incomplete: {rel_truncation*100:.1f}% of energy missing. "
+                f"Eigenfunction expansion may be incomplete: {rel_truncation * 100:.1f}% of energy missing. "
                 f"Only {len(evals)} eigenfunctions used. Consider increasing num_eigs or check if operator "
                 f"is non-self-adjoint (eigenfunctions may not span the space)."
             )
@@ -1569,7 +1754,7 @@ class LinOp:
 
         return result
 
-    def null(self, tol: Optional[float] = None) -> List[Chebfun]:
+    def null(self, tol: float | None = None) -> list[Chebfun]:
         """Compute a basis for the nullspace of the operator.
 
         Returns functions u such that L[u] = 0 (with boundary conditions).
@@ -1582,7 +1767,7 @@ class LinOp:
         """
         tol = tol if tol is not None else self.tol
         A, disc = self._discretize()
-        n_per_block = disc['n_per_block']
+        n_per_block = disc["n_per_block"]
         total_n = sum(n_per_block)
 
         # SVD to find nullspace
@@ -1611,7 +1796,7 @@ class LinOp:
 
         return basis
 
-    def svds(self, k: int = 6) -> Tuple[np.ndarray, List[Chebfun], List[Chebfun]]:
+    def svds(self, k: int = 6) -> tuple[np.ndarray, list[Chebfun], list[Chebfun]]:
         """Compute k largest singular values and singular functions.
 
         Args:
@@ -1623,15 +1808,14 @@ class LinOp:
             v_funcs: List of k right singular functions
         """
         A, disc = self._discretize()
-        n_per_block = disc['n_per_block']
+        n_per_block = disc["n_per_block"]
         total_n = sum(n_per_block)
 
         U, S, Vh = np.linalg.svd(A, full_matrices=False)
         k_actual = min(k, len(S))
 
         # Right singular functions (input space)
-        v_funcs = [self.reconstruct_solution(Vh[j, :total_n], n_per_block)
-                   for j in range(k_actual)]
+        v_funcs = [self.reconstruct_solution(Vh[j, :total_n], n_per_block) for j in range(k_actual)]
 
         # Left singular functions (output space)
         # NOTE: For rectangular systems (m rows > n cols due to BCs), the left singular
@@ -1646,7 +1830,7 @@ class LinOp:
             # Rectangular system: left singular vectors are in constraint space
             # Cannot meaningfully reconstruct as functions in the domain
             # Return the raw vectors instead (they represent combinations of residuals/BCs)
-            import warnings
+
             warnings.warn(
                 "Left singular vectors for rectangular system (with BCs) are in constraint space, "
                 "not function space. Returning None for u_funcs. Only v_funcs (right singular vectors) "
@@ -1692,7 +1876,7 @@ class LinOp:
             return s[0] if len(s) > 0 else 0.0
         return np.linalg.norm(A, ord=p)
 
-    def rank(self, tol: Optional[float] = None) -> int:
+    def rank(self, tol: float | None = None) -> int:
         """Compute the numerical rank of the discretized operator.
 
         Args:
@@ -1739,7 +1923,6 @@ class LinOp:
         Args:
             **kwargs: Arguments passed to matplotlib.pyplot.spy
         """
-        import matplotlib.pyplot as plt
         A, _ = self._discretize()
         plt.figure()
         plt.spy(A, **kwargs)
@@ -1760,18 +1943,14 @@ class LinOp:
             TypeError: If other is not a LinOp
 
         Example:
-            >>> L1 = LinOp([a0, a1], domain, diff_order=1)  # d/dx
-            >>> L2 = LinOp([b0, b1, b2], domain, diff_order=2)  # d²/dx²
-            >>> L3 = L1 + L2  # d/dx + d²/dx²
+            Addition of compatible LinOp objects combines their domains and orders.
         """
         if not isinstance(other, LinOp):
             raise TypeError(f"Cannot add LinOp and {type(other)}")
 
         # Check domain compatibility (both endpoints and internal breakpoints)
         if self.domain.support != other.domain.support:
-            raise ValueError(
-                f"Operators must have same domain: {self.domain.support} vs {other.domain.support}"
-            )
+            raise ValueError(f"Operators must have same domain: {self.domain.support} vs {other.domain.support}")
 
         # Check internal breakpoints match
         # Interval objects are tuple-like (a, b)
@@ -1779,7 +1958,6 @@ class LinOp:
         other_breaks = sorted([tuple(iv) for iv in other.domain.intervals])
 
         if self_breaks != other_breaks:
-            import warnings
             warnings.warn(
                 f"Operators have different internal breakpoint structures. "
                 f"This may cause issues in discretization. "
@@ -1796,24 +1974,17 @@ class LinOp:
             if k < len(self.coeffs):
                 c1 = self.coeffs[k]
             else:
-                from .api import chebfun
-                c1 = chebfun(lambda x: 0*x, list(self.domain))
+                c1 = Chebfun.initfun(lambda x: 0 * x, list(self.domain))
 
             if k < len(other.coeffs):
                 c2 = other.coeffs[k]
             else:
-                from .api import chebfun
-                c2 = chebfun(lambda x: 0*x, list(self.domain))
+                c2 = Chebfun.initfun(lambda x: 0 * x, list(self.domain))
 
             # Add coefficients
             new_coeffs.append(c1 + c2)
 
-        return LinOp(
-            coeffs=new_coeffs,
-            domain=self.domain,
-            diff_order=new_order,
-            tol=min(self.tol, other.tol)
-        )
+        return LinOp(coeffs=new_coeffs, domain=self.domain, diff_order=new_order, tol=min(self.tol, other.tol))
 
     def __sub__(self, other):
         """Subtract two linear operators: (L1 - L2)[u] = L1[u] - L2[u].
@@ -1844,12 +2015,7 @@ class LinOp:
         # Scale all coefficients
         new_coeffs = [c * scalar for c in self.coeffs]
 
-        return LinOp(
-            coeffs=new_coeffs,
-            domain=self.domain,
-            diff_order=self.diff_order,
-            tol=self.tol
-        )
+        return LinOp(coeffs=new_coeffs, domain=self.domain, diff_order=self.diff_order, tol=self.tol)
 
     def __rmul__(self, scalar):
         """Multiply operator by scalar (left multiplication): (c * L)[u] = c * L[u].
@@ -1911,8 +2077,8 @@ class LinOp:
         if power == 0:
             # L^0 = I (identity operator)
             # Create identity operator: 1*u + 0*u'
-            from .api import chebfun
-            a0 = chebfun(lambda x: 1 + 0*x, list(self.domain))
+
+            a0 = Chebfun.initfun(lambda x: 1 + 0 * x, list(self.domain))
             return LinOp(coeffs=[a0], domain=self.domain, diff_order=0, tol=self.tol)
         elif power == 1:
             return self
@@ -1962,21 +2128,8 @@ class LinOp:
             ValueError: If operators have incompatible domains
 
         Examples:
-            >>> # Composition of differentiation operators: D @ D = D^2
-            >>> domain = Domain([0, 1])
-            >>> a0 = chebfun(lambda x: 0*x, [0, 1])
-            >>> a1 = chebfun(lambda x: 1 + 0*x, [0, 1])
-            >>> D = LinOp(coeffs=[a0, a1], domain=domain, diff_order=1)
-            >>> D2 = D @ D
-            >>> # D2 is the second derivative operator
-            >>> print(D2.diff_order)  # 2
-
-            >>> # Variable coefficient composition: (x*D) @ D
-            >>> x = chebfun(lambda x: x, [0, 1])
-            >>> L1 = LinOp(coeffs=[a0, x], domain=domain, diff_order=1)  # x*D
-            >>> L2 = LinOp(coeffs=[a0, a1], domain=domain, diff_order=1)  # D
-            >>> L3 = L1 @ L2  # (x*D)[D[u]] = x*D[u'] = x*u''
-            >>> # Result has order 2
+            Composition of differentiation operators: D @ D = D^2
+            composes operators by function composition, combining their orders and coefficients.
 
         Notes:
             - Composition is associative but not commutative: (L1 @ L2) @ L3 = L1 @ (L2 @ L3)
@@ -1990,12 +2143,8 @@ class LinOp:
         # Check domain compatibility
         if self.domain.support != other.domain.support:
             raise ValueError(
-                f"Operators must have same domain for composition: "
-                f"{self.domain.support} vs {other.domain.support}"
+                f"Operators must have same domain for composition: {self.domain.support} vs {other.domain.support}"
             )
-
-        from .api import chebfun
-        from scipy.special import comb
 
         # Result order is sum of orders
         result_order = self.diff_order + other.diff_order
@@ -2016,7 +2165,7 @@ class LinOp:
         # c_k = sum_{i,j,m: i+j-m=k} a_i(x) (i choose m) b_j^(m)(x)
 
         for k in range(result_order + 1):
-            c_k = chebfun(lambda x: 0*x, list(self.domain))
+            c_k = Chebfun.initfun(lambda x: 0 * x, list(self.domain))
 
             # Sum over all (i, j, m) such that i + j - m = k
             for i in range(len(self.coeffs)):
@@ -2048,12 +2197,7 @@ class LinOp:
 
             result_coeffs.append(c_k)
 
-        return LinOp(
-            coeffs=result_coeffs,
-            domain=self.domain,
-            diff_order=result_order,
-            tol=min(self.tol, other.tol)
-        )
+        return LinOp(coeffs=result_coeffs, domain=self.domain, diff_order=result_order, tol=min(self.tol, other.tol))
 
     def adjoint(self) -> "LinOp":
         """Compute the adjoint (formal adjoint) of this operator.
@@ -2137,9 +2281,6 @@ class LinOp:
         See Also:
             expm, eigs, svds
         """
-        from .api import chebfun
-        from scipy.special import comb
-
         # Compute the adjoint coefficients
         # L* = sum_k (-1)^k D^k a_k(x)
         #
@@ -2151,7 +2292,7 @@ class LinOp:
 
         for m in range(n + 1):
             # Initialize as zero
-            b_m = chebfun(lambda x: 0*x, list(self.domain))
+            b_m = Chebfun.initfun(lambda x: 0 * x, list(self.domain))
 
             # Sum over j such that m+j <= n (i.e., j <= n-m)
             for j in range(n - m + 1):
@@ -2167,7 +2308,7 @@ class LinOp:
 
                     # Binomial coefficient and sign
                     binom_coeff = comb(k, j, exact=True)
-                    sign = (-1)**k
+                    sign = (-1) ** k
 
                     # Add to b_m
                     b_m = b_m + (sign * binom_coeff) * a_k_deriv
@@ -2175,12 +2316,7 @@ class LinOp:
             new_coeffs.append(b_m)
 
         # Create adjoint operator
-        L_adj = LinOp(
-            coeffs=new_coeffs,
-            domain=self.domain,
-            diff_order=n,
-            tol=self.tol
-        )
+        L_adj = LinOp(coeffs=new_coeffs, domain=self.domain, diff_order=n, tol=self.tol)
 
         return L_adj
 

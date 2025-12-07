@@ -11,14 +11,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from .decorators import cast_other
-from .exceptions import (
-    IntervalGap,
-    IntervalOverlap,
-    IntervalValues,
-    InvalidDomain,
-    NotSubdomain,
-    SupportMismatch,
-)
+from .exceptions import IntervalGap, IntervalOverlap, IntervalValues, InvalidDomain, NotSubdomain, SupportMismatch
 from .settings import _preferences as prefs
 
 

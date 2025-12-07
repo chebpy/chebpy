@@ -115,7 +115,7 @@ class Trigtech(Smoothfun):
             interval (list, optional): Interval [a, b]. Defaults to [0, 2π].
             minpow2 (int, optional): Minimum power of 2 for number of points.
         """
-        interval = interval if interval is not None else [0, 2*np.pi]
+        interval = interval if interval is not None else [0, 2 * np.pi]
         interval = Interval(*interval)
         coeffs = cls._adaptive_trig(fun, hscale=interval.hscale, minpow2=minpow2)
         return cls(coeffs, interval=interval)
@@ -138,21 +138,25 @@ class Trigtech(Smoothfun):
         abs_coeffs = np.abs(coeffs[::-1])
 
         # Pair up k and -k coefficients following MATLAB logic exactly
-        is_even = (n % 2 == 0)
+        is_even = n % 2 == 0
         if is_even:
             n2 = n // 2
             # MATLAB (1-indexed): [coeffs(n) ; coeffs(n-1:-1:n/2+1) + coeffs(1:n/2-1) ; coeffs(n/2)]
             # Python (0-indexed):
-            part1 = abs_coeffs[n-1:n]  # coeffs(n) -> coeffs[n-1]
-            part2 = abs_coeffs[n-2:n2-1:-1] + abs_coeffs[0:n2-1]  # Pair coeffs[n-1:-1:n/2+1] with coeffs[1:n/2-1]
-            part3 = abs_coeffs[n2-1:n2]  # coeffs(n/2) -> coeffs[n2-1]
+            part1 = abs_coeffs[n - 1 : n]  # coeffs(n) -> coeffs[n-1]
+            part2 = (
+                abs_coeffs[n - 2 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
+            )  # Pair coeffs[n-1:-1:n/2+1] with coeffs[1:n/2-1]
+            part3 = abs_coeffs[n2 - 1 : n2]  # coeffs(n/2) -> coeffs[n2-1]
             paired = np.concatenate([part1, part2, part3])
         else:
             n2 = (n + 1) // 2
             # MATLAB (1-indexed): [coeffs(n:-1:(n+1)/2+1) + coeffs(1:(n+1)/2-1) ; coeffs((n+1)/2)]
             # Python (0-indexed):
-            part1 = abs_coeffs[n-1:n2-1:-1] + abs_coeffs[0:n2-1]  # Pair coeffs[n:-1:(n+1)/2+1] with coeffs[1:(n+1)/2-1]
-            part2 = abs_coeffs[n2-1:n2]  # coeffs((n+1)/2) -> coeffs[n2-1]
+            part1 = (
+                abs_coeffs[n - 1 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
+            )  # Pair coeffs[n:-1:(n+1)/2+1] with coeffs[1:(n+1)/2-1]
+            part2 = abs_coeffs[n2 - 1 : n2]  # coeffs((n+1)/2) -> coeffs[n2-1]
             paired = np.concatenate([part1, part2])
 
         # NOTE: MATLAB does flipud, but that's because MATLAB's trigtech stores coefficients
@@ -200,7 +204,7 @@ class Trigtech(Smoothfun):
             # Check for zero function
             vscale = np.max(np.abs(values))
             if vscale == 0:
-                return np.array([0.0+0j])
+                return np.array([0.0 + 0j])
 
             coeffs = cls._vals2coeffs(values)
 
@@ -225,7 +229,7 @@ class Trigtech(Smoothfun):
         warnings.warn(
             f"Trigtech adaptive constructor did not converge after {maxpow2 - minpow2 + 1} "
             f"iterations: using {n} points. Function may be too oscillatory or non-periodic.",
-            stacklevel=2
+            stacklevel=2,
         )
         return coeffs
 
@@ -246,7 +250,7 @@ class Trigtech(Smoothfun):
             interval (array-like, optional): The interval on which the function
                 is defined. Defaults to [0, 2π].
         """
-        interval = interval if interval is not None else [0, 2*np.pi]
+        interval = interval if interval is not None else [0, 2 * np.pi]
         self._coeffs = np.array(coeffs, dtype=complex)
         self._interval = Interval(*interval)
 
@@ -285,7 +289,7 @@ class Trigtech(Smoothfun):
 
         # Get frequency indices (integer mode numbers)
         # fftfreq with d=1/n gives [0, 1, 2, ..., n//2, -(n//2-1), ..., -1]
-        k = np.fft.fftfreq(n, d=1.0/n)
+        k = np.fft.fftfreq(n, d=1.0 / n)
 
         # Scale frequencies for the interval [a, b]
         # For a function on [a,b], Fourier basis is exp(2πikx/(b-a))
@@ -435,7 +439,7 @@ class Trigtech(Smoothfun):
         # Find the highest significant frequency
         # FFT ordering: [0, 1, 2, ..., n//2, -(n//2-1 or n//2), ..., -2, -1]
         abs_coeffs = np.abs(coeffs)
-        freq = np.fft.fftfreq(n, d=1.0/n)
+        freq = np.fft.fftfreq(n, d=1.0 / n)
         abs_freq = np.abs(freq)
 
         # Find indices where coefficients are significant
@@ -590,15 +594,19 @@ class Trigtech(Smoothfun):
         Returns:
             Trigtech: A new Trigtech representing this Trigtech raised to the power f.
         """
+
         def powfun(fn, x):
             return np.power(self(x), fn(x) if callable(fn) else fn)
 
         if np.isscalar(f):
+
             def op(x):
                 return powfun(f, x)
         else:
+
             def op(x):
                 return powfun(f, x)
+
         return self.__class__.initfun_adaptive(op, interval=self.interval)
 
     def __radd__(self, f):
@@ -642,7 +650,7 @@ class Trigtech(Smoothfun):
         This allows numpy functions like np.exp, np.sin, np.cos, etc. to work
         directly on Trigtech objects.
         """
-        if method == '__call__':
+        if method == "__call__":
             # Get the Trigtech object from inputs and maximum size
             trigtech_obj = None
             max_size = 0
@@ -697,7 +705,7 @@ class Trigtech(Smoothfun):
 
         # Evaluate on a fine grid
         n_grid = max(1000, 10 * self.size)
-        x_grid = np.linspace(0, 2*np.pi, n_grid, endpoint=False)
+        x_grid = np.linspace(0, 2 * np.pi, n_grid, endpoint=False)
         vals = self(x_grid)
 
         # Handle complex values - take real part if imaginary is negligible
@@ -716,8 +724,8 @@ class Trigtech(Smoothfun):
         roots = []
         for idx in sign_changes:
             # Refine with bisection
-            a, b = x_grid[idx], x_grid[idx+1]
-            fa, _fb = vals[idx], vals[idx+1]
+            a, b = x_grid[idx], x_grid[idx + 1]
+            fa, _fb = vals[idx], vals[idx + 1]
 
             # Bisection
             for _ in range(50):  # Max iterations
@@ -779,7 +787,7 @@ class Trigtech(Smoothfun):
         elif p == np.inf:
             # L-infinity norm: max|f|
             n_eval = max(1000, 10 * self.size)
-            x = np.linspace(0, 2*np.pi, n_eval, endpoint=False)
+            x = np.linspace(0, 2 * np.pi, n_eval, endpoint=False)
             vals = self(x)
             return np.max(np.abs(vals))
         else:
@@ -829,7 +837,7 @@ class Trigtech(Smoothfun):
         coeffs = self.coeffs.copy()
 
         # Get frequency indices
-        k = np.fft.fftfreq(n, d=1.0/n)
+        k = np.fft.fftfreq(n, d=1.0 / n)
 
         # Compute integrated coefficients: c_k / (ik)
         int_coeffs = np.zeros(n, dtype=complex)
@@ -868,7 +876,7 @@ class Trigtech(Smoothfun):
             return self.copy()
 
         if self.isconst and n > 0:
-            return self.__class__(np.array([0.0+0j], dtype=complex), interval=self.interval)
+            return self.__class__(np.array([0.0 + 0j], dtype=complex), interval=self.interval)
 
         m = self.size
         if m == 0:
@@ -878,7 +886,7 @@ class Trigtech(Smoothfun):
 
         # Get frequency indices (integer mode numbers)
         # fftfreq with d=1/m gives [0, 1, 2, ..., m//2, -(m//2-1), ..., -1]
-        k = np.fft.fftfreq(m, d=1.0/m)
+        k = np.fft.fftfreq(m, d=1.0 / m)
 
         # Scale frequencies for the interval [a, b]
         # For a function on [a,b], Fourier basis is exp(2πikx/(b-a))
@@ -888,7 +896,7 @@ class Trigtech(Smoothfun):
         omega = 2.0 * np.pi / L  # Angular frequency scaling
 
         # Multiply by (i*omega*k)^n for n-th derivative
-        diff_coeffs = coeffs * (1j * omega * k)**n
+        diff_coeffs = coeffs * (1j * omega * k) ** n
 
         return self.__class__(diff_coeffs, interval=self.interval)
 
@@ -923,7 +931,7 @@ class Trigtech(Smoothfun):
         # For real functions, we need both +k and -k frequencies
         # FFT frequency ordering for n points:
         # [0, 1, 2, ..., n//2, -(n//2-1) or -n//2, ..., -2, -1]
-        freq = np.fft.fftfreq(n, d=1.0/n)
+        freq = np.fft.fftfreq(n, d=1.0 / n)
         sig_indices = np.where(significant)[0]
         sig_freqs = np.abs(freq[sig_indices])
 
@@ -1053,7 +1061,7 @@ class Trigtech(Smoothfun):
         Returns:
             matplotlib.lines.Line2D: The line object created by the plot.
         """
-        return plotfun(self, (0, 2*np.pi), ax=ax, **kwargs)
+        return plotfun(self, (0, 2 * np.pi), ax=ax, **kwargs)
 
     def plotcoeffs(self, ax=None, **kwargs):
         """Plot the absolute values of the Fourier coefficients.

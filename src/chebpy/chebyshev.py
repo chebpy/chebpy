@@ -12,7 +12,7 @@ import numpy as np
 import numpy.polynomial.chebyshev as cheb
 from matplotlib.axes import Axes
 
-from .algorithms import coeffs2vals2, standard_chop, vals2coeffs2
+from .algorithms import chebpts2, coeffs2vals2, standard_chop, vals2coeffs2
 from .settings import _preferences as prefs
 
 # Type aliases
@@ -417,8 +417,6 @@ def from_function(
     Returns:
         A new Chebyshev polynomial that approximates the given function.
     """
-    from .algorithms import chebpts2, vals2coeffs2
-
     domain_arr = np.array([-1, 1]) if domain is None else np.array(domain)
 
     # Create a wrapper function that maps points from [-1, 1] to the custom domain
