@@ -10,6 +10,8 @@ import re
 import subprocess
 import sys
 
+import pytest
+
 logger = logging.getLogger(__name__)
 
 ROOT = pathlib.Path(__file__).parent.parent
@@ -21,6 +23,7 @@ CODE_BLOCK = re.compile(r"```python\n(.*?)```", re.DOTALL)
 RESULT = re.compile(r"```result\n(.*?)```", re.DOTALL)
 
 
+@pytest.mark.slow
 def test_readme_runs():
     """Execute README code blocks and compare output to documented results."""
     logger.info("Reading README from %s", README)

@@ -42,6 +42,7 @@ def _iter_modules_from_path(package_path: Path):
             continue
 
 
+@pytest.mark.slow
 def test_doctests(project_root: Path, monkeypatch: pytest.MonkeyPatch):
     """Run doctests for each package directory under src/."""
     src_path = project_root / "src"
