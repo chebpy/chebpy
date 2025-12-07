@@ -90,11 +90,13 @@ class TestOrderDetectionChaining:
     def test_deep_chain_ten_derivatives(self):
         """Very deep chain: 10 successive derivatives should have order 10."""
         N = chebop([-1, 1])
+
         def op(u):
             result = u
             for _ in range(10):
                 result = result.diff()
             return result
+
         N.op = op
         assert N._detect_order() == 10
 
@@ -137,13 +139,13 @@ class TestOrderDetectionWithNumpy:
     def test_log_of_derivative_squared(self):
         """log(u'**2) should have order 1."""
         N = chebop([-1, 1])
-        N.op = lambda u: np.log(u.diff()**2)
+        N.op = lambda u: np.log(u.diff() ** 2)
         assert N._detect_order() == 1
 
     def test_sqrt_of_derivative_squared(self):
         """sqrt(u''**2) should have order 2."""
         N = chebop([-1, 1])
-        N.op = lambda u: np.sqrt(u.diff(2)**2)
+        N.op = lambda u: np.sqrt(u.diff(2) ** 2)
         assert N._detect_order() == 2
 
     def test_abs_of_first_derivative(self):
@@ -316,7 +318,7 @@ class TestOrderDetectionMixedComplexity:
     def test_third_order_with_nonlinearity(self):
         """u*u''' + u'² + u should have order 3."""
         N = chebop([-1, 1])
-        N.op = lambda u: u * u.diff(3) + u.diff()**2 + u
+        N.op = lambda u: u * u.diff(3) + u.diff() ** 2 + u
         assert N._detect_order() == 3
 
     def test_highly_nonlinear_second_order(self):
@@ -344,7 +346,7 @@ class TestOrderDetectionEdgeCases:
     def test_power_of_derivative(self):
         """(u')^5 should have order 1."""
         N = chebop([-1, 1])
-        N.op = lambda u: u.diff()**5
+        N.op = lambda u: u.diff() ** 5
         assert N._detect_order() == 1
 
     def test_division_by_derivative(self):
@@ -405,8 +407,8 @@ class TestOrderDetectionConsistency:
             lambda u: u.diff(2),
             lambda u: u.diff().diff(),
             lambda u: np.sin(u.diff(2)),
-            lambda u: (1 + 0*u) * u.diff(2),
-            lambda u: u.diff(2) + 0*u,
+            lambda u: (1 + 0 * u) * u.diff(2),
+            lambda u: u.diff(2) + 0 * u,
         ]
 
         orders = []
@@ -494,7 +496,7 @@ class TestOrderDetectionChallenging:
     def test_derivative_raised_to_power(self):
         """Power: (u.diff())**3 + (u.diff(2))**2."""
         N = chebop([-1, 1])
-        N.op = lambda u: u.diff()**3 + u.diff(2)**2
+        N.op = lambda u: u.diff() ** 3 + u.diff(2) ** 2
         assert N._detect_order() == 2
 
     def test_floor_division_like_operation(self):
@@ -577,6 +579,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_wrap_operand_with_astnode(self):
         """ASTNode._wrap_operand with ASTNode returns it."""
         from chebpy.order_detection_ast import ConstNode, VarNode
+
         var = VarNode("u")
         const = ConstNode(5)
         result = var._wrap_operand(const)
@@ -585,6 +588,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_wrap_operand_with_non_astnode(self):
         """ASTNode._wrap_operand with non-ASTNode returns ConstNode."""
         from chebpy.order_detection_ast import ConstNode, VarNode
+
         var = VarNode("u")
         result = var._wrap_operand(42)
         assert isinstance(result, ConstNode)
@@ -592,6 +596,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_add(self):
         """ASTNode.__add__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = var + 5
         assert isinstance(result, BinOpNode)
@@ -600,6 +605,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_radd(self):
         """ASTNode.__radd__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = 5 + var
         assert isinstance(result, BinOpNode)
@@ -608,6 +614,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_sub(self):
         """ASTNode.__sub__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = var - 5
         assert isinstance(result, BinOpNode)
@@ -616,6 +623,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_rsub(self):
         """ASTNode.__rsub__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = 5 - var
         assert isinstance(result, BinOpNode)
@@ -624,6 +632,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_mul(self):
         """ASTNode.__mul__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = var * 5
         assert isinstance(result, BinOpNode)
@@ -632,6 +641,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_rmul(self):
         """ASTNode.__rmul__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = 5 * var
         assert isinstance(result, BinOpNode)
@@ -640,6 +650,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_truediv(self):
         """ASTNode.__truediv__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = var / 5
         assert isinstance(result, BinOpNode)
@@ -648,6 +659,7 @@ class TestASTNodeBaseOperators:
     def test_astnode_rtruediv(self):
         """ASTNode.__rtruediv__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         result = 5 / var
         assert isinstance(result, BinOpNode)
@@ -656,14 +668,16 @@ class TestASTNodeBaseOperators:
     def test_astnode_pow(self):
         """ASTNode.__pow__ creates BinOpNode."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
-        result = var ** 2
+        result = var**2
         assert isinstance(result, BinOpNode)
         assert result.op == "**"
 
     def test_astnode_neg(self):
         """ASTNode.__neg__ creates UnaryOpNode."""
         from chebpy.order_detection_ast import UnaryOpNode, VarNode
+
         var = VarNode("u")
         result = -var
         assert isinstance(result, UnaryOpNode)
@@ -676,12 +690,14 @@ class TestASTNodeInternals:
     def test_constnode_call_returns_self(self):
         """ConstNode.__call__ should return self."""
         from chebpy.order_detection_ast import ConstNode
+
         node = ConstNode(5)
         assert node() is node
 
     def test_constnode_diff_returns_zero(self):
         """ConstNode.diff() should return a new ConstNode(0)."""
         from chebpy.order_detection_ast import ConstNode
+
         node = ConstNode(5)
         result = node.diff()
         assert isinstance(result, ConstNode)
@@ -690,12 +706,14 @@ class TestASTNodeInternals:
     def test_varnode_call_returns_self(self):
         """VarNode.__call__ should return self."""
         from chebpy.order_detection_ast import VarNode
+
         node = VarNode("u")
         assert node() is node
 
     def test_varnode_diff_creates_diffnode(self):
         """VarNode.diff() should create a DiffNode."""
         from chebpy.order_detection_ast import DiffNode, VarNode
+
         node = VarNode("u")
         result = node.diff(3)
         assert isinstance(result, DiffNode)
@@ -704,6 +722,7 @@ class TestASTNodeInternals:
     def test_diffnode_call_returns_self(self):
         """DiffNode.__call__ should return self."""
         from chebpy.order_detection_ast import DiffNode, VarNode
+
         var = VarNode("u")
         diff = DiffNode(var, 2)
         assert diff() is diff
@@ -711,6 +730,7 @@ class TestASTNodeInternals:
     def test_diffnode_diff_chains(self):
         """DiffNode.diff() should chain derivatives."""
         from chebpy.order_detection_ast import DiffNode, VarNode
+
         var = VarNode("u")
         diff1 = DiffNode(var, 2)
         diff2 = diff1.diff(3)
@@ -720,6 +740,7 @@ class TestASTNodeInternals:
     def test_unaryop_double_negation(self):
         """UnaryOpNode double negation should return original."""
         from chebpy.order_detection_ast import UnaryOpNode, VarNode
+
         var = VarNode("u")
         neg1 = UnaryOpNode("-", var)
         result = -neg1  # Double negation
@@ -728,6 +749,7 @@ class TestASTNodeInternals:
     def test_unaryop_non_neg_negation(self):
         """Negating a non-negation UnaryOpNode."""
         from chebpy.order_detection_ast import UnaryOpNode, VarNode
+
         var = VarNode("u")
         # Create a unary op that's not negation (hypothetical)
         unary = UnaryOpNode("+", var)  # Not a negation
@@ -738,6 +760,7 @@ class TestASTNodeInternals:
     def test_unaryop_call_returns_functionnode(self):
         """UnaryOpNode.__call__ should return FunctionNode."""
         from chebpy.order_detection_ast import FunctionNode, UnaryOpNode, VarNode
+
         var = VarNode("u")
         neg = UnaryOpNode("-", var)
         result = neg()
@@ -746,6 +769,7 @@ class TestASTNodeInternals:
     def test_unaryop_diff(self):
         """UnaryOpNode.diff() should return negation of derivative."""
         from chebpy.order_detection_ast import UnaryOpNode, VarNode
+
         var = VarNode("u")
         neg = UnaryOpNode("-", var)
         result = neg.diff(2)
@@ -755,6 +779,7 @@ class TestASTNodeInternals:
     def test_binop_call_returns_functionnode(self):
         """BinOpNode.__call__ should return FunctionNode."""
         from chebpy.order_detection_ast import BinOpNode, FunctionNode, VarNode
+
         var = VarNode("u")
         binop = BinOpNode("+", var, var)
         result = binop()
@@ -763,6 +788,7 @@ class TestASTNodeInternals:
     def test_binop_diff_addition(self):
         """BinOpNode.diff() for addition."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         binop = BinOpNode("+", var, var)
         result = binop.diff()
@@ -773,6 +799,7 @@ class TestASTNodeInternals:
     def test_binop_diff_subtraction(self):
         """BinOpNode.diff() for subtraction."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         binop = BinOpNode("-", var, var)
         result = binop.diff()
@@ -782,6 +809,7 @@ class TestASTNodeInternals:
     def test_binop_diff_multiplication(self):
         """BinOpNode.diff() for multiplication (product rule)."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         binop = BinOpNode("*", var, var)
         result = binop.diff()
@@ -791,6 +819,7 @@ class TestASTNodeInternals:
     def test_binop_diff_division(self):
         """BinOpNode.diff() for division."""
         from chebpy.order_detection_ast import BinOpNode, VarNode
+
         var = VarNode("u")
         binop = BinOpNode("/", var, var)
         result = binop.diff()
@@ -800,6 +829,7 @@ class TestASTNodeInternals:
     def test_binop_diff_with_constnode(self):
         """BinOpNode.diff() with ConstNode operand."""
         from chebpy.order_detection_ast import BinOpNode, ConstNode, VarNode
+
         var = VarNode("u")
         const = ConstNode(5)
         binop = BinOpNode("+", var, const)
@@ -809,6 +839,7 @@ class TestASTNodeInternals:
     def test_functionnode_call_returns_nested(self):
         """FunctionNode.__call__ should return nested FunctionNode."""
         from chebpy.order_detection_ast import FunctionNode, VarNode
+
         var = VarNode("u")
         func = FunctionNode("sin", var)
         result = func()
@@ -818,6 +849,7 @@ class TestASTNodeInternals:
     def test_functionnode_diff(self):
         """FunctionNode.diff() creates DiffNode inside."""
         from chebpy.order_detection_ast import FunctionNode, VarNode
+
         var = VarNode("u")
         func = FunctionNode("sin", var)
         result = func.diff(2)
@@ -827,12 +859,14 @@ class TestASTNodeInternals:
     def test_tracer_domain_property(self):
         """OrderTracerAST.domain should return _domain."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u", domain=[-1, 1])
         assert tracer.domain == [-1, 1]
 
     def test_tracer_break_returns_list(self):
         """OrderTracerAST._break should return [self]."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         result = tracer._break(None)
         assert result == [tracer]
@@ -840,6 +874,7 @@ class TestASTNodeInternals:
     def test_tracer_iter(self):
         """OrderTracerAST.__iter__ should iterate over [self]."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         result = list(tracer)
         assert result == [tracer]
@@ -847,6 +882,7 @@ class TestASTNodeInternals:
     def test_tracer_wrap_operand_with_astnode(self):
         """OrderTracerAST._wrap_operand with ASTNode should return it."""
         from chebpy.order_detection_ast import OrderTracerAST, VarNode
+
         tracer = OrderTracerAST("u")
         node = VarNode("x")
         result = tracer._wrap_operand(node)
@@ -855,6 +891,7 @@ class TestASTNodeInternals:
     def test_tracer_call(self):
         """OrderTracerAST.__call__ should return FunctionNode wrapper."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         result = tracer()
         assert isinstance(result, OrderTracerAST)
@@ -863,6 +900,7 @@ class TestASTNodeInternals:
     def test_tracer_array_ufunc_non_call_method(self):
         """OrderTracerAST.__array_ufunc__ with non-__call__ method returns NotImplemented."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         result = tracer.__array_ufunc__(np.sin, "reduce", tracer)
         assert result is NotImplemented
@@ -870,6 +908,7 @@ class TestASTNodeInternals:
     def test_tracer_array_ufunc_non_tracer_input(self):
         """OrderTracerAST.__array_ufunc__ with non-tracer input returns NotImplemented."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         result = tracer.__array_ufunc__(np.sin, "__call__", 5)
         assert result is NotImplemented
@@ -877,6 +916,7 @@ class TestASTNodeInternals:
     def test_tracer_array_ufunc_binary(self):
         """OrderTracerAST.__array_ufunc__ with binary ufunc."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer1 = OrderTracerAST("u")
         tracer2 = OrderTracerAST("v")
         # np.add is a binary ufunc
@@ -887,6 +927,7 @@ class TestASTNodeInternals:
     def test_tracer_array_ufunc_three_inputs(self):
         """OrderTracerAST.__array_ufunc__ with 3+ inputs returns NotImplemented."""
         from chebpy.order_detection_ast import OrderTracerAST
+
         tracer = OrderTracerAST("u")
         # Manually call with 3 inputs (rare but possible)
         result = tracer.__array_ufunc__(np.sin, "__call__", tracer, tracer, tracer)
@@ -899,12 +940,13 @@ class TestOrderDetectionNumericalFallback:
     def test_operator_that_raises_exception(self):
         """Operator that raises exception during AST tracing falls back to numerical."""
         N = chebop([-1, 1])
+
         # This operator will fail during AST tracing (division by zero on dummy tracers)
         # but numerical probing can handle it
         def op_that_fails(u):
             # Will fail during AST tracing but numerical method handles it
             x = np.linspace(-1, 1, 100)
-            return np.sin(x) / (1 + np.sin(x)**2) * u.diff(2)
+            return np.sin(x) / (1 + np.sin(x) ** 2) * u.diff(2)
 
         N.op = op_that_fails
         order = N._detect_order()
@@ -913,6 +955,7 @@ class TestOrderDetectionNumericalFallback:
     def test_operator_with_internal_exception(self):
         """Operator with exception in evaluation still detects order via fallback."""
         N = chebop([-1, 1])
+
         def problematic_op(u):
             # This will error on certain inputs but still be detectable numerically
             return u.diff(3) + np.log(np.abs(u) + 1e-10)

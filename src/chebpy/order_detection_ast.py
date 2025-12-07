@@ -397,9 +397,6 @@ class OrderTracerAST(ASTNode):
 
     def __rmul__(self, other):
         """Multiply from right: other * self."""
-        # Handle Chebfun * OrderTracerAST
-        # Chebfun will try to call its own __mul__, which may fail
-        # So we intercept here and return an OrderTracerAST
         other_node = self._wrap_operand(other)
         return self._create_result(BinOpNode("*", other_node, self._root))
 
@@ -464,7 +461,9 @@ class OrderTracerAST(ASTNode):
             left = inputs[0]._root if isinstance(inputs[0], OrderTracerAST) else ConstNode(inputs[0])
             right = inputs[1]._root if isinstance(inputs[1], OrderTracerAST) else ConstNode(inputs[1])
             func_name = ufunc.__name__
-            result_root = FunctionNode(func_name, BinOpNode("+", left, right))  # Simplification
+            result_root = FunctionNode(func_name, BinOpNode("+", left, right))  # Simplification, logic stays the same
+
+        # ufuncs have 1 or 2 inputs, so no need to check for 3+
 
         if result_root is None:
             return NotImplemented
