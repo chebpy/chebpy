@@ -1,4 +1,4 @@
-"""op_discretization: Chebyshev spectral discretization of differential operators.
+"""Chebyshev spectral discretization of differential operators.
 
 This module provides the op_discretization class for discretizing linear differential
 operators on Chebyshev grids.
@@ -8,11 +8,8 @@ Responsibilities:
 - Build differentiation matrices D^k
 - Build diagonal coefficient multiplication matrices M_{a_k}
 - Assemble discrete operator blocks: A_block = sum_k M_{a_k} D^k
-- Construct boundary condition constraint rows
-- Construct interface continuity constraint rows
+- Construct constraint rows
 """
-
-import warnings
 
 import numpy as np
 from scipy import sparse
@@ -22,7 +19,7 @@ from .algorithms import clencurt_weights
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .chebtech import Chebtech
-from .sparse_utils import extract_scalar, is_nearly_zero, prune_sparse
+from .sparse_utils import extract_scalar, is_nearly_zero, prune_sparse, sparse_to_dense
 from .spectral import (
     barycentric_matrix,
     cheb_points_scaled,
@@ -60,7 +57,6 @@ class OpDiscretization:
         for idx, val in zip(indices, values):
             row[0, idx] = val
         return row.tocsr()
-
 
     @staticmethod
     def _setup_linearization_point(linop, u_current, block_interval_obj=None):
@@ -123,9 +119,8 @@ class OpDiscretization:
 
         This is the main entry point. It:
         1. Discretizes each block interval
-        2. Builds BC constraint rows
-        3. Builds continuity constraint rows
-        4. Packages everything into a dictionary
+        2. Builds constraint rows
+        3. Packages everything into a dictionary
 
         Args:
             linop: LinOp instance to discretize
@@ -155,20 +150,18 @@ class OpDiscretization:
                 - 'rectangularization': Boolean indicating if rectangular discretization was used
                 - 'bc_enforcement': The BC enforcement strategy used
         """
-        # Ensure domain is prepared
         if linop.blocks is None:
             linop.prepare_domain()
 
         # Check if periodic BCs are used (triggers Fourier collocation)
         use_fourier = OpDiscretization._is_periodic(linop) and len(linop.blocks) == 1
 
-        # Determine m for rectangularization (MATLAB Chebfun heuristic)
+        # Determine m for rectangularization
         if rectangularization and m is None:
             m = min(2 * n, n + 50)
         elif not rectangularization:
             m = n  # Square discretization
 
-        # Validate m >= n
         if m < n:
             raise ValueError(f"Rectangular discretization requires m >= n, got m={m}, n={n}")
 
@@ -183,7 +176,6 @@ class OpDiscretization:
             coeffs = block_spec["coeffs"]
             diff_order = block_spec["diff_order"]
 
-            # Build operator matrix for this block
             A_block = OpDiscretization._build_block_operator(
                 interval, coeffs, diff_order, n, m=m, use_fourier=use_fourier, rectangularization=rectangularization
             )
@@ -192,37 +184,36 @@ class OpDiscretization:
             # Build RHS for this block
             if linop.rhs is not None:
                 # Evaluate RHS at collocation points
-                # Use Fourier points for periodic problems, Chebyshev otherwise
-                # For rectangular discretization, use m collocation points
                 if use_fourier:
-                    # Fourier: use n points (not affected by rectangularization)
+                    # Fourier for periodic problems: use n points (not affected by rectangularization)
                     x_pts = fourier_points_scaled(n, interval)
                 else:
-                    # Chebyshev: use m+1 collocation points for rectangular
+                    # Chebyshev otherwise: use m+1 collocation points for rectangular
                     x_pts = cheb_points_scaled(m, interval)
                 rhs_vals = linop.rhs(x_pts)
                 rhs_blocks.append(rhs_vals)
             else:
-                # Periodic: n points, Non-periodic: m+1 points (or n+1 for square)
-                if use_fourier:
-                    rhs_size = n
-                else:
-                    rhs_size = m + 1 if rectangularization else n + 1
+                # Periodic: n points, Non-periodic: m+1 points
+                rhs_size = n if use_fourier else m + 1
                 rhs_blocks.append(np.zeros(rhs_size))
 
             # Store grid sizes
             # n_per_block: coefficient DOFs (n+1 for Chebyshev)
-            # m_per_block: collocation points (m+1 for rectangular, n+1 for square)
+            # m_per_block: collocation points (m+1)
             if use_fourier:
                 n_per_block.append(n)
                 m_per_block.append(n)
             else:
                 n_per_block.append(n + 1)
-                m_per_block.append(m + 1 if rectangularization else n + 1)
+                m_per_block.append(m + 1)
 
         # Build boundary condition rows
         # For periodic problems with Fourier collocation, no BC rows needed
-        bc_rows, bc_rhs = OpDiscretization._build_bc_rows(linop, n_per_block, u_current, use_fourier=use_fourier)
+        # Periodicity is implicit in the toeplitz structure of Fourier diff matrices
+        if use_fourier:
+            bc_rows, bc_rhs = [], []
+        else:
+            bc_rows, bc_rhs = OpDiscretization._build_bc_rows(linop, n_per_block, u_current)
 
         # Build continuity constraint rows
         # For periodic problems with Fourier collocation, no continuity rows needed (unless eigenvalue problem)
@@ -247,7 +238,7 @@ class OpDiscretization:
         # PS projects from m+1 collocation points to n+1 coefficient points
         projection_matrices = []
         if rectangularization and not use_fourier:
-            for i, block_spec in enumerate(linop.blocks):
+            for block_spec in linop.blocks:
                 interval = block_spec["interval"]
                 PS_block = projection_matrix_rectangular(n, m, interval)
                 projection_matrices.append(PS_block)
@@ -349,22 +340,19 @@ class OpDiscretization:
                         M_k = mult_matrix(coeff_fun, n, interval=interval)
 
                 # Build differentiation matrix D^k
-                if k == 0:
-                    # Identity matrix (appropriate size for collocation type)
-                    if use_fourier:
+                if use_fourier:
+                    if k == 0:
                         D_k = sparse.eye(n, format="csr")
-                    elif rectangularization and m is not None:
-                        D_k = sparse.eye(row_size, col_size, format="csr")
                     else:
-                        D_k = identity_matrix(n)
-                else:
-                    # Differentiation matrix
-                    if use_fourier:
-                        # Fourier differentiation returns dense matrix, convert to sparse
                         D_k = sparse.csr_matrix(fourier_diff_matrix(n, interval, order=k))
-                    elif rectangularization and m is not None:
-                        # Rectangular differentiation matrix
-                        D_k = diff_matrix_rectangular(n, m, interval, order=k)
+                elif rectangularization and m is not None:
+                    # Rectangular: use interpolation (k=0) or diff matrix (k>0)
+                    # diff_matrix_rectangular handles both cases correctly
+                    D_k = diff_matrix_rectangular(n, m, interval, order=k)
+                else:
+                    # Square Chebyshev
+                    if k == 0:
+                        D_k = identity_matrix(n)
                     else:
                         D_k = diff_matrix(n, interval, order=k)
 
@@ -405,44 +393,41 @@ class OpDiscretization:
             block_offset = 0
             block_interval = linop.blocks[0]["interval"] if linop.blocks else linop.domain.support
             endpoint_idx = 0
-            endpoint_name = "Left"
         else:
             block_n = n_per_block[-1]
             block_offset = sum(n_per_block[:-1])
             block_interval = linop.blocks[-1]["interval"] if linop.blocks else linop.domain.support
             endpoint_idx = total_size - 1
-            endpoint_name = "Right"
 
         # Handle callable BC
         if callable(bc_value):
-            try:
-                # Get interval and setup linearization point
-                interval_obj = linop.blocks[0 if is_left else -1]["interval"] if linop.blocks else None
-                a_val, b_val, u_lin = OpDiscretization._setup_linearization_point(linop, u_current, interval_obj)
+            # Get interval and setup linearization point
+            interval_obj = linop.blocks[0 if is_left else -1]["interval"] if linop.blocks else None
+            a_val, b_val, u_lin = OpDiscretization._setup_linearization_point(linop, u_current, interval_obj)
 
-                # Linearize BC at appropriate endpoint
-                x_bc = a_val if is_left else b_val
-                residual, constraint_row = linearize_bc_matrix(bc_value, u_lin, n=block_n - 1, x_bc=x_bc)
+            # Linearize BC at appropriate endpoint
+            x_bc = a_val if is_left else b_val
+            residual, constraint_row = linearize_bc_matrix(bc_value, u_lin, n=block_n - 1, x_bc=x_bc)
 
-                # Check if BC returned multiple constraints
-                if isinstance(residual, (list, tuple)):
-                    for res_i, row_i in zip(residual, constraint_row):
-                        if is_nearly_zero(row_i):
-                            continue
-
-                        row = sparse.lil_matrix((1, total_size))
-                        row[0, block_offset : block_offset + block_n] = row_i
-                        bc_rows.append(row.tocsr())
-                        bc_rhs.append(extract_scalar(res_i, negate=True))
-                else:
-                    # Single constraint
-                    if is_nearly_zero(constraint_row):
-                        return bc_rows, bc_rhs
+            # Check if BC returned multiple constraints
+            if isinstance(residual, (list, tuple)):
+                for res_i, row_i in zip(residual, constraint_row):
+                    if is_nearly_zero(row_i):
+                        continue
 
                     row = sparse.lil_matrix((1, total_size))
-                    row[0, block_offset : block_offset + block_n] = constraint_row
+                    row[0, block_offset : block_offset + block_n] = row_i
                     bc_rows.append(row.tocsr())
-                    bc_rhs.append(extract_scalar(residual, negate=True))
+                    bc_rhs.append(extract_scalar(res_i, negate=True))
+            else:
+                # Single constraint
+                if is_nearly_zero(constraint_row):
+                    return bc_rows, bc_rhs
+
+                row = sparse.lil_matrix((1, total_size))
+                row[0, block_offset : block_offset + block_n] = constraint_row
+                bc_rows.append(row.tocsr())
+                bc_rhs.append(extract_scalar(residual, negate=True))
         else:
             # Numeric value: u^(k)(endpoint) = bc_value
             row = sparse.lil_matrix((1, total_size))
@@ -452,14 +437,14 @@ class OpDiscretization:
                 # Derivative BC
                 D = diff_matrix(block_n - 1, block_interval, order=deriv_order)
                 row_idx = 0 if is_left else -1
-                row[0, block_offset : block_offset + block_n] = D[row_idx, :].toarray()
+                row[0, block_offset : block_offset + block_n] = sparse_to_dense(D[row_idx, :])
             bc_rows.append(row.tocsr())
             bc_rhs.append(bc_value)
 
         return bc_rows, bc_rhs
 
     @staticmethod
-    def _build_bc_rows(linop, n_per_block: list[int], u_current=None, use_fourier: bool = False) -> tuple[list, list]:
+    def _build_bc_rows(linop, n_per_block: list[int], u_current=None) -> tuple[list, list]:
         """Build constraint rows for boundary conditions.
 
         Point ordering:
@@ -484,17 +469,9 @@ class OpDiscretization:
         Returns:
             (bc_rows, bc_rhs): List of constraint matrices and RHS values
         """
-        # For periodic problems with Fourier collocation, no BC rows needed
-        # Periodicity is implicit in the toeplitz structure of Fourier diff matrices
-        if use_fourier and OpDiscretization._is_periodic(linop):
-            return [], []
-
         bc_rows = []
         bc_rhs = []
         total_size = sum(n_per_block)
-
-        # NOTE: Periodic boundary conditions removed - requires Fourier collocation
-        # for proper implementation. Use explicit lbc/rbc constraints instead.
 
         # Left boundary condition
         if linop.lbc is not None:
@@ -549,47 +526,46 @@ class OpDiscretization:
                 if not callable(bc_functional):
                     continue
 
-                try:
-                    # Linearize BC functional by evaluating on basis functions
-                    constraint_row = np.zeros(total_size)
+                # Linearize BC functional by evaluating on basis functions
+                constraint_row = np.zeros(total_size)
 
-                    # For each DOF, evaluate BC on corresponding basis function
-                    for i in range(first_block_n):
-                        vals = np.zeros(first_block_n)
-                        vals[i] = 1.0
+                # For each DOF, evaluate BC on corresponding basis function
+                for i in range(first_block_n):
+                    vals = np.zeros(first_block_n)
+                    vals[i] = 1.0
 
-                        tech = Chebtech.initvalues(vals)
-                        interval = Interval(a_val, b_val)
-                        bndfun = Bndfun(tech, interval)
-                        u_basis = Chebfun([bndfun])
+                    tech = Chebtech.initvalues(vals)
+                    interval = Interval(a_val, b_val)
+                    bndfun = Bndfun(tech, interval)
+                    u_basis = Chebfun([bndfun])
 
-                        bc_result = bc_functional(u_basis)
+                    bc_result = bc_functional(u_basis)
 
-                        # Extract scalar value
-                        if hasattr(bc_result, "__call__"):
-                            val = bc_result(np.array([a_val]))[0]
-                        else:
-                            val = extract_scalar(bc_result)
-
-                        constraint_row[i] = val
-
-                    # Check if BC is essentially zero
-                    if is_nearly_zero(constraint_row):
-                        continue
-
-                    # Build sparse row for full system
-                    row = sparse.lil_matrix((1, total_size))
-                    row[0, :first_block_n] = constraint_row[:first_block_n]
-                    bc_rows.append(row.tocsr())
-
-                    # Get RHS: bc(0)
-                    u_zero = Chebfun.initfun(lambda x: np.zeros_like(x), [a_val, b_val])
-                    bc_zero = bc_functional(u_zero)
-                    if hasattr(bc_zero, "__call__"):
-                        rhs_val = bc_zero(np.array([a_val]))[0]
+                    # Extract scalar value
+                    if hasattr(bc_result, "__call__"):
+                        val = bc_result(np.array([a_val]))[0]
                     else:
-                        rhs_val = extract_scalar(bc_zero)
-                    bc_rhs.append(rhs_val)
+                        val = extract_scalar(bc_result)
+
+                    constraint_row[i] = val
+
+                # Check if BC is essentially zero
+                if is_nearly_zero(constraint_row):
+                    continue
+
+                # Build sparse row for full system
+                row = sparse.lil_matrix((1, total_size))
+                row[0, :first_block_n] = constraint_row[:first_block_n]
+                bc_rows.append(row.tocsr())
+
+                # Get RHS: bc(0)
+                u_zero = Chebfun.initfun(lambda x: np.zeros_like(x), [a_val, b_val])
+                bc_zero = bc_functional(u_zero)
+                if hasattr(bc_zero, "__call__"):
+                    rhs_val = bc_zero(np.array([a_val]))[0]
+                else:
+                    rhs_val = extract_scalar(bc_zero)
+                bc_rhs.append(rhs_val)
 
         return bc_rows, bc_rhs
 

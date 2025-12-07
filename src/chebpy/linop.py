@@ -42,6 +42,7 @@ from .chebtech import Chebtech
 from .linop_diagnostics import diagnose_linop
 from .op_discretization import OpDiscretization
 from .order_detection_ast import OrderTracerAST
+from .sparse_utils import sparse_to_dense
 from .spectral import cheb_points_scaled
 from .trigtech import Trigtech
 from .utilities import Domain, Interval
@@ -113,14 +114,17 @@ class LinOp:
         # Note: For composed operators (e.g., in generalized eigenvalue problems),
         # the coefficient list may be longer than diff_order+1. We only warn if
         # the list is shorter (which could indicate missing terms).
+        # None entries in coeffs represent zero coefficients (e.g., [a0, None, a2] for u'' + u with no u' term).
         if diff_order is not None and coeffs is not None:
             expected_len = diff_order + 1
-            actual_len = len([c for c in coeffs if c is not None])
+            # Count total list length (including None entries for zero coefficients)
+            actual_len = len(coeffs)
             if actual_len < expected_len and actual_len != 0:
                 warnings.warn(
                     f"Coefficient list length ({actual_len}) is less than diff_order+1 ({expected_len}). "
                     f"This may cause incorrect results. Expected at least {expected_len} coefficients "
-                    f"for order-{diff_order} operator."
+                    f"for order-{diff_order} operator. Use None for zero coefficients "
+                    f"(e.g., [a0, None, a2] for a2*u'' + a0*u)."
                 )
 
         # Integral constraints
@@ -161,20 +165,6 @@ class LinOp:
             True if bc is the string "periodic", False otherwise.
         """
         return isinstance(self.bc, str) and self.bc.lower() == "periodic"
-
-    @staticmethod
-    def _to_dense(mat):
-        """Convert sparse matrix to dense array if needed.
-
-        Args:
-            mat: Matrix (sparse or dense)
-
-        Returns:
-            Dense numpy array
-        """
-        if hasattr(mat, "toarray"):
-            return mat.toarray()
-        return np.asarray(mat)
 
     @staticmethod
     def _filter_eigenvalues(vals_all, vecs_all, k, sigma=None):
@@ -729,16 +719,17 @@ class LinOp:
         m, n = mat.shape
 
         # Overdetermined system: choose solver based on size
-        # For moderate-sized systems (n < 1000), use direct lstsq for better accuracy
-        # For large systems (n >= 1000), use iterative LSMR for efficiency
+        # For systems with n < 5000, use direct lstsq for reliability
+        # For very large systems (n >= 5000), use iterative LSMR for memory efficiency
         if m > n:
-            # Small to moderate systems: use direct lstsq (more accurate)
-            if n < 1000:
+            # Small to moderately large systems: use direct lstsq (more reliable)
+            # Dense lstsq uses LAPACK's optimized least-squares solver which is:
+            # - Fast and reliable (typically < 1s for n=4000)
+            # - Doesn't require convergence tuning like iterative methods
+            # - Memory: ~n^2*8 bytes (e.g., 128MB for n=4000)
+            if n < 5000:
                 # Convert to dense if sparse
-                if hasattr(mat, "toarray"):
-                    A_dense = mat.toarray()
-                else:
-                    A_dense = np.asarray(mat)
+                A_dense = sparse_to_dense(mat)
 
                 # Direct least squares for best accuracy
                 # Use rcond=None (machine precision default) for better handling of ill-conditioned systems
@@ -746,7 +737,7 @@ class LinOp:
                 u, _, rank, _ = np.linalg.lstsq(A_dense, b, rcond=None)
                 return u
 
-            # Large systems: use iterative LSMR for memory efficiency
+            # Very large systems: use iterative LSMR for memory efficiency
             else:
                 # Convert to sparse if not already
                 if not hasattr(mat, "toarray"):
@@ -757,7 +748,12 @@ class LinOp:
                 # LSMR for sparse overdetermined least squares
                 # atol, btol: convergence tolerances for ||A'r|| and ||r||
                 # Use tighter tolerances for spectral accuracy
-                result = lsmr(mat_sp, b, atol=self.tol, btol=self.tol, show=False)
+                # maxiter: For stiff/boundary layer problems, default min(m,n) is insufficient.
+                # Use 4*min(m,n) to allow convergence for difficult systems while avoiding
+                # excessive iterations for well-conditioned problems.
+                m_sp, n_sp = mat_sp.shape
+                maxiter = 4 * min(m_sp, n_sp)
+                result = lsmr(mat_sp, b, atol=self.tol, btol=self.tol, maxiter=maxiter, show=False)
                 u, istop, itn, normr, normar, normA, condA, normx = result
 
                 # Check convergence
@@ -771,10 +767,7 @@ class LinOp:
 
         # Square or underdetermined system: use existing approach
         # Convert to dense for LU decomposition
-        if hasattr(mat, "toarray"):
-            A_dense = mat.toarray()
-        else:
-            A_dense = np.asarray(mat)
+        A_dense = sparse_to_dense(mat)
 
         # Row scaling to improve accuracy (MATLAB @valsDiscretization/mldivide.m:19-20)
         # s = 1 / max(1, max(abs(A), [], 2))
@@ -852,12 +845,12 @@ class LinOp:
         solution = Chebfun(pieces)
         return solution
 
-    def solve(self, n: int | None = None, rhs: Chebfun | None = None) -> Chebfun:
+    def solve(self, rhs: Chebfun | None = None, n: int | None = None) -> Chebfun:
         """Solve the linear BVP with adaptive refinement.
 
         Args:
-            n: Optional fixed discretization size (default: adaptive)
             rhs: Optional right-hand side (default: use self.rhs from constructor)
+            n: Optional fixed discretization size (default: adaptive)
 
         Returns:
             Chebfun solution to the BVP
@@ -1127,7 +1120,7 @@ class LinOp:
         bc_enforcement = "replace" if self.diff_order >= 4 else "append"
         disc = OpDiscretization.build_discretization(self, n_actual, self.u_current, bc_enforcement=bc_enforcement)
         A, _ = self.assemble_system(disc)
-        return A.toarray(), disc
+        return sparse_to_dense(A), disc
 
     def _discretize_operator_only(self, n: int | None = None) -> tuple[np.ndarray, dict]:
         """Discretize and return only the square operator matrix (no BC rows).
@@ -1152,7 +1145,7 @@ class LinOp:
         n_per_block = disc["n_per_block"]
         total_n = sum(n_per_block)
 
-        A_op = sparse.block_diag(disc["blocks"], format="csr").toarray()
+        A_op = sparse_to_dense(sparse.block_diag(disc["blocks"], format="csr"))
         # Ensure square by taking only the operator part
         A_op = A_op[:total_n, :total_n]
         return A_op, disc
@@ -1319,10 +1312,10 @@ class LinOp:
                 # Need to project onto n-dimensional subspace via QR
                 # This is handled below after BC projection
                 total_rows = sum(m_per_block)
-                A_op_rect = A_op_sparse.toarray()[:total_rows, :total_dofs]
+                A_op_rect = sparse_to_dense(A_op_sparse)[:total_rows, :total_dofs]
             else:
                 # Square case: extract (n+1) x (n+1) square operator
-                A_op = A_op_sparse.toarray()[:total_dofs, :total_dofs]
+                A_op = sparse_to_dense(A_op_sparse)[:total_dofs, :total_dofs]
 
             # Get BC rows and continuity rows (includes periodic constraints)
             bc_rows_list = disc.get("bc_rows", [])
@@ -1350,11 +1343,11 @@ class LinOp:
                     # This is equivalent to: (PS @ A_rect) @ v = λ * (PS @ PS.T) @ v
                     # The projected system is square (n+1) x (n+1)
                     A_eig_sparse = PS @ A_op_rect
-                    A_eig = A_eig_sparse.toarray() if hasattr(A_eig_sparse, "toarray") else np.asarray(A_eig_sparse)
+                    A_eig = sparse_to_dense(A_eig_sparse)
 
                     # Mass matrix: PS @ PS.T projects the identity
                     M_eig_sparse = PS @ PS.T
-                    M_eig = M_eig_sparse.toarray() if hasattr(M_eig_sparse, "toarray") else np.asarray(M_eig_sparse)
+                    M_eig = sparse_to_dense(M_eig_sparse)
 
                     # No BC projection needed
                     bc_proj = np.eye(total_dofs)
@@ -1366,10 +1359,7 @@ class LinOp:
                 # Assemble constraint matrix from all constraint rows
                 BC = []
                 for bc_row in all_constraint_rows:
-                    if sparse.isspmatrix(bc_row):
-                        BC.append(bc_row.toarray().ravel()[:total_dofs])
-                    else:
-                        BC.append(np.asarray(bc_row).ravel()[:total_dofs])
+                    BC.append(sparse_to_dense(bc_row).ravel()[:total_dofs])
                 BC = np.array(BC)
 
                 # For eigenproblems L[u] = λu, we need homogeneous BCs: BC @ u = 0
@@ -1416,11 +1406,7 @@ class LinOp:
                     # A_rect is (m+1) x (n+1), PS is (n+1) x (m+1)
                     # Result: PA is (n+1) x (n+1) - square!
                     A_projected_sparse = PS @ A_op_rect
-                    A_projected = (
-                        A_projected_sparse.toarray()
-                        if hasattr(A_projected_sparse, "toarray")
-                        else np.asarray(A_projected_sparse)
-                    )
+                    A_projected = sparse_to_dense(A_projected_sparse)
 
                     # Now project onto BC-satisfying subspace
                     # bc_proj is the nullspace of BCs in the coefficient space
@@ -1449,20 +1435,16 @@ class LinOp:
 
                         M_PS = sparse.block_diag(M_PS_matrices, format="csr")
                         M_total_rows = sum(M_disc.get("m_per_block", M_disc["n_per_block"]))
-                        M_op_rect = M_op_sparse.toarray()[:M_total_rows, :total_dofs]
+                        M_op_rect = sparse_to_dense(M_op_sparse)[:M_total_rows, :total_dofs]
 
                         # Project mass matrix: M_projected = M_PS @ M_rect
                         M_projected_sparse = M_PS @ M_op_rect
-                        M_projected = (
-                            M_projected_sparse.toarray()
-                            if hasattr(M_projected_sparse, "toarray")
-                            else np.asarray(M_projected_sparse)
-                        )
+                        M_projected = sparse_to_dense(M_projected_sparse)
 
                         # Project onto BC-satisfying subspace
                         M_eig = bc_proj.T @ M_projected @ bc_proj
                     else:
-                        M_op = M_op_sparse.toarray()[:total_dofs, :total_dofs]
+                        M_op = sparse_to_dense(M_op_sparse)[:total_dofs, :total_dofs]
                         # Project mass matrix onto same BC-satisfying subspace
                         M_eig = bc_proj.T @ M_op @ bc_proj
                 else:
@@ -1473,11 +1455,7 @@ class LinOp:
                         PS = sparse.block_diag(PS_matrices, format="csr")
                         # Mass matrix in coefficient space: PS @ PS.T (projects identity)
                         M_projected_sparse = PS @ PS.T
-                        M_projected = (
-                            M_projected_sparse.toarray()
-                            if hasattr(M_projected_sparse, "toarray")
-                            else np.asarray(M_projected_sparse)
-                        )
+                        M_projected = sparse_to_dense(M_projected_sparse)
                         # Project onto BC-satisfying subspace
                         M_eig = bc_proj.T @ M_projected @ bc_proj
                     else:

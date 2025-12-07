@@ -266,6 +266,17 @@ class Chebfun:
         """
         return self.funs.__iter__()
 
+    def __len__(self):
+        """Return the total number of coefficients across all funs.
+
+        This is analogous to MATLAB Chebfun's length() function, which returns
+        the total number of degrees of freedom in the representation.
+
+        Returns:
+            int: The sum of sizes of all constituent funs.
+        """
+        return sum(f.size for f in self.funs)
+
     def __eq__(self, other):
         """Test for equality between two Chebfun objects.
 

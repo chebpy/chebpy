@@ -39,6 +39,7 @@ from .chebtech import Chebtech
 from .chebyshev import vals2coeffs2
 from .linop import LinOp
 from .order_detection_ast import OrderTracerAST
+from .sparse_utils import sparse_to_dense
 from .spectral import cheb_points_scaled, diff_matrix
 from .utilities import Domain, Interval, InvalidDomain
 
@@ -219,6 +220,27 @@ class Chebop:
         bc_str = f"BCs: lbc={self.lbc is not None}, rbc={self.rbc is not None}, general={len(self.bc)}"
         return f"Chebop({domain_str}, {op_str}, {bc_str})"
 
+    def _is_ivp(self) -> bool:
+        """Check if this is an Initial Value Problem (IVP).
+
+        An IVP has conditions only at one endpoint:
+        - Left IVP: lbc specified, no rbc or bc
+        - Right IVP (FVP): rbc specified, no lbc or bc
+
+        Returns:
+            True if this is an IVP/FVP, False if BVP
+        """
+        has_lbc = self.lbc is not None
+        has_rbc = self.rbc is not None
+        has_bc = len(self.bc) > 0
+
+        # Left IVP: only lbc, no rbc or general bc
+        left_ivp = has_lbc and not has_rbc and not has_bc
+        # Right IVP (Final Value Problem): only rbc, no lbc or general bc
+        right_ivp = has_rbc and not has_lbc and not has_bc
+
+        return left_ivp or right_ivp
+
     @classmethod
     def from_dict(cls, spec: dict[str, Any]) -> "Chebop":
         """Create a Chebop from a dictionary specification.
@@ -337,7 +359,7 @@ class Chebop:
                     raise TypeError("Functional BC must return AdChebfun")
 
                 # Extract constraint row from appropriate end
-                constraint_row = bc_constraint.jacobian[0 if is_left else -1, :].toarray().ravel()
+                constraint_row = sparse_to_dense(bc_constraint.jacobian[0 if is_left else -1, :]).ravel()
                 eq_idx = bc_idx % num_eqs
                 row_within_eq = bc_row_counters[eq_idx]
                 bc_row_counters[eq_idx] += 1
@@ -598,15 +620,9 @@ class Chebop:
             if L_low is None or L_high is None:
                 return 2  # Default fallback
 
-            # Compute norms
-            def func_norm(f):
-                total = 0.0
-                for fun in f:
-                    total += np.sum(np.abs(fun.coeffs) ** 2)
-                return np.sqrt(total)
-
-            norm_low = func_norm(L_low)
-            norm_high = func_norm(L_high)
+            # Compute norms using L2 norm
+            norm_low = self._function_norm(L_low)
+            norm_high = self._function_norm(L_high)
 
             if norm_low < 1e-14 or norm_high < 1e-14:
                 # One of the norms is too small - likely operator is in kernel
@@ -619,8 +635,8 @@ class Chebop:
                 if L_low is None or L_high is None:
                     return 2
 
-                norm_low = func_norm(L_low)
-                norm_high = func_norm(L_high)
+                norm_low = self._function_norm(L_low)
+                norm_high = self._function_norm(L_high)
 
                 if norm_low < 1e-14:
                     return 0  # Identity-like operator
@@ -638,7 +654,7 @@ class Chebop:
 
             return detected_order
 
-        except Exception:
+        except Exception:  # pragma: no cover
             return 2  # Default to second order
 
     def _evaluate_operator_safe(self, u: Chebfun, x_override: Chebfun | None = None) -> Chebfun | None:
@@ -661,7 +677,7 @@ class Chebop:
                 and p.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
             )
             nargs = n_required
-        except Exception:
+        except Exception:  # pragma: no cover
             nargs = None
 
         try:
@@ -682,17 +698,15 @@ class Chebop:
         except Exception:
             pass
 
-        # --- fallbacks ---
-        try:
-            return self.op(u)
-        except Exception:
-            pass
-
-        try:
-            x = x_override or Chebfun.initidentity(self.domain)
-            return self.op(x, u)
-        except Exception:
-            pass
+        # --- fallback attempts with different calling conventions ---
+        for attempt in [
+            lambda: self.op(u),
+            lambda: self.op(x_override or Chebfun.initidentity(self.domain), u),
+        ]:
+            try:
+                return attempt()
+            except Exception:
+                pass
 
         return None
 
@@ -919,8 +933,6 @@ class Chebop:
         if not self._is_linear:
             raise ValueError("Cannot convert nonlinear operator to LinOp")
 
-        # Import here to avoid circular dependency
-
         # Create LinOp with extracted information
         # Note: We don't cache this because rhs can change (e.g., in Newton iteration)
         # and we need to create a fresh LinOp each time
@@ -978,11 +990,8 @@ class Chebop:
         if not self._is_linear:
             raise ValueError("Nonlinear systems not yet supported")
 
-        # Import here to avoid circular dependency
-
         # For linear systems, the Jacobian IS the operator itself
         # We extract operator blocks L_ij by linearizing around zero functions
-
         a, b = self.domain.support
 
         # Create array of zero functions (linearization point)
@@ -1093,7 +1102,14 @@ class Chebop:
                     "Your operator appears to be linear. Use solve() without continuation=True."
                 )
 
-            # Route to appropriate solver
+            # Check if this is an IVP (Initial Value Problem)
+            # IVPs should use time-stepping, not global BVP solvers
+            if self._is_ivp():
+                if self.verbose:
+                    print("Detected IVP - using time-stepping solver")
+                return self._solve_ivp()
+
+            # Route to appropriate BVP solver
             if self._is_linear:
                 return self._solve_linear()
             else:
@@ -1508,6 +1524,23 @@ class Chebop:
             # This mimics MATLAB's fitBCs approach
             u = self._create_initial_guess_from_bcs(a, b)
 
+        # Force minimum resolution for nonlinear problems
+        # Coarse initial guesses (e.g., 2-3 points) trigger finite difference path
+        # instead of AdChebfun, preventing proper convergence
+        MIN_RESOLUTION_FOR_NONLINEAR = 16
+        u_size = max(fun.size for fun in u.funs)
+        if u_size < MIN_RESOLUTION_FOR_NONLINEAR:
+            # Refine initial guess to have adequate resolution
+            # This ensures AdChebfun can be used from the start
+            a, b = self.domain.support
+            # Create a copy with minimum resolution
+            u_copy = u  # Save reference to evaluate
+
+            def eval_u(x):
+                return u_copy(x) if np.isscalar(x) or x.size == 1 else u_copy(x)
+
+            u = Chebfun.initfun(eval_u, [a, b], n=MIN_RESOLUTION_FOR_NONLINEAR)
+
         # Relaxed tolerance for nonlinear (MATLAB uses 200*tol)
         nonlinear_tol = 200 * self.tol
 
@@ -1534,16 +1567,23 @@ class Chebop:
         stagnation_threshold = 1e-15  # If norm_delta stops decreasing below this, we're stuck
 
         for iteration in range(self.maxiter):
+            print(f"[VDP DEBUG] Starting iteration {iteration}, u.size={len(u)}")
             # Compute residual
+            print("[VDP DEBUG] Computing residual...")
             residual = self._compute_residual(u)
+            print(f"[VDP DEBUG] Residual computed, len={len(residual)}")
 
             # Compute Jacobian
+            print("[VDP DEBUG] Computing Jacobian...")
             jacobian_op = self._compute_jacobian(u)
+            print("[VDP DEBUG] Jacobian computed")
             jacobian_op.rhs = -residual
             jacobian_op._u_current = u  # Store current solution for BC linearization
 
             # Convert to LinOp for solving
+            print("[VDP DEBUG] Converting to LinOp...")
             jacobian_linop = jacobian_op.to_linop()
+            print("[VDP DEBUG] LinOp created")
             jacobian_linop._u_current = u  # Preserve for callable BC linearization
 
             # CRITICAL FIX: For AdChebfun path, we need to recompute the residual
@@ -1573,7 +1613,12 @@ class Chebop:
                     # Return negative residual: -(N(u) - rhs) = rhs - N(u)
                     return rhs_vals - Nu_vals
 
-                jacobian_linop._residual_evaluator = residual_evaluator
+                # CRITICAL FIX: Do NOT set _residual_evaluator as a closure!
+                # The closure captures the current u and rhs, which means when we update
+                # jacobian_linop.rhs in the damping step, the _residual_evaluator still
+                # uses the OLD rhs values from when the Jacobian was computed.
+                # Instead, let LinOp.solve() use self.rhs directly by evaluating the chebfun.
+                # jacobian_linop._residual_evaluator = residual_evaluator
 
             # MATLAB optimization: Use current solution size as starting point for adaptive refinement
             # This avoids restarting from min_n=9 every Newton iteration
@@ -1641,7 +1686,7 @@ class Chebop:
                 u, lambda_val, c_factor, success, give_up, norm_delta_bar, delta_bar, stay_damped = self._damping_step(
                     u,
                     delta,
-                    jacobian_op,
+                    jacobian_linop,
                     iteration,
                     lambda_val,
                     lambda_min,
@@ -1714,6 +1759,20 @@ class Chebop:
                     if self.verbose:
                         print(f"  Iteration {iteration}: norm_delta={norm_delta:.2e}, first undamped step")
 
+            #  Ensure u maintains minimum resolution after update (Bug #6 fix)
+            # If u gets simplified to very low resolution (e.g., 3 points), the next
+            # Jacobian computation will fail. Re-refine if needed.
+            MIN_RESOLUTION_FOR_NONLINEAR = 16
+            u_size = max(fun.size for fun in u.funs)
+            if u_size < MIN_RESOLUTION_FOR_NONLINEAR:
+                a, b = self.domain.support
+                u_copy = u
+
+                def eval_u_refine(x):
+                    return u_copy(x) if np.isscalar(x) or x.size == 1 else u_copy(x)
+
+                u = Chebfun.initfun(eval_u_refine, [a, b], n=MIN_RESOLUTION_FOR_NONLINEAR)
+
             norm_delta_old = norm_delta
 
             if success or give_up:
@@ -1730,7 +1789,7 @@ class Chebop:
         self,
         u,
         delta,
-        jacobian_op,
+        jacobian_linop,
         iteration,
         lambda_val,
         lambda_min,
@@ -1791,14 +1850,19 @@ class Chebop:
 
             # Take trial step (MATLAB line 109)
             u_trial = u + lambda_val * delta
+            if self.verbose:
+                x_test = np.linspace(u.domain.support[0], u.domain.support[1], 10)
+                u_trial(x_test)
 
             # Evaluate operator at trial point (MATLAB lines 111-125)
             try:
                 residual_trial = self._compute_residual(u_trial)
+                if self.verbose:
+                    residual_trial(x_test)
             except (ValueError, RuntimeError, np.linalg.LinAlgError):
                 # Residual computation failed - reduce lambda and try again
                 if self.verbose:
-                    print(f"    Damping iter {damping_iter}: Residual eval failed at lambda={lambda_val:.4f}, reducing")
+                    print(f"    Damping iter {damping_iter}: Residual eval failed at lambda={lambda_val:.4f}")
                 consecutive_failures += 1
                 if consecutive_failures >= 3:
                     # Too many failures - give up on this Newton step
@@ -1810,9 +1874,11 @@ class Chebop:
                 continue
 
             # Solve for simplified Newton step (reuse Jacobian) (MATLAB lines 129-142)
-            jacobian_op.rhs = -residual_trial
+            jacobian_linop.rhs = -residual_trial
             try:
-                delta_bar = jacobian_op.solve()
+                delta_bar = jacobian_linop.solve()
+                if self.verbose:
+                    delta_bar(x_test)
                 consecutive_failures = 0  # Reset on success
             except Exception:
                 # Simplified Newton solve failed - this is critical
@@ -1845,8 +1911,8 @@ class Chebop:
                     u_test = u + lambda_test * delta
                     try:
                         res_test = self._compute_residual(u_test)
-                        jacobian_op.rhs = -res_test
-                        delta_bar_test = jacobian_op.solve()
+                        jacobian_linop.rhs = -res_test
+                        delta_bar_test = jacobian_linop.solve()
                         # Success! Use this lambda
                         lambda_val = lambda_test
                         u_trial = u_test
@@ -1874,17 +1940,14 @@ class Chebop:
                 # If we found a good lambda via backtracking, proceed with that
 
             norm_delta_bar = self._function_norm(delta_bar)
-
             # Contraction factor (MATLAB line 151)
             c_factor = norm_delta_bar / norm_delta
-
             # Correction factor for step-size (MATLAB line 154)
             diff_norm = self._function_norm(delta_bar - (1.0 - lambda_val) * delta)
             if diff_norm > 1e-14:
                 mu_prime = (0.5 * norm_delta * lambda_val**2) / diff_norm
             else:
                 mu_prime = lambda_val
-
             # If not contracting, decrease lambda (MATLAB lines 157-161)
             if c_factor >= 1.0:
                 lambda_val = min(mu_prime, 0.5 * lambda_val)
@@ -1961,6 +2024,266 @@ class Chebop:
                     "- Overflow in exponentials or other functions\n"
                     "Try adjusting initial guess or checking operator definition."
                 )
+
+    def _solve_ivp(self):
+        """Solve Initial Value Problem (IVP) using time-stepping.
+
+        For IVPs with conditions only at one endpoint, time-stepping
+        is much more efficient than global BVP solvers.
+
+        Converts higher-order ODE to first-order system and uses
+        scipy.integrate.solve_ivp for time integration.
+
+        The method automatically extracts the ODE structure by evaluating
+        the operator at test points, assuming the highest derivative
+        appears linearly (standard form for explicit ODEs).
+
+        Returns:
+            Chebfun: Solution to the IVP
+
+        Raises:
+            RuntimeError: If IVP solver fails to converge
+            ValueError: If highest derivative has zero coefficient
+        """
+        import inspect
+
+        import numpy as np
+        from scipy.integrate import solve_ivp
+
+        # MATLAB-compatible tolerances (from cheboppref.m lines 466-467)
+        # ivpAbsTol = 1e5*eps ≈ 2.22e-11
+        # ivpRelTol = 100*eps ≈ 2.22e-14
+        eps = np.finfo(float).eps
+        ivp_abstol = 1e5 * eps
+        ivp_reltol = 100 * eps
+
+        a, b = self.domain.support[0], self.domain.support[-1]
+
+        # Determine if this is left IVP (forward) or right IVP (backward)
+        is_left_ivp = self.lbc is not None
+        t_span = (a, b) if is_left_ivp else (b, a)
+
+        # Get initial conditions
+        if is_left_ivp:
+            ic = self.lbc if isinstance(self.lbc, (list, np.ndarray)) else [self.lbc]
+        else:
+            ic = self.rbc if isinstance(self.rbc, (list, np.ndarray)) else [self.rbc]
+
+        ic = np.array(ic, dtype=float)
+        order = len(ic)  # Order of the ODE = number of initial conditions
+
+        # Determine operator signature
+        try:
+            sig = inspect.signature(self.op)
+            params = sig.parameters
+            n_required = sum(
+                1
+                for p in params.values()
+                if p.default == inspect.Parameter.empty
+                and p.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+            )
+            op_nargs = n_required
+        except Exception:
+            op_nargs = 1  # Default to single argument
+
+        # PointEval: lightweight class for evaluating operator at a single point
+        class PointEval:
+            """Evaluate ODE operator at a single point with known derivatives.
+
+            This class mimics a Chebfun but only stores derivative values at one point.
+            When the operator is applied, arithmetic operations return scalars.
+            """
+
+            def __init__(self, derivs, t_val=None):
+                """Args:
+
+                derivs: List of derivative values [u, u', u'', ...]
+                t_val: Value of independent variable (for x-dependent operators).
+                """
+                self.derivs = list(derivs)
+                self.t = t_val
+                self._value = derivs[0]
+
+            def diff(self, k=1):
+                """Return k-th derivative value."""
+                if k < len(self.derivs):
+                    return self.derivs[k]
+                raise ValueError(f"Derivative order {k} not available (max: {len(self.derivs) - 1})")
+
+            def __call__(self, x):
+                """Evaluate at point (returns u value)."""
+                return self._value
+
+            # Arithmetic operations return scalars based on u(t) value
+            def __float__(self):
+                return float(self._value)
+
+            def __add__(self, other):
+                if isinstance(other, PointEval):
+                    return self._value + other._value
+                return self._value + other
+
+            def __radd__(self, other):
+                return other + self._value
+
+            def __sub__(self, other):
+                if isinstance(other, PointEval):
+                    return self._value - other._value
+                return self._value - other
+
+            def __rsub__(self, other):
+                return other - self._value
+
+            def __mul__(self, other):
+                if isinstance(other, PointEval):
+                    return self._value * other._value
+                return self._value * other
+
+            def __rmul__(self, other):
+                return other * self._value
+
+            def __truediv__(self, other):
+                if isinstance(other, PointEval):
+                    return self._value / other._value
+                return self._value / other
+
+            def __rtruediv__(self, other):
+                return other / self._value
+
+            def __pow__(self, exp):
+                return self._value**exp
+
+            def __rpow__(self, base):
+                return base**self._value
+
+            def __neg__(self):
+                return -self._value
+
+            def __pos__(self):
+                return self._value
+
+            def __abs__(self):
+                return abs(self._value)
+
+            # NumPy ufunc support - convert to value and apply
+            def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+                new_inputs = tuple(x._value if isinstance(x, PointEval) else x for x in inputs)
+                return getattr(ufunc, method)(*new_inputs, **kwargs)
+
+            def __array__(self, dtype=None):
+                return np.array(self._value, dtype=dtype)
+
+        def evaluate_op_at_point(t_val, derivs):
+            """Evaluate operator N(u) at point t with given derivative values.
+
+            Args:
+                t_val: Value of independent variable
+                derivs: List [u, u', u'', ..., u^(n)] of derivative values at t
+
+            Returns:
+                Scalar value of N(u) at t
+            """
+            u_point = PointEval(derivs, t_val)
+
+            if op_nargs == 1:
+                # op(u)
+                result = self.op(u_point)
+            else:
+                # op(x, u) - x is also a PointEval returning t
+                x_point = PointEval([t_val], t_val)
+                result = self.op(x_point, u_point)
+
+            # Handle case where result is still a PointEval
+            if isinstance(result, PointEval):
+                return result._value
+            return float(result)
+
+        def compute_highest_derivative(t_val, y):
+            """Compute u^(n) such that N(u) = 0 at point t.
+
+            Uses linear extraction: assumes N(u) = a*u^(n) + b where
+            a and b can depend on t, u, u', ..., u^(n-1).
+
+            Solves: u^(n) = -b/a
+            """
+            # Evaluate with u^(n) = 0 to get constant term b
+            derivs_0 = list(y) + [0.0]
+            N0 = evaluate_op_at_point(t_val, derivs_0)
+
+            # Evaluate with u^(n) = 1 to get coefficient a + b
+            derivs_1 = list(y) + [1.0]
+            N1 = evaluate_op_at_point(t_val, derivs_1)
+
+            # Extract linear coefficients: N = a*u^(n) + b
+            a_coeff = N1 - N0  # Coefficient of u^(n)
+            b_coeff = N0  # Constant term (when u^(n)=0)
+
+            # Check for degenerate case
+            if abs(a_coeff) < 1e-14:
+                raise ValueError(
+                    f"Highest derivative u^({order}) has near-zero coefficient ({a_coeff:.2e}).\n"
+                    "This may indicate:\n"
+                    "  1. The ODE is actually lower order than expected\n"
+                    "  2. The highest derivative appears nonlinearly\n"
+                    "  3. A singular point in the coefficient function\n"
+                    f"At t={t_val}, y={y}"
+                )
+
+            # Solve: a*u^(n) + b = 0 => u^(n) = -b/a
+            u_n = -b_coeff / a_coeff
+
+            # Handle RHS if present
+            if self.rhs is not None:
+                if callable(self.rhs):
+                    rhs_val = self.rhs(t_val)
+                else:
+                    rhs_val = float(self.rhs)
+                # N(u) = rhs => a*u^(n) + b = rhs => u^(n) = (rhs - b)/a
+                u_n = (rhs_val - b_coeff) / a_coeff
+
+            return u_n
+
+        def first_order_system(t_val, y):
+            """Convert N-th order ODE to first-order system.
+
+            State: y = [u, u', u'', ..., u^(n-1)]
+            Returns: [u', u'', ..., u^(n)]
+            """
+            # Compute the highest derivative
+            u_n = compute_highest_derivative(t_val, y)
+
+            # Build output: [u', u'', ..., u^(n)]
+            return np.array(list(y[1:]) + [u_n])
+
+        # Solve the IVP
+        if self.verbose:
+            print(f"Solving IVP (order {order}) from t={t_span[0]} to t={t_span[1]}")
+            print(f"Initial conditions: {ic}")
+            print(f"Tolerances: rtol={ivp_reltol:.2e}, atol={ivp_abstol:.2e}")
+
+        sol = solve_ivp(
+            first_order_system,
+            t_span,
+            ic,
+            method="BDF",  # BDF is robust for stiff problems
+            dense_output=True,
+            rtol=ivp_reltol,
+            atol=ivp_abstol,
+        )
+
+        if not sol.success:
+            raise RuntimeError(f"IVP solver failed: {sol.message}")
+
+        # Create chebfun from solution using dense output
+        from chebpy import chebfun
+
+        u_solution = chebfun(lambda x: sol.sol(x)[0], [a, b])
+
+        if self.verbose:
+            print(f"IVP solved successfully. Solution length: {len(u_solution)}")
+            print(f"Solver used {len(sol.t)} time steps")
+
+        return u_solution
 
     def _compute_residual(self, u: Chebfun) -> Chebfun:
         """Compute residual N(u) - f for nonlinear operator.
@@ -2113,13 +2436,18 @@ class Chebop:
                         # Create AdChebfun variable at requested discretization
                         ad_u = AdChebfun(u_refined, n=n)
 
-                        # # Evaluate operator
-                        # if needs_x:
-                        #     chebpts(n, self.domain.support)
-                        #     x_ad = Chebfun.initfun(lambda x: x, self.domain.support)
-                        #     ad_result = self.op(x_ad, ad_u)
-                        # else:
-                        ad_result = self.op(ad_u)
+                        # Evaluate operator with proper signature
+                        if needs_x:
+                            # Operator needs independent variable: op(x, u)
+                            # Create identity chebfun for independent variable with ZERO Jacobian
+                            # (x does not depend on u, so ∂x/∂u = 0)
+                            x_chebfun = Chebfun.initidentity(self.domain)
+                            zero_jacobian = sparse.csr_matrix((n + 1, n + 1))
+                            x_ad = AdChebfun(x_chebfun, n=n, jacobian=zero_jacobian)
+                            ad_result = self.op(x_ad, ad_u)
+                        else:
+                            # Operator only needs u: op(u)
+                            ad_result = self.op(ad_u)
 
                         return ad_result.jacobian
                     except Exception as e:
@@ -2247,7 +2575,7 @@ class Chebop:
         # Build differentiation matrices
         D = [np.eye(N)]  # D^0 = I
         for k in range(1, max_order + 1):
-            D.append(diff_matrix(n, interval, order=k).toarray())
+            D.append(sparse_to_dense(diff_matrix(n, interval, order=k)))
 
         # Apply Jacobian to polynomial test functions
         # and solve least squares for coefficients at each point
@@ -2634,15 +2962,12 @@ class Chebop:
                     f"For Neumann or higher-order BCs, use list format like [None, value].",
                     UserWarning,
                 )
-                try:
-                    bc_eval = bc(u)
-                    if hasattr(bc_eval, "__call__"):
-                        residual_at_bc = float(bc_eval(np.array([x_bc]))[0])
-                    else:
-                        residual_at_bc = float(bc_eval)
-                    return -residual_at_bc
-                except Exception:
-                    return 0  # Ultimate fallback
+                bc_eval = bc(u)
+                if hasattr(bc_eval, "__call__"):
+                    residual_at_bc = float(bc_eval(np.array([x_bc]))[0])
+                else:
+                    residual_at_bc = float(bc_eval)
+                return -residual_at_bc
 
         elif isinstance(bc, (list, tuple)):
             # List BC: [c0, c1, ...] for [u(x), u'(x), u''(x), ...]
@@ -2656,17 +2981,14 @@ class Chebop:
                     residuals.append(None)
                 elif callable(c_k):
                     # c_k is a callable BC functional
-                    try:
-                        bc_eval = c_k(u)
-                        if hasattr(bc_eval, "__call__"):
-                            # Chebfun result - evaluate at boundary
-                            residual_at_bc = float(bc_eval(np.array([x_bc]))[0])
-                        else:
-                            residual_at_bc = float(bc_eval)
-                        # Return negated residual
-                        residuals.append(-residual_at_bc)
-                    except Exception:
-                        residuals.append(0)  # Fallback
+                    bc_eval = c_k(u)
+                    if hasattr(bc_eval, "__call__"):
+                        # Chebfun result - evaluate at boundary
+                        residual_at_bc = float(bc_eval(np.array([x_bc]))[0])
+                    else:
+                        residual_at_bc = float(bc_eval)
+                    # Return negated residual
+                    residuals.append(-residual_at_bc)
                 else:
                     # c_k is desired numeric value, u^(k)(x_bc) is current value
                     u_k_at_bc = float(u_derivs[k](np.array([x_bc]))[0])

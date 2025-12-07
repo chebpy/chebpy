@@ -211,8 +211,8 @@ class Trigtech(Smoothfun):
             # MATLAB standardCheck: pair, flip, and double coefficients for standardChop
             paired_doubled = cls._pair_fourier_coeffs(coeffs)
 
-            # Normalize tolerance by vscale (MATLAB line 74: tol = tol.*data.vscale./nrmf)
-            tol = epslevel * vscale / vscale  # Simplifies to epslevel, but keep for clarity
+            # Normalize tolerance by vscale
+            tol = epslevel
 
             # Call standardChop to find cutoff
             cutoff = standard_chop(paired_doubled, tol=tol)
@@ -309,9 +309,7 @@ class Trigtech(Smoothfun):
 
     def __call__fft(self, x):
         """Evaluate using FFT (only works for points on the standard grid)."""
-        # This is primarily for internal use when x is on the Fourier grid
-        self.values()
-        # For arbitrary x, fall back to direct evaluation
+        # FFT evaluation is only efficient for grid points; always use direct
         return self.__call__direct(x)
 
     def __repr__(self):  # pragma: no cover
@@ -594,20 +592,9 @@ class Trigtech(Smoothfun):
         Returns:
             Trigtech: A new Trigtech representing this Trigtech raised to the power f.
         """
-
-        def powfun(fn, x):
-            return np.power(self(x), fn(x) if callable(fn) else fn)
-
-        if np.isscalar(f):
-
-            def op(x):
-                return powfun(f, x)
-        else:
-
-            def op(x):
-                return powfun(f, x)
-
-        return self.__class__.initfun_adaptive(op, interval=self.interval)
+        return self.__class__.initfun_adaptive(
+            lambda x: np.power(self(x), f(x) if callable(f) else f), interval=self.interval
+        )
 
     def __radd__(self, f):
         """Right addition (commutative with __add__)."""
@@ -725,7 +712,7 @@ class Trigtech(Smoothfun):
         for idx in sign_changes:
             # Refine with bisection
             a, b = x_grid[idx], x_grid[idx + 1]
-            fa, _fb = vals[idx], vals[idx + 1]
+            fa = vals[idx]
 
             # Bisection
             for _ in range(50):  # Max iterations
@@ -738,7 +725,7 @@ class Trigtech(Smoothfun):
                 if np.sign(fmid) == np.sign(fa):
                     a, fa = mid, fmid
                 else:
-                    b, _fb = mid, fmid
+                    b = mid
 
             roots.append((a + b) / 2)
 

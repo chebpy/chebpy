@@ -9,9 +9,9 @@ import numpy as np
 from scipy import sparse
 
 from .chebfun import Chebfun
+from .sparse_utils import extract_scalar, jacobian_to_row, sparse_to_dense
 from .spectral import barycentric_matrix, diff_matrix, identity_matrix, mult_matrix
-from .sparse_utils import extract_scalar, jacobian_to_row
-from .utilities import Interval, is_scalar_type
+from .utilities import ensure_interval, is_scalar_type
 
 
 def _extract_residual_jacobian(bc_elem, x_bc, n):
@@ -68,13 +68,7 @@ class AdChebfun:
             jacobian: Sparse matrix Jacobian. If None, initializes as identity.
         """
         # Convert Domain to Interval (support is a Domain, we need an Interval)
-        support = func.support
-        if hasattr(support, "__iter__") and len(support) == 2:
-            # It's a Domain or array-like [a, b]
-            self.domain = Interval(support[0], support[1])
-        else:
-            # Already an Interval
-            self.domain = support
+        self.domain = ensure_interval(func.support)
 
         # Infer discretization size from func if not provided
         if n is None:
@@ -156,6 +150,10 @@ class AdChebfun:
             new_func = self.func + other.func
             new_jacobian = self.jacobian + other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, Chebfun):
+            # Treat regular Chebfun as constant (zero Jacobian contribution)
+            new_func = self.func + other
+            return AdChebfun(new_func, self.n, self.jacobian)
         elif is_scalar_type(other) or isinstance(other, np.ndarray):
             # Adding constant: Jacobian unchanged
             new_func = self.func + other
@@ -175,6 +173,10 @@ class AdChebfun:
             new_func = self.func - other.func
             new_jacobian = self.jacobian - other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, Chebfun):
+            # Treat regular Chebfun as constant (zero Jacobian contribution)
+            new_func = self.func - other
+            return AdChebfun(new_func, self.n, self.jacobian)
         elif is_scalar_type(other) or isinstance(other, np.ndarray):
             new_func = self.func - other
             return AdChebfun(new_func, self.n, self.jacobian)
@@ -183,7 +185,12 @@ class AdChebfun:
 
     def __rsub__(self, other) -> "AdChebfun":
         """Right subtract: c - f."""
-        if is_scalar_type(other) or isinstance(other, np.ndarray):
+        if isinstance(other, Chebfun):
+            # Treat regular Chebfun as constant (zero Jacobian contribution)
+            new_func = other - self.func
+            new_jacobian = -self.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
             new_func = other - self.func
             new_jacobian = -self.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
@@ -207,6 +214,13 @@ class AdChebfun:
             M_g = mult_matrix(other.func, self.n, self.domain)
 
             new_jacobian = M_g @ self.jacobian + M_f @ other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, Chebfun):
+            # Treat regular Chebfun as constant (zero Jacobian)
+            # Product rule: (f * c)' = f' * c (since c' = 0)
+            new_func = self.func * other
+            M_c = mult_matrix(other, self.n, self.domain)
+            new_jacobian = M_c @ self.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
         elif is_scalar_type(other):
             # Multiply by constant: (c*f)' = c*f'
@@ -238,6 +252,14 @@ class AdChebfun:
             M_f_over_g2 = mult_matrix(f_over_g2, self.n, self.domain)
 
             new_jacobian = M_g_inv @ self.jacobian - M_f_over_g2 @ other.jacobian
+            return AdChebfun(new_func, self.n, new_jacobian)
+        elif isinstance(other, Chebfun):
+            # Treat regular Chebfun as constant (zero Jacobian)
+            # Quotient rule: (f / c)' = f' / c (since c' = 0)
+            new_func = self.func / other
+            c_inv = Chebfun.initfun(lambda x: 1.0 / other(x), self.domain)
+            M_c_inv = mult_matrix(c_inv, self.n, self.domain)
+            new_jacobian = M_c_inv @ self.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
         elif is_scalar_type(other):
             new_func = self.func / other
@@ -302,6 +324,22 @@ class AdChebfun:
     def sqrt(self) -> "AdChebfun":
         """Compute square root with autodifferentiation."""
         return self._apply_unary_op(np.sqrt, lambda x: 1.0 / (2.0 * np.sqrt(x)))
+
+    def sinh(self) -> "AdChebfun":
+        """Compute hyperbolic sine with autodifferentiation."""
+        return self._apply_unary_op(np.sinh, np.cosh)
+
+    def cosh(self) -> "AdChebfun":
+        """Compute hyperbolic cosine with autodifferentiation."""
+        return self._apply_unary_op(np.cosh, np.sinh)
+
+    def tanh(self) -> "AdChebfun":
+        """Compute hyperbolic tangent with autodifferentiation."""
+        return self._apply_unary_op(np.tanh, lambda x: 1.0 / (np.cosh(x) ** 2))
+
+    def log1p(self) -> "AdChebfun":
+        """Compute log(1+x) with autodifferentiation."""
+        return self._apply_unary_op(np.log1p, lambda x: 1.0 / (1.0 + x))
 
     def abs(self) -> "AdChebfun":
         """Absolute value - NOT Fréchet differentiable!"""
@@ -384,7 +422,7 @@ class AdChebfunScalar:
         if isinstance(self.value, np.ndarray):
             indexed_value = self.value[index]
             # Extract corresponding row(s) of Jacobian
-            J_dense = self.jacobian.toarray()
+            J_dense = sparse_to_dense(self.jacobian)
             indexed_jacobian = J_dense[index] if J_dense.ndim > 1 else J_dense
             # Ensure 2D for sparse matrix
             if indexed_jacobian.ndim == 1:
