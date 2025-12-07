@@ -57,10 +57,7 @@ class OpDiscretization:
         """
         row = sparse.lil_matrix((1, total_size))
         for idx, val in zip(indices, values):
-            if isinstance(idx, slice):
-                row[0, idx] = val
-            else:
-                row[0, idx] = val
+            row[0, idx] = val
         return row.tocsr()
 
     @staticmethod

@@ -10,7 +10,7 @@ from scipy import sparse
 
 from .chebfun import Chebfun
 from .spectral import barycentric_matrix, diff_matrix, identity_matrix, mult_matrix
-from .utilities import Interval
+from .utilities import Interval, is_scalar_type
 
 
 def _extract_scalar(res):
@@ -172,7 +172,7 @@ class AdChebfun:
             new_func = self.func + other.func
             new_jacobian = self.jacobian + other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
-        elif isinstance(other, (int, float, np.ndarray)):
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
             # Adding constant: Jacobian unchanged
             new_func = self.func + other
             return AdChebfun(new_func, self.n, self.jacobian)
@@ -191,7 +191,7 @@ class AdChebfun:
             new_func = self.func - other.func
             new_jacobian = self.jacobian - other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
-        elif isinstance(other, (int, float, np.ndarray)):
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
             new_func = self.func - other
             return AdChebfun(new_func, self.n, self.jacobian)
         else:
@@ -199,7 +199,7 @@ class AdChebfun:
 
     def __rsub__(self, other) -> "AdChebfun":
         """Right subtract: c - f."""
-        if isinstance(other, (int, float, np.ndarray)):
+        if is_scalar_type(other) or isinstance(other, np.ndarray):
             new_func = other - self.func
             new_jacobian = -self.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
@@ -224,7 +224,7 @@ class AdChebfun:
 
             new_jacobian = M_g @ self.jacobian + M_f @ other.jacobian
             return AdChebfun(new_func, self.n, new_jacobian)
-        elif isinstance(other, (int, float)):
+        elif is_scalar_type(other):
             # Multiply by constant: (c*f)' = c*f'
             new_func = self.func * other
             new_jacobian = other * self.jacobian

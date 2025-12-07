@@ -161,10 +161,6 @@ def check_coefficient_oscillation(
 
         if coeff_size > 50:
             # Highly oscillatory coefficient
-            # Estimate number of oscillations
-            a, b = domain.support
-            b - a
-
             # Rough estimate: n Chebyshev points can resolve ~n/2 oscillations
             num_oscillations = coeff_size / 2
 
