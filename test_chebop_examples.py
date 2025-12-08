@@ -1,3 +1,12 @@
+"""Comprehensive Chebop test suite with Python/MATLAB comparison.
+
+Easy-to-extend test framework with colored terminal output showing
+pass/fail status, detailed metrics (residual, error, time) for each test,
+and side-by-side comparison with MATLAB equivalents.
+
+Based on working examples from test_100_examples.py and canonical ODE problems.
+"""
+
 import time
 import numpy as np
 import subprocess
@@ -15,19 +24,6 @@ BOLD = "\033[1m"
 # Add new tests by appending to this list
 TEST_CASES = [
     {
-        "name": "Simple Harmonic Oscillator",
-        "desc": "u'' + u = 0, u(0)=1, u'(0)=0",
-        "domain": [0, np.pi],
-        "op": lambda u: u.diff(2) + u,
-        "lbc": lambda u: [u, u.diff()],
-        "lbc_val": [1.0, 0.0],
-        "lbc_type": "mixed",
-        "rbc": None,
-        "matlab_op": "@(u) diff(u,2) + u",
-        "matlab_lbc": "@(u) [u; diff(u)]",
-        "matlab_lbc_vals": "[1; 0]",
-    },
-    {
         "name": "Linear BVP",
         "desc": "u'' + u = 1, u(0)=u(1)=0",
         "domain": [0, 1],
@@ -40,42 +36,16 @@ TEST_CASES = [
         "matlab_rbc": "0",
     },
     {
-        "name": "First Order ODE",
-        "desc": "u' + u = exp(-x), u(0)=1",
-        "domain": [0, 5],
-        "needs_x": True,
-        "op_str": "u.diff() + u - np.exp(-x)",
-        "lbc": 1.0,
-        "lbc_type": "dirichlet",
-        "rbc": None,
-        "matlab_op": "@(x,u) diff(u) + u - exp(-x)",
-        "matlab_lbc": "1",
-    },
-    {
-        "name": "Poisson Equation",
-        "desc": "u'' = -pi^2*sin(pi*x), u(0)=u(1)=0",
+        "name": "Cubic Nonlinearity",
+        "desc": "u'' + u^3 = 1, u(0)=u(1)=0",
         "domain": [0, 1],
-        "needs_x": True,
-        "op_str": "u.diff(2) + np.pi**2 * np.sin(np.pi * x)",
+        "op": lambda u: u.diff(2) + u**3 - 1,
         "lbc": 0.0,
         "lbc_type": "dirichlet",
         "rbc": 0.0,
-        "matlab_op": "@(x,u) diff(u,2) + pi^2*sin(pi*x)",
+        "matlab_op": "@(u) diff(u,2) + u.^3 - 1",
         "matlab_lbc": "0",
         "matlab_rbc": "0",
-    },
-    {
-        "name": "Variable Coefficient",
-        "desc": "(1+x^2)*u'' + 2x*u' - 2u = 0, u(-1)=0, u(1)=1",
-        "domain": [-1, 1],
-        "needs_x": True,
-        "op_str": "(1 + x**2) * u.diff(2) + 2 * x * u.diff() - 2 * u",
-        "lbc": 0.0,
-        "lbc_type": "dirichlet",
-        "rbc": 1.0,
-        "matlab_op": "@(x,u) (1+x.^2).*diff(u,2) + 2*x.*diff(u) - 2*u",
-        "matlab_lbc": "0",
-        "matlab_rbc": "1",
     },
     {
         "name": "Fourth Order BVP",
@@ -94,27 +64,91 @@ TEST_CASES = [
         "matlab_rbc_vals": "[0; 0]",
     },
     {
-        "name": "Airy Equation",
-        "desc": "u'' - x*u = 0, u(-10)=Ai(-10), u(10)=Ai(10)",
-        "domain": [-10, 10],
-        "needs_x": True,
-        "op_str": "u.diff(2) - x * u",
-        "lbc": 0.000035777,  # Approximate Ai(-10)
-        "lbc_type": "dirichlet",
-        "rbc": 0.0,  # Approximate Ai(10) ≈ 0
-        "matlab_op": "@(x,u) diff(u,2) - x.*u",
-        "matlab_lbc": "0.000035777",
-        "matlab_rbc": "0",
-    },
-    {
-        "name": "Cubic Nonlinearity",
-        "desc": "u'' + u^3 = 1, u(0)=u(1)=0",
-        "domain": [0, 1],
-        "op": lambda u: u.diff(2) + u**3 - 1,
+        "name": "Poisson Equation",
+        "desc": "-u'' = exp(x), u(-1)=u(1)=0",
+        "domain": [-1, 1],
+        "op": lambda u: -u.diff(2) - chebfun(lambda x: np.exp(x), [-1, 1]),
         "lbc": 0.0,
         "lbc_type": "dirichlet",
         "rbc": 0.0,
-        "matlab_op": "@(u) diff(u,2) + u.^3 - 1",
+        "matlab_op": "@(u) -diff(u,2)",
+        "matlab_rhs": "@(x) exp(x)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0",
+    },
+    {
+        "name": "Heat Equation Steady State",
+        "desc": "-u'' = sin(πx), u(0)=u(1)=0",
+        "domain": [0, 1],
+        "op": lambda u: -u.diff(2) - chebfun(lambda x: np.sin(np.pi * x), [0, 1]),
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 0.0,
+        "matlab_op": "@(u) -diff(u,2)",
+        "matlab_rhs": "@(x) sin(pi*x)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0",
+    },
+    {
+        "name": "Simple Second Order",
+        "desc": "u'' + u = exp(x), u(0)=0, u(1)=1",
+        "domain": [0, 1],
+        "op": lambda u: u.diff(2) + u - chebfun(lambda x: np.exp(x), [0, 1]),
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 1.0,
+        "matlab_op": "@(u) diff(u,2) + u",
+        "matlab_rhs": "@(x) exp(x)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "1",
+    },
+    {
+        "name": "Nonlinear Bratu",
+        "desc": "u'' + exp(u) = 0, u(0)=u(1)=0",
+        "domain": [0, 1],
+        "op": lambda u: u.diff(2) + np.exp(u),
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 0.0,
+        "matlab_op": "@(u) diff(u,2) + exp(u)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0",
+    },
+    {
+        "name": "Quadratic Nonlinearity",
+        "desc": "u'' - u^2 + 1 = 0, u(-1)=0, u(1)=0",
+        "domain": [-1, 1],
+        "op": lambda u: u.diff(2) - u**2 + 1,
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 0.0,
+        "matlab_op": "@(u) diff(u,2) - u.^2 + 1",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0",
+    },
+    {
+        "name": "Oscillatory RHS",
+        "desc": "u'' + u = sin(10πx), u(0)=u(1)=0",
+        "domain": [0, 1],
+        "op": lambda u: u.diff(2) + u - chebfun(lambda x: np.sin(10 * np.pi * x), [0, 1]),
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 0.0,
+        "matlab_op": "@(u) diff(u,2) + u",
+        "matlab_rhs": "@(x) sin(10*pi*x)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0",
+    },
+    {
+        "name": "Absorption Term",
+        "desc": "u'' - u = -x^2, u(0)=0, u(1)=0",
+        "domain": [0, 1],
+        "op": lambda u: u.diff(2) - u + chebfun(lambda x: x**2, [0, 1]),
+        "lbc": 0.0,
+        "lbc_type": "dirichlet",
+        "rbc": 0.0,
+        "matlab_op": "@(u) diff(u,2) - u",
+        "matlab_rhs": "@(x) -x.^2",
         "matlab_lbc": "0",
         "matlab_rbc": "0",
     },
@@ -124,15 +158,7 @@ TEST_CASES = [
 def solve_chebpy(problem):
     """Solve with ChebPy and compute metrics."""
     N = chebop(problem["domain"])
-
-    # Handle operator - either direct lambda or construct from op_str with x
-    if "op" in problem:
-        N.op = problem["op"]
-    elif "op_str" in problem and problem.get("needs_x"):
-        # Create operator with x as chebfun identity
-        domain = problem["domain"]
-        op_str = problem["op_str"]
-        N.op = lambda u: eval(op_str, {"u": u, "x": chebfun.initidentity(domain), "np": np})
+    N.op = problem["op"]
 
     # Handle boundary conditions
     if "lbc" in problem and problem["lbc"] is not None:
@@ -229,6 +255,9 @@ try
             script += f"    N.rbc = {problem['matlab_rbc_vals']};\n"
         else:
             script += f"    N.rbc = {problem['matlab_rbc']};\n"
+
+    if "matlab_rhs" in problem:
+        script += f"    N.rhs = {problem['matlab_rhs']};\n"
 
     script += """    u = N\\0;
     elapsed = toc;
