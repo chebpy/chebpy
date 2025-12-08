@@ -127,6 +127,10 @@ class LinOp:
                     f"(e.g., [a0, None, a2] for a2*u'' + a0*u)."
                 )
 
+        # Performance optimization flags
+        # Set by Newton iteration to avoid expensive diagnostics on each linearization
+        self._disable_diagnostics = False
+
         # Integral constraints
         # Can be a single constraint dict or a list of constraint dicts
         # Each dict has {'weight': chebfun or None, 'value': float}
@@ -869,8 +873,9 @@ class LinOp:
 
             # Run diagnostics to detect potential issues
             # This will warn about singularities, oscillatory coefficients, etc.
-
-            diagnose_linop(self, verbose=True)
+            # Skip diagnostics if disabled (e.g., during Newton iteration for performance)
+            if not self._disable_diagnostics:
+                diagnose_linop(self, verbose=True)
 
             # Determine discretization sequence
             # Match MATLAB's dimensionValues: powers of 2 up to 512, then half powers

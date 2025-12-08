@@ -303,6 +303,10 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None, m
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
+        # Handle scalar returns from constant functions like lambda x: 1.0
+        values = np.atleast_1d(values)
+        if values.size == 1:
+            values = np.broadcast_to(values, points.shape)
         coeffs = cls._vals2coeffs(values)
         eps = prefs.eps
         tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale

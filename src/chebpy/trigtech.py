@@ -100,11 +100,16 @@ class Trigtech(Smoothfun):
         """
         interval = interval if interval is not None else [0, 2 * np.pi]
         interval = Interval(*interval)
-        points = cls._trigpts(n)
-        # Map points from [0, 2π] to the actual interval [a, b]
+        # Get equally-spaced points in [0, 1]
+        t = np.arange(n) / n if n > 0 else np.array([])
+        # Map to interval [a, b]: equally spaced points starting at a
         a, b = interval
-        points_mapped = a + (b - a) * points / (2 * np.pi)
+        points_mapped = a + (b - a) * t
         values = fun(points_mapped)
+        # Handle scalar returns from constant functions like lambda x: 1.0
+        values = np.atleast_1d(values)
+        if values.size == 1:
+            values = np.broadcast_to(values, points_mapped.shape)
         coeffs = cls._vals2coeffs(values)
         return cls(coeffs, interval=interval)
 
@@ -209,10 +214,15 @@ class Trigtech(Smoothfun):
 
         for k in range(minpow2, max(minpow2, maxpow2) + 1):
             n = 2**k
-            points = cls._trigpts(n)
-            # Map points from [0, 2π] to the actual interval [a, b]
-            points_mapped = a + (b - a) * points / (2 * np.pi)
+            # Get equally-spaced points in [0, 1]
+            t = np.arange(n) / n
+            # Map to interval [a, b]: equally spaced points starting at a
+            points_mapped = a + (b - a) * t
             values = fun(points_mapped)
+            # Handle scalar returns from constant functions like lambda x: 1.0
+            values = np.atleast_1d(values)
+            if values.size == 1:
+                values = np.broadcast_to(values, points_mapped.shape)
 
             # Check for zero function
             vscale = np.max(np.abs(values))
@@ -305,15 +315,16 @@ class Trigtech(Smoothfun):
         k = np.fft.fftfreq(n, d=1.0 / n)
 
         # Scale frequencies for the interval [a, b]
-        # For a function on [a,b], Fourier basis is exp(2πikx/(b-a))
+        # For a function on [a,b], Fourier basis is exp(2πik(x-a)/(b-a))
+        # This is because FFT assumes periodicity starting at 0, but our interval starts at a
         a, b = self.interval
         L = b - a
         omega = 2.0 * np.pi / L  # Angular frequency scaling
 
-        # Evaluate: f(x) = Σ c_k exp(i*omega*k*x)
+        # Evaluate: f(x) = Σ c_k exp(i*omega*k*(x-a))
         result = np.zeros_like(x, dtype=complex)
         for i, coeff in enumerate(coeffs):
-            result += coeff * np.exp(1j * omega * k[i] * x)
+            result += coeff * np.exp(1j * omega * k[i] * (x - a))
 
         # Always return complex result - let higher-level code decide whether to take real part
         # This is critical for differentiation operations where intermediate results may have
@@ -403,17 +414,24 @@ class Trigtech(Smoothfun):
 
         Obtained either by truncating if n < self.size or zero-padding if n > self.size.
         In all cases a deep copy is returned.
+
+        For Trigtech, we cannot simply append/truncate coefficients because FFT
+        coefficients have a specific ordering. Instead, we resample the function.
         """
         m = self.size
-        ak = self.coeffs
         cls = self.__class__
-        if n - m < 0:
-            out = cls(ak[:n].copy(), interval=self.interval)
-        elif n - m > 0:
-            out = cls(np.append(ak, np.zeros(n - m, dtype=complex)), interval=self.interval)
-        else:
-            out = self.copy()
-        return out
+
+        if n == m:
+            return self.copy()
+
+        # For Trigtech, we need to resample rather than just padding coefficients
+        # because FFT coefficients have positive and negative frequencies interleaved
+        # Resampling ensures the function is preserved correctly
+
+        # Use the function values approach: evaluate at old points, resample at new points
+        # But for efficiency, we can use initfun_fixedlen which will call the function
+        # at the new points
+        return cls.initfun_fixedlen(lambda x: self(x), n, interval=self.interval)
 
     def real(self):
         """Return the real part of the Trigtech.
@@ -525,11 +543,28 @@ class Trigtech(Smoothfun):
             # This should ideally not happen - periodic problems should use Trigtech throughout
             # But if it does, convert the other operand to Trigtech by resampling
             if not isinstance(f, cls):
+                # Import Chebtech to check type
+                from .chebtech import Chebtech
+
                 # Convert f to Trigtech by sampling at enough points
                 # Use fixed-length to avoid adaptive convergence issues
-                target_size = 2 * max(self.size, getattr(f, 'size', 16))
+                target_size = 2 * max(self.size, getattr(f, "size", 16))
                 target_size = min(target_size, 512)  # Cap to avoid excessive computation
-                f = cls.initfun(lambda x: f(x), n=target_size, interval=self.interval)
+
+                # If f is a Chebtech, we need to map points from [a,b] to [-1,1]
+                # because Chebtech always works on [-1,1] interval
+                if isinstance(f, Chebtech):
+                    a, b = self.interval
+
+                    def wrapped_f(x):
+                        # Map x from [a, b] to [-1, 1] for Chebtech evaluation
+                        x_mapped = 2 * (x - a) / (b - a) - 1
+                        return f(x_mapped)
+
+                    f = cls.initfun(wrapped_f, n=target_size, interval=self.interval)
+                else:
+                    # For other Smoothfun types, assume they handle intervals correctly
+                    f = cls.initfun(lambda x: f(x), n=target_size, interval=self.interval)
 
             g = self
             n, m = g.size, f.size

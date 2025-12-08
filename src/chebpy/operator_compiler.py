@@ -21,9 +21,12 @@ Example:
     >>> # With pre-compilation: ~1-2s (matches MATLAB performance)
 """
 
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
-from typing import Callable, Tuple, Any, Dict, List
-from .order_detection_ast import OrderTracerAST, DiffNode, BinOpNode, ConstNode
+
+from .order_detection_ast import BinOpNode, ConstNode, DiffNode, OrderTracerAST
 
 
 class CoefficientExtractor:
@@ -38,7 +41,7 @@ class CoefficientExtractor:
         self.max_order = max_order
         self.chebfuns = []  # List of chebfun coefficients found
 
-    def extract(self, ast_root) -> Tuple[Any, Any]:
+    def extract(self, ast_root) -> tuple[Any, Any]:
         """Extract coefficient of highest derivative and remaining expression.
 
         This follows MATLAB's approach: walk the tree to identify the term
@@ -88,13 +91,14 @@ class CoefficientExtractor:
 
         return highest_deriv_coeff, remaining_expr
 
-    def _split_sum(self, node) -> List:
+    def _split_sum(self, node) -> list:
         """Split a sum into individual terms."""
         if isinstance(node, BinOpNode) and node.op == "+":
             return self._split_sum(node.left) + self._split_sum(node.right)
         elif isinstance(node, BinOpNode) and node.op == "-":
             # Subtraction: left + (-right)
             from .order_detection_ast import UnaryOpNode
+
             return self._split_sum(node.left) + [UnaryOpNode("-", node.right)]
         else:
             return [node]
@@ -105,9 +109,9 @@ class CoefficientExtractor:
             # Calculate total derivative order
             order = node.get_max_order()
             return order == self.max_order
-        elif hasattr(node, 'left') and hasattr(node, 'right'):
+        elif hasattr(node, "left") and hasattr(node, "right"):
             return self._has_highest_deriv(node.left) or self._has_highest_deriv(node.right)
-        elif hasattr(node, 'expr'):
+        elif hasattr(node, "expr"):
             return self._has_highest_deriv(node.expr)
         return False
 
@@ -160,7 +164,7 @@ class CodeGenerator:
             Evaluator function that uses interpolation.
         """
         # Check if coefficient is a chebfun (has domain attribute)
-        if hasattr(coeff_ast, 'value') and hasattr(coeff_ast.value, 'domain'):
+        if hasattr(coeff_ast, "value") and hasattr(coeff_ast.value, "domain"):
             chebfun_obj = coeff_ast.value
             # Pre-evaluate on grid
             a, b = self.domain.support[0], self.domain.support[-1]
@@ -177,7 +181,7 @@ class CodeGenerator:
             return evaluator
         elif isinstance(coeff_ast, ConstNode):
             # Constant coefficient
-            val = coeff_ast.value if hasattr(coeff_ast, 'value') else 1.0
+            val = coeff_ast.value if hasattr(coeff_ast, "value") else 1.0
             return lambda t: val
         else:
             # Unknown coefficient type - try to evaluate if callable
@@ -186,12 +190,7 @@ class CodeGenerator:
             else:
                 return lambda t: 1.0
 
-    def generate_rhs_function(
-        self,
-        coeff_evaluator: Callable,
-        expr_evaluator: Callable,
-        rhs: float = 0.0
-    ) -> Callable:
+    def generate_rhs_function(self, coeff_evaluator: Callable, expr_evaluator: Callable, rhs: float = 0.0) -> Callable:
         """Generate optimized RHS function for ODE solver.
 
         Creates a function of the form:
@@ -235,7 +234,7 @@ class CodeGenerator:
 class ExpressionEvaluator:
     """Evaluate AST expressions at runtime using pre-evaluated coefficients."""
 
-    def __init__(self, grid_cache: Dict):
+    def __init__(self, grid_cache: dict):
         """Initialize expression evaluator.
 
         Args:
@@ -252,6 +251,7 @@ class ExpressionEvaluator:
         Returns:
             Function (t, u) -> scalar value.
         """
+
         def evaluate(t, u):
             return self._eval_node(expr_ast, t, u)
 
@@ -259,11 +259,11 @@ class ExpressionEvaluator:
 
     def _eval_node(self, node, t, u):
         """Recursively evaluate an AST node."""
-        from .order_detection_ast import VarNode, UnaryOpNode, FunctionNode
+        from .order_detection_ast import FunctionNode, UnaryOpNode, VarNode
 
         if isinstance(node, ConstNode):
             # Check if it's a wrapped chebfun
-            if hasattr(node, 'value') and hasattr(node.value, 'domain'):
+            if hasattr(node, "value") and hasattr(node.value, "domain"):
                 # It's a chebfun coefficient
                 chebfun_obj = node.value
                 obj_id = id(chebfun_obj)
@@ -273,7 +273,7 @@ class ExpressionEvaluator:
                 else:
                     return chebfun_obj(t)
             else:
-                return node.value if hasattr(node, 'value') else 0.0
+                return node.value if hasattr(node, "value") else 0.0
 
         elif isinstance(node, VarNode):
             # Variable u (not a derivative) - return u[0]
@@ -300,7 +300,7 @@ class ExpressionEvaluator:
             elif node.op == "/":
                 return left_val / right_val
             elif node.op == "**":
-                return left_val ** right_val
+                return left_val**right_val
             else:
                 raise ValueError(f"Unknown binary operator: {node.op}")
 
@@ -318,16 +318,16 @@ class ExpressionEvaluator:
 
             # Map function names to numpy functions
             func_map = {
-                'sin': np.sin,
-                'cos': np.cos,
-                'tan': np.tan,
-                'exp': np.exp,
-                'log': np.log,
-                'sqrt': np.sqrt,
-                'abs': np.abs,
-                'sinh': np.sinh,
-                'cosh': np.cosh,
-                'tanh': np.tanh,
+                "sin": np.sin,
+                "cos": np.cos,
+                "tan": np.tan,
+                "exp": np.exp,
+                "log": np.log,
+                "sqrt": np.sqrt,
+                "abs": np.abs,
+                "sinh": np.sinh,
+                "cosh": np.cosh,
+                "tanh": np.tanh,
             }
 
             func = func_map.get(node.func_name)
@@ -345,7 +345,7 @@ class ExpressionEvaluator:
 
             return result
 
-        elif hasattr(node, 'expr'):
+        elif hasattr(node, "expr"):
             # Generic node with expr attribute
             return self._eval_node(node.expr, t, u)
 
@@ -356,13 +356,7 @@ class ExpressionEvaluator:
 class OperatorCompiler:
     """Main class for compiling differential operators into optimized functions."""
 
-    def compile_ivp_operator(
-        self,
-        op: Callable,
-        domain,
-        max_order: int,
-        rhs: float = 0.0
-    ) -> Callable:
+    def compile_ivp_operator(self, op: Callable, domain, max_order: int, rhs: float = 0.0) -> Callable:
         """Compile a differential operator into an optimized ODE RHS function.
 
         This follows MATLAB's approach:
@@ -385,7 +379,7 @@ class OperatorCompiler:
         result = op(tracer)
 
         # Extract the root AST node
-        if hasattr(result, '_root'):
+        if hasattr(result, "_root"):
             ast_root = result._root
         else:
             ast_root = result
@@ -405,10 +399,6 @@ class OperatorCompiler:
         expr_evaluator = expr_eval.create_evaluator(remaining_expr)
 
         # 4. Generate optimized RHS function
-        compiled_fn = codegen.generate_rhs_function(
-            coeff_evaluator,
-            expr_evaluator,
-            rhs
-        )
+        compiled_fn = codegen.generate_rhs_function(coeff_evaluator, expr_evaluator, rhs)
 
         return compiled_fn
