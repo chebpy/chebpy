@@ -19,7 +19,7 @@ dev = [
     "pytest-cov>=6.2.1",
     "pre-commit>=4.2.0",
     "seaborn==0.13.2",
-    "marimo==0.18.1",
+    "marimo==0.18.3",
     "pytest>=8.4.1"
 ]
 
