@@ -256,3 +256,121 @@ def test_norm_relation_to_dot(calculus_fixtures):
     # ||f||^2 should equal f.dot(f)
     assert abs(f2.norm() ** 2 - f2.dot(f2)) < 1e-10
     assert abs(f3.norm() ** 2 - f3.dot(f3)) < 1e-10
+
+
+class TestChebfunCalculusEdgeCases:
+    """Additional edge case tests for Chebfun calculus operations."""
+
+    def test_diff_edge_cases(self):
+        """Test diff with n=0 and negative n."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x**3, [-1, 1])
+
+        # n=0 should return original function
+        f0 = f.diff(0)
+        assert f0 == f
+
+        # Negative n should raise ValueError
+        with pytest.raises(ValueError, match="non-negative"):
+            f.diff(-1)
+
+    def test_diff_higher_order(self):
+        """Test higher order derivatives."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x**4, [-1, 1])
+        # Fourth derivative of x^4 is 24
+        f4 = f.diff(4)
+        xx = np.linspace(-1, 1, 20)
+        assert np.allclose(f4(xx), 24, atol=1e-10)
+
+    def test_multipiece_cumsum_with_many_pieces(self):
+        """Test cumsum with more than 2 pieces."""
+        from chebpy import chebfun
+
+        # Test that continuity is enforced across multiple pieces
+        f = chebfun(lambda x: x * 0 + 1, [-1, -0.5, 0, 0.5, 1])
+        f_int = f.cumsum()
+        # Check that it's continuous at breakpoints
+        xx = np.array([-0.5, 0, 0.5])
+        left = xx - 1e-10
+        right = xx + 1e-10
+        assert np.allclose(f_int(left), f_int(right), atol=1e-5)
+
+    def test_cumsum_multipiece_continuity(self):
+        """Test that cumsum maintains continuity across pieces."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: np.sign(x), [-1, 0, 1])
+        f_cumsum = f.cumsum()
+        # Check continuity at x=0
+        left_val = f_cumsum(-1e-10)
+        right_val = f_cumsum(1e-10)
+        # Should be continuous (within tolerance)
+        assert np.abs(left_val - right_val) < 1e-6
+
+    def test_norm_l1(self):
+        """Test L1 norm."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x, [-1, 1])
+        # L1 norm = integral(|x|) from -1 to 1 = 2 * integral(x) from 0 to 1 = 1
+        norm_l1 = f.norm(p=1)
+        assert np.isclose(norm_l1, 1.0, atol=1e-10)
+
+    def test_norm_l2(self):
+        """Test L2 norm (default)."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x, [-1, 1])
+        # L2 norm = sqrt(integral(x^2)) from -1 to 1 = sqrt(2/3)
+        norm_l2 = f.norm()
+        assert np.isclose(norm_l2, np.sqrt(2 / 3), atol=1e-10)
+
+    def test_norm_linf(self):
+        """Test L-infinity norm."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x**2, [-1, 1])
+        # L-inf norm = max|x^2| on [-1, 1] = 1
+        norm_linf = f.norm(np.inf)
+        assert np.isclose(norm_linf, 1.0, atol=1e-10)
+
+    def test_norm_l3(self):
+        """Test L3 norm."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x * 0 + 1, [-1, 1])  # Constant function workaround
+        # L3 norm of constant 1 = (integral(1) from -1 to 1)^(1/3) = 2^(1/3)
+        norm_l3 = f.norm(p=3)
+        assert np.isclose(norm_l3, 2 ** (1 / 3), atol=1e-10)
+
+    def test_norm_invalid_p(self):
+        """Test norm with invalid p value."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x, [-1, 1])
+        with pytest.raises(ValueError, match="must be positive"):
+            f.norm(p=-1)
+
+        with pytest.raises(ValueError, match="must be positive"):
+            f.norm(p=0)
+
+    def test_norm_l2_multipiece(self):
+        """Test L2 norm on multipiece function."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x, [-1, 0, 1])
+        norm = f.norm()  # L2 by default
+        # L2 norm of x on [-1,1] = sqrt(2/3)
+        assert np.isclose(norm, np.sqrt(2 / 3), atol=1e-10)
+
+    def test_norm_linf_with_multiple_extrema(self):
+        """Test L-infinity norm with multiple local maxima."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: np.sin(3 * x), [-np.pi, np.pi])
+        norm_inf = f.norm(np.inf)
+        # Should be 1 (max of |sin|)
+        assert np.isclose(norm_inf, 1.0, atol=1e-10)

@@ -341,7 +341,6 @@ Expire-Date: 0
     yield local_dir
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "bump_type, expected_version",
     [
@@ -368,7 +367,6 @@ def test_bump_updates_version_no_commit(git_repo, bump_type, expected_version):
     assert f"v{expected_version}" not in tags
 
 
-@pytest.mark.slow
 def test_bump_commit_then_release_push(git_repo):
     """Bump with commit, then run `release` to create and push the tag."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -394,7 +392,6 @@ def test_bump_commit_then_release_push(git_repo):
     assert "v0.1.1" in remote_tags
 
 
-@pytest.mark.slow
 def test_release_creates_signed_tag(git_repo):
     """Release creates a GPG-signed tag."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -417,7 +414,6 @@ def test_release_creates_signed_tag(git_repo):
     assert verify_result.returncode == 0, f"Tag signature verification failed: {verify_result.stderr}"
 
 
-@pytest.mark.slow
 def test_uncommitted_changes_failure(git_repo):
     """Script fails if there are uncommitted changes."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -438,7 +434,6 @@ def test_uncommitted_changes_failure(git_repo):
     assert "You have uncommitted changes" in result.stdout
 
 
-@pytest.mark.slow
 def test_release_fails_if_local_tag_exists(git_repo):
     """If the target tag already exists locally, release should warn and abort if user says no."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -454,7 +449,6 @@ def test_release_fails_if_local_tag_exists(git_repo):
     assert "Aborted by user" in result.stdout
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("version", ["1.2.3", "2.0.0", "0.5.0"])
 def test_bump_explicit_version(git_repo, version):
     """Bump with explicit version."""
@@ -468,7 +462,6 @@ def test_bump_explicit_version(git_repo, version):
         assert f'version = "{version}"' in f.read()
 
 
-@pytest.mark.slow
 def test_bump_custom_commit_message(git_repo):
     """Bump with custom commit message."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -487,7 +480,6 @@ def test_bump_custom_commit_message(git_repo):
     assert "Custom message" in last_commit
 
 
-@pytest.mark.slow
 def test_bump_fails_existing_tag(git_repo):
     """Bump fails if tag already exists."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -502,7 +494,6 @@ def test_bump_fails_existing_tag(git_repo):
     assert "Tag 'v0.1.1' already exists locally" in result.stdout
 
 
-@pytest.mark.slow
 def test_release_fails_if_remote_tag_exists(git_repo):
     """Release fails if tag exists on remote."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -517,7 +508,6 @@ def test_release_fails_if_remote_tag_exists(git_repo):
     assert "already exists on remote" in result.stdout
 
 
-@pytest.mark.slow
 def test_release_uncommitted_changes_failure(git_repo):
     """Release fails if there are uncommitted changes (even pyproject.toml)."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -532,7 +522,6 @@ def test_release_uncommitted_changes_failure(git_repo):
     assert "You have uncommitted changes" in result.stdout
 
 
-@pytest.mark.slow
 def test_warn_on_non_default_branch(git_repo):
     """Script warns if not on default branch."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -549,7 +538,6 @@ def test_warn_on_non_default_branch(git_repo):
     assert "You are on branch 'feature' but the default branch is 'master'" in result.stdout
 
 
-@pytest.mark.slow
 def test_bump_fails_if_pyproject_toml_dirty(git_repo):
     """Bump fails if pyproject.toml has uncommitted changes."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -564,7 +552,6 @@ def test_bump_fails_if_pyproject_toml_dirty(git_repo):
     assert "You have uncommitted changes" in result.stdout
 
 
-@pytest.mark.slow
 def test_release_pushes_if_ahead_of_remote(git_repo):
     """Release prompts to push if local branch is ahead of remote."""
     script = git_repo / ".github" / "scripts" / "release.sh"
@@ -588,7 +575,6 @@ def test_release_pushes_if_ahead_of_remote(git_repo):
     assert "Push changes to remote before releasing?" in result.stdout
 
 
-@pytest.mark.slow
 def test_release_fails_if_behind_remote(git_repo):
     """Release fails if local branch is behind remote."""
     script = git_repo / ".github" / "scripts" / "release.sh"

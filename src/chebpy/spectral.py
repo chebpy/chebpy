@@ -15,6 +15,7 @@ from scipy import sparse
 from scipy.linalg import toeplitz
 
 from .algorithms import barywts2, chebpts2
+from .sparse_utils import sparse_to_dense
 from .utilities import Interval
 
 
@@ -108,6 +109,75 @@ def diff_matrix_rectangular(n, m, interval, order=1):
     d_rect = eval_matrix @ d_standard
 
     return sparse.csr_matrix(d_rect)
+
+
+def diff_matrix_driscoll_hale(n, interval, order=1):
+    """Construct Driscoll-Hale rectangular differentiation matrix.
+
+    This implements the rectangular spectral collocation approach from
+    Driscoll & Hale (2016). The key insight is that differentiating a
+    polynomial of degree n gives a polynomial of degree n-1. So the k-th
+    derivative of a degree-n polynomial can be represented by n-k+1 values.
+
+    The matrix maps from n+1 Chebyshev coefficients to (n-order+1) collocation
+    points, creating a rectangular matrix that preserves polynomial accuracy
+    without row deletion.
+
+    For a k-th order ODE with k BCs, this gives:
+        - Operator matrix: (n-k+1) × (n+1)
+        - Add k BC rows: (n+1) × (n+1) square system
+
+    Args:
+        n: Number of coefficient DOFs (yields n+1 Chebyshev coefficients)
+        interval: Two-element array [a, b] defining the physical interval
+        order: Order of differentiation (1, 2, 3, ...). Defaults to 1.
+
+    Returns:
+        scipy.sparse matrix: Rectangular differentiation matrix of size
+        (n-order+1) × (n+1).
+
+    References:
+        Driscoll & Hale (2016), "Rectangular spectral collocation",
+        IMA Journal of Numerical Analysis 36(1):108-132.
+
+    Examples:
+        >>> D = diff_matrix_driscoll_hale(10, [-1, 1], order=2)
+        >>> D.shape  # 2nd derivative: maps 11 coeffs to 9 values
+        (9, 11)
+
+        >>> # For u'' = f with 2 BCs:
+        >>> # Operator: (n-1) × (n+1), add 2 BC rows → (n+1) × (n+1)
+    """
+    if n < order:
+        raise ValueError(f"Polynomial degree n={n} must be >= derivative order={order}")
+
+    # Number of output points (one fewer for each derivative order)
+    m = n - order
+
+    if m < 0:
+        raise ValueError(f"Cannot take order-{order} derivative of degree-{n} polynomial")
+
+    # For the Driscoll-Hale approach, we need to:
+    # 1. Differentiate using standard n+1 point differentiation matrix
+    # 2. Resample from n+1 points to m+1 points (polynomial subspace)
+
+    # Get standard differentiation matrix (n+1) × (n+1)
+    D_full = diff_matrix(n, interval, order=order)
+
+    # Get the sampling points for input (n+1 points) and output (m+1 points)
+    interval_obj = Interval(*interval) if not isinstance(interval, Interval) else interval
+    cheb_points_scaled(n, interval_obj)  # n+1 points
+    x_output = cheb_points_scaled(m, interval_obj)  # m+1 points
+
+    # Build resampling matrix: interpolate from n+1 to m+1 points
+    # This is (m+1) × (n+1)
+    P = barycentric_matrix(x_output, n, interval_obj)
+
+    # The Driscoll-Hale matrix is P @ D_full
+    # This maps: n+1 values → (D_full) → n+1 derivative values → (P) → m+1 resampled values
+    D_rect = P @ sparse_to_dense(D_full)
+
+    return sparse.csr_matrix(D_rect)
 
 
 def diff_matrix(n, interval, order=1):
@@ -539,3 +609,392 @@ def fourier_diff_matrix(n, interval: Interval, order=1):
     a, b = interval
     scale_factor = (2 * np.pi) / (b - a)
     return (scale_factor**order) * D
+
+
+# ============================================================================
+# ULTRASPHERICAL SPECTRAL METHOD (Olver-Townsend)
+# ============================================================================
+#
+# The ultraspherical spectral method works in coefficient space rather than
+# collocation (value) space. Key advantages:
+# - Banded matrices (O(n) solve vs O(n³) for dense)
+# - Better conditioning than collocation
+# - Stable for high-order derivatives
+#
+# Reference: S. Olver and A. Townsend, "A fast and well-conditioned spectral
+# method," SIAM Review, 55 (2013), 462-489.
+
+
+def ultraspherical_diff(n, lmbda=0):
+    """Compute differentiation operator in ultraspherical basis.
+
+    Maps Chebyshev coefficients (C^(λ) basis) to C^(λ+1) basis.
+
+    Following MATLAB's diffmat convention: returns n×n matrix operating on
+    n coefficients (not n+1).
+
+    The derivative of a Chebyshev T_k polynomial is:
+        d/dx T_k(x) = k * U_{k-1}(x) = k * C^(1)_{k-1}(x)
+
+    More generally, for C^(λ) polynomials:
+        d/dx C^(λ)_k(x) = 2λ * C^(λ+1)_{k-1}(x)
+
+    Args:
+        n (int): Number of coefficients (returns n×n matrix).
+        lmbda (int): Current ultraspherical parameter (0 for Chebyshev T).
+
+    Returns:
+        scipy.sparse matrix: Differentiation matrix of size n×n.
+        Maps C^(λ) coefficients to C^(λ+1) coefficients.
+    """
+    if n < 1:
+        return sparse.csr_matrix((0, 0))
+
+    # Differentiation formula: d/dx C^(λ)_k = 2λ * C^(λ+1)_{k-1}
+    # For Chebyshev (λ=0), special case: d/dx T_k = k * U_{k-1}
+
+    if lmbda == 0:
+        # Chebyshev case: d/dx T_k = k * U_{k-1} = k * C^(1)_{k-1}
+        # MATLAB diffmat: spdiags((0 : n - 1)', 1, n, n)
+        diag = np.arange(0, n)
+    else:
+        # General case: d/dx C^(λ)_k = 2λ * C^(λ+1)_{k-1}
+        # MATLAB diffmat: for m>0, multiplies by spdiags(2*m*ones(n,1), 1, n, n)
+        diag = 2 * lmbda * np.ones(n)
+
+    # Build sparse matrix: D[i, i+1] = diag[i] (n×n matrix with superdiagonal)
+    D = sparse.diags([diag], [1], shape=(n, n), format="csr")
+    return D
+
+
+def ultraspherical_conversion(n, lmbda):
+    """Compute conversion matrix between ultraspherical bases.
+
+    Maps C^(λ) coefficients to C^(λ+1) coefficients.
+
+    Following MATLAB's convertmat convention: returns n×n matrix operating on
+    n coefficients.
+
+    The conversion uses the recurrence relation:
+        C^(λ)_k(x) = (λ/(λ+k)) * [C^(λ+1)_k(x) - C^(λ+1)_{k-2}(x)]
+
+    Inverting this gives the forward conversion (C^λ → C^(λ+1)):
+        C^(λ+1)_k = C^(λ)_k + (λ/(λ+k-1)) * C^(λ+1)_{k-2}
+
+    Which leads to a bidiagonal matrix.
+
+    Args:
+        n (int): Number of coefficients (returns n×n matrix).
+        lmbda (int): Current ultraspherical parameter.
+
+    Returns:
+        scipy.sparse matrix: Conversion matrix of size n×n.
+    """
+    if n < 1:
+        return sparse.eye(1, format="csr")
+
+    if lmbda == 0:
+        # Special case: Chebyshev T → C^(1)
+        # MATLAB spconvert: relation is C_n^(0) = 0.5*(C_n^(1) - C_{n-2}^(1))
+        # Inverting: C_n^(1) = 2*C_n^(0) + C_{n-2}^(1)
+        # In matrix form with superdiagonal structure:
+        # S[0,0] = 1, S[1,1] = 0.5, S[k,k] = 0.5 for k >= 2
+        # S[k, k+2] = -0.5 for k >= 0
+
+        # Build main diagonal
+        main_diag = np.ones(n)
+        main_diag[1:] = 0.5
+
+        # Superdiagonal at offset +2
+        super_diag = -0.5 * np.ones(n - 2) if n >= 2 else np.array([])
+
+        S = sparse.diags([main_diag, super_diag], [0, 2], shape=(n, n), format="csr")
+        return S
+
+    else:
+        # General case: C^(λ) → C^(λ+1)
+        # MATLAB implementation uses superdiagonal structure
+        # S[0,0] = 1, S[1,1] = lam/(lam+1)
+        # S[k,k] = lam/(lam+k) for k >= 2
+        # S[k, k+2] = -lam/(lam+k) for k >= 0
+
+        # Build main diagonal
+        main_diag = np.ones(n)
+        if n > 1:
+            main_diag[1] = lmbda / (lmbda + 1)
+        if n >= 3:
+            k_vals = np.arange(2, n)
+            main_diag[2:] = lmbda / (lmbda + k_vals)
+
+        # Superdiagonal at offset +2
+        if n >= 3:
+            k_super = np.arange(0, n - 2)
+            super_diag = -lmbda / (lmbda + k_super + 2)
+        else:
+            super_diag = np.array([])
+
+        S = sparse.diags([main_diag, super_diag], [0, 2], shape=(n, n), format="csr")
+        return S
+
+
+def ultraspherical_multiplication(coeffs_f, n):
+    """Build multiplication operator in Chebyshev coefficient space.
+
+    Given a function f(x) represented by Chebyshev coefficients,
+    construct the matrix M such that (f*u) has coefficients M @ u_coeffs.
+
+    The multiplication of two Chebyshev series uses the product formula:
+        T_m * T_n = (1/2) * [T_{m+n} + T_{|m-n|}]
+
+    This gives a sparse banded matrix when f has limited Chebyshev degree.
+
+    Args:
+        coeffs_f (array): Chebyshev coefficients of the multiplier function f.
+        n (int): Size of the output coefficient vector.
+
+    Returns:
+        scipy.sparse matrix: Multiplication matrix of size (n+1) × (n+1).
+    """
+    m = len(coeffs_f) - 1  # Degree of f
+    nn = n + 1
+
+    # Build the multiplication matrix
+    # M[i, j] = coefficient of T_i in (f * T_j)
+
+    # For T_j * sum_k f_k T_k = sum_k f_k * (T_j * T_k)
+    # = sum_k f_k * (1/2) * [T_{j+k} + T_{|j-k|}]
+
+    # Build M as dense first for simplicity, then convert to sparse
+    M = np.zeros((nn, nn))
+
+    for j in range(nn):
+        for k in range(m + 1):
+            fk = coeffs_f[k]
+            if fk == 0:
+                continue
+
+            # T_j * T_k = 0.5 * [T_{j+k} + T_{|j-k|}]
+            # We want coefficient in row i
+
+            # Contribution from T_{j+k}
+            if j + k < nn:
+                if k == 0:
+                    M[j + k, j] += fk
+                else:
+                    M[j + k, j] += 0.5 * fk
+
+            # Contribution from T_{|j-k|}
+            abs_jk = abs(j - k)
+            if abs_jk < nn:
+                if k == 0:
+                    # T_j * T_0 = T_j (no factor of 0.5)
+                    pass  # Already handled above
+                else:
+                    M[abs_jk, j] += 0.5 * fk
+
+    return sparse.csr_matrix(M)
+
+
+def ultraspherical_bc_row(n, interval, bc_order, bc_side):
+    """Construct boundary condition row for ultraspherical method.
+
+    The BC row enforces u^(bc_order)(x_bc) = value, where x_bc is the
+    left (a) or right (b) endpoint.
+
+    For Chebyshev polynomials:
+        T_k(1) = 1 for all k
+        T_k(-1) = (-1)^k
+
+    For derivatives at endpoints, we use the formula:
+        T'_k(±1) = ±k² (at ±1)
+        T''_k(±1) = k²(k²-1)/3 (at ±1, sign alternates)
+
+    Args:
+        n (int): Number of Chebyshev coefficients (n+1 total).
+        interval (Interval): Physical interval [a, b].
+        bc_order (int): Order of derivative (0 for Dirichlet, 1 for Neumann, etc.)
+        bc_side (str): 'left' or 'right'.
+
+    Returns:
+        numpy.ndarray: Row vector of length n+1.
+    """
+    nn = n + 1
+    a, b = interval if hasattr(interval, "__iter__") else (interval.a, interval.b)
+    L = (b - a) / 2  # Half-width of interval
+
+    row = np.zeros(nn)
+
+    if bc_side == "left":
+        # Evaluate at x = a, which corresponds to ξ = -1 in [-1, 1]
+        xi = -1
+
+        def sign(k):
+            return (-1) ** k
+    else:
+        # Evaluate at x = b, which corresponds to ξ = +1 in [-1, 1]
+        xi = 1
+
+        def sign(k):
+            return 1
+
+    if bc_order == 0:
+        # Dirichlet: u(x_bc) = sum_k c_k * T_k(xi)
+        for k in range(nn):
+            row[k] = sign(k) if xi == -1 else 1
+    elif bc_order == 1:
+        # Neumann: u'(x_bc) = sum_k c_k * T'_k(xi) / L
+        # T'_k(1) = k², T'_k(-1) = (-1)^{k+1} * k²
+        for k in range(nn):
+            if xi == 1:
+                row[k] = k**2 / L
+            else:
+                row[k] = ((-1) ** (k + 1)) * (k**2) / L
+    elif bc_order == 2:
+        # Second derivative: u''(x_bc)
+        # T''_k(1) = k²(k²-1)/3, T''_k(-1) = (-1)^k * k²(k²-1)/3
+        for k in range(nn):
+            val = k**2 * (k**2 - 1) / 3 / (L**2)
+            row[k] = sign(k) * val
+    else:
+        # General case using explicit formula for T^(m)_k at ±1
+        # This gets complicated - for now raise error for order > 2
+        raise NotImplementedError(f"BC order {bc_order} not yet implemented in ultraspherical method")
+
+    return row
+
+
+def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
+    """Solve a linear ODE using the ultraspherical method.
+
+    Follows MATLAB's ultraspherical implementation approach.
+
+    For an ODE of the form:
+        a_2(x) * u''(x) + a_1(x) * u'(x) + a_0(x) * u(x) = f(x)
+
+    with boundary conditions at the endpoints.
+
+    Args:
+        coeffs (list): Coefficient functions [a_0, a_1, a_2] as constants.
+        rhs_coeffs (array): Chebyshev coefficients of RHS f(x).
+        n (int): Number of Chebyshev coefficients for solution.
+        interval (Interval): Physical domain [a, b].
+        lbc (list): Left BCs as list of values or single value.
+        rbc (list): Right BCs as list of values or single value.
+
+    Returns:
+        numpy.ndarray: Chebyshev coefficients of the solution.
+    """
+    diff_order = len(coeffs) - 1  # Highest derivative order
+
+    # Scale factor for interval mapping
+    a, b = interval if hasattr(interval, "__iter__") else (interval.a, interval.b)
+    L = (b - a) / 2
+
+    # Only support 2nd order for now
+    if diff_order != 2:
+        raise NotImplementedError(
+            f"Ultraspherical method currently only supports 2nd order ODEs, got order {diff_order}"
+        )
+
+    # Following MATLAB's approach:
+    # 1. Build matrices: D0 (n×n), D1 ((n-1)×(n-1)), S0 (n×n), S1 (n×n)
+    # 2. Build operator: L = D1 @ D0 + a1 * S1_reduced @ D0 + a0 * S1 @ S0
+    # 3. Project: remove last m=2 rows
+    # 4. Add BC rows
+    # 5. Build RHS and solve
+
+    # Get conversion and differentiation matrices (all n×n now)
+    D0 = ultraspherical_diff(n, 0) / L  # d/dx: T → C^(1), scaled for interval
+    D1 = ultraspherical_diff(n, 1) / L  # d/dx: C^(1) → C^(2), scaled
+    S0 = ultraspherical_conversion(n, 0)  # T → C^(1)
+    S1 = ultraspherical_conversion(n, 1)  # C^(1) → C^(2)
+
+    # Build operator matrix in C^(2) basis
+    # L_op will be (n)×(n) initially, then we project to (n-2)×(n)
+
+    # u'' term: D1 @ D0
+    # Note: D0 is n×n, D1 is n×n, but D1 @ D0 loses a row due to differentiation
+    # So we need to be careful about dimensions
+    L_op = (D1 @ D0).tocsr()
+
+    # a_1 * u' term
+    if len(coeffs) > 1 and coeffs[1] is not None:
+        a1_val = float(coeffs[1]) if not isinstance(coeffs[1], (int, float)) else coeffs[1]
+        # S1 @ D0: convert C^(1) to C^(2) after differentiation
+        L_op = L_op + a1_val * (S1 @ D0).tocsr()
+
+    # a_0 * u term
+    if len(coeffs) > 0 and coeffs[0] is not None:
+        a0_val = float(coeffs[0]) if not isinstance(coeffs[0], (int, float)) else coeffs[0]
+        # S1 @ S0: convert T → C^(1) → C^(2)
+        L_op = L_op + a0_val * (S1 @ S0).tocsr()
+
+    # PROJECTION STEP: Remove last m=2 rows (MATLAB's reduce() operation)
+    m = diff_order  # For 2nd order ODE, m = 2
+    if L_op.shape[0] > m:
+        L_op_reduced = L_op[: -m, :]
+    else:
+        raise ValueError(f"Matrix too small for projection: {L_op.shape[0]} rows, need to remove {m}")
+
+    # Build BC rows (these operate on Chebyshev coefficients directly)
+    bc_rows = []
+    bc_values = []
+
+    # Process left BCs
+    if lbc is not None:
+        if isinstance(lbc, (int, float)):
+            # Dirichlet: u(a) = lbc
+            row = ultraspherical_bc_row(n, interval, 0, "left")
+            bc_rows.append(row)
+            bc_values.append(lbc)
+        elif isinstance(lbc, list):
+            for i, val in enumerate(lbc):
+                if val is not None:
+                    row = ultraspherical_bc_row(n, interval, i, "left")
+                    bc_rows.append(row)
+                    bc_values.append(val)
+
+    # Process right BCs
+    if rbc is not None:
+        if isinstance(rbc, (int, float)):
+            # Dirichlet: u(b) = rbc
+            row = ultraspherical_bc_row(n, interval, 0, "right")
+            bc_rows.append(row)
+            bc_values.append(rbc)
+        elif isinstance(rbc, list):
+            for i, val in enumerate(rbc):
+                if val is not None:
+                    row = ultraspherical_bc_row(n, interval, i, "right")
+                    bc_rows.append(row)
+                    bc_values.append(val)
+
+    # Assemble full system: [BC_rows; L_op_reduced]
+    if bc_rows:
+        BC_matrix = np.vstack(bc_rows)
+        A = sparse.vstack([sparse.csr_matrix(BC_matrix), L_op_reduced])
+    else:
+        A = L_op_reduced
+
+    # Build RHS vector
+    # Convert RHS from T to C^(2) basis, then project
+
+    # Pad or truncate RHS coefficients to size n
+    rhs_cheb = np.zeros(n)
+    if rhs_coeffs is not None and len(rhs_coeffs) > 0:
+        rhs_cheb[: min(len(rhs_coeffs), n)] = rhs_coeffs[:n]
+
+    # Convert T → C^(1) → C^(2)
+    rhs_c1 = S0 @ rhs_cheb
+    rhs_c2 = S1 @ rhs_c1
+
+    # Project: remove last m=2 entries
+    rhs_c2_projected = rhs_c2[: -m] if len(rhs_c2) > m else rhs_c2
+
+    # Full RHS: BC values + projected interior RHS
+    b = np.concatenate([bc_values, rhs_c2_projected])
+
+    # Solve the system
+    A_dense = sparse_to_dense(A) if sparse.issparse(A) else A
+    coeffs_solution = np.linalg.lstsq(A_dense, b, rcond=None)[0]
+
+    return coeffs_solution

@@ -43,7 +43,7 @@ from .linop_diagnostics import diagnose_linop
 from .op_discretization import OpDiscretization
 from .order_detection_ast import OrderTracerAST
 from .sparse_utils import sparse_to_dense
-from .spectral import cheb_points_scaled
+from .spectral import cheb_points_scaled, ultraspherical_solve
 from .trigtech import Trigtech
 from .utilities import Domain, Interval
 
@@ -782,7 +782,7 @@ class LinOp:
         A_scaled = A_dense * s[:, np.newaxis]
         sb = s * b
 
-        # For square systems, use LU decomposition (MATLAB approach)
+        # For square systems, use LU decomposition (MATLAB approach) - fast for most cases
         if m == n:
             try:
                 lu, piv = lu_factor(A_scaled)
@@ -849,16 +849,29 @@ class LinOp:
         solution = Chebfun(pieces)
         return solution
 
-    def solve(self, rhs: Chebfun | None = None, n: int | None = None) -> Chebfun:
+    def solve(
+        self,
+        rhs: Chebfun | None = None,
+        n: int | None = None,
+        discretization: str = "collocation",
+    ) -> Chebfun:
         """Solve the linear BVP with adaptive refinement.
 
         Args:
             rhs: Optional right-hand side (default: use self.rhs from constructor)
             n: Optional fixed discretization size (default: adaptive)
+            discretization: Discretization method to use. Options:
+                - 'collocation' (default): Standard Chebyshev collocation (Driscoll-Hale style)
+                - 'ultraspherical': Ultraspherical spectral method (Olver-Townsend)
+                  Works in coefficient space with banded matrices for O(n) solve.
+                  Currently supports constant-coefficient 2nd order ODEs.
 
         Returns:
             Chebfun solution to the BVP
         """
+        # Route to ultraspherical method if requested
+        if discretization == "ultraspherical":
+            return self._solve_ultraspherical(rhs=rhs, n=n)
         # Allow rhs to be provided as parameter for convenience
         if rhs is not None:
             original_rhs = self.rhs
@@ -904,10 +917,13 @@ class LinOp:
             for n_current in n_values:
                 self.n_current = n_current
 
-                # Use BC row replacement ('replace') for high-order operators (>= 4)
-                # For lower order, 'append' mode works well and avoids row projection issues
-                # High-order operators critically need exact BC enforcement
-                bc_enforcement = "replace" if self.diff_order >= 4 else "append"
+                # Use 'append' mode for all operators - achieves machine precision via least squares
+                # NOTE: 'replace' and 'driscoll_hale' modes have convergence issues
+                # - append: Converges to machine precision (~1e-14)
+                # - replace: Diverges/unstable
+                # - driscoll_hale: Oscillates, does not converge properly
+                # The Driscoll-Hale implementation needs substantial rework to match the paper's algorithm
+                bc_enforcement = "append"
 
                 # Check if we have a Jacobian computer function from AdChebfun
                 if hasattr(self, "_jacobian_computer"):
@@ -1082,6 +1098,142 @@ class LinOp:
             # Restore original rhs if it was temporarily overridden
             if original_rhs is not None:
                 self.rhs = original_rhs
+
+    def _solve_ultraspherical(self, rhs: Chebfun | None = None, n: int | None = None) -> Chebfun:
+        """Solve using the ultraspherical spectral method (Olver-Townsend).
+
+        The ultraspherical method works in coefficient space rather than at
+        collocation points. Key advantages:
+        - Banded matrices giving O(n) complexity for banded operators
+        - Better conditioning than collocation for some problems
+        - Well-suited for constant-coefficient problems
+        - Achieves machine precision accuracy
+
+        Current limitations:
+        - Only supports 2nd order ODEs
+        - Only supports constant coefficients (not variable coefficient a(x)*u)
+        - Single interval only (no domain splitting)
+
+        Reference: Olver & Townsend, "A Fast and Well-Conditioned Spectral Method",
+        SIAM Review, 2013.
+
+        Args:
+            rhs: Optional right-hand side (default: use self.rhs)
+            n: Optional fixed discretization size (default: adaptive)
+
+        Returns:
+            Chebfun solution
+        """
+        # Use provided rhs or fall back to self.rhs
+        actual_rhs = rhs if rhs is not None else self.rhs
+
+        # Validate: ultraspherical currently only supports 2nd order
+        if self.diff_order != 2:
+            raise NotImplementedError(
+                f"Ultraspherical method currently only supports 2nd order ODEs, "
+                f"got order {self.diff_order}. Use discretization='collocation' for other orders."
+            )
+
+        # Validate: single interval only
+        intervals_list = list(self.domain.intervals)
+        if len(intervals_list) > 1:
+            raise NotImplementedError(
+                "Ultraspherical method does not support domain splitting. "
+                "Use discretization='collocation' for multi-interval problems."
+            )
+
+        # Extract interval
+        interval = intervals_list[0]
+        a, b = interval
+
+        # Extract coefficient values (must be constant for now)
+        # coeffs list is [a_0(x), a_1(x), a_2(x)] for a_2*u'' + a_1*u' + a_0*u
+        # Evaluate at midpoint to get constant value
+        x_mid = (a + b) / 2
+        coeffs_vals = []
+        for i, coeff in enumerate(self.coeffs):
+            if coeff is None:
+                coeffs_vals.append(None)
+            elif callable(coeff):
+                val = coeff(np.array([x_mid]))[0]
+                coeffs_vals.append(val)
+            elif isinstance(coeff, Chebfun):
+                val = coeff(np.array([x_mid]))[0]
+                # Check if coefficient is approximately constant
+                x_test = np.linspace(a, b, 10)
+                vals_test = coeff(x_test)
+                if np.max(np.abs(vals_test - val)) > 1e-10:
+                    raise NotImplementedError(
+                        f"Ultraspherical method currently only supports constant coefficients. "
+                        f"Coefficient a_{i}(x) varies. Use discretization='collocation'."
+                    )
+                coeffs_vals.append(val)
+            else:
+                coeffs_vals.append(float(coeff))
+
+        # Get RHS coefficients
+        if actual_rhs is None:
+            rhs_coeffs = np.array([0.0])
+        elif isinstance(actual_rhs, Chebfun):
+            if len(actual_rhs.funs) > 0:
+                rhs_coeffs = actual_rhs.funs[0].onefun.coeffs.copy()
+            else:
+                rhs_coeffs = np.array([0.0])
+        else:
+            rhs_coeffs = np.array([float(actual_rhs)])
+
+        # Determine discretization size
+        if n is None:
+            # Start with reasonable default, increase adaptively
+            n_values = [16, 32, 64, 128, 256, 512]
+        else:
+            n_values = [n]
+
+        solution = None
+        prev_solution = None
+
+        for n_current in n_values:
+            # Call ultraspherical_solve from spectral module
+            try:
+                sol_coeffs = ultraspherical_solve(
+                    coeffs=coeffs_vals,
+                    rhs_coeffs=rhs_coeffs,
+                    n=n_current,
+                    interval=interval,
+                    lbc=self.lbc,
+                    rbc=self.rbc,
+                )
+            except Exception as e:
+                if n is not None:
+                    raise RuntimeError(f"Ultraspherical solve failed at n={n_current}: {e}") from e
+                continue
+
+            # Convert coefficient solution to Chebfun
+            # sol_coeffs are Chebyshev coefficients
+            onefun = Chebtech(sol_coeffs)
+            bndfun = Bndfun(onefun, interval)
+            solution = Chebfun([bndfun])
+
+            # Check convergence via coefficient decay
+            cutoff = standard_chop(sol_coeffs, tol=self.tol)
+            if cutoff < n_current:
+                return solution
+
+            # Check convergence vs previous
+            if prev_solution is not None:
+                diff = (solution - prev_solution).norm()
+                if diff < self.tol:
+                    return solution
+
+            prev_solution = solution
+
+            if n is not None:
+                return solution
+
+        if solution is None:
+            raise RuntimeError("Ultraspherical solve failed to converge")
+
+        return solution
 
     def _discretization_size(self, n: int | None = None) -> int:
         """Compute appropriate discretization size for this operator.

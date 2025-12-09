@@ -164,6 +164,7 @@ class Chebop:
 
         # Analysis cache
         self._is_linear = None
+        self._bc_is_linear = None  # True if all callable BCs are linear
         self._diff_order = None
         self._coeffs = None
         self._linop = None
@@ -461,11 +462,15 @@ class Chebop:
         # Determine differential order by testing with random functions
         self._diff_order = self._detect_order()
 
-        # Test for linearity
+        # Test for linearity (operator)
         self._is_linear = self._test_linearity()
 
+        # Test for linearity (boundary conditions)
+        self._bc_is_linear = self._test_bc_linearity()
+
         # Extract coefficients for linear operators (scalar only)
-        if self._is_linear and not self._is_system:
+        # Only extract if both operator AND BCs are linear
+        if self._is_linear and self._bc_is_linear and not self._is_system:
             self._coeffs = self._extract_coefficients()
         else:
             self._coeffs = None
@@ -733,6 +738,9 @@ class Chebop:
         and applies both relative and absolute tolerance checks to handle cases
         where the operator output is very small.
 
+        Also detects AFFINE operators (linear + constant) and treats them as linear
+        for solving purposes by extracting the constant term separately.
+
         For systems, tests linearity for all variables simultaneously.
 
         Optimization: Uses a cheap "quick check" with simpler polynomials first
@@ -740,6 +748,36 @@ class Chebop:
         """
         if self.op is None:
             return False
+
+        # Check if operator has extra parameters (for continuation, etc.)
+        # Parametric operators like lambda u, eps: ... cannot be tested for linearity
+        # in the standard way since the parameter changes behavior
+        #
+        # However, we need to distinguish:
+        # 1. Variable coefficient operators: lambda x, u: x*u (linear in u, x is spatial variable)
+        # 2. Parametric operators: lambda u, eps: eps*u'' + u (nonlinear for continuation)
+        try:
+            sig = inspect.signature(self.op)
+            params = list(sig.parameters.values())
+            param_names = [p.name for p in params]
+            required_params = sum(1 for p in params if p.default == inspect.Parameter.empty)
+
+            # If operator takes 2+ required parameters, check if first param is 'x'
+            # If first param is 'x', it's a variable coefficient operator (potentially linear)
+            # Otherwise, it's a parametric operator (nonlinear for continuation)
+            if required_params >= 2 and not self._is_system:
+                # Check if first parameter is named 'x' (spatial variable)
+                if param_names[0] != "x":
+                    # Parametric operator like lambda u, eps: ...
+                    return False
+                # If first param is 'x' and there are 3+ params, it's still parametric
+                # Example: lambda x, u, eps: ...
+                if required_params >= 3:
+                    return False
+                # If we get here, it's lambda x, u: ... (variable coefficient, potentially linear)
+        except Exception:
+            # If we can't inspect, proceed with testing
+            pass
 
         a, b = self.domain.support
         rel_tol = 1e-6
@@ -749,9 +787,11 @@ class Chebop:
             # FAST PATH: Quick check with simple low-degree polynomials
             # This catches obvious nonlinearity (like y^2, y*diff(y), etc.) cheaply
             if not self._is_system:
-                # Use very simple constant and linear functions for quick test
-                u1_simple = Chebfun.initfun(lambda x: 1.0 + 0 * x, [a, b])
-                u2_simple = Chebfun.initfun(lambda x: x, [a, b])
+                # Use functions with non-zero derivatives to catch nonlinearities like (u')^2
+                # u1 = x (linear function with u' = 1, u'' = 0)
+                # u2 = x^2 (quadratic with u' = 2x, u'' = 2)
+                u1_simple = Chebfun.initfun(lambda x: x - a, [a, b])  # Shifted so u(a) = 0
+                u2_simple = Chebfun.initfun(lambda x: (x - a) ** 2, [a, b])
                 alpha = 2.0
 
                 try:
@@ -764,11 +804,48 @@ class Chebop:
                         err_quick = self._maxnorm(N_scaled - alpha * N_u1)
                         denom_quick = self._maxnorm(alpha * N_u1)
 
-                        # If this fails, definitely nonlinear - exit early
+                        # If this fails, might be affine - test that below
                         if err_quick > abs_tol and err_quick / (denom_quick + 1e-14) > rel_tol:
-                            return False
+                            # Could be affine (linear + constant)
+                            # Test: N(αu) - N(0) vs α(N(u) - N(0))
+                            zero_func = Chebfun.initfun(lambda x: 0 * x, [a, b])
+                            N_zero = self._evaluate_operator_safe(zero_func)
 
-                        # Quick additivity test: N(u1+u2) vs N(u1)+N(u2)
+                            if N_zero is not None:
+                                # Check if N(0) is reasonable (not NaN, not infinite)
+                                # If N(0) has NaN or Inf, operator is likely nonlinear (e.g., 1/u)
+                                N_zero_vals = N_zero(np.linspace(a, b, 20))
+                                if np.any(np.isnan(N_zero_vals)) or np.any(np.isinf(N_zero_vals)):
+                                    return False  # Nonlinear operator with singularities
+
+                                # Test if N(u) - N(0) is linear
+                                N_u1_shifted = N_u1 - N_zero
+                                N_scaled_shifted = N_scaled - N_zero
+
+                                err_affine = self._maxnorm(N_scaled_shifted - alpha * N_u1_shifted)
+                                denom_affine = self._maxnorm(alpha * N_u1_shifted)
+
+                                if err_affine > abs_tol and err_affine / (denom_affine + 1e-14) > rel_tol:
+                                    return False  # Truly nonlinear
+                                else:
+                                    # For affine operators, test additivity of N(u) - N(0)
+                                    N_u2_shifted = N_u2 - N_zero
+                                    N_sum = self._evaluate_operator_safe(u1_simple + u2_simple)
+                                    N_sum_shifted = N_sum - N_zero
+
+                                    err_add_shifted = self._maxnorm(N_sum_shifted - (N_u1_shifted + N_u2_shifted))
+                                    denom_add_shifted = self._maxnorm(N_u1_shifted + N_u2_shifted)
+
+                                    if (
+                                        err_add_shifted > abs_tol
+                                        and err_add_shifted / (denom_add_shifted + 1e-14) > rel_tol
+                                    ):
+                                        return False
+                                    else:
+                                        # Affine operator confirmed, skip further tests
+                                        return True
+
+                        # Quick additivity test: N(u1+u2) vs N(u1)+N(u2) (only if not affine)
                         N_sum = self._evaluate_operator_safe(u1_simple + u2_simple)
                         err_add = self._maxnorm(N_sum - (N_u1 + N_u2))
                         denom_add = self._maxnorm(N_u1 + N_u2)
@@ -842,7 +919,8 @@ class Chebop:
                     return False
 
                 # Homogeneity: N(α*u) = α*N(u)
-                err1 = self._evaluate_operator_safe(alpha * u1) - alpha * N_u1
+                N_alpha_u1 = self._evaluate_operator_safe(alpha * u1)
+                err1 = N_alpha_u1 - alpha * N_u1
 
                 # Additivity: N(u1 + u2) = N(u1) + N(u2)
                 err2 = self._evaluate_operator_safe(u1 + u2) - (N_u1 + N_u2)
@@ -857,10 +935,149 @@ class Chebop:
                 pass1 = (err1_norm < abs_tol) or (err1_norm / (denom1 + 1e-14) < rel_tol)
                 pass2 = (err2_norm < abs_tol) or (err2_norm / (denom2 + 1e-14) < rel_tol)
 
+                # If homogeneity fails, test for affine
+                if not pass1:
+                    zero_func = Chebfun.initfun(lambda x: 0 * x, [a, b])
+                    N_zero = self._evaluate_operator_safe(zero_func)
+
+                    if N_zero is not None:
+                        # Check if N(0) is reasonable (not NaN, not infinite)
+                        N_zero_vals = N_zero(np.linspace(a, b, 20))
+                        if not (np.any(np.isnan(N_zero_vals)) or np.any(np.isinf(N_zero_vals))):
+                            # Test if N(u) - N(0) is linear
+                            N_u1_shifted = N_u1 - N_zero
+                            N_alpha_u1_shifted = N_alpha_u1 - N_zero
+
+                            err1_affine = N_alpha_u1_shifted - alpha * N_u1_shifted
+                            err1_affine_norm = self._maxnorm(err1_affine)
+                            denom1_affine = self._maxnorm(alpha * N_u1_shifted)
+
+                            pass1_affine = (err1_affine_norm < abs_tol) or (
+                                err1_affine_norm / (denom1_affine + 1e-14) < rel_tol
+                            )
+
+                            if pass1_affine:
+                                # Affine operator detected, treat as linear
+                                pass1 = True
+
+                                # Also need to test additivity of shifted operator
+                                N_u2_shifted = N_u2 - N_zero
+                                N_sum = self._evaluate_operator_safe(u1 + u2)
+                                N_sum_shifted = N_sum - N_zero
+
+                                err2_affine = N_sum_shifted - (N_u1_shifted + N_u2_shifted)
+                                err2_affine_norm = self._maxnorm(err2_affine)
+                                denom2_affine = self._maxnorm(N_u1_shifted + N_u2_shifted)
+
+                                pass2_affine = (err2_affine_norm < abs_tol) or (
+                                    err2_affine_norm / (denom2_affine + 1e-14) < rel_tol
+                                )
+
+                                if pass2_affine:
+                                    pass2 = True
+
                 return bool(pass1 and pass2)
 
         except Exception:
             return False
+
+    def _test_bc_linearity(self) -> bool:
+        """Test if all boundary conditions are linear.
+
+        A BC is linear if bc(alpha*u) = alpha*bc(u) for scalar alpha.
+        Non-callable BCs (constants, lists of constants) are always linear.
+
+        Returns:
+            True if all BCs are linear, False if any BC is nonlinear
+        """
+        a, b = self.domain.support
+
+        # Collect all callable BCs to test
+        callable_bcs = []
+
+        # Check lbc
+        if callable(self.lbc):
+            callable_bcs.append(("lbc", self.lbc, a))
+        elif isinstance(self.lbc, list):
+            for i, bc in enumerate(self.lbc):
+                if callable(bc):
+                    callable_bcs.append((f"lbc[{i}]", bc, a))
+
+        # Check rbc
+        if callable(self.rbc):
+            callable_bcs.append(("rbc", self.rbc, b))
+        elif isinstance(self.rbc, list):
+            for i, bc in enumerate(self.rbc):
+                if callable(bc):
+                    callable_bcs.append((f"rbc[{i}]", bc, b))
+
+        # Check general BCs
+        for i, bc_obj in enumerate(self.bc):
+            if isinstance(bc_obj, BoundaryCondition) and callable(bc_obj.func):
+                callable_bcs.append((f"bc[{i}]", bc_obj.func, bc_obj.location))
+            elif callable(bc_obj):
+                callable_bcs.append((f"bc[{i}]", bc_obj, None))
+
+        # If no callable BCs, they're all linear (constants)
+        if not callable_bcs:
+            return True
+
+        # Test each callable BC for linearity using homogeneity test
+        # bc(alpha*u) should equal alpha*bc(u) for linear BCs
+        rel_tol = 1e-6
+        abs_tol = 1e-10
+        alpha = 2.0
+
+        # Create test functions
+        u1 = Chebfun.initfun(lambda x: np.sin(np.pi * (x - a) / (b - a)), [a, b])
+        u2 = Chebfun.initfun(lambda x: np.cos(2 * np.pi * (x - a) / (b - a)), [a, b])
+
+        for name, bc_func, location in callable_bcs:
+            try:
+                # Test homogeneity: bc(alpha*u) = alpha*bc(u)
+                bc_u1 = bc_func(u1)
+                bc_alpha_u1 = bc_func(alpha * u1)
+
+                # Handle both scalar and chebfun returns
+                if isinstance(bc_u1, Chebfun):
+                    val1 = bc_u1(location if location is not None else (a + b) / 2)
+                    val2 = bc_alpha_u1(location if location is not None else (a + b) / 2)
+                else:
+                    val1 = float(bc_u1)
+                    val2 = float(bc_alpha_u1)
+
+                err = abs(val2 - alpha * val1)
+                denom = abs(alpha * val1)
+
+                if err > abs_tol and (denom < 1e-14 or err / denom > rel_tol):
+                    # Failed homogeneity test - BC is nonlinear
+                    return False
+
+                # Also test additivity: bc(u1 + u2) = bc(u1) + bc(u2)
+                bc_u2 = bc_func(u2)
+                bc_sum = bc_func(u1 + u2)
+
+                if isinstance(bc_u1, Chebfun):
+                    loc = location if location is not None else (a + b) / 2
+                    val_sum = bc_sum(loc)
+                    val_expected = bc_u1(loc) + bc_u2(loc)
+                else:
+                    val_sum = float(bc_sum)
+                    val_expected = float(bc_u1) + float(bc_u2)
+
+                err_add = abs(val_sum - val_expected)
+                denom_add = abs(val_expected)
+
+                if err_add > abs_tol and (denom_add < 1e-14 or err_add / denom_add > rel_tol):
+                    # Failed additivity test - BC is nonlinear
+                    return False
+
+            except Exception:
+                # If we can't evaluate the BC, assume it might be nonlinear
+                # to be safe
+                return False
+
+        return True
 
     def _extract_coefficients(self) -> list[Chebfun]:
         """Extract coefficient functions a_k(x) for linear operator.
@@ -986,6 +1203,66 @@ class Chebop:
         if not self._is_linear:
             raise ValueError("Cannot convert nonlinear operator to LinOp")
 
+        # For affine operators, separate the constant term from the linear part
+        # Affine operators have form: N(u) = L(u) + c where L is linear
+        # The user writes: lambda u: u.diff(2) + u - 1 (meaning u'' + u - 1 = 0)
+        # We need to convert to: L(u) = f where L(u) = u'' + u and f = 1
+        #
+        # To detect the constant term c, evaluate op(0):
+        # N(0) = L(0) + c = 0 + c = c (since L is linear, L(0) = 0)
+        coeffs_for_linop = self._coeffs
+        rhs_for_linop = self.rhs
+
+        # Check if operator has affine constant term by evaluating at zero
+        zero_func = Chebfun.initfun(lambda x: 0 * x, self.domain)
+        N_zero = self._evaluate_operator_safe(zero_func)
+
+        if N_zero is not None:
+            c_max = np.max(np.abs(N_zero(np.linspace(*self.domain.support, 20))))
+
+            if c_max > 1e-14:
+                # Operator has form N(u) = L(u) + c
+                # User equation: N(u) = 0 means L(u) + c = 0, so L(u) = -c
+                # If rhs was explicitly set, keep it: L(u) = rhs - c
+                # If rhs was not set (None), default is: L(u) = -c
+
+                if rhs_for_linop is None:
+                    # No explicit RHS, so equation is N(u) = 0
+                    # Convert to L(u) = -c
+                    rhs_for_linop = -N_zero
+                else:
+                    # Explicit RHS was set: N(u) = rhs
+                    # Convert to L(u) + c = rhs, so L(u) = rhs - c
+                    rhs_for_linop = rhs_for_linop - N_zero
+
+                # CRITICAL: The coeffs extracted by _extract_coefficients include the constant
+                # We need to re-extract coefficients for the LINEAR part only: L(u) = N(u) - c
+                # Create a new operator that subtracts the constant
+                original_op = self.op
+
+                # Determine the signature of the original operator to preserve it
+                try:
+                    sig = inspect.signature(original_op)
+                    params = list(sig.parameters.values())
+                    n_required = sum(1 for p in params if p.default == inspect.Parameter.empty)
+                except Exception:
+                    n_required = 1
+
+                # Create linear_op with matching signature
+                if n_required == 1:
+
+                    def linear_op(u):
+                        return original_op(u) - N_zero
+                else:
+                    # For operators like lambda x, u: x*u, preserve (x, u) signature
+                    def linear_op(x, u):
+                        return original_op(x, u) - N_zero
+
+                # Temporarily replace operator to extract pure linear coefficients
+                self.op = linear_op
+                coeffs_for_linop = self._extract_coefficients()
+                self.op = original_op  # Restore
+
         # Create LinOp with extracted information
         # Note: We don't cache this because rhs can change (e.g., in Newton iteration)
         # and we need to create a fresh LinOp each time
@@ -996,13 +1273,13 @@ class Chebop:
             bc_for_linop = "periodic"
 
         linop = LinOp(
-            coeffs=self._coeffs,
+            coeffs=coeffs_for_linop,
             domain=self.domain,
             diff_order=self._diff_order,
             lbc=self.lbc,
             rbc=self.rbc,
             bc=bc_for_linop,
-            rhs=self.rhs,
+            rhs=rhs_for_linop,
             tol=self.tol,
             point_constraints=self.point_constraints,
         )
@@ -1184,7 +1461,9 @@ class Chebop:
                 return self._solve_ivp()
 
             # Route to appropriate BVP solver
-            if self._is_linear:
+            # Problem is linear only if BOTH operator AND BCs are linear
+            is_fully_linear = self._is_linear and self._bc_is_linear
+            if is_fully_linear:
                 return self._solve_linear()
             else:
                 if use_continuation:
@@ -1265,7 +1544,6 @@ class Chebop:
 
         solutions = []
         for i, param_value in enumerate(continuation_range):
-
             # Create modified operator with fixed parameter
             if has_param:
                 if needs_x:

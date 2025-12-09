@@ -95,3 +95,40 @@ class TestAdditionalCoverage:
 
         h_min = f.minimum(g)
         assert not h_min.isempty
+
+
+class TestChebfunEqualityEdgeCases:
+    """Test equality comparison edge cases."""
+
+    def test_eq_with_non_chebfun(self):
+        """Test equality comparison with non-Chebfun types."""
+        f = chebfun(lambda x: x, [-1, 1])
+        assert not (f == 5)
+        assert not (f == "string")
+        assert not (f == [1, 2, 3])
+
+    def test_eq_different_vscales(self):
+        """Test equality with different vertical scales."""
+        f1 = chebfun(lambda x: x, [-1, 1])
+        f2 = chebfun(lambda x: x + 1e-14, [-1, 1])  # Very close but different
+        # Should be equal within tolerance
+        assert f1 == f2
+
+    def test_eq_different_types(self):
+        """Test equality comparison with non-Chebfun objects."""
+        # Create a simple Chebfun
+        f = chebfun(lambda x: x**2)
+
+        # Compare with non-Chebfun objects
+        assert (f == "not a chebfun") is False
+        assert (f == 5) is False
+        assert (f == [1, 2, 3]) is False
+
+    def test_eq_empty_chebfuns(self):
+        """Test equality comparison with empty Chebfun objects."""
+        # Create empty Chebfuns
+        f1 = Chebfun.initempty()
+        f2 = Chebfun.initempty()
+
+        # They should be equal
+        assert f1 == f2

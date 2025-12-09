@@ -73,7 +73,6 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - np.abs(np.sin(10 * x))))
             assert err < 1e-9  # Multiple discontinuities, relaxed tolerance
 
-    @pytest.mark.slow
     def test_sqrt_singularity(self):
         """Test splitting on sqrt(x) which has singularity at x=0."""
         with _preferences:
@@ -88,7 +87,6 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - np.sqrt(x)))
             assert err < 1e-11
 
-    @pytest.mark.slow
     def test_power_near_singularity(self):
         """Test the Lennard-Jones power operation case: (r/12)^(-6) where r crosses zero.
 
@@ -168,7 +166,6 @@ class TestAutomaticSplitting:
             err = np.max(np.abs(f(x) - expected))
             assert err < 1e-13
 
-    @pytest.mark.slow
     def test_splitting_off_by_default(self):
         """Test that splitting is off by default (matches current behavior)."""
         # Default preferences should have splitting = True as set in settings.py
@@ -179,7 +176,6 @@ class TestAutomaticSplitting:
         # (may be unhappy but won't split)
         assert len(f.funs) == 1
 
-    @pytest.mark.slow
     def test_multiple_discontinuities(self):
         """Test function with multiple discontinuities."""
         with _preferences:
@@ -208,7 +204,6 @@ class TestAutomaticSplitting:
             assert np.abs(f(-0.5)) < 1e-10
             assert np.abs(f(0.5) - 1.0) < 1e-10
 
-    @pytest.mark.slow
     def test_split_at_interior_singularity(self):
         """Test function that blows up in interior of domain."""
         with _preferences:
@@ -371,3 +366,266 @@ class TestEdgeCases:
                 assert len(f.funs) >= 1  # At least creates something
             except Warning:
                 pass  # May warn about not being resolved
+
+
+class TestChebfunSplittingAndDomainOps:
+    """Test splitting and domain-related operations."""
+
+    def test_splitting_with_explicit_false(self):
+        """Test that splitting=False is respected."""
+        # Even with discontinuity, should not split if splitting=False
+        f = chebfun(lambda x: np.sign(x), [-1, 1], splitting=False)
+        # May converge to max length without splitting
+        assert len(f.funs) == 1
+
+    def test_splitting_very_small_interval(self):
+        """Test splitting with interval below minimum threshold."""
+        with _preferences:
+            _preferences.splitting = True
+
+            def safe_sign(x):
+                x = np.atleast_1d(x)
+                result = np.sign(x - 0.5)
+                result[np.abs(x - 0.5) < 1e-15] = 0
+                return result if len(result) > 1 else result[0]
+
+            f = chebfun(safe_sign, [0, 1], splitting=True)
+            # Should still create valid chebfun
+            assert not f.isempty
+
+    def test_splitting_detect_edge_no_growing_derivatives(self):
+        """Test edge detection when derivatives don't grow."""
+        with _preferences:
+            _preferences.splitting = True
+            # Smooth polynomial should not detect edges
+            f = chebfun(lambda x: x**2, [-1, 1], splitting=True)
+            # Should create single piece for smooth function
+            assert len(f.funs) == 1
+
+    def test_splitting_function_evaluation_error(self):
+        """Test splitting with function that raises errors at some points."""
+
+        def problematic_func(x):
+            # Function that's safe most places but can have issues
+            with np.errstate(all="ignore"):
+                return np.where(np.abs(x) < 1e-10, 0, 1 / x)
+
+        f = chebfun(problematic_func, [-1, -0.1, 0.1, 1], splitting=False)
+        # Should handle it gracefully
+        assert not f.isempty
+
+    def test_translate_positive(self):
+        """Test translate with positive offset."""
+        f = chebfun(lambda x: x**2, [-1, 1])
+        f_shifted = f.translate(2)
+        # f_shifted(x) = f(x-2) = (x-2)^2
+        xx = np.linspace(1, 3, 50)
+        assert np.allclose(f_shifted(xx), (xx - 2) ** 2, atol=1e-10)
+
+    def test_translate_negative(self):
+        """Test translate with negative offset."""
+        f = chebfun(lambda x: x**2, [0, 2])
+        f_shifted = f.translate(-1)
+        # f_shifted(x) = f(x+1) = (x+1)^2
+        xx = np.linspace(-1, 1, 50)
+        assert np.allclose(f_shifted(xx), (xx + 1) ** 2, atol=1e-10)
+
+    def test_translate_on_multipiece(self):
+        """Test translate on multipiece chebfun."""
+        f = chebfun(lambda x: x, [-1, 0, 1])
+        f_shifted = f.translate(2)
+        xx = np.linspace(1, 3, 50)
+        # f_shifted(x) = f(x-2) = x-2
+        assert np.allclose(f_shifted(xx), xx - 2, atol=1e-10)
+
+    def test_restrict_with_simplification(self):
+        """Test that restrict() includes simplification."""
+        f = chebfun(lambda x: x, [-2, -1, 0, 1, 2])
+        # Restrict to smaller interval
+        f_restricted = f.restrict([-0.5, 0.5])
+        # Check it works
+        xx = np.linspace(-0.5, 0.5, 30)
+        assert np.allclose(f_restricted(xx), xx, atol=1e-10)
+
+    def test_break_internal_method(self):
+        """Test the _break internal method."""
+        from chebpy.utilities import Domain
+
+        f = chebfun(lambda x: x**2, [-1, 1])
+        # Break into finer domain
+        new_domain = Domain([-1, -0.5, 0, 0.5, 1])
+        f_broken = f._break(new_domain)
+        # Should have 4 pieces now
+        assert len(f_broken.funs) == 4
+        # Verify correctness
+        xx = np.linspace(-1, 1, 50)
+        assert np.allclose(f_broken(xx), xx**2, atol=1e-10)
+
+    def test_simplify_multipiece(self):
+        """Test simplify on multipiece chebfun."""
+        # Create multipiece chebfun
+        f = chebfun(lambda x: x, [-1, 0, 1])
+        f_simplified = f.simplify()
+        # Should still work correctly
+        xx = np.linspace(-1, 1, 50)
+        assert np.allclose(f_simplified(xx), xx, atol=1e-10)
+
+    def test_simplify_on_each_piece(self):
+        """Test simplify method."""
+        # Create chebfun and simplify it
+        f = chebfun(lambda x: x + 0.5, [-1, 0, 1])
+        f_simple = f.simplify()
+        # Should still work correctly
+        xx = np.linspace(-1, 1, 30)
+        assert np.allclose(f_simple(xx), xx + 0.5, atol=1e-10)
+
+    def test_absolute_with_roots(self):
+        """Test that absolute() breaks domain at roots."""
+        f = chebfun(lambda x: x, [-1, 1])
+        f_abs = f.absolute()
+        # Should have broken domain at x=0
+        assert len(f_abs.funs) >= 2
+        # Verify correctness
+        xx = np.linspace(-1, 1, 100)
+        assert np.allclose(f_abs(xx), np.abs(xx), atol=1e-10)
+
+    def test_absolute_method_directly(self):
+        """Test absolute() method (not __abs__)."""
+        f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
+        f_abs = f.absolute()
+        # Should have multiple pieces due to root breaking
+        assert len(f_abs.funs) >= 2
+        xx = np.linspace(-np.pi, np.pi, 100)
+        assert np.allclose(f_abs(xx), np.abs(np.sin(xx)), atol=1e-9)
+
+    def test_maximum_with_non_overlapping_domains(self):
+        """Test maximum with non-overlapping supports."""
+        f1 = chebfun(lambda x: x, [-2, -1])
+        f2 = chebfun(lambda x: x, [0, 1])
+        # Non-overlapping domains should return empty
+        result = f1.maximum(f2)
+        assert result.isempty
+
+    def test_minimum_with_non_overlapping_domains(self):
+        """Test minimum with non-overlapping supports."""
+        f1 = chebfun(lambda x: x, [-2, -1])
+        f2 = chebfun(lambda x: x, [0, 1])
+        result = f1.minimum(f2)
+        assert result.isempty
+
+    def test_maximum_with_partial_overlap(self):
+        """Test maximum with partially overlapping domains."""
+        f1 = chebfun(lambda x: x + 1, [-1, 1])
+        f2 = chebfun(lambda x: x, [0, 2])
+        # Overlap is [0, 1]
+        result = f1.maximum(f2)
+        # Result should be on overlap region [0, 1]
+        assert np.allclose(result.support, [0, 1], atol=1e-10)
+        # On [0, 1], max(x+1, x) = x+1
+        xx = np.linspace(0, 1, 50)
+        expected = xx + 1
+        assert np.allclose(result(xx), expected, atol=1e-10)
+
+    def test_minimum_with_partial_overlap(self):
+        """Test minimum with partially overlapping domains."""
+        f1 = chebfun(lambda x: x + 1, [-1, 1])
+        f2 = chebfun(lambda x: x, [0, 2])
+        result = f1.minimum(f2)
+        # Result should be on overlap region [0, 1]
+        assert np.allclose(result.support, [0, 1], atol=1e-10)
+        # On [0, 1], min(x+1, x) = x
+        xx = np.linspace(0, 1, 50)
+        expected = xx
+        assert np.allclose(result(xx), expected, atol=1e-10)
+
+    def test_maximum_with_constant(self):
+        """Test maximum with constant (via cast_arg_to_chebfun)."""
+        f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
+        result = f.maximum(0)
+        xx = np.linspace(-np.pi, np.pi, 100)
+        expected = np.maximum(np.sin(xx), 0)
+        assert np.allclose(result(xx), expected, atol=1e-10)
+
+    def test_minimum_with_constant(self):
+        """Test minimum with constant."""
+        f = chebfun(lambda x: np.cos(x), [0, np.pi])
+        result = f.minimum(0)
+        xx = np.linspace(0, np.pi, 100)
+        expected = np.minimum(np.cos(xx), 0)
+        assert np.allclose(result(xx), expected, atol=1e-10)
+
+    def test_maximum_minimum_with_many_switches(self):
+        """Test maximum/minimum with function that switches multiple times."""
+        f1 = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
+        f2 = chebfun(lambda x: 0.5 * x, [-np.pi, np.pi])
+        result = f1.maximum(f2)
+        # Verify correctness
+        xx = np.linspace(-np.pi, np.pi, 100)
+        expected = np.maximum(np.sin(xx), 0.5 * xx)
+        assert np.allclose(result(xx), expected, atol=1e-9)
+
+    def test_maximum_with_coincident_functions(self):
+        """Test maximum when functions are identical (no switching)."""
+        f = chebfun(lambda x: x**2, [-1, 1])
+        g = chebfun(lambda x: x**2, [-1, 1])
+        result = f.maximum(g)
+        # Should return one of the functions
+        xx = np.linspace(-1, 1, 50)
+        assert np.allclose(result(xx), f(xx), atol=1e-10)
+
+    def test_minimum_with_coincident_functions(self):
+        """Test minimum when functions are identical."""
+        f = chebfun(lambda x: np.sin(x), [-1, 1])
+        g = chebfun(lambda x: np.sin(x), [-1, 1])
+        result = f.minimum(g)
+        xx = np.linspace(-1, 1, 50)
+        assert np.allclose(result(xx), f(xx), atol=1e-10)
+
+    def test_maximum_minimum_different_supports(self):
+        """Test maximum and minimum with functions having different supports."""
+        # Create two Chebfuns with different supports
+        f = chebfun(lambda x: x**2, domain=[-1, 1])
+        g = chebfun(lambda x: 1 - x**2, domain=[0, 2])
+
+        # Test maximum
+        h_max = f.maximum(g)
+
+        # The result should be defined on [0, 1] (the intersection of domains)
+        assert h_max.support[0] == 0
+        assert h_max.support[1] == 1
+
+        # Test minimum
+        h_min = f.minimum(g)
+
+        # The result should be defined on [0, 1] (the intersection of domains)
+        assert h_min.support[0] == 0
+        assert h_min.support[1] == 1
+
+    def test_maximum_minimum_no_intersection(self):
+        """Test maximum and minimum with functions having no intersection."""
+        # Create two Chebfuns with non-overlapping supports
+        f = chebfun(lambda x: x**2, domain=[-2, -1])
+        g = chebfun(lambda x: 1 - x**2, domain=[1, 2])
+
+        # Test maximum - should return empty
+        h_max = f.maximum(g)
+        assert h_max.isempty
+
+        # Test minimum - should return empty
+        h_min = f.minimum(g)
+        assert h_min.isempty
+
+    def test_maximum_minimum_empty_switch(self):
+        """Test maximum and minimum that result in an empty switch."""
+        # Create a special case where the switch would be empty
+        # This is a bit tricky to construct, but we can try with functions
+        # that are exactly equal at all points
+        f = chebfun(lambda x: x**2, domain=[-1, 1])
+        g = chebfun(lambda x: x**2, domain=[-1, 1])
+
+        # The difference f-g has no roots, but the algorithm should handle this
+        h_max = f.maximum(g)
+        assert not h_max.isempty
+
+        h_min = f.minimum(g)
+        assert not h_min.isempty

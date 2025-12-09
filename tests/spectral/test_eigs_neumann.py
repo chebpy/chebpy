@@ -5,7 +5,6 @@ not just Dirichlet BCs. The old heuristic (len(r.indices) == 1) would fail these
 """
 
 import numpy as np
-import pytest
 
 from chebpy import chebfun
 from chebpy.linop import LinOp
@@ -24,9 +23,9 @@ class TestNeumannEigenvalues:
         domain = Domain([0, 1])
 
         # L = -d^2/dx^2
-        a0 = chebfun(lambda x: 0*x, [0, 1])
-        a1 = chebfun(lambda x: 0*x, [0, 1])
-        a2 = chebfun(lambda x: -1 + 0*x, [0, 1])
+        a0 = chebfun(lambda x: 0 * x, [0, 1])
+        a1 = chebfun(lambda x: 0 * x, [0, 1])
+        a2 = chebfun(lambda x: -1 + 0 * x, [0, 1])
 
         L = LinOp(
             coeffs=[a0, a1, a2],
@@ -43,7 +42,7 @@ class TestNeumannEigenvalues:
         evals, efuns = L.eigs(k=5, sigma=0)
 
         # Expected: 0, π^2, (2π)^2, (3π)^2, (4π)^2
-        expected = np.array([0, np.pi**2, (2*np.pi)**2, (3*np.pi)**2, (4*np.pi)**2])
+        expected = np.array([0, np.pi**2, (2 * np.pi) ** 2, (3 * np.pi) ** 2, (4 * np.pi) ** 2])
 
         # Sort computed eigenvalues
         idx = np.argsort(evals)
@@ -73,9 +72,9 @@ class TestNeumannEigenvalues:
         domain = Domain([0, np.pi])
 
         # L = -d^2/dx^2
-        a0 = chebfun(lambda x: 0*x, [0, np.pi])
-        a1 = chebfun(lambda x: 0*x, [0, np.pi])
-        a2 = chebfun(lambda x: -1 + 0*x, [0, np.pi])
+        a0 = chebfun(lambda x: 0 * x, [0, np.pi])
+        a1 = chebfun(lambda x: 0 * x, [0, np.pi])
+        a2 = chebfun(lambda x: -1 + 0 * x, [0, np.pi])
 
         L = LinOp(
             coeffs=[a0, a1, a2],
@@ -91,7 +90,7 @@ class TestNeumannEigenvalues:
         evals, efuns = L.eigs(k=4, sigma=0)
 
         # Expected: (1/2)^2, (3/2)^2, (5/2)^2, (7/2)^2
-        expected = np.array([(0.5)**2, (1.5)**2, (2.5)**2, (3.5)**2])
+        expected = np.array([(0.5) ** 2, (1.5) ** 2, (2.5) ** 2, (3.5) ** 2])
 
         # Sort computed eigenvalues
         idx = np.argsort(evals)
@@ -111,9 +110,9 @@ class TestNeumannEigenvalues:
         domain = Domain([0, 1])
 
         # L = -d^2/dx^2
-        a0 = chebfun(lambda x: 0*x, [0, 1])
-        a1 = chebfun(lambda x: 0*x, [0, 1])
-        a2 = chebfun(lambda x: -1 + 0*x, [0, 1])
+        a0 = chebfun(lambda x: 0 * x, [0, 1])
+        a1 = chebfun(lambda x: 0 * x, [0, 1])
+        a2 = chebfun(lambda x: -1 + 0 * x, [0, 1])
 
         L = LinOp(
             coeffs=[a0, a1, a2],
@@ -144,11 +143,11 @@ class TestNeumannEigenvalues:
         domain = Domain([0, 1])
 
         # L = d^4/dx^4
-        a0 = chebfun(lambda x: 0*x, [0, 1])
-        a1 = chebfun(lambda x: 0*x, [0, 1])
-        a2 = chebfun(lambda x: 0*x, [0, 1])
-        a3 = chebfun(lambda x: 0*x, [0, 1])
-        a4 = chebfun(lambda x: 1 + 0*x, [0, 1])
+        a0 = chebfun(lambda x: 0 * x, [0, 1])
+        a1 = chebfun(lambda x: 0 * x, [0, 1])
+        a2 = chebfun(lambda x: 0 * x, [0, 1])
+        a3 = chebfun(lambda x: 0 * x, [0, 1])
+        a4 = chebfun(lambda x: 1 + 0 * x, [0, 1])
 
         L = LinOp(
             coeffs=[a0, a1, a2, a3, a4],
@@ -159,10 +158,10 @@ class TestNeumannEigenvalues:
         # Natural BCs for beam: u'(0) = u'''(0) = u'(1) = u'''(1) = 0
         # For 4th order, need 4 BCs total
         L.bc = [
-            lambda u: u.diff()(np.array([0.0]))[0],      # u'(0) = 0
-            lambda u: u.diff(3)(np.array([0.0]))[0],     # u'''(0) = 0
-            lambda u: u.diff()(np.array([1.0]))[0],      # u'(1) = 0
-            lambda u: u.diff(3)(np.array([1.0]))[0],     # u'''(1) = 0
+            lambda u: u.diff()(np.array([0.0]))[0],  # u'(0) = 0
+            lambda u: u.diff(3)(np.array([0.0]))[0],  # u'''(0) = 0
+            lambda u: u.diff()(np.array([1.0]))[0],  # u'(1) = 0
+            lambda u: u.diff(3)(np.array([1.0]))[0],  # u'''(1) = 0
         ]
 
         # Should be able to compute eigenvalues
@@ -187,9 +186,9 @@ class TestBCDetectionRegression:
         """
         domain = Domain([0, 1])
 
-        a0 = chebfun(lambda x: 0*x, [0, 1])
-        a1 = chebfun(lambda x: 0*x, [0, 1])
-        a2 = chebfun(lambda x: -1 + 0*x, [0, 1])
+        a0 = chebfun(lambda x: 0 * x, [0, 1])
+        a1 = chebfun(lambda x: 0 * x, [0, 1])
+        a2 = chebfun(lambda x: -1 + 0 * x, [0, 1])
 
         L = LinOp(
             coeffs=[a0, a1, a2],
@@ -202,16 +201,18 @@ class TestBCDetectionRegression:
         # Prepare domain and build discretization
         L.prepare_domain()
         from chebpy.op_discretization import OpDiscretization
+
         disc = OpDiscretization.build_discretization(L, 16)
 
         # Check BC rows
-        bc_rows = disc.get('bc_rows', [])
+        bc_rows = disc.get("bc_rows", [])
         assert len(bc_rows) > 0, "Should have BC rows"
 
         from scipy import sparse
+
         for row in bc_rows:
             r = row.tocsr() if sparse.isspmatrix(row) else sparse.csr_matrix(row)
-            num_nonzeros = len(r.indices)
+            len(r.indices)
             # Derivative BCs have multiple nonzeros (differentiation stencil)
             # So the old heuristic `if num_nonzeros == 1` would miss these
             # We just document this fact; the new method doesn't rely on counting nonzeros

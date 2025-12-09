@@ -24,6 +24,7 @@ from .spectral import (
     barycentric_matrix,
     cheb_points_scaled,
     diff_matrix,
+    diff_matrix_driscoll_hale,
     diff_matrix_rectangular,
     fourier_diff_matrix,
     fourier_points_scaled,
@@ -136,6 +137,11 @@ class OpDiscretization:
                           - 'append': Append BC rows to operator (overdetermined system, least squares)
                           - 'replace': Replace operator rows with BC rows (square system, exact BCs)
                                      This is the MATLAB Chebfun approach for spectral accuracy.
+                          - 'driscoll_hale': Use Driscoll-Hale rectangular collocation where the
+                                     operator matrix is (n-k+1) × (n+1) for k-th order ODE, then
+                                     k BC rows are added to form a square (n+1) × (n+1) system.
+                                     This preserves polynomial accuracy without row deletion.
+                                     Reference: Driscoll & Hale (2016), IMA J. Numer. Anal.
 
         Returns:
             Dictionary with:
@@ -170,6 +176,9 @@ class OpDiscretization:
         n_per_block = []
         m_per_block = []
 
+        # Check for Driscoll-Hale mode
+        use_driscoll_hale = bc_enforcement == "driscoll_hale"
+
         # Discretize each block
         for block_spec in linop.blocks:
             interval = block_spec["interval"]
@@ -177,7 +186,14 @@ class OpDiscretization:
             diff_order = block_spec["diff_order"]
 
             A_block = OpDiscretization._build_block_operator(
-                interval, coeffs, diff_order, n, m=m, use_fourier=use_fourier, rectangularization=rectangularization
+                interval,
+                coeffs,
+                diff_order,
+                n,
+                m=m,
+                use_fourier=use_fourier,
+                rectangularization=rectangularization,
+                bc_enforcement=bc_enforcement,
             )
             blocks.append(A_block)
 
@@ -187,22 +203,34 @@ class OpDiscretization:
                 if use_fourier:
                     # Fourier for periodic problems: use n points (not affected by rectangularization)
                     x_pts = fourier_points_scaled(n, interval)
+                elif use_driscoll_hale:
+                    # Driscoll-Hale: n-diff_order+1 points
+                    m_dh = n - diff_order
+                    x_pts = cheb_points_scaled(m_dh, interval)
                 else:
                     # Chebyshev otherwise: use m+1 collocation points for rectangular
                     x_pts = cheb_points_scaled(m, interval)
                 rhs_vals = linop.rhs(x_pts)
                 rhs_blocks.append(rhs_vals)
             else:
-                # Periodic: n points, Non-periodic: m+1 points
-                rhs_size = n if use_fourier else m + 1
+                # Periodic: n points, Driscoll-Hale: n-diff_order+1, Other: m+1 points
+                if use_fourier:
+                    rhs_size = n
+                elif use_driscoll_hale:
+                    rhs_size = n - diff_order + 1
+                else:
+                    rhs_size = m + 1
                 rhs_blocks.append(np.zeros(rhs_size))
 
             # Store grid sizes
             # n_per_block: coefficient DOFs (n+1 for Chebyshev)
-            # m_per_block: collocation points (m+1)
+            # m_per_block: collocation/output points
             if use_fourier:
                 n_per_block.append(n)
                 m_per_block.append(n)
+            elif use_driscoll_hale:
+                n_per_block.append(n + 1)
+                m_per_block.append(n - diff_order + 1)
             else:
                 n_per_block.append(n + 1)
                 m_per_block.append(m + 1)
@@ -272,6 +300,7 @@ class OpDiscretization:
         m: int = None,
         use_fourier: bool = False,
         rectangularization: bool = False,
+        bc_enforcement: str = "append",
     ) -> sparse.spmatrix:
         """Build discretized operator matrix for a single interval.
 
@@ -290,20 +319,30 @@ class OpDiscretization:
             m: Number of collocation points for rectangular discretization (yields m+1 points)
             use_fourier: If True, use Fourier collocation; otherwise use Chebyshev
             rectangularization: If True, build rectangular (overdetermined) matrix
+            bc_enforcement: BC enforcement strategy ('append', 'replace', or 'driscoll_hale')
 
         Returns:
             Sparse matrix representing discretized operator
             - Chebyshev square: (n+1) x (n+1)
-            - Chebyshev rectangular: (m+1) x (n+1)
+            - Chebyshev rectangular (overdetermined): (m+1) x (n+1)
+            - Chebyshev Driscoll-Hale: (n-diff_order+1) x (n+1)
             - Fourier: n x n (not affected by rectangularization)
         """
-        # Determine grid sizes
+        # Determine grid sizes and mode
+        use_driscoll_hale = bc_enforcement == "driscoll_hale"
+        max_order = diff_order if diff_order is not None else (len(coeffs) - 1 if coeffs else 0)
+
         if use_fourier:
             # Fourier: n x n (rectangularization not applicable)
             row_size = n
             col_size = n
+        elif use_driscoll_hale:
+            # Driscoll-Hale: (n-diff_order+1) x (n+1) for operator rows
+            # BCs will be added separately to make it square
+            row_size = n - max_order + 1
+            col_size = n + 1
         elif rectangularization and m is not None:
-            # Chebyshev rectangular: (m+1) x (n+1)
+            # Chebyshev rectangular (overdetermined): (m+1) x (n+1)
             row_size = m + 1
             col_size = n + 1
         else:
@@ -315,8 +354,6 @@ class OpDiscretization:
         A = sparse.csr_matrix((row_size, col_size))
 
         # Add each term: a_k(x) * D^k
-        # Handle None diff_order (use coefficient list length)
-        max_order = diff_order if diff_order is not None else (len(coeffs) - 1 if coeffs else 0)
         for k in range(max_order + 1):
             if k < len(coeffs) and coeffs[k] is not None:
                 # Get coefficient function
@@ -326,6 +363,13 @@ class OpDiscretization:
                 # Need to evaluate at correct grid points for Fourier or Chebyshev
                 if use_fourier:
                     x_pts = fourier_points_scaled(n, interval)
+                    coeff_vals = coeff_fun(x_pts)
+                    coeff_vals = np.atleast_1d(coeff_vals).ravel()
+                    M_k = sparse.diags(coeff_vals, 0, format="csr")
+                elif use_driscoll_hale:
+                    # Driscoll-Hale: evaluate at n-max_order+1 output points
+                    m_dh = n - max_order
+                    x_pts = cheb_points_scaled(m_dh, interval)
                     coeff_vals = coeff_fun(x_pts)
                     coeff_vals = np.atleast_1d(coeff_vals).ravel()
                     M_k = sparse.diags(coeff_vals, 0, format="csr")
@@ -345,9 +389,29 @@ class OpDiscretization:
                         D_k = sparse.eye(n, format="csr")
                     else:
                         D_k = sparse.csr_matrix(fourier_diff_matrix(n, interval, order=k))
+                elif use_driscoll_hale:
+                    # Driscoll-Hale rectangular differentiation
+                    # D^k maps n+1 values to (n-max_order+1) values
+                    if k == 0:
+                        # Identity needs to resample from n+1 to n-max_order+1 points
+                        m_dh = n - max_order
+                        x_output = cheb_points_scaled(m_dh, interval)
+                        D_k = barycentric_matrix(x_output, n, interval)
+                        D_k = sparse.csr_matrix(D_k)
+                    else:
+                        D_k = diff_matrix_driscoll_hale(n, interval, order=k)
+                        # Resample to match output size if k < max_order
+                        if k < max_order:
+                            # D_k is (n-k+1) × (n+1), need (n-max_order+1) × (n+1)
+                            m_dh = n - max_order
+                            m_k = n - k
+                            if m_k != m_dh:
+                                # Resample from m_k+1 to m_dh+1 points
+                                x_output = cheb_points_scaled(m_dh, interval)
+                                P = barycentric_matrix(x_output, m_k, interval)
+                                D_k = sparse.csr_matrix(P @ sparse_to_dense(D_k))
                 elif rectangularization and m is not None:
-                    # Rectangular: use interpolation (k=0) or diff matrix (k>0)
-                    # diff_matrix_rectangular handles both cases correctly
+                    # Rectangular (overdetermined): use interpolation (k=0) or diff matrix (k>0)
                     D_k = diff_matrix_rectangular(n, m, interval, order=k)
                 else:
                     # Square Chebyshev

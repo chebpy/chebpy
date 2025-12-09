@@ -357,3 +357,32 @@ def test_initfun_fixedlen_succeeds():
 
     # Check that the first piece of g2 has the same coefficients as the first piece of g0
     assert np.sum(g2.funs[0].coeffs - g0.funs[0].coeffs) == 0
+
+
+class TestChebfunConstructionEdgeCases:
+    """Additional edge case tests for Chebfun construction."""
+
+    def test_initfun_with_n_parameter(self):
+        """Test initfun with explicit n parameter (delegates to initfun_fixedlen)."""
+        f = Chebfun.initfun(lambda x: np.sin(x), domain=[-1, 1], n=20)
+        assert f.funs[0].size == 20
+
+        # Test with multiple intervals
+        f2 = Chebfun.initfun(lambda x: np.sin(x), domain=[-1, 0, 1], n=15)
+        assert len(f2.funs) == 2
+        assert all(fun.size == 15 for fun in f2.funs)
+
+    def test_initfun_adaptive_with_empty_domain(self):
+        """Test initfun_adaptive with empty domain array."""
+        f = Chebfun.initfun_adaptive(lambda x: x, domain=[])
+        assert f.isempty
+
+    def test_initfun_adaptive_with_single_point_domain(self):
+        """Test initfun_adaptive with single point (should raise error)."""
+        with pytest.raises(InvalidDomain, match="at least two points"):
+            Chebfun.initfun_adaptive(lambda x: x, domain=[0])
+
+    def test_initfun_adaptive_with_equal_endpoints(self):
+        """Test initfun_adaptive with equal endpoints (should raise error)."""
+        with pytest.raises(InvalidDomain, match="cannot be equal"):
+            Chebfun.initfun_adaptive(lambda x: x, domain=[0, 0])
