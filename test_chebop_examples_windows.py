@@ -154,7 +154,105 @@ TEST_CASES = [
         "matlab_lbc": "0",
         "matlab_rbc": "0",
     },
+    {
+        "name": "Singular Perturbation",
+        "desc": "epsilon * u'' - u = 0, u(0)=0, u(1)=1, epsilon = 1e-6",
+        "domain": [0, 1],
+        "op": lambda u: 1e-3 * u.diff(2) - u.diff(),
+        "lbc": 0.0,
+        "rbc": 1.0,
+        "lbc_type": "dirichlet",
+        "matlab_op": "@(u) 1e-3*diff(u,2) - diff(u)",
+        "matlab_lbc": "0",
+        "matlab_rbc": "1"
+    },
+    {
+        "name": "Duffing Nonlinear ODE",
+        "desc": "u'' + u + u^3 = 0, u(0)=0, u(1)=0",
+        "domain": [-10, 10],
+        "op": lambda u: u.diff(2) + u + u**3,
+        "lbc": 0.0,
+        "rbc": 0.0,
+        "lbc_type": "dirichlet",
+        "matlab_op": "@(u) diff(u,2) + u + u^3",
+        "matlab_lbc": "0",
+        "matlab_rbc": "0"
+    },
 ]
+
+def solve_chebpy_legendre(problem):
+    """Solve with ChebPy and compute metrics."""
+    N = chebop(problem["domain"], uselegendre=True)
+    N.op = problem["op"]
+
+    # Handle boundary conditions
+    if "lbc" in problem and problem["lbc"] is not None:
+        if problem["lbc_type"] == "dirichlet":
+            N.lbc = problem["lbc"]
+        elif problem["lbc_type"] == "mixed":
+            N.lbc = problem["lbc"]
+            if "lbc_val" in problem:
+                N.lbc_val = problem["lbc_val"]
+
+    if "rbc" in problem and problem["rbc"] is not None:
+        if problem["lbc_type"] == "dirichlet":
+            N.rbc = problem["rbc"]
+        elif problem["lbc_type"] == "mixed":
+            N.rbc = problem["rbc"]
+            if "rbc_val" in problem:
+                N.rbc_val = problem["rbc_val"]
+
+    start = time.time()
+    try:
+        u = N.solve()
+        elapsed = time.time() - start
+
+        # Compute residual
+        residual = N.op(u)
+        x_test = np.linspace(problem["domain"][0], problem["domain"][1], 100)
+        res_vals = residual(x_test)
+        max_residual = np.max(np.abs(res_vals))
+
+        # Compute BC error
+        a, b = problem["domain"]
+        bc_left = 0.0
+        bc_right = 0.0
+
+        if "lbc" in problem and problem["lbc"] is not None:
+            if problem["lbc_type"] == "dirichlet":
+                bc_left = abs(u(a) - problem["lbc"])
+            elif problem["lbc_type"] == "mixed" and "lbc_val" in problem:
+                bc_left = max(abs(u(a) - problem["lbc_val"][0]),
+                            abs(u.diff()(a) - problem["lbc_val"][1]))
+
+        if "rbc" in problem and problem["rbc"] is not None:
+            if problem["lbc_type"] == "dirichlet":
+                bc_right = abs(u(b) - problem["rbc"])
+            elif problem["lbc_type"] == "mixed" and "rbc_val" in problem:
+                bc_right = max(abs(u(b) - problem["rbc_val"][0]),
+                             abs(u.diff()(b) - problem["rbc_val"][1]))
+
+        bc_error = max(bc_left, bc_right)
+
+        # Get solution size
+        if hasattr(u, "funs"):
+            solution_size = max(fun.size for fun in u.funs)
+        else:
+            solution_size = len(u)
+
+        return {
+            "success": True,
+            "time": elapsed,
+            "max_residual": max_residual,
+            "bc_error": bc_error,
+            "solution_size": solution_size,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "time": time.time() - start,
+            "error_msg": str(e)[:100],
+        }
 
 
 def solve_chebpy(problem):
@@ -380,6 +478,20 @@ def run_tests():
         # ChebPy
         print(f"    {BOLD}ChebPy:{RESET} ", end="", flush=True)
         chebpy_result = solve_chebpy(problem)
+
+        if chebpy_result["success"]:
+            print(f"{GREEN}✓{RESET} {chebpy_result['time']:.3f}s")
+            print(f"            Residual:  {format_metric(chebpy_result['max_residual'])}")
+            print(f"            BC Error:  {format_metric(chebpy_result['bc_error'])}")
+            print(f"            Size:      {chebpy_result['solution_size']} pts")
+        else:
+            print(f"{RED}✗ FAILED{RESET}")
+            print(f"            Error: {chebpy_result['error_msg']}")
+            failed += 1
+
+        # ChebPy with Legendre
+        print(f"    {BOLD}ChebPy-Leg:{RESET} ", end="", flush=True)
+        chebpy_leg_result = solve_chebpy_legendre(problem)
 
         if chebpy_result["success"]:
             print(f"{GREEN}✓{RESET} {chebpy_result['time']:.3f}s")
