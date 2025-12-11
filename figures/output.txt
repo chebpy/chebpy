@@ -1,0 +1,319 @@
+CHEBOP TEST SUITE - PYTHON vs MATLAB
+Running 25 test(s)
+
+[1/25] Linear BVP
+    u'' + u = 1, u(0)=u(1)=0
+
+    ChebPy: ✓ 0.021s
+            Residual:  4.09e-14
+            BC Error:  4.02e-16
+            Size:      17 pts
+    MATLAB: ✓ 0.627s
+            Residual:  7.94e-12
+            BC Error:  3.03e-16
+            Size:      11 pts
+    >>> ChebPy is 30.02x faster
+
+[2/25] Cubic Nonlinearity
+    u'' + u^3 = 1, u(0)=u(1)=0
+
+    ChebPy: /Users/cmaloney111/Documents/Harvard/NumMeth/proj/real/chebpy/figures/../src/chebpy/algorithms.py:318: UserWarning: The Chebtech constructor did not converge: using 4097 points. Function may be too oscillatory or have discontinuities. Tolerance: 2.22e-16. Consider increasing prefs.maxpow2 if needed.
+  warnings.warn(
+✓ 0.408s
+            Residual:  2.22e-16
+            BC Error:  2.78e-17
+            Size:      21 pts
+    MATLAB: ✓ 0.985s
+            Residual:  1.95e-10
+            BC Error:  7.48e-15
+            Size:      15 pts
+    >>> ChebPy is 2.41x faster
+
+[3/25] Fourth Order BVP
+    u'''' = 1, u(0)=u'(0)=u(1)=u'(1)=0
+
+    ChebPy: ✓ 0.032s
+            Residual:  4.65e-14
+            BC Error:  3.17e-16
+            Size:      5 pts
+    MATLAB: ✓ 0.632s
+            Residual:  1.41e-11
+            BC Error:  1.09e-14
+            Size:      6 pts
+    >>> ChebPy is 19.55x faster
+
+[4/25] Nonlinear Bratu
+    u'' + exp(u) = 0, u(0)=u(1)=0
+
+    ChebPy: ✓ 0.476s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      21 pts
+    MATLAB: ✓ 0.968s
+            Residual:  7.41e-11
+            BC Error:  2.10e-15
+            Size:      15 pts
+    >>> ChebPy is 2.03x faster
+
+[5/25] Quadratic Nonlinearity
+    u'' - u^2 + 1 = 0, u(-1)=0, u(1)=0
+
+    ChebPy: ✓ 0.685s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      23 pts
+    MATLAB: ✓ 1.094s
+            Residual:  1.16e-10
+            BC Error:  1.22e-14
+            Size:      19 pts
+    >>> ChebPy is 1.60x faster
+
+[6/25] Mixed Dirichlet-Neumann
+    u'' = 0, u(0)=0, u'(1)=1
+
+    ChebPy: ✓ 0.013s
+            Residual:  2.76e-14
+            BC Error:  1.47e-14
+            Size:      3 pts
+    MATLAB: ✓ 0.630s
+            Residual:  0.00e+00
+            BC Error:  1.00e+00
+            Size:      1 pts
+    >>> ChebPy is 47.06x faster
+
+[7/25] Robin BCs
+    u'' + u = 1, u'(0)-u(0)=0, u'(1)+u(1)=0
+
+    ChebPy: ✓ 0.031s
+            Residual:  1.39e-12
+            BC Error:  5.48e-13
+            Size:      17 pts
+    MATLAB: ✓ 0.652s
+            Residual:  1.74e-11
+            BC Error:  1.35e-12
+            Size:      11 pts
+    >>> ChebPy is 20.71x faster
+
+[8/25] Sin Nonlinearity
+    u'' + sin(u) = 0, u(0)=0, u(π)=0
+
+    ChebPy: ✓ 0.051s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      16 pts
+    MATLAB: ✓ 0.831s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      1 pts
+    >>> ChebPy is 16.23x faster
+
+[9/25] Third Order ODE
+    u''' = 1, u(0)=0, u'(0)=1, u(1)=0
+
+    ChebPy: ✓ 0.023s
+            Residual:  4.55e-14
+            BC Error:  1.98e-14
+            Size:      4 pts
+    MATLAB: ✓ 0.597s
+            Residual:  1.99e-13
+            BC Error:  1.00e+00
+            Size:      4 pts
+    >>> ChebPy is 26.36x faster
+
+[10/25] Mixed Derivative
+    u'' + u' - u = 0, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.022s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      1 pts
+    MATLAB: ✗ FAILED
+            Error: Not enough input arguments.
+
+[11/25] Exponential Coefficient
+    u'' + exp(x)*u = 1, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.034s
+            Residual:  1.47e-14
+            BC Error:  1.80e-16
+            Size:      16 pts
+    MATLAB: ✓ 0.617s
+            Residual:  7.95e-13
+            BC Error:  1.77e-17
+            Size:      16 pts
+    >>> ChebPy is 18.23x faster
+
+[12/25] Larger Domain
+    u'' + 0.1u = 0, u(-π)=0, u(π)=0
+
+    ChebPy: ✓ 0.018s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      1 pts
+    MATLAB: ✓ 0.614s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      1 pts
+    >>> ChebPy is 35.00x faster
+
+[13/25] High Frequency
+    u'' + 100u = 0, u(0)=1, u(1)=0
+
+    ChebPy: ✓ 0.020s
+            Residual:  5.21e-10
+            BC Error:  2.66e-15
+            Size:      33 pts
+    MATLAB: ✓ 0.647s
+            Residual:  3.69e-10
+            BC Error:  1.33e-15
+            Size:      25 pts
+    >>> ChebPy is 31.87x faster
+
+[14/25] Stiff Decay
+    u'' - 10u = 0, u(0)=1, u(1)=0
+
+    ChebPy: ✓ 0.020s
+            Residual:  4.26e-11
+            BC Error:  8.88e-16
+            Size:      16 pts
+    MATLAB: ✓ 0.616s
+            Residual:  3.85e-11
+            BC Error:  8.88e-16
+            Size:      16 pts
+    >>> ChebPy is 30.37x faster
+
+[15/25] Variable RHS
+    u'' = x^2, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.014s
+            Residual:  6.37e-15
+            BC Error:  1.46e-16
+            Size:      5 pts
+    MATLAB: ✗ FAILED
+            Error: Dot indexing is not supported for variables of this type.
+
+[16/25] Cosine Nonlinearity
+    u'' + cos(u) = 0, u(0)=0, u(1)=1
+
+    ChebPy: ✓ 0.435s
+            Residual:  5.08e-16
+            BC Error:  1.11e-16
+            Size:      21 pts
+    MATLAB: ✓ 1.022s
+            Residual:  1.36e-09
+            BC Error:  1.05e-13
+            Size:      15 pts
+    >>> ChebPy is 2.35x faster
+
+[17/25] Abs Nonlinearity
+    u'' + abs(u) - 1 = 0, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.022s
+            Residual:  2.79e-01
+            BC Error:  4.02e-16
+            Size:      17 pts
+    MATLAB: ✗ FAILED
+            Error: ABS() is not Frechet differentiable.
+
+[18/25] Square Root
+    u'' + sqrt(abs(u+1)) = 2, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.379s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      25 pts
+    MATLAB: ✗ FAILED
+            Error: ABS() is not Frechet differentiable.
+
+[19/25] Power Law
+    u'' + u^5 = 1, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.425s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      21 pts
+    MATLAB: ✓ 0.939s
+            Residual:  4.40e-11
+            BC Error:  3.60e-15
+            Size:      13 pts
+    >>> ChebPy is 2.21x faster
+
+[20/25] Damped Oscillator
+    u'' + 0.5u' + u = 0, u(0)=1, u(2π)=0
+
+    ChebPy: ✓ 0.030s
+            Residual:  7.66e-12
+            BC Error:  3.11e-15
+            Size:      21 pts
+    MATLAB: ✗ FAILED
+            Error: Not enough input arguments.
+
+[21/25] Fifth Order
+    u^(5) = 1, u(0)=u'(0)=u''(0)=0, u(1)=u'(1)=0
+
+    ChebPy: ✓ 0.042s
+            Residual:  7.52e-14
+            BC Error:  1.47e-16
+            Size:      6 pts
+    MATLAB: ✓ 0.629s
+            Residual:  5.15e-10
+            BC Error:  6.89e-13
+            Size:      7 pts
+    >>> ChebPy is 14.92x faster
+
+[22/25] Polynomial Coefficient
+    (1+x^2)u'' + u = 0, u(0)=1, u(1)=0
+
+    ChebPy: ✓ 0.027s
+            Residual:  1.82e-10
+            BC Error:  1.07e-14
+            Size:      20 pts
+    MATLAB: ✓ 0.651s
+            Residual:  8.36e-10
+            BC Error:  5.11e-15
+            Size:      18 pts
+    >>> ChebPy is 24.25x faster
+
+[23/25] Tanh Nonlinearity
+    u'' + tanh(u) = 0, u(-1)=0, u(1)=0
+
+    ChebPy: ✓ 0.051s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      16 pts
+    MATLAB: ✓ 0.820s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      1 pts
+    >>> ChebPy is 15.95x faster
+
+[24/25] Log Nonlinearity
+    u'' + log(1+u^2) = 1, u(0)=0, u(1)=0
+
+    ChebPy: ✓ 0.585s
+            Residual:  0.00e+00
+            BC Error:  0.00e+00
+            Size:      21 pts
+    MATLAB: ✓ 1.145s
+            Residual:  1.07e-10
+            BC Error:  1.08e-15
+            Size:      17 pts
+    >>> ChebPy is 1.96x faster
+
+[25/25] Rational Nonlinearity
+    u'' + u/(1+u^2) = 0, u(0)=1, u(1)=0
+
+    ChebPy: ✓ 0.514s
+            Residual:  0.00e+00
+            BC Error:  3.82e-17
+            Size:      32 pts
+    MATLAB: ✓ 1.062s
+            Residual:  1.26e-09
+            BC Error:  1.07e-13
+            Size:      20 pts
+    >>> ChebPy is 2.07x faster
+
+SUMMARY
+Passed: 20/25
+
+Average speedup: ChebPy is 23.42x faster

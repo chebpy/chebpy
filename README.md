@@ -1,3 +1,15 @@
+# Note for Graders (AM205 Final Project)
+
+In last-minute editing, we mixed up some text and figures in the paper. See figures/ for how to reproduce the correct figures, and see below for corrected text:
+
+1. **Figure 1**: The figure in the report was an old figure, whereas the correct figure we wanted to use was one based on the Airy equation, which you can see in the figures directory (spectral.png). What we report in the paper should be changed to the Airy equation with n around 50.
+
+2. **Figure 3**: The paper text describes the quantum harmonic oscillator ($-u'' + x^2 u = \lambda u$ with eigenvalues $\lambda_k = 2k+1$), but Figure 3 actually shows the simple Laplacian eigenvalue problem which we had planned to include earlier but then removed ($-u'' = \lambda u$ on $[0,\pi]$ with eigenvalues $n^2$). The correct figure for the harmonic oscillator on [-6,6] is `eig.png` in the figures folder.
+
+You can also see the respective files for generating these figures with chebpy. Apologies for these mistakes.
+
+---
+
 <div align="center">
 
 # 📊 ChebPy
