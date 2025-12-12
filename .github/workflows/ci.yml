@@ -3,17 +3,11 @@
 #
 # Workflow: Continuous Integration
 #
-# Purpose: This workflow runs tests on multiple Python versions to ensure
-#          compatibility and code quality across different environments.
+# Purpose: Run tests on multiple Python versions to ensure compatibility.
 #
-# Trigger: This workflow runs on every push and on pull requests to main/master
-#          branches (including from forks)
-#
-# Components:
-#   - 🧪 Run tests on multiple Python versions
-#   - 🔄 Matrix strategy for testing on different environments
+# Trigger: On push and pull requests to main/master branches.
 
-name: "CI"
+name: CI
 
 permissions:
   contents: read
@@ -21,43 +15,52 @@ permissions:
 on:
   push:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
-  test:
-    # if: github.repository != 'tschm/.config-templates'
-    # The type of runner that the job will run on
-    runs-on: ${{ matrix.os }}
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.versions.outputs.list }}
+    steps:
+      - uses: actions/checkout@v6
 
+      - id: versions
+        run: |
+          # Generate Python versions JSON from the script
+          JSON=$(python ./.github/workflows/scripts/version_matrix.py)
+          echo "list=$JSON" >> "$GITHUB_OUTPUT"
+
+      - name: Debug matrix
+        run: |
+          echo "Python versions: ${{ steps.versions.outputs.list }}"
+
+  test:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        # mongo container action only supported on Linux
-        os: [ubuntu-latest]
-        # Python version matrix - configurable via PYTHON_MAX_VERSION variable
-        # Set PYTHON_MAX_VERSION to '3.13' or '3.12' to exclude newer versions
-        python-version: ${{ vars.PYTHON_MAX_VERSION == '3.13' && fromJSON('["3.11", "3.12", "3.13"]') ||
-                            vars.PYTHON_MAX_VERSION == '3.12' && fromJSON('["3.11", "3.12"]') ||
-                            vars.PYTHON_MAX_VERSION == '3.11' && fromJSON('["3.11"]') || fromJSON('["3.11", "3.12", "3.13", "3.14"]') }}
+        python-version: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           lfs: true
 
-      # Use the composite action to set up the project
       - name: Setup the project
-        id: setup
         uses: ./.github/actions/setup-project
         with:
           python-version: ${{ matrix.python-version }}
+          uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
 
-      - name: "Run the tests"
+      - name: Install dependencies
         run: |
-          # if there is a tests/requirements.txt file, install it
           if [ -f "tests/requirements.txt" ]; then
             uv pip install -r tests/requirements.txt
           fi
           uv pip install pytest
-          uv run pytest tests
+
+      - name: Run tests
+        run: uv run pytest tests
