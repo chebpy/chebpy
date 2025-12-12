@@ -26,7 +26,7 @@ jobs:
     name: Check dependencies with deptry
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/astral-sh/uv:0.9.16-python3.12-trixie
+      image: ghcr.io/astral-sh/uv:0.9.17-python3.12-trixie
 
     steps:
       - uses: actions/checkout@v6

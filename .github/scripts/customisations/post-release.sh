@@ -26,7 +26,7 @@
 # Note: If you customize this file in your repository, add it to the exclude list
 #       in template.yml to prevent it from being overwritten by template updates:
 #       exclude: |
-#         .github/scripts/post-release.sh
+#         .github/scripts/customisations/post-release.sh
 #
 
 set -euo pipefail
