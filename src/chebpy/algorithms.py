@@ -268,7 +268,7 @@ def standard_chop(coeffs: np.ndarray, tol: float = None) -> int:
     return min((cutoff, n - 1))
 
 
-def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
+def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None, min_samples: int = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
@@ -282,6 +282,9 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
         hscale (float, optional): Scale factor for the tolerance. Defaults to 1.
         maxpow2 (int, optional): Maximum power of 2 to try. If None, uses the
             value from preferences.
+        min_samples (int, optional): Minimum number of sample points to use. This
+            ensures the result has at least as many points as the input when
+            composing operations.
 
     Returns:
         numpy.ndarray: Coefficients of the Chebyshev series representing the function.
@@ -291,11 +294,19 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
             number of iterations.
     """
     minpow2 = 4  # 17 points
+    if min_samples is not None and min_samples > 17:
+        # Find the power of 2 that gives at least min_samples points
+        minpow2 = max(minpow2, int(np.ceil(np.log2(min_samples - 1))))
+
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
+        # Handle scalar returns from constant functions like lambda x: 1.0
+        values = np.atleast_1d(values)
+        if values.size == 1:
+            values = np.broadcast_to(values, points.shape)
         coeffs = cls._vals2coeffs(values)
         eps = prefs.eps
         tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
@@ -304,7 +315,11 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points")
+            warnings.warn(
+                f"The {cls.__name__} constructor did not converge: using {n} points. "
+                f"Function may be too oscillatory or have discontinuities. "
+                f"Tolerance: {tol:.2e}. Consider increasing prefs.maxpow2 if needed."
+            )
             break
     return coeffs
 
@@ -360,6 +375,65 @@ def barywts2(n: int) -> np.ndarray:
         wts[n - 2 :: -2] = -1
         wts[0] = 0.5 * wts[0]
     return wts
+
+
+def clencurt_weights(n: int) -> np.ndarray:
+    """Compute Clenshaw-Curtis quadrature weights for n+1 Chebyshev points.
+
+    Returns the weights for integrating on [-1, 1] with Chebyshev points
+    x_j = cos(j*pi/n), j=0..n. The rule is exact for polynomials up to degree n.
+
+    This implementation uses an FFT-based O(n log n) algorithm via DCT-I,
+    matching MATLAB Chebfun's Waldvogel method in spirit but adapted for
+    the n+1 points convention.
+
+    Args:
+        n (int): Discretization size (returns n+1 weights for n+1 points).
+
+    Returns:
+        numpy.ndarray: Array of n+1 quadrature weights.
+
+    References:
+        - Waldvogel, "Fast Construction of the Fejér and Clenshaw-Curtis
+          Quadrature Rules", BIT Numerical Mathematics 46 (2006), pp 195-202.
+        - MATLAB Chebfun @chebtech2/quadwts.m
+
+    Examples:
+        >>> w = clencurt_weights(1)
+        >>> w
+        array([1., 1.])
+        >>> w = clencurt_weights(2)
+        >>> np.allclose(w, [1/3, 4/3, 1/3])
+        True
+        >>> np.allclose(np.sum(clencurt_weights(4)), 2.0)  # Should equal 2
+        True
+    """
+    if n == 0:
+        return np.array([2.0])
+    elif n == 1:
+        return np.array([1.0, 1.0])
+
+    n_pts = n + 1  # Number of points
+
+    # Moments of Chebyshev polynomials: int_{-1}^1 T_m(x) dx
+    # = 2/(1-m^2) for even m, 0 for odd m
+    c = np.zeros(n_pts)
+    c[0] = 2.0
+    for k in range(2, n_pts, 2):
+        c[k] = 2.0 / (1.0 - k**2)
+
+    # DCT-I via FFT: mirror as [c[0], c[1], ..., c[n_pts-1], c[n_pts-2], ..., c[1]]
+    c_mirror = np.concatenate([c, c[-2:0:-1]])
+    w = np.real(np.fft.ifft(c_mirror))[:n_pts]
+
+    # Adjust boundary weights (DCT-I endpoints are weighted by 1/2)
+    w[0] /= 2.0
+    w[-1] /= 2.0
+
+    # Scale by 2
+    w *= 2.0
+
+    return w
 
 
 def chebpts2(n: int) -> np.ndarray:

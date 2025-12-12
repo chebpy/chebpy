@@ -145,3 +145,36 @@ def test_plot_multipiece():
 
     fig, ax = plt.subplots()
     f_multi.plot(ax=ax)
+
+
+class TestChebfunPlottingEdgeCases:
+    """Additional edge case tests for Chebfun plotting."""
+
+    def test_plot_returns_axes(self):
+        """Test that plot() returns matplotlib axes."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: x**2, [-1, 1])
+        ax = f.plot()
+        assert ax is not None
+        plt.close("all")
+
+    def test_plotcoeffs_returns_axes(self):
+        """Test that plotcoeffs() returns matplotlib axes."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: np.sin(x), [-1, 1])
+        ax = f.plotcoeffs()
+        assert ax is not None
+        plt.close("all")
+
+    def test_plotcoeffs_multipiece(self):
+        """Test plotcoeffs with multiple pieces."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: np.abs(x), [-1, 0, 1])
+        ax = f.plotcoeffs()
+        assert ax is not None
+        # Should have plotted multiple series
+        assert len(ax.lines) >= 2
+        plt.close("all")

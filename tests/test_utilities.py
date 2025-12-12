@@ -12,14 +12,7 @@ import pytest
 
 from chebpy import chebfun
 from chebpy.bndfun import Bndfun
-from chebpy.exceptions import (
-    IntervalGap,
-    IntervalOverlap,
-    IntervalValues,
-    InvalidDomain,
-    NotSubdomain,
-    SupportMismatch,
-)
+from chebpy.exceptions import IntervalGap, IntervalOverlap, IntervalValues, InvalidDomain, NotSubdomain, SupportMismatch
 from chebpy.settings import DefaultPreferences
 from chebpy.utilities import Domain, Interval, check_funs, compute_breakdata, htol
 

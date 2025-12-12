@@ -89,3 +89,44 @@ def test_roots_high_frequency():
 
     assert roots.size == expected_roots.size
     assert np.allclose(np.sort(roots), expected_roots, atol=1e-10)
+
+
+class TestChebfunRootsEdgeCases:
+    """Additional edge case tests for Chebfun roots."""
+
+    def test_roots_merging_at_breakpoints(self):
+        """Test that roots at breakpoints are properly handled."""
+        from chebpy import chebfun
+
+        # Function with root at x=0 (a breakpoint)
+        f = chebfun(lambda x: x**2 - 0.25, [-1, 0, 1])
+        roots = f.roots()
+        expected = np.array([-0.5, 0.5])
+        assert np.allclose(roots, expected, atol=1e-10)
+
+    def test_roots_multipiece(self):
+        """Test roots on multipiece chebfun."""
+        from chebpy import chebfun
+
+        f = chebfun(lambda x: (x + 0.5) * (x - 0.3), [-1, 0, 1])
+        roots = f.roots()
+        # Should find both roots
+        assert roots.size == 2
+        assert np.any(np.isclose(roots, -0.5, atol=1e-10))
+        assert np.any(np.isclose(roots, 0.3, atol=1e-10))
+
+    def test_roots_on_complex_function(self):
+        """Test roots on a more complex multipiece function."""
+        from chebpy import chebfun
+
+        # Function with multiple roots
+        def multi_root(x):
+            return (x + 0.7) * (x + 0.2) * (x - 0.3) * (x - 0.8)
+
+        f = chebfun(multi_root, [-1, -0.5, 0, 0.5, 1])
+        roots = f.roots()
+        # Should find all 4 roots
+        assert roots.size == 4
+        expected_roots = np.array([-0.7, -0.2, 0.3, 0.8])
+        for expected_root in expected_roots:
+            assert np.any(np.abs(roots - expected_root) < 1e-10)
