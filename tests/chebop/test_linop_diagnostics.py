@@ -617,7 +617,7 @@ class TestDiagnoseLinop:
         L = N.to_linop()
 
         # Should raise ValueError for periodic incompatibility
-        with pytest.raises(ValueError, match="COMPATIBILITY ERROR"):
+        with pytest.raises(ValueError, match="Compatibility error"):
             diagnose_linop(L, verbose=False)
 
     def test_diagnose_oscillatory_updates_max_n(self):
