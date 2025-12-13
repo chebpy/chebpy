@@ -4,12 +4,13 @@ This module includes tests for edge cases in helper methods,
 adaptive construction, simplification, and algebraic operations.
 """
 
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from chebpy.trigtech import Trigtech
-import matplotlib
-import matplotlib.pyplot as plt
+
 
 class TestInitFunSwitch:
     """Test that initfun correctly dispatches to adaptive/fixedlen."""
@@ -431,6 +432,7 @@ class TestPlotting:
         line = f.plotcoeffs(ax=ax)
         assert line is not None
         plt.close(fig)
+
 
 class TestPairFourierCoeffs:
     """Test _pair_fourier_coeffs for both even and odd sizes."""

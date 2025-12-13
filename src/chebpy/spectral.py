@@ -894,9 +894,7 @@ def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
 
     # Only support 2nd order
     if diff_order != 2:
-        raise NotImplementedError(
-            f"Ultraspherical method supports 2nd order ODEs only, got order {diff_order}"
-        )
+        raise NotImplementedError(f"Ultraspherical method supports 2nd order ODEs only, got order {diff_order}")
 
     # Following MATLAB's approach:
     # 1. Build matrices: D0 (n×n), D1 ((n-1)×(n-1)), S0 (n×n), S1 (n×n)

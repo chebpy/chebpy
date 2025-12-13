@@ -126,6 +126,7 @@ class TestConservationLaws:
         mass = u.sum()
         assert abs(mass - 2.0) < 1e-6
 
+
 class TestIntegralConstraintImplementation:
     """Tests for how integral constraints are discretized."""
 

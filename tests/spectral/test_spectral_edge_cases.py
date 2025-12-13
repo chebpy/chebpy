@@ -89,12 +89,12 @@ class TestVariableCoefficientChallenges:
 
     def test_sign_changing_coefficient(self):
         """Test coefficient that changes sign: (x-0.5)*u'' + u' = 1 with u(0)=u(1)=0.
-        
+
         The general solution is u(x) = x + (C+0.5)*log|x-0.5| + D.
         The log term is unbounded at x=0.5. Applying BCs:
           u(0) = 0  =>  D = -(C+0.5)*log(0.5)
           u(1) = 0  =>  1 + (C+0.5)*log(0.5) + D = 0
-        Substituting:  1 = 0 
+        Substituting:  1 = 0
 
         This problem is ill-posed. No smooth solution
         exists that satisfies both boundary conditions.
