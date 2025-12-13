@@ -13,7 +13,6 @@ nonlinear differential equations of various types:
 """
 
 import numpy as np
-import pytest
 
 from chebpy import chebfun, chebop
 
