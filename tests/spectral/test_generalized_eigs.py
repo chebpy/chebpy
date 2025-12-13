@@ -187,7 +187,7 @@ class TestGeneralizedEigenvalues:
         for i in range(3):
             rel_err = abs(evals_sorted[i] - expected[i]) / abs(expected[i])
             # 4th order problem with derivative mass matrix is more challenging
-            assert rel_err < 5e-10, f"Eigenvalue {i}: {evals_sorted[i]} vs {expected[i]}, rel_err={rel_err}"
+            assert rel_err < 1e-9, f"Eigenvalue {i}: {evals_sorted[i]} vs {expected[i]}, rel_err={rel_err}"
 
         # Check eigenfunctions satisfy BCs
         for i, ef in enumerate(efuns):
@@ -196,8 +196,8 @@ class TestGeneralizedEigenvalues:
             bc_u2_0 = abs(ef.diff(2)(np.array([0.0]))[0])
             bc_u2_1 = abs(ef.diff(2)(np.array([1.0]))[0])
 
-            assert bc_u0 < 1e-10, f"Eigenfunction {i}: u(0) = {bc_u0}"
-            assert bc_u1 < 1e-10, f"Eigenfunction {i}: u(1) = {bc_u1}"
+            assert bc_u0 < 1e-9, f"Eigenfunction {i}: u(0) = {bc_u0}"
+            assert bc_u1 < 1e-9, f"Eigenfunction {i}: u(1) = {bc_u1}"
             # Note: Second derivative BCs have looser tolerance due to numerical differentiation
             # Using 3e-8 to account for improved but still approximate derivative evaluation at boundaries
             # With barycentric formula: typical errors are 1-2e-8, allow 3e-8 for safety

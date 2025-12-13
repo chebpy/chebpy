@@ -103,7 +103,7 @@ class TestPeriodicVsNonPeriodic:
         N_periodic.bc = "periodic"
         N_periodic.rhs = rhs
 
-        with pytest.raises(ValueError, match="PERIODIC COMPATIBILITY ERROR"):
+        with pytest.raises(ValueError, match="Compatibility error"):
             N_periodic.solve()
 
         # Dirichlet BCs should work fine (no compatibility constraint)
