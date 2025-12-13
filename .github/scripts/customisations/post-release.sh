@@ -1,6 +1,6 @@
 #!/bin/bash
-# This file is part of the tschm/.config-templates repository
-# (https://github.com/tschm/.config-templates).
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
 #
 # Optional hook script for post-release actions
 #
