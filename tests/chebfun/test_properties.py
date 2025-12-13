@@ -7,6 +7,7 @@ including breakpoints, domain, hscale, isempty, isconst, support, and vscale.
 import numpy as np
 import pytest
 
+from chebpy import chebfun
 from chebpy.chebfun import Chebfun
 from chebpy.utilities import Domain
 
@@ -145,3 +146,81 @@ def test_vscale(properties_fixtures):
     """
     f1 = properties_fixtures["f1"]
     assert f1.vscale == 1.0
+
+
+class TestChebfunPropertiesEdgeCases:
+    """Additional edge case tests for Chebfun properties."""
+
+    def test_repr_multipiece_shows_total_length(self):
+        """Test that __repr__ shows total length for multipiece chebfuns."""
+        f = chebfun(lambda x: np.abs(x), [-1, 0, 1])
+        repr_str = repr(f)
+        assert "total length" in repr_str
+        # Check that total length is sum of pieces
+        total = sum(fun.size for fun in f)
+        assert f"total length = {total}" in repr_str
+
+    def test_breakpoints_property(self):
+        """Test breakpoints property."""
+        f = chebfun(lambda x: x, [-1, -0.5, 0, 0.5, 1])
+        breakpoints = f.breakpoints
+        expected = np.array([-1, -0.5, 0, 0.5, 1])
+        assert np.allclose(breakpoints, expected, atol=1e-14)
+
+    def test_copy_method(self):
+        """Test copy creates independent chebfun."""
+        f = chebfun(lambda x: x**2, [-1, 1])
+        f_copy = f.copy()
+        # Modify original shouldn't affect copy
+        xx = np.linspace(-1, 1, 20)
+        assert np.allclose(f(xx), f_copy(xx), atol=1e-14)
+        # Verify it's a different object
+        assert f is not f_copy
+
+    def test_len_single_piece(self):
+        """Test __len__ returns total size for single-piece chebfun."""
+        f = chebfun(lambda x: np.sin(x), [-1, 1])
+        # len should match the size of the single fun
+        assert len(f) == f.funs[0].size
+        # For smooth sin(x), should be relatively small
+        assert len(f) < 30
+
+    def test_len_multi_piece(self):
+        """Test __len__ returns sum of sizes for multi-piece chebfun."""
+        # Piecewise function with breakpoint at 0
+        f = chebfun(lambda x: np.abs(x), [-1, 0, 1])
+        # len should be sum of all pieces
+        expected_len = sum(fun.size for fun in f.funs)
+        assert len(f) == expected_len
+        # Should have 2 pieces
+        assert len(f.funs) == 2
+
+    def test_len_constant(self):
+        """Test __len__ for constant chebfun."""
+        f = chebfun(3.14, [-1, 1])
+        # Constant should have minimal length
+        assert len(f) == 1
+
+    def test_len_empty(self):
+        """Test __len__ for empty chebfun."""
+        f = Chebfun.initempty()
+        # Empty chebfun has no funs
+        assert len(f) == 0
+
+    def test_len_behavior(self):
+        """Test that len(f) returns the expected value."""
+        # Create several test functions
+        f1 = chebfun(lambda x: np.exp(x), [0, 1])
+        f2 = chebfun(lambda x: x**2, [-1, 1])
+        f3 = chebfun(lambda x: np.sin(10 * x), [0, 2 * np.pi])
+
+        # Length should be positive integer
+        assert isinstance(len(f1), int)
+        assert len(f1) > 0
+        assert isinstance(len(f2), int)
+        assert len(f2) > 0
+        assert isinstance(len(f3), int)
+        assert len(f3) > 0
+
+        # More oscillatory function should need more points
+        assert len(f3) > len(f1)

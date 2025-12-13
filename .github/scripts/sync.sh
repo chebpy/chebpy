@@ -183,33 +183,49 @@ if ! git clone --depth 1 --branch "$TEMPLATE_BRANCH" "$REPO_URL" "$TEMP_DIR/temp
   exit 1
 fi
 
+# Function to check if a file path should be excluded
+is_file_excluded() {
+  file_path="$1"
+  if [ -z "$EXCLUDE_LIST" ]; then
+    return 1  # Not excluded (false)
+  fi
+
+  while IFS= read -r exclude_item || [ -n "$exclude_item" ]; do
+    [ -z "$exclude_item" ] && continue
+    if [ "$file_path" = "$exclude_item" ]; then
+      return 0  # Is excluded (true)
+    fi
+  done <<EOF_EXCLUDE_CHECK
+$EXCLUDE_LIST
+EOF_EXCLUDE_CHECK
+
+  return 1  # Not excluded (false)
+}
+
 # Copy files from template to current directory
 printf "%b[INFO] Syncing files...%b\n" "$BLUE" "$RESET"
 
 synced_count=0
 skipped_count=0
+# Track whether .github (containing this script) was synced and whether a direct self update was requested
+synced_dotgithub="false"
+deferred_self_update="false"
 
 # Use here-document instead of pipeline to avoid subshell
 while IFS= read -r item || [ -n "$item" ]; do
   [ -z "$item" ] && continue
 
   # Check if this item is in the exclude list
-  is_excluded=""
-  if [ -n "$EXCLUDE_LIST" ]; then
-    while IFS= read -r exclude_item || [ -n "$exclude_item" ]; do
-      [ -z "$exclude_item" ] && continue
-      if [ "$item" = "$exclude_item" ]; then
-        is_excluded="true"
-        break
-      fi
-    done <<EOF_EXCLUDE
-$EXCLUDE_LIST
-EOF_EXCLUDE
-  fi
-
-  if [ -n "$is_excluded" ]; then
+  if is_file_excluded "$item"; then
     printf "  %b[SKIP]%b %s (excluded)\n" "$YELLOW" "$RESET" "$item"
     skipped_count=$((skipped_count + 1))
+    continue
+  fi
+
+  # Defer updating this script to the very end to avoid mid-run overwrite
+  if [ "$item" = ".github/scripts/sync.sh" ]; then
+    deferred_self_update="true"
+    printf "  %b[DEFER]%b %s (will update at end)\n" "$YELLOW" "$RESET" "$item"
     continue
   fi
 
@@ -228,6 +244,32 @@ EOF_EXCLUDE
       # Copy contents of the source directory into the destination directory
       # to avoid nesting (e.g., .github/.github or tests/tests)
       cp -R "$src_path"/. "$dest_path"/
+      # Mark if we synced the .github directory so we can safely update sync.sh at the end
+      if [ "$item" = ".github" ]; then
+        synced_dotgithub="true"
+      fi
+
+      # Remove excluded files from the copied directory
+      if [ -n "$EXCLUDE_LIST" ]; then
+        while IFS= read -r exclude_item || [ -n "$exclude_item" ]; do
+          [ -z "$exclude_item" ] && continue
+          # Check if the excluded item is a child of the current item
+          # e.g., if item=".github" and exclude_item=".github/workflows/docker.yml"
+          case "$exclude_item" in
+            "$item"/*)
+              # This is a nested file that should be excluded
+              excluded_file_path="./$exclude_item"
+              if [ -e "$excluded_file_path" ]; then
+                rm -rf "$excluded_file_path"
+                printf "  %b[EXCLUDE]%b %s (removed from synced directory)\n" "$YELLOW" "$RESET" "$exclude_item"
+              fi
+              ;;
+          esac
+        done <<EOF_EXCLUDE_NESTED
+$EXCLUDE_LIST
+EOF_EXCLUDE_NESTED
+      fi
+
       # If we just synced the .github directory, restore this script immediately to avoid mid-run overwrite issues
       if [ "$item" = ".github" ] && [ -f "$TEMP_DIR/sync.sh.bak" ]; then
         cp "$TEMP_DIR/sync.sh.bak" "$SELF_SCRIPT"
@@ -245,6 +287,18 @@ EOF_EXCLUDE
 done <<EOF_INCLUDE
 $INCLUDE_LIST
 EOF_INCLUDE
+
+# Finalize self-update of sync.sh if applicable
+TEMPLATE_SELF_SH="$TEMP_DIR/template/.github/scripts/sync.sh"
+if [ -f "$TEMPLATE_SELF_SH" ] && { [ "$deferred_self_update" = "true" ] || [ "$synced_dotgithub" = "true" ]; }; then
+  if is_file_excluded ".github/scripts/sync.sh"; then
+    printf "  %b[SKIP]%b .github/scripts/sync.sh (excluded from final update)\n" "$YELLOW" "$RESET"
+  else
+    cp "$TEMPLATE_SELF_SH" "$SELF_SCRIPT"
+    chmod +x "$SELF_SCRIPT" 2>/dev/null || true
+    printf "  %b[SYNC]%b .github/scripts/sync.sh (finalized)\n" "$GREEN" "$RESET"
+  fi
+fi
 
 printf "\n%b[INFO] Sync complete!%b\n" "$GREEN" "$RESET"
 printf "  Synced: %d files/directories\n" "$synced_count"

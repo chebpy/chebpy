@@ -45,7 +45,7 @@ class Chebtech(Smoothfun, ABC):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
-    of the core operational functionality is defined this level.
+    of the core operational functionality is defined at this level.
 
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
@@ -95,15 +95,21 @@ class Chebtech(Smoothfun, ABC):
         return cls(coeffs, interval=interval)
 
     @classmethod
-    def initfun_adaptive(cls, fun, *, interval=None):
+    def initfun_adaptive(cls, fun, *, interval=None, min_samples=None, maxpow2=None):
         """Initialise a Chebtech from the callable fun utilising the adaptive constructor.
 
         This constructor uses an adaptive algorithm to determine the appropriate
         number of degrees of freedom needed to represent the function.
+
+        Args:
+            fun: Callable function to approximate
+            interval: Domain interval (defaults to prefs.domain)
+            min_samples: Minimum number of sample points (for composition operations)
+            maxpow2: Maximum power of 2 for adaptive refinement (for composition operations)
         """
         interval = interval if interval is not None else prefs.domain
         interval = Interval(*interval)
-        coeffs = adaptive(cls, fun, hscale=interval.hscale)
+        coeffs = adaptive(cls, fun, hscale=interval.hscale, min_samples=min_samples, maxpow2=maxpow2)
         return cls(coeffs, interval=interval)
 
     @classmethod
@@ -122,7 +128,6 @@ class Chebtech(Smoothfun, ABC):
             coeffs (array-like): The coefficients of the Chebyshev series.
             interval (array-like, optional): The interval on which the function
                 is defined. Defaults to None, which uses the default interval
-                from preferences.
         """
         interval = interval if interval is not None else prefs.domain
         self._coeffs = np.array(coeffs)
@@ -402,7 +407,13 @@ class Chebtech(Smoothfun, ABC):
             else:
                 return fn(x)
 
-        return self.__class__.initfun_adaptive(lambda x: np.power(self(x), powfun(f, x)), interval=self.interval)
+        min_samples = len(self.coeffs)
+        if not np.isscalar(f) and hasattr(f, "coeffs"):
+            min_samples = max(min_samples, len(f.coeffs))
+
+        return self.__class__.initfun_adaptive(
+            lambda x: np.power(self(x), powfun(f, x)), interval=self.interval, min_samples=min_samples
+        )
 
     def __rdiv__(self, f):
         """Divide a scalar by this Chebtech.
@@ -417,7 +428,7 @@ class Chebtech(Smoothfun, ABC):
         """
 
         # Executed when __div__(f, self) fails, which is to say whenever f
-        # is not a Chebtech. We proceeed on the assumption f is a scalar.
+        # is not a Chebtech. We proceed on the assumption f is a scalar.
         def constfun(x):
             return 0.0 * x + f
 

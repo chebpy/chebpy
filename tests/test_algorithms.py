@@ -217,7 +217,6 @@ def test_bary(testfunctions: list) -> None:
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
-                print(f"Testing bary {fun.__name__}")
                 assert _eval_tester(bary, fun, xx, chebpts)
 
 
@@ -236,7 +235,6 @@ def test_clenshaw(testfunctions: list) -> None:
     for fun, _, _ in testfunctions:
         for j, chebpts in enumerate(ptsarry):
             for k, xx in enumerate(evalpts):
-                print(f"Testing clenshaw {fun.__name__}")
                 assert _eval_tester(clenshaw, fun, xx, chebpts)
 
 

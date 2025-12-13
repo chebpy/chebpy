@@ -37,7 +37,7 @@ def test_identity_construction():
 # Test functions for adaptive and fixed-length construction
 fun_details = [
     # (function, name for the test printouts,
-    #  interval, Matlab chebfun adaptive degree on [-2,3])
+    #  interval, expected adaptive degree on [-2,3])
     (lambda x: x**3 + x**2 + x + 1, "poly3(x)", [-2, 3], 4),
     (lambda x: exp(x), "exp(x)", [-2, 3], 20),
     (lambda x: sin(x), "sin(x)", [-2, 3], 20),

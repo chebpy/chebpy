@@ -9,7 +9,7 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.8'
+    rev: 'v0.14.9'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -18,7 +18,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.46.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013"]
@@ -42,3 +42,12 @@ repos:
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
+
+  - repo: local
+    hooks:
+      - id: update-readme-help
+        name: Update README with Makefile help output
+        entry: /bin/sh .github/scripts/update-readme-help.sh
+        language: system
+        files: '^Makefile$'
+        pass_filenames: false

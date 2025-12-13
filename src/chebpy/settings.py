@@ -27,6 +27,7 @@ class DefaultPreferences:
     maxiter = 10
     sortroots = False
     mergeroots = True
+    splitting = False  # Disable automatic domain splitting by default (matches MATLAB Chebfun behavior)
 
     @classmethod
     def _defaults(cls):
