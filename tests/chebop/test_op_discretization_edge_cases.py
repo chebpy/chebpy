@@ -1,6 +1,6 @@
-"""Comprehensive tests for op_discretization.py to achieve >90% coverage.
+"""Tests for op_discretization.py edge cases.
 
-This test file specifically targets untested areas in OpDiscretization:
+This test file includes tests for OpDiscretization:
 1. Fourier/periodic BC handling with Fourier collocation
 2. Integral constraints using Clenshaw-Curtis weights
 3. Point constraints with interior derivatives

@@ -9,7 +9,9 @@ potentially incorrect eigenvalues based on:
 import numpy as np
 
 from chebpy import chebfun
+from chebpy.bndfun import Bndfun
 from chebpy.chebfun import Chebfun
+from chebpy.chebtech import Chebtech
 from chebpy.linop import LinOp
 from chebpy.utilities import Domain, Interval
 
@@ -59,8 +61,6 @@ class TestCheckEigenvalueSpurious:
 
         # Create an artificial eigenfunction with deliberately poor resolution
         # by constructing coefficients with no decay
-        from chebpy.bndfun import Bndfun
-        from chebpy.chebtech import Chebtech
 
         n = 20
         coeffs = np.ones(n)  # No decay - all coefficients equal
@@ -187,8 +187,6 @@ class TestCheckEigenvalueSpurious:
         L.rbc = 0
 
         # Create eigenfunction with only 5 coefficients
-        from chebpy.bndfun import Bndfun
-        from chebpy.chebtech import Chebtech
 
         coeffs = np.array([0.0, 1.0, 0.0, -0.5, 0.0])  # Only 5 coeffs
         efun_onefun = Chebtech(coeffs)

@@ -7,6 +7,7 @@ including empty, constant, and various polynomial and trigonometric functions.
 import numpy as np
 import pytest
 
+from chebpy import chebfun
 from chebpy.chebfun import Chebfun
 
 from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
@@ -96,8 +97,6 @@ class TestChebfunRootsEdgeCases:
 
     def test_roots_merging_at_breakpoints(self):
         """Test that roots at breakpoints are properly handled."""
-        from chebpy import chebfun
-
         # Function with root at x=0 (a breakpoint)
         f = chebfun(lambda x: x**2 - 0.25, [-1, 0, 1])
         roots = f.roots()
@@ -106,8 +105,6 @@ class TestChebfunRootsEdgeCases:
 
     def test_roots_multipiece(self):
         """Test roots on multipiece chebfun."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: (x + 0.5) * (x - 0.3), [-1, 0, 1])
         roots = f.roots()
         # Should find both roots
@@ -117,7 +114,6 @@ class TestChebfunRootsEdgeCases:
 
     def test_roots_on_complex_function(self):
         """Test roots on a more complex multipiece function."""
-        from chebpy import chebfun
 
         # Function with multiple roots
         def multi_root(x):

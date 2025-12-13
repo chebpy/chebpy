@@ -1,4 +1,4 @@
-"""Additional tests to improve coverage for chebfun.py."""
+"""Tests for chebfun comparison operations."""
 
 import numpy as np
 
@@ -6,8 +6,8 @@ from chebpy.api import chebfun
 from chebpy.chebfun import Chebfun
 
 
-class TestAdditionalCoverage:
-    """Additional tests to improve coverage for chebfun.py."""
+class TestChebfunEdgeCases:
+    """Test chebfun edge cases."""
 
     def test_eq_different_types(self):
         """Test equality comparison with non-Chebfun objects."""

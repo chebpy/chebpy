@@ -1,7 +1,6 @@
-"""Comprehensive tests for coupled ODE systems using Chebop.
+"""Tests for coupled ODE systems using Chebop.
 
-Test-driven development for Issue #11: System Solving.
-These tests define the expected API and behavior before implementation.
+These tests define the expected API and behavior for system solving.
 """
 
 import numpy as np
@@ -425,7 +424,7 @@ class TestEdgeCases:
 
         NOTE: Current implementation solves on full domain [0, 1] without
         explicit continuity constraints at interior breakpoints. This matches
-        MATLAB Chebfun behavior. True piecewise system support would require
+        reference behavior. True piecewise system support would require
         solving separately on each interval with continuity constraints.
         """
         with _preferences:
@@ -453,7 +452,7 @@ class TestEdgeCases:
             v_cont = v(x_cont)
 
             # Relaxed tolerance - interpolation error from evaluating polynomial
-            # at nearby points, not true discontinuity. Matches MATLAB behavior.
+            # at nearby points, not true discontinuity.
             assert abs(u_cont[1] - u_cont[0]) < 1e-3, f"u discontinuity {abs(u_cont[1] - u_cont[0]):.2e} exceeds 1e-3"
             assert abs(v_cont[1] - v_cont[0]) < 1e-3, f"v discontinuity {abs(v_cont[1] - v_cont[0]):.2e} exceeds 1e-3"
 
@@ -542,13 +541,13 @@ class TestNumericalAccuracy:
             assert error_v < 1e-9, f"v error {error_v:.2e} exceeds 1e-9"
 
 
-class TestMATLABComparison:
-    """Tests based on MATLAB Chebfun examples."""
+class TestReferenceComparison:
+    """Tests based on reference examples."""
 
-    def test_matlab_example_coupled_system(self):
-        """From MATLAB: u'' = v, v'' = u on [0,1].
+    def test_reference_example_coupled_system(self):
+        """Reference example: u'' = v, v'' = u on [0,1].
 
-        This is from test_system3.m in MATLAB Chebfun.
+        This is from a reference implementation.
 
         Analytical solution: u'''' = u, so u = A*cosh(x) + B*sinh(x) + C*cos(x) + D*sin(x)
         and v = u'' = A*cosh(x) + B*sinh(x) - C*cos(x) - D*sin(x).

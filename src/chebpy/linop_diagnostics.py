@@ -240,7 +240,7 @@ def check_operator_wellposedness(
 
     if total_bcs < diff_order:
         warnings_list.append(
-            f"UNDERDETERMINED SYSTEM: Differential order is {diff_order} but only "
+            f"Underdetermined system: Differential order is {diff_order} but only "
             f"{total_bcs} boundary conditions provided ({num_lbc} left, {num_rbc} right). "
             f"Need {diff_order} boundary conditions for well-posedness. "
             f"Solution will not be unique."
@@ -249,7 +249,7 @@ def check_operator_wellposedness(
 
     if total_bcs > diff_order:
         warnings_list.append(
-            f"OVERDETERMINED SYSTEM: Differential order is {diff_order} but "
+            f"Overdetermined system: Differential order is {diff_order} but "
             f"{total_bcs} boundary conditions provided ({num_lbc} left, {num_rbc} right). "
             f"System may be inconsistent. Typically need exactly {diff_order} BCs."
         )
@@ -289,7 +289,7 @@ def check_periodic_compatibility(linop) -> tuple[bool, list[str]]:
     diff_order = block["diff_order"]
 
     if diff_order != 2:
-        # For other orders, compatibility is more complex - skip for now
+        # For other orders, compatibility is more complex - skip
         return True, warnings_list
 
     # Check if RHS is provided
@@ -303,7 +303,7 @@ def check_periodic_compatibility(linop) -> tuple[bool, list[str]]:
 
         if abs(rhs_integral) > tol:
             warnings_list.append(
-                f"PERIODIC COMPATIBILITY ERROR: For u'' = f with periodic BCs, "
+                f"Periodic compatibility error: For u'' = f with periodic BCs, "
                 f"the RHS must satisfy ∫f dx = 0 over the period. "
                 f"Found ∫f dx = {rhs_integral:.6e}, which violates this condition. "
                 f"The problem is mathematically ILL-POSED and has no periodic solution. "

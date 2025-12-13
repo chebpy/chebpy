@@ -33,12 +33,12 @@ class TestSystemsBasics:
         # u' - v = 0
         # v' + u = 0
 
-        # For now, test that we can construct and solve each equation separately
+        # Test that we can construct and solve each equation separately
         # Full system support would require matrix-valued LinOps
 
         # First equation: u' - v = 0, or u' = v
-        # This is harder to express in current LinOp framework
-        # Let's test a simpler decoupled system first
+        # This is harder to express in LinOp framework
+        # Test a simpler decoupled system
 
     def test_harmonic_oscillator(self):
         """Test harmonic oscillator as 2x2 system.
@@ -92,7 +92,7 @@ class TestCoupledSystems:
         domain = Domain([0, 1])
 
         # Solve u'' = v with some assumed v
-        # This is a placeholder - full coupling requires more infrastructure
+        # Full coupling requires more infrastructure
 
         # Test that we can solve with a chebfun RHS
         v_assumed = chebfun(lambda x: np.sinh(x), [0, 1])
@@ -124,7 +124,7 @@ class TestCoupledSystems:
         δv' = dv₀δu + (-c + du₀)δv
 
         This is a first-order matrix ODE that would require system support.
-        For now, verify we can handle the structure.
+        Verify we can handle the structure.
         """
         # Placeholder test
         pass
@@ -174,7 +174,7 @@ class TestSystemInterfaces:
         """
         domain = Domain([0, 1])
 
-        # Single equation for now
+        # Single equation
         a0 = chebfun(lambda x: 0 * x, [0, 1])
         a1 = chebfun(lambda x: 0 * x, [0, 1])
         a2 = chebfun(lambda x: 1 + 0 * x, [0, 1])
@@ -186,24 +186,24 @@ class TestSystemInterfaces:
         # Try list of RHS (even though it's just one equation)
         rhs_list = [chebfun(lambda x: 1 + 0 * x, [0, 1])]
 
-        # Current LinOp expects single chebfun, so this might not work yet
+        # LinOp expects single chebfun
         # This test documents what we'd need for systems
-        L.rhs = rhs_list[0]  # Use single element for now
+        L.rhs = rhs_list[0]  # Use single element
 
         u = L.solve()
         assert u is not None
 
 
 class TestMatrixOperators:
-    """Tests for matrix-valued operators (future feature)."""
+    """Tests for matrix-valued operators."""
 
     def test_matrix_coefficient(self):
         """Test operator with matrix coefficient: U' = A(x)U.
 
         This would require LinOp to accept matrix-valued coefficients.
-        For now, document the desired interface.
+        Document the desired interface.
         """
-        # Future interface might look like:
+        # Desired interface:
         # A = lambda x: np.array([[0, 1], [-1, 0]])
         # L = LinOp(matrix_coeffs=[None, A], system_size=2)
         pass

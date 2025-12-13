@@ -269,9 +269,6 @@ class Chebfun:
     def __len__(self):
         """Return the total number of coefficients across all funs.
 
-        This is analogous to MATLAB Chebfun's length() function, which returns
-        the total number of degrees of freedom in the representation.
-
         Returns:
             int: The sum of sizes of all constituent funs.
         """
@@ -1125,13 +1122,10 @@ class Chebfun:
         while sad_intervals and total_points < split_max_length and iteration < max_iterations:
             iteration += 1
 
-            # Choose the LARGEST sad interval by WIDTH (MATLAB behavior)
+            # Choose the largest sad interval by width
             sad_intervals.sort(key=lambda x: -x[3])  # Sort by width, largest first
             a, b, _, _ = sad_intervals.pop(0)
 
-            # CRITICAL FIX: Check if interval is too small to split BEFORE edge detection
-            # This prevents pathological subdivision near singularities (MATLAB: line 268)
-            # Use <= to catch zero-width intervals and add eps for numerical safety
             if (b - a) <= max(min_interval, 10 * np.finfo(float).eps * hscale):
                 # Interval too small - accept current approximation as constant at midpoint
                 fun, is_happy, vscale = cls._get_fun_splitting(f, a, b, hscale, vscale, max_pow2_split)
@@ -1344,10 +1338,10 @@ class Chebfun:
                     return edge
                 # If findJump returns None, fall through to return midpoint
 
-            # Update endpoints for next iteration (MATLAB line 157)
+            # Update endpoints for next iteration
             ends = [new_a[num_test_ders - 1], new_b[num_test_ders - 1]]
 
-        # Return midpoint of final interval (MATLAB line 173)
+        # Return midpoint of final interval
         return (ends[0] + ends[1]) / 2.0
 
     @classmethod
@@ -1553,7 +1547,7 @@ class Chebfun:
             if max_der < max_der_prev * 1.5:
                 cont += 1
 
-        # Final refinement: check floating point precision (MATLAB lines 247-256)
+        # Final refinement: check floating point precision
         # When we've converged to machine precision, determine exact edge location
         if abs(e0 - e1) <= 2 * np.finfo(float).eps * abs(e0):
             with np.errstate(all="ignore"):

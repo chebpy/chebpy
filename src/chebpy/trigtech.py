@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .algorithms import standard_chop
+from .chebtech import Chebtech
 from .decorators import self_empty
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
@@ -134,8 +135,7 @@ class Trigtech(Smoothfun):
     def _pair_fourier_coeffs(cls, coeffs):
         """Pair Fourier coefficients for use with standard_chop.
 
-        Following MATLAB Chebfun's standardCheck for trigtech, this pairs
-        up k and -k frequency coefficients and prepares them for standardchop.
+        This pairs up k and -k frequency coefficients and prepares them for standardchop.
 
         Args:
             coeffs (np.ndarray): Fourier coefficients in FFT order
@@ -144,38 +144,29 @@ class Trigtech(Smoothfun):
             np.ndarray: Paired coefficients suitable for standard_chop
         """
         n = len(coeffs)
-        # MATLAB: coeffs = abs(f.coeffs(end:-1:1,:))
+        # Reverse and take absolute values of coefficients
         abs_coeffs = np.abs(coeffs[::-1])
 
-        # Pair up k and -k coefficients following MATLAB logic exactly
+        # Pair up k and -k coefficients
         is_even = n % 2 == 0
         if is_even:
             n2 = n // 2
-            # MATLAB (1-indexed): [coeffs(n) ; coeffs(n-1:-1:n/2+1) + coeffs(1:n/2-1) ; coeffs(n/2)]
-            # Python (0-indexed):
-            part1 = abs_coeffs[n - 1 : n]  # coeffs(n) -> coeffs[n-1]
-            part2 = (
-                abs_coeffs[n - 2 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
-            )  # Pair coeffs[n-1:-1:n/2+1] with coeffs[1:n/2-1]
-            part3 = abs_coeffs[n2 - 1 : n2]  # coeffs(n/2) -> coeffs[n2-1]
+            # For even n: pair up symmetric frequencies
+            part1 = abs_coeffs[n - 1 : n]
+            part2 = abs_coeffs[n - 2 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
+            part3 = abs_coeffs[n2 - 1 : n2]
             paired = np.concatenate([part1, part2, part3])
         else:
             n2 = (n + 1) // 2
-            # MATLAB (1-indexed): [coeffs(n:-1:(n+1)/2+1) + coeffs(1:(n+1)/2-1) ; coeffs((n+1)/2)]
-            # Python (0-indexed):
-            part1 = (
-                abs_coeffs[n - 1 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
-            )  # Pair coeffs[n:-1:(n+1)/2+1] with coeffs[1:(n+1)/2-1]
-            part2 = abs_coeffs[n2 - 1 : n2]  # coeffs((n+1)/2) -> coeffs[n2-1]
+            # For odd n: pair up symmetric frequencies
+            part1 = abs_coeffs[n - 1 : n2 - 1 : -1] + abs_coeffs[0 : n2 - 1]
+            part2 = abs_coeffs[n2 - 1 : n2]
             paired = np.concatenate([part1, part2])
 
-        # NOTE: MATLAB does flipud, but that's because MATLAB's trigtech stores coefficients
-        # in a different order than Python's FFT. After pairing, we already have:
+        # NOTE: After pairing, we already have:
         # paired = [DC, k=±1, k=±2, ..., k=±(n/2-1), Nyquist]
         # which is already in the right order (low freq first = large coeffs first for most functions).
-        # So we DON'T flip in Python.
 
-        # MATLAB: [coeffs(1,:) ; kron(coeffs(2:end,:), [1 ; 1])]
         # Double up all except first element
         if len(paired) > 1:
             doubled = np.concatenate([paired[0:1], np.repeat(paired[1:], 2)])
@@ -188,7 +179,7 @@ class Trigtech(Smoothfun):
     def _adaptive_trig(cls, fun, hscale=1, maxpow2=None, minpow2=None, interval=None):
         """Adaptive constructor for Trigtech using Fourier points.
 
-        Implements MATLAB's standardCheck happiness criterion using standardChop
+        Implements standardCheck happiness criterion using standardChop
         on paired and doubled Fourier coefficients.
 
         Args:
@@ -231,7 +222,7 @@ class Trigtech(Smoothfun):
 
             coeffs = cls._vals2coeffs(values)
 
-            # MATLAB standardCheck: pair, flip, and double coefficients for standardChop
+            # StandardCheck: pair and double coefficients for standardChop
             paired_doubled = cls._pair_fourier_coeffs(coeffs)
 
             # Normalize tolerance by vscale
@@ -240,9 +231,9 @@ class Trigtech(Smoothfun):
             # Call standardChop to find cutoff
             cutoff = standard_chop(paired_doubled, tol=tol)
 
-            # Happy if cutoff < n (MATLAB line 85: ishappy = cutoff < n)
+            # Happy if cutoff < n
             # Note: cutoff is compared to original n, not to len(paired_doubled)
-            # Allow n=16 to be happy (changed from n >= 17 to n >= 16)
+            # Allow n=16 to be happy
             is_happy = (n >= 16) and (cutoff < n)
 
             if is_happy:
@@ -544,7 +535,6 @@ class Trigtech(Smoothfun):
             # But if it does, convert the other operand to Trigtech by resampling
             if not isinstance(f, cls):
                 # Import Chebtech to check type
-                from .chebtech import Chebtech
 
                 # Convert f to Trigtech by sampling at enough points
                 # Use fixed-length to avoid adaptive convergence issues
@@ -721,7 +711,6 @@ class Trigtech(Smoothfun):
                 # Apply the ufunc
                 return ufunc(*vals, **kwargs)
 
-            # Following MATLAB's compose(): pref.min_samples = max(pref.min_samples, length(f))
             # Ensure result has at least as many points as inputs
             minpow2 = int(np.ceil(np.log2(max_size))) if max_size > 0 else None
             return self.__class__.initfun_adaptive(newfun, interval=trigtech_obj.interval, minpow2=minpow2)

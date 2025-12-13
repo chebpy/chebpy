@@ -54,7 +54,6 @@ class TestCoefficientsValidation:
         a2 = chebfun(lambda x: 1 + 0 * x, [0, 1])
 
         # Should NOT warn (intentional behavior per Issue #8)
-        import warnings
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")  # Turn warnings into errors

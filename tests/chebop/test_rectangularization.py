@@ -1,4 +1,4 @@
-"""Tests for rectangularization feature in chebop (Issue #3).
+"""Tests for rectangularization feature in chebop.
 
 Rectangularization improves eigenvalue accuracy by using overdetermined systems:
 - n Chebyshev coefficients
@@ -10,9 +10,11 @@ square collocation.
 """
 
 import numpy as np
-import pytest
 
 from chebpy import chebfun, chebop
+from chebpy.op_discretization import OpDiscretization
+from chebpy.spectral import diff_matrix_rectangular
+from chebpy.utilities import Interval
 
 
 class TestRectangularization:
@@ -67,8 +69,6 @@ class TestRectangularization:
 
     def test_rectangular_discretization_dimensions(self):
         """Test that rectangular discretization creates correct matrix dimensions."""
-        from chebpy.op_discretization import OpDiscretization
-
         N = chebop([0, 1])
         N.op = lambda u: u.diff(2)
         N.lbc = 0
@@ -91,9 +91,6 @@ class TestRectangularization:
 
     def test_rectangular_diff_matrix_shape(self):
         """Test that rectangular differentiation matrices have correct shape."""
-        from chebpy.spectral import diff_matrix_rectangular
-        from chebpy.utilities import Interval
-
         n = 16  # Chebyshev coefficients
         m = 32  # Collocation points
         interval = Interval(0, 1)
@@ -108,8 +105,6 @@ class TestRectangularization:
 
     def test_adaptive_m_selection(self):
         """Test that m is automatically chosen based on n."""
-        from chebpy.op_discretization import OpDiscretization
-
         N = chebop([0, 1])
         N.op = lambda u: u.diff(2)
         N.lbc = 0
@@ -117,7 +112,7 @@ class TestRectangularization:
 
         linop = N.to_linop()
 
-        # Test MATLAB's heuristic: m = min(2*n, n + 50)
+        # Test heuristic:
         test_cases = [
             (8, 16),  # n=8:  m = 2*8 = 16
             (16, 32),  # n=16: m = 2*16 = 32
@@ -190,11 +185,11 @@ class TestRectangularization:
             assert abs(ef(0.0)) < 1e-10
             assert abs(ef(1.0)) < 1e-10
 
-    def test_comparison_with_matlab_chebfun(self):
-        """Compare eigenvalue accuracy with known MATLAB Chebfun results.
+    def test_comparison_with_reference(self):
+        """Compare eigenvalue accuracy with known reference results.
 
         This test documents the expected improvement from rectangularization
-        based on MATLAB Chebfun's performance (Driscoll et al., "Exploring ODEs").
+        based on reference implementation.
         """
         # Problem: -u'' = λu on [0, π] with Dirichlet BCs
         N = chebop([0, np.pi])
@@ -213,7 +208,7 @@ class TestRectangularization:
         # Relative errors
         rel_err = np.abs(evals - exact) / exact
 
-        # MATLAB Chebfun with rectangularization achieves ~10^-15 accuracy
+        # Reference implementation with rectangularization achieves ~10^-15 accuracy
         # We expect similar performance
         assert np.all(rel_err < 1e-12)
 
@@ -230,8 +225,6 @@ class TestRectangularizationEdgeCases:
         Square collocation matrices become increasingly ill-conditioned
         for higher-order operators. Rectangularization helps with eigenvalue accuracy.
         """
-        from chebpy.op_discretization import OpDiscretization
-
         N = chebop([0, 1])
         N.op = lambda u: u.diff(4)
         N.lbc = [0, 0]

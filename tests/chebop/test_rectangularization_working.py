@@ -1,6 +1,6 @@
-"""Working tests for rectangularization implementation (Issue #3).
+"""Tests for rectangularization implementation.
 
-This file tests the implemented rectangularization feature step by step:
+This file tests the rectangularization feature step by step:
 1. Rectangular differentiation matrices
 2. Rectangular discretization
 3. LSMR solver for overdetermined systems
@@ -11,8 +11,10 @@ The implementation follows Driscoll & Hale (2016) "Rectangular spectral collocat
 
 import numpy as np
 import pytest
+from scipy import sparse
 
 from chebpy import chebfun
+from chebpy.algorithms import chebpts2
 from chebpy.linop import LinOp
 from chebpy.op_discretization import OpDiscretization
 from chebpy.spectral import diff_matrix, diff_matrix_rectangular
@@ -58,7 +60,6 @@ class TestRectangularDifferentiationMatrix:
         D1 = diff_matrix_rectangular(n, m, interval, order=1)
 
         # Test function: sin(πx)
-        from chebpy.algorithms import chebpts2
 
         x_coeff = chebpts2(n + 1)  # n+1 coefficient points
         x_coeff_scaled = interval(x_coeff)
@@ -117,7 +118,7 @@ class TestRectangularDiscretization:
         assert disc["n_per_block"][0] == n + 1
 
     def test_rectangularization_heuristic(self):
-        """Test automatic m selection using MATLAB Chebfun heuristic."""
+        """Test automatic m selection using heuristic."""
         domain = Domain([0, 1])
         interval = Interval(0, 1)
         a0 = chebfun(lambda x: np.zeros_like(x), interval)
@@ -146,7 +147,6 @@ class TestLSMRSolver:
     def test_solve_overdetermined_simple(self):
         """Test that LSMR solver handles overdetermined systems."""
         # Create simple overdetermined system: m=20, n=10
-        from scipy import sparse
 
         np.random.seed(42)
 
@@ -171,8 +171,6 @@ class TestLSMRSolver:
 
     def test_solve_square_system_unchanged(self):
         """Test that square systems still use LU decomposition."""
-        from scipy import sparse
-
         np.random.seed(42)
 
         n = 10

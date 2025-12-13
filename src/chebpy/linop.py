@@ -3,13 +3,6 @@
 This module provides the LinOp class for representing linear differential operators
 and solving linear boundary value problems using spectral collocation.
 
-TWO-PHASE DESIGN PATTERN:
--------------------------
-LinOp works in concert with op_discretization using a two-phase approach:
-
-This separation allows LinOp to focus on mathematical problem structure while
-delegating numerical implementation to OpDiscretization.
-
 The LinOp class handles:
 - Domain splitting and continuity constraint specification
 - Discretization via op_discretization
@@ -31,9 +24,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
 from scipy.linalg import cholesky, eig, lu_factor, lu_solve, qr
-from scipy.sparse.linalg import LinearOperator
+from scipy.sparse.linalg import LinearOperator, lsmr
 from scipy.sparse.linalg import eigs as sp_eigs
-from scipy.sparse.linalg import lsmr
 from scipy.special import comb
 
 from .algorithms import standard_chop
@@ -148,7 +140,7 @@ class LinOp:
         if diff_order is not None and diff_order >= 4:
             self.max_n = 128  # Conservative limit for 4th+ order operators
         else:
-            self.max_n = 4096  # Standard limit (matches MATLAB Chebfun default)
+            self.max_n = 4096  # Standard limit for spectral collocation
 
         self.min_n = 8  # Minimum grid size
 
@@ -728,10 +720,7 @@ class LinOp:
         # For very large systems (n >= 5000), use iterative LSMR for memory efficiency
         if m > n:
             # Small to moderately large systems: use direct lstsq (more reliable)
-            # Dense lstsq uses LAPACK's optimized least-squares solver which is:
-            # - Fast and reliable (typically < 1s for n=4000)
-            # - Doesn't require convergence tuning like iterative methods
-            # - Memory: ~n^2*8 bytes (e.g., 128MB for n=4000)
+            # Dense lstsq uses LAPACK's optimized least-squares solver.
             if n < 5000:
                 # Convert to dense if sparse
                 A_dense = sparse_to_dense(mat)
@@ -752,10 +741,6 @@ class LinOp:
 
                 # LSMR for sparse overdetermined least squares
                 # atol, btol: convergence tolerances for ||A'r|| and ||r||
-                # Use tighter tolerances for spectral accuracy
-                # maxiter: For stiff/boundary layer problems, default min(m,n) is insufficient.
-                # Use 4*min(m,n) to allow convergence for difficult systems while avoiding
-                # excessive iterations for well-conditioned problems.
                 m_sp, n_sp = mat_sp.shape
                 maxiter = 4 * min(m_sp, n_sp)
                 result = lsmr(mat_sp, b, atol=self.tol, btol=self.tol, maxiter=maxiter, show=False)
@@ -825,7 +810,6 @@ class LinOp:
             raise RuntimeError("Must call prepare_domain() before reconstruction")
 
         # Check if we're using periodic BCs (Fourier collocation)
-
         use_fourier = OpDiscretization._is_periodic(self) and len(self.blocks) == 1
 
         # Split solution vector into per-block pieces
@@ -918,12 +902,9 @@ class LinOp:
             for n_current in n_values:
                 self.n_current = n_current
 
-                # Use 'append' mode for all operators - achieves machine precision via least squares
-                # NOTE: 'replace' and 'driscoll_hale' modes have convergence issues
-                # - append: Converges to machine precision (~1e-14)
-                # - replace: Diverges/unstable
-                # - driscoll_hale: Oscillates, does not converge properly
-                # The Driscoll-Hale implementation needs substantial rework to match the paper's algorithm
+                # Use 'append' mode for all operators. Later, maybe switch to driscoll_hale
+                # although currently having some problems with this while append is working best.
+                # should test when to use replace as well, if ever.
                 bc_enforcement = "append"
 
                 # Check if we have a Jacobian computer function from AdChebfun
@@ -966,7 +947,6 @@ class LinOp:
                 # MATLAB Chebfun approach: happinessCheck via standardCheck
                 # Checks if cutoff < n where cutoff = standardChop(coeffs, tol)
                 # NO residual check - only coefficient decay!
-                # See _remove/chebfun/@chebtech/standardCheck.m lines 70-73
 
                 solution_is_happy = False
                 for fun in solution.funs:
@@ -974,7 +954,6 @@ class LinOp:
                     coeffs = fun.onefun.coeffs
                     if len(coeffs) > 0:
                         # For Trigtech (Fourier basis), pair k and -k modes before checking decay
-                        # This matches MATLAB @trigtech/standardCheck.m lines 36-43
                         # Without pairing, standard_chop sees large values at both ends with
                         # noise in between, confusing the plateau detection
 
@@ -1043,7 +1022,7 @@ class LinOp:
 
                 # Note: We don't warn about large residuals during intermediate adaptive
                 # refinement iterations, since higher resolution often fixes this.
-                # Final warning (if needed) is issued at max_n (lines 537-548).
+                # Final warning (if needed) is issued at max_n.
                 # elif relres > 10 * self.tol:
                 #     warnings.warn(f"Large residual: {relres:.2e}")
 
@@ -1147,7 +1126,7 @@ class LinOp:
         interval = intervals_list[0]
         a, b = interval
 
-        # Extract coefficient values (must be constant for now)
+        # Extract coefficient values (must be constant)
         # coeffs list is [a_0(x), a_1(x), a_2(x)] for a_2*u'' + a_1*u' + a_0*u
         # Evaluate at midpoint to get constant value
         x_mid = (a + b) / 2
@@ -1165,7 +1144,7 @@ class LinOp:
                 vals_test = coeff(x_test)
                 if np.max(np.abs(vals_test - val)) > 1e-10:
                     raise NotImplementedError(
-                        f"Ultraspherical method currently only supports constant coefficients. "
+                        f"Ultraspherical method requires constant coefficients. "
                         f"Coefficient a_{i}(x) varies. Use discretization='collocation'."
                     )
                 coeffs_vals.append(val)
@@ -1549,9 +1528,7 @@ class LinOp:
 
                 # Project operator onto BC-satisfying subspace
                 if is_rectangular:
-                    # Rectangular discretization: Full implementation following MATLAB Chebfun
-                    # See _remove/chebfun/@linop/eigs.m lines 348-378 and @chebcolloc/reduce.m
-
+                    # Rectangular discretization: Full implementation
                     # Get projection matrices PS (barycentric interpolation m+1 -> n+1)
                     PS_matrices = disc.get("projection_matrices", [])
                     if not PS_matrices:
@@ -1607,7 +1584,6 @@ class LinOp:
                         M_eig = bc_proj.T @ M_op @ bc_proj
                 else:
                     # No explicit mass matrix: use PS @ PS.T as mass matrix for rectangular
-                    # This follows MATLAB: PB = [zeros(size(C)); PS] (line 358 of eigs.m)
                     if is_rectangular:
                         PS_matrices = disc.get("projection_matrices", [])
                         PS = sparse.block_diag(PS_matrices, format="csr")

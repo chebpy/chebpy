@@ -1,9 +1,10 @@
 """Unit tests for differentiation matrices."""
 
 import numpy as np
+from scipy import sparse
 
 from chebpy import chebfun
-from chebpy.spectral import cheb_points_scaled, diff_matrix
+from chebpy.spectral import cheb_points_scaled, diff_matrix, diff_matrix_driscoll_hale
 from chebpy.utilities import Interval
 
 
@@ -137,8 +138,6 @@ class TestDiffMatrix:
 
     def test_sparse_format(self):
         """Test that matrix is returned in sparse format."""
-        from scipy import sparse
-
         domain = Interval(-1, 1)
         D = diff_matrix(10, domain)
         assert sparse.issparse(D)
@@ -175,26 +174,18 @@ class TestDriscollHaleDiffMatrix:
 
     def test_shape_second_derivative(self):
         """D2 should map (n+1) values to (n-1) values."""
-        from chebpy.spectral import diff_matrix_driscoll_hale
-
         n = 10
         D2 = diff_matrix_driscoll_hale(n, [-1, 1], order=2)
         assert D2.shape == (n - 1, n + 1)  # (9, 11)
 
     def test_shape_first_derivative(self):
         """D1 should map (n+1) values to (n) values."""
-        from chebpy.spectral import diff_matrix_driscoll_hale
-
         n = 10
         D1 = diff_matrix_driscoll_hale(n, [-1, 1], order=1)
         assert D1.shape == (n, n + 1)  # (10, 11)
 
     def test_accuracy_polynomial(self):
         """Test accuracy on a polynomial f(x) = x^3, f'' = 6x."""
-        from chebpy.spectral import (cheb_points_scaled,
-                                     diff_matrix_driscoll_hale)
-        from chebpy.utilities import Interval
-
         n = 10
         interval = [-1, 1]
         D2 = diff_matrix_driscoll_hale(n, interval, order=2)
@@ -210,10 +201,6 @@ class TestDriscollHaleDiffMatrix:
 
     def test_scaled_interval(self):
         """Test on non-standard interval [0, 2]."""
-        from chebpy.spectral import (cheb_points_scaled,
-                                     diff_matrix_driscoll_hale)
-        from chebpy.utilities import Interval
-
         n = 12
         interval = [0, 2]
         D1 = diff_matrix_driscoll_hale(n, interval, order=1)

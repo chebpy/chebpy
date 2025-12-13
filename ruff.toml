@@ -74,6 +74,8 @@ line-ending = "auto"
 
 # File-specific rule exceptions
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]        # Allow assert statements in tests
+"tests/**/*.py" = ["S101", "N806"]        # Allow assert statements in tests
+                                           # and uppercase variables for math notation (N806)
 "book/marimo/*.py" = ["N803", "S101"] # Allow non-lowercase variable names (N803)
                                       # and assert statements in marimo files
+"src/chebpy/**/*.py" = ["N806"] # N806: uppercase variables for math notation

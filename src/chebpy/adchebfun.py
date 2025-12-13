@@ -10,8 +10,7 @@ from scipy import sparse
 
 from .chebfun import Chebfun
 from .sparse_utils import extract_scalar, jacobian_to_row, sparse_to_dense
-from .spectral import (barycentric_matrix, diff_matrix, identity_matrix,
-                       mult_matrix)
+from .spectral import barycentric_matrix, diff_matrix, identity_matrix, mult_matrix
 from .utilities import ensure_interval, is_scalar_type
 
 

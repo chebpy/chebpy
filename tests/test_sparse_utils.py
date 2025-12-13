@@ -3,9 +3,7 @@
 import numpy as np
 from scipy import sparse
 
-from chebpy.sparse_utils import (extract_scalar, is_nearly_zero,
-                                 jacobian_to_row, prune_sparse,
-                                 sparse_to_dense)
+from chebpy.sparse_utils import extract_scalar, is_nearly_zero, jacobian_to_row, prune_sparse, sparse_to_dense
 
 
 class TestExtractScalar:

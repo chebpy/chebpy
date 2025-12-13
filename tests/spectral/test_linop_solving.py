@@ -1,6 +1,6 @@
 """Tests for LinOp solving functions: solve_linear_system, solve, and _build_discretization_from_jacobian.
 
-This test suite focuses on improving coverage for:
+This test suite includes tests for:
 1. solve_linear_system - different matrix types, sizes, solvers
 2. solve - adaptive refinement, convergence checks, BC satisfaction
 3. _build_discretization_from_jacobian - AdChebfun path for nonlinear problems
@@ -14,11 +14,13 @@ from scipy import sparse
 
 from chebpy import chebfun
 from chebpy.linop import LinOp
+from chebpy.op_discretization import OpDiscretization
+from chebpy.trigtech import Trigtech
 from chebpy.utilities import Domain
 
 
 class TestSolveLinearSystem:
-    """Tests for LinOp.solve_linear_system covering different solver paths."""
+    """Tests for LinOp.solve_linear_system with different solver paths."""
 
     def test_square_system_lu_solver(self):
         """Test LU decomposition for square systems."""
@@ -33,7 +35,6 @@ class TestSolveLinearSystem:
 
         # Get a square system
         L.prepare_domain()
-        from chebpy.op_discretization import OpDiscretization
 
         disc = OpDiscretization.build_discretization(L, 16, bc_enforcement="replace")
         A, b = L.assemble_system(disc)
@@ -237,7 +238,7 @@ class TestSolveLinearSystem:
 
 
 class TestSolve:
-    """Tests for LinOp.solve covering adaptive refinement and convergence."""
+    """Tests for LinOp.solve with adaptive refinement and convergence."""
 
     def test_solve_with_explicit_n(self):
         """Test solve with explicit discretization size."""
@@ -477,7 +478,6 @@ class TestSolve:
         u = L.solve(n=32)
 
         # Check that solution uses Trigtech
-        from chebpy.trigtech import Trigtech
 
         assert any(isinstance(fun.onefun, Trigtech) for fun in u.funs)
 
@@ -642,8 +642,6 @@ class TestAssembleSystem:
         L.rbc = 0
         L.prepare_domain()
 
-        from chebpy.op_discretization import OpDiscretization
-
         disc = OpDiscretization.build_discretization(L, 16, bc_enforcement="append")
 
         A, b = L.assemble_system(disc)
@@ -663,8 +661,6 @@ class TestAssembleSystem:
         L.lbc = 0
         L.rbc = 0
         L.prepare_domain()
-
-        from chebpy.op_discretization import OpDiscretization
 
         disc = OpDiscretization.build_discretization(L, 16, bc_enforcement="replace")
 
@@ -686,8 +682,6 @@ class TestAssembleSystem:
         L.lbc = 0
         L.rbc = 0  # 2 BCs for 1st order
         L.prepare_domain()
-
-        from chebpy.op_discretization import OpDiscretization
 
         # Create discretization with replace mode
         # This may not raise during discretization, but during assembly

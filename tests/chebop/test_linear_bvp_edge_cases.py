@@ -1,6 +1,6 @@
-"""Comprehensive tests for linear BVP solving with Chebop.
+"""Tests for linear BVP solving with Chebop.
 
-This test suite ensures chebop works exactly like MATLAB Chebfun for linear problems.
+This test suite ensures chebop works correctly for linear problems.
 Tests cover:
 - Various orders (0th through 4th derivatives)
 - Dirichlet, Neumann, and mixed boundary conditions
@@ -212,12 +212,7 @@ class TestHigherOrderOperators:
         assert error < 1e-12
 
     def test_fourth_order(self):
-        """Test u'''' = f (biharmonic) with clamped boundary conditions.
-
-        This is a clamped-clamped beam problem (4th order with 2 BCs at each endpoint).
-        Previously thought to have rank deficiency issues, but verified to work correctly
-        with error ~1e-15 (better than MATLAB's ~1e-14).
-        """
+        """Test u'''' = f (biharmonic) with clamped boundary conditions."""
         N = chebop([0, 1])
         N.op = lambda u: u.diff(4)
         N.lbc = [0, 0]  # u(0) = u'(0) = 0
@@ -234,9 +229,7 @@ class TestHigherOrderOperators:
 
         x_test = np.linspace(0, 1, 100)
         error = np.max(np.abs((u - u_exact)(x_test)))
-        # With BC row replacement, BCs are satisfied to machine precision but solution
-        # error is ~2e-10 (still excellent for fourth-order problems)
-        assert error < 1e-9  # Expect excellent accuracy
+        assert error < 1e-9
 
 
 class TestVariableCoefficients:
@@ -391,7 +384,6 @@ class TestSpecialCases:
 
         x_test = np.linspace(0, 1, 100)
         error = np.max(np.abs((u - u_exact)(x_test)))
-        # BC row replacement gives ~1.2e-12 error (still excellent accuracy)
         assert error < 2e-12
 
     def test_periodic_forcing(self):

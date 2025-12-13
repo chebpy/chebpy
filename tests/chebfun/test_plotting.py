@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from chebpy import chebfun
 from chebpy.chebfun import Chebfun
 
 from ..generic.plotting import test_plot, test_plot_complex  # noqa: F401
@@ -152,8 +153,6 @@ class TestChebfunPlottingEdgeCases:
 
     def test_plot_returns_axes(self):
         """Test that plot() returns matplotlib axes."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**2, [-1, 1])
         ax = f.plot()
         assert ax is not None
@@ -161,8 +160,6 @@ class TestChebfunPlottingEdgeCases:
 
     def test_plotcoeffs_returns_axes(self):
         """Test that plotcoeffs() returns matplotlib axes."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: np.sin(x), [-1, 1])
         ax = f.plotcoeffs()
         assert ax is not None
@@ -170,8 +167,6 @@ class TestChebfunPlottingEdgeCases:
 
     def test_plotcoeffs_multipiece(self):
         """Test plotcoeffs with multiple pieces."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: np.abs(x), [-1, 0, 1])
         ax = f.plotcoeffs()
         assert ax is not None

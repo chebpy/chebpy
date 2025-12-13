@@ -126,28 +126,6 @@ class TestConservationLaws:
         mass = u.sum()
         assert abs(mass - 2.0) < 1e-6
 
-    def test_center_of_mass_constraint(self):
-        """Test with center of mass constraint: ∫ x*u dx / ∫ u dx = x_cm."""
-        # This is more complex - would need two integral constraints
-        # or a nonlinear constraint. Skip for now.
-        pass
-
-
-class TestMultipleConstraints:
-    """Tests for problems with multiple integral constraints."""
-
-    def test_mean_and_variance(self):
-        """Test with both mean and second moment constraints.
-
-        This would require multiple integral constraints:
-        ∫ u dx = μ
-        ∫ x²u dx = σ² + μ²
-        """
-        # Would need LinOp to accept list of integral constraints
-        # This tests future functionality
-        pass
-
-
 class TestIntegralConstraintImplementation:
     """Tests for how integral constraints are discretized."""
 
@@ -265,7 +243,7 @@ class TestConstraintSyntax:
         # Could specify as callable
         # L.integral_constraint = lambda u: u.sum() - 1.0
 
-        # For now, use dict syntax
+        # Use dict syntax
         L.integral_constraint = {"weight": None, "value": 1.0}
 
         L.rhs = chebfun(lambda x: 1 + 0 * x, [0, 1])

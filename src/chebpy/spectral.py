@@ -71,7 +71,7 @@ def diff_matrix_rectangular(n, m, interval, order=1):
 
     Notes:
         - For square case (m = n), this reduces to standard diff_matrix().
-        - Typical choices: m = 2*n or m = n + 50 (MATLAB Chebfun heuristic).
+        - Typical choices: m = 2*n or m = n + 50 for overdetermination.
         - See Driscoll & Hale (2016), "Rectangular spectral collocation".
 
     Examples:
@@ -283,7 +283,7 @@ def mult_matrix(chebfun, n, interval=None):
     # Evaluate chebfun at these points
     values = chebfun(x)
 
-    # Ensure values is 1D (MATLAB Chebfun returns column vectors)
+    # Ensure values is 1D
     values = np.atleast_1d(values).ravel()
 
     # Create diagonal matrix
@@ -859,8 +859,8 @@ def ultraspherical_bc_row(n, interval, bc_order, bc_side):
             row[k] = sign(k) * val
     else:
         # General case using explicit formula for T^(m)_k at ±1
-        # This gets complicated - for now raise error for order > 2
-        raise NotImplementedError(f"BC order {bc_order} not yet implemented in ultraspherical method")
+        # This gets complicated - raise error for order > 2
+        raise NotImplementedError(f"BC order {bc_order} not implemented in ultraspherical method")
 
     return row
 
@@ -892,10 +892,10 @@ def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
     a, b = interval if hasattr(interval, "__iter__") else (interval.a, interval.b)
     L = (b - a) / 2
 
-    # Only support 2nd order for now
+    # Only support 2nd order
     if diff_order != 2:
         raise NotImplementedError(
-            f"Ultraspherical method currently only supports 2nd order ODEs, got order {diff_order}"
+            f"Ultraspherical method supports 2nd order ODEs only, got order {diff_order}"
         )
 
     # Following MATLAB's approach:

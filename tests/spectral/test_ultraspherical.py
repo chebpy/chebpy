@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 
 from chebpy.spectral import (
-    ultraspherical_diff,
-    ultraspherical_conversion,
-    ultraspherical_multiplication,
     ultraspherical_bc_row,
+    ultraspherical_conversion,
+    ultraspherical_diff,
+    ultraspherical_multiplication,
     ultraspherical_solve,
 )
 from chebpy.utilities import Interval

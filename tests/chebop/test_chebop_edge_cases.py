@@ -1,6 +1,6 @@
-"""Comprehensive tests for chebop.py to improve coverage.
+"""Tests for chebop.py edge cases.
 
-This test file targets previously untested areas:
+This test file includes:
 1. System operator handling with callable BCs
 2. Order detection numerical fallback (_detect_order_numerical)
 3. Continuation method with parameter ramping
@@ -13,6 +13,7 @@ import pytest
 
 from chebpy import chebfun, chebop
 from chebpy.adchebfun import AdChebfun
+from chebpy.chebfun import Chebfun
 from chebpy.settings import _preferences
 
 
@@ -112,6 +113,7 @@ class TestSystemOperatorHandling:
 
             assert abs(u(0) - 1) < 1e-10
             assert abs(v(0)) < 1e-10
+
 
 class TestOrderDetectionNumerical:
     """Test numerical order detection fallback (_detect_order_numerical)."""
@@ -387,7 +389,6 @@ class TestSystemReconstruction:
             u, v = N.solve()
 
             # Check type
-            from chebpy.chebfun import Chebfun
 
             assert isinstance(u, Chebfun)
             assert isinstance(v, Chebfun)

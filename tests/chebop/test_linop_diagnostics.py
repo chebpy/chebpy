@@ -1,6 +1,6 @@
-"""Comprehensive tests for linop_diagnostics module.
+"""Tests for linop_diagnostics module.
 
-This module provides extensive tests for the diagnostic functions in linop_diagnostics.py
+This module provides tests for the diagnostic functions in linop_diagnostics.py
 that detect and warn about numerical issues in differential operator coefficients.
 
 Tests cover:
@@ -21,11 +21,13 @@ import pytest
 
 from chebpy import chebfun, chebop
 from chebpy.linop import LinOp
-from chebpy.linop_diagnostics import (check_coefficient_oscillation,
-                                      check_coefficient_singularities,
-                                      check_operator_wellposedness,
-                                      check_periodic_compatibility,
-                                      diagnose_linop)
+from chebpy.linop_diagnostics import (
+    check_coefficient_oscillation,
+    check_coefficient_singularities,
+    check_operator_wellposedness,
+    check_periodic_compatibility,
+    diagnose_linop,
+)
 from chebpy.utilities import Domain
 
 
@@ -576,7 +578,6 @@ class TestDiagnoseLinop:
         N.rbc = lambda u: u(1)  # noqa: E731
 
         # For this test, manually create LinOp with vanishing coefficient
-        from chebpy.utilities import Domain
 
         domain = Domain([-1, 1])
         a2 = chebfun(lambda x: np.zeros_like(x), [-1, 1])  # Vanishing
@@ -705,7 +706,7 @@ class TestDiagnoseLinop:
 
 
 class TestEdgeCases:
-    """Additional edge case tests for comprehensive coverage."""
+    """Test edge cases for linop diagnostics."""
 
     def test_check_singularities_multiple_warnings(self):
         """Test that multiple issues generate multiple warnings."""
@@ -802,7 +803,6 @@ class TestEdgeCases:
         # Missing rbc - underdetermined
 
         # Manually create LinOp with explicit vanishing coefficient
-        from chebpy.utilities import Domain
 
         domain = Domain([-1, 1])
         a2 = chebfun(lambda x: np.zeros_like(x), [-1, 1])

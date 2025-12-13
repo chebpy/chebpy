@@ -1,6 +1,6 @@
-"""Comprehensive tests for LinOp to achieve >90% coverage.
+"""Tests for LinOp edge cases.
 
-This test file targets untested code paths including:
+This test file includes:
 1. Eigenvalue computation edge cases (spurious eigenvalues, rectangular discretization,
    generalized eigenvalue problems, sparse solver paths)
 2. Matrix exponential (expm) method
@@ -13,6 +13,7 @@ import warnings
 
 import numpy as np
 import pytest
+from scipy import sparse
 
 from chebpy import chebfun
 from chebpy.linop import LinOp
@@ -20,7 +21,7 @@ from chebpy.utilities import Domain
 
 
 class TestEigenvalueEdgeCases:
-    """Test eigenvalue computation edge cases for coverage."""
+    """Test eigenvalue computation edge cases."""
 
     def test_eigs_rectangular_discretization(self):
         """Test eigenvalues with rectangular (overdetermined) discretization."""
@@ -625,8 +626,6 @@ class TestAssembleConstraintRows:
 
     def test_assemble_multiple_constraints(self):
         """Test assembling multiple constraint rows."""
-        from scipy import sparse
-
         # Create some constraint rows
         row1 = sparse.csr_matrix(np.array([[1, 0, 0, 0]]))
         row2 = sparse.csr_matrix(np.array([[0, 1, 0, 0]]))

@@ -8,6 +8,7 @@ breakpoints, and points outside the interval of definition.
 import numpy as np
 import pytest
 
+from chebpy import chebfun
 from chebpy.chebfun import Chebfun
 
 from ..utilities import cos, eps, exp, sin
@@ -161,12 +162,9 @@ class TestChebfunEvaluationEdgeCases:
 
     def test_call_with_trigtech_complex_output(self):
         """Test that __call__ properly handles Trigtech complex intermediate results."""
-        from chebpy import chebfun
-
-        # This tests the Trigtech branch in __call__ (lines 229, 232, 253-257)
+        # This tests the Trigtech branch in __call__
         # We need to use a function that would create Trigtech-based funs
-        # For now, we'll test with regular chebfuns since Trigtech integration
-        # is handled at a lower level
+        # Trigtech integration is handled at a lower level
         f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
         xx = np.linspace(-np.pi, np.pi, 100)
         vals = f(xx)
@@ -175,8 +173,6 @@ class TestChebfunEvaluationEdgeCases:
 
     def test_call_outside_domain_both_sides(self):
         """Test evaluation outside domain on both sides."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**2, [0, 1])
         # Extrapolate on left
         assert np.isclose(f(-0.5), 0.25, atol=1e-10)
@@ -185,8 +181,6 @@ class TestChebfunEvaluationEdgeCases:
 
     def test_single_point_evaluation(self):
         """Test evaluating at a single point."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**2, [-1, 1])
         result = f(0.5)
         expected = 0.25
@@ -194,16 +188,12 @@ class TestChebfunEvaluationEdgeCases:
 
     def test_empty_array_evaluation(self):
         """Test evaluating with empty array."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         result = f(np.array([]))
         assert result.size == 0
 
     def test_rtruediv_with_scalar(self):
         """Test scalar / chebfun operation."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x + 2, [-1, 1])
         result = 1 / f
         expected = chebfun(lambda x: 1 / (x + 2), [-1, 1])
@@ -212,8 +202,6 @@ class TestChebfunEvaluationEdgeCases:
 
     def test_abs_dunder_method(self):
         """Test __abs__ method (absolute value via dunder)."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         f_abs = abs(f)
         xx = np.linspace(-1, 1, 100)

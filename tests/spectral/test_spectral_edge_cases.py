@@ -1,9 +1,11 @@
-"""Tests for extreme edge cases verified to work in MATLAB Chebfun.
+"""Tests for extreme edge cases.
 
 These tests push the boundaries of what the spectral method can handle,
 including high-order equations, extreme domains, oscillatory coefficients,
 and nearly singular operators.
 """
+
+import warnings
 
 import numpy as np
 
@@ -18,11 +20,11 @@ class TestHighOrderEquations:
     def test_sixth_order_beam_equation(self):
         """Test 6th order BVP: u^(6) = 1 with 6 boundary conditions.
 
-        MATLAB result: u(0.5) = -0.0000217014
+        Expected result: u(0.5) = -0.0000217014
 
-        NOTE: This test is skipped because computing 6th order derivatives as D^6
-        leads to severe ill-conditioning and rank deficiency. MATLAB likely uses
-        a more sophisticated approach for high-order derivatives.
+        Computing 6th order derivatives as D^6 leads to severe ill-conditioning
+        and rank deficiency. Reference implementation likely uses a more
+        sophisticated approach for high-order derivatives.
         """
         domain = Domain([0, 1])
 
@@ -45,7 +47,7 @@ class TestHighOrderEquations:
 
         u = L.solve()
 
-        # Check against MATLAB value
+        # Check against expected value
         u_mid = u(np.array([0.5]))[0]
         assert abs(u_mid - (-0.0000217014)) < 1e-7, f"Expected u(0.5) ≈ -0.0000217014, got {u_mid}"
 
@@ -56,10 +58,9 @@ class TestHighOrderEquations:
     def test_fourth_order_constant_coefficients(self):
         """Test 4th order ODE: u'''' - 2u'' + u = exp(x).
 
-        MATLAB result: u(0.5) = 0.0041498738
+        Expected result: u(0.5) = 0.0041498738
 
-        NOTE: Currently skipped due to numerical issues with 4th order derivative matrix D^4.
-        The BCs are not properly enforced (u(0) and u'(0) should be zero but aren't).
+        The BCs may not be properly enforced (u(0) and u'(0) should be zero).
         """
         domain = Domain([0, 1])
 
@@ -78,7 +79,7 @@ class TestHighOrderEquations:
 
         u = L.solve()
 
-        # Check against MATLAB
+        # Check against expected
         u_mid = u(np.array([0.5]))[0]
         assert abs(u_mid - 0.0041498738) < 1e-6, f"Expected u(0.5) ≈ 0.0041498738, got {u_mid}"
 
@@ -88,23 +89,15 @@ class TestVariableCoefficientChallenges:
 
     def test_sign_changing_coefficient(self):
         """Test coefficient that changes sign: (x-0.5)*u'' + u' = 1 with u(0)=u(1)=0.
-
-        MATHEMATICAL ANALYSIS:
+        
         The general solution is u(x) = x + (C+0.5)*log|x-0.5| + D.
         The log term is unbounded at x=0.5. Applying BCs:
           u(0) = 0  =>  D = -(C+0.5)*log(0.5)
           u(1) = 0  =>  1 + (C+0.5)*log(0.5) + D = 0
-        Substituting:  1 = 0  (CONTRADICTION!)
+        Substituting:  1 = 0 
 
-        CONCLUSION: This problem is MATHEMATICALLY ILL-POSED. No smooth solution
+        This problem is ill-posed. No smooth solution
         exists that satisfies both boundary conditions.
-
-        PURPOSE OF TEST:
-        Verify that the diagnostic system:
-        1. Detects the sign-changing coefficient
-        2. Issues appropriate warnings
-        3. Returns a bounded solution (least-squares approximation)
-        4. Does not crash
 
         The numerical solver returns a least-squares solution that minimizes
         BC errors, but cannot satisfy them exactly.
@@ -123,8 +116,6 @@ class TestVariableCoefficientChallenges:
         L.max_n = 64
 
         # Expect warnings about sign-changing coefficient
-        import warnings
-
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             u = L.solve()
@@ -158,7 +149,7 @@ class TestVariableCoefficientChallenges:
         solving the ODE requires even more due to the multiplication by
         differentiation matrices.
 
-        MATLAB needs 476+ points. We use 2048 to ensure spectral accuracy.
+        Reference implementation needs 476+ points. We use 2048 to ensure spectral accuracy.
         """
         domain = Domain([0, 1])
 
@@ -203,7 +194,7 @@ class TestVariableCoefficientChallenges:
         For this test, we use only 2 BCs: u(0)=u(1)=0, which makes the problem
         well-posed and gives max|u| ≈ 0.125 (very close to the pure u''=1 solution).
 
-        MATLAB with 4 BCs gets max|u| = 0.127, but this involves special handling
+        Reference implementation with 4 BCs gets max|u| = 0.127, but this involves special handling
         of the overdetermined system. Python's spectral solver achieves similar
         accuracy with the mathematically consistent 2-BC formulation.
         """
@@ -241,10 +232,7 @@ class TestExtremeDomains:
     def test_very_small_domain(self):
         """Test on interval [0, 0.001] (length 0.001).
 
-        MATLAB result: u(0.0005) = 0.5000000625
-
-        NOTE: Skipped - very small domains cause rank deficiency in discretization matrices
-        due to finite precision arithmetic when scaling Chebyshev points.
+        Expected result: u(0.0005) = 0.5000000625
         """
         domain = Domain([0, 0.001])
 
@@ -261,14 +249,14 @@ class TestExtremeDomains:
 
         u = L.solve()
 
-        # Check against MATLAB
+        # Check against expected
         u_mid = u(np.array([0.0005]))[0]
         assert abs(u_mid - 0.5000000625) < 1e-6, f"Expected u(0.0005) ≈ 0.5000000625, got {u_mid}"
 
     def test_very_large_domain(self):
         """Test on interval [0, 100] (length 100).
 
-        MATLAB result: u(50) ≈ 0 (exponential decay)
+        Expected result: u(50) ≈ 0 (exponential decay)
         """
         domain = Domain([0, 100])
 
@@ -297,7 +285,7 @@ class TestBoundaryconditionEdgeCases:
         """Test Robin BC with very large coefficient (approaches Dirichlet).
 
         -u'' = 1 with u'(0) + 1000*u(0) = 0
-        MATLAB result: u(0) = -5.0050050050e-04
+        Expected result: u(0) = -5.0050050050e-04
         """
         domain = Domain([0, 1])
 
@@ -316,7 +304,7 @@ class TestBoundaryconditionEdgeCases:
 
         u = L.solve()
 
-        # Check against MATLAB
+        # Check against expected
         u_left = u(np.array([0.0]))[0]
         assert abs(u_left - (-5.0050050050e-04)) < 1e-6, f"Expected u(0) ≈ -5.005e-04, got {u_left}"
 
@@ -324,7 +312,7 @@ class TestBoundaryconditionEdgeCases:
         """Test with nearly zero right-hand side.
 
         -u'' = 1e-15 with u(0)=u(1)=0
-        MATLAB result: max|u| = 1.25e-16
+        Expected result: max|u| = 1.25e-16
         """
         domain = Domain([0, 1])
 
@@ -354,7 +342,7 @@ class TestFourthOrderEigenvalues:
 
         BCs: u(0)=u''(0)=u(π)=u''(π)=0
         Theoretical eigenvalues: -n^4 for n=1,2,3,...
-        MATLAB eigenvalues: -1, -16, -81, -256, -625, -1296, ...
+        Expected eigenvalues: -1, -16, -81, -256, -625, -1296, ...
         """
         domain = Domain([0, np.pi])
 
@@ -394,7 +382,7 @@ class TestOperatorAlgebra:
         """Test L = D² + 3D + 2I where D is differentiation.
 
         This represents the operator u'' + 3u' + 2u
-        MATLAB result: u(0.5) = -0.1276259652 for RHS=1
+        Expected result: u(0.5) = -0.1276259652 for RHS=1
         """
         domain = Domain([0, 1])
 
@@ -411,7 +399,7 @@ class TestOperatorAlgebra:
 
         u = L.solve()
 
-        # Check against MATLAB
+        # Check against expected
         u_mid = u(np.array([0.5]))[0]
         assert abs(u_mid - (-0.1276259652)) < 1e-6, f"Expected u(0.5) ≈ -0.1276259652, got {u_mid}"
 

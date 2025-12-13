@@ -1,13 +1,12 @@
-"""Tests for automatic domain splitting functionality.
-
-Based on MATLAB Chebfun's test_splitting.m and test_constructor_splitting.m.
-"""
+"""Tests for automatic domain splitting functionality."""
 
 import numpy as np
 import pytest
 
 from chebpy import chebfun
+from chebpy.exceptions import InvalidDomain
 from chebpy.settings import _preferences
+from chebpy.utilities import Domain
 
 
 class TestAutomaticSplitting:
@@ -109,7 +108,6 @@ class TestAutomaticSplitting:
             # Note: This function has a pole singularity (blows up to infinity)
             # which is fundamentally not representable by polynomials.
             # Splitting will create many intervals trying to resolve the pole.
-            # The old behavior created 65537 points.
             assert len(r_power.funs) >= 2, f"Should split domain at singularity, got {len(r_power.funs)} fun(s)"
 
             # Accept that pole singularities require many points or hit iteration limits
@@ -126,7 +124,7 @@ class TestAutomaticSplitting:
             )
 
             # Check accuracy at safe test points away from singularity
-            # MATLAB crashes and gives wrong values for this function, so we use
+            # This function is problematic, so we use
             # more reasonable test points that don't involve values near machine precision
             test_points_good = [
                 (0, 1.223059e-02),
@@ -236,7 +234,7 @@ class TestSplittingPreferences:
 
     def test_splitting_preference_default(self):
         """Test default splitting preference value."""
-        # As set in settings.py - defaults to False to match MATLAB Chebfun
+        # As set in settings.py - defaults to False
         assert _preferences.splitting is False
 
     def test_splitting_context_manager(self):
@@ -252,13 +250,12 @@ class TestSplittingPreferences:
 
     def test_splitting_explicit_argument(self):
         """Test explicit splitting argument in chebfun constructor."""
-        # This test will pass once splitting is implemented in constructor
-        # For now, just test that the argument is accepted
+        # Test that the splitting argument is accepted
         try:
             chebfun(lambda x: x**2, [-1, 1], splitting=False)
             assert True  # Argument accepted
         except TypeError:
-            pytest.skip("splitting argument not yet implemented in constructor")
+            pytest.skip("splitting argument requires implementation in constructor")
 
 
 class TestSplittingAccuracy:
@@ -319,11 +316,9 @@ class TestEdgeCases:
     def test_single_point_domain(self):
         """Test that single-point domains are handled properly.
 
-        MATLAB raises an error for single-point domains.
+        Single-point domains should raise an error.
         Python ChebPy also raises InvalidDomain for this case.
         """
-        from chebpy.exceptions import InvalidDomain
-
         with _preferences:
             _preferences.splitting = True
             with pytest.raises(InvalidDomain):
@@ -406,7 +401,6 @@ class TestChebfunSplittingAndDomainOps:
         """Test splitting with function that raises errors at some points."""
 
         def problematic_func(x):
-            # Function that's safe most places but can have issues
             with np.errstate(all="ignore"):
                 return np.where(np.abs(x) < 1e-10, 0, 1 / x)
 
@@ -449,8 +443,6 @@ class TestChebfunSplittingAndDomainOps:
 
     def test_break_internal_method(self):
         """Test the _break internal method."""
-        from chebpy.utilities import Domain
-
         f = chebfun(lambda x: x**2, [-1, 1])
         # Break into finer domain
         new_domain = Domain([-1, -0.5, 0, 0.5, 1])

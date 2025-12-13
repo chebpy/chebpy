@@ -1,4 +1,4 @@
-"""Comprehensive tests for LinOp functions: eigs, expm, null, svds, cond, norm.
+"""Tests for LinOp functions: eigs, expm, null, svds, cond, norm.
 
 Tests cover:
 - Standard eigenvalue problems (Laplacian, etc.)
@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from chebpy import chebfun
+from chebpy.chebfun import Chebfun
 from chebpy.linop import LinOp
 from chebpy.utilities import Domain
 
@@ -294,8 +295,6 @@ class TestSvds:
         )
 
         _, u_funcs, v_funcs = L.svds(k=2)
-
-        from chebpy.chebfun import Chebfun
 
         for uf in u_funcs:
             assert isinstance(uf, Chebfun)
