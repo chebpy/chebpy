@@ -1,5 +1,5 @@
-# This file is part of the tschm/.config-templates repository
-# (https://github.com/tschm/.config-templates).
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
 #
 # Workflow: Marimo Notebooks
 #
@@ -91,5 +91,14 @@ jobs:
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
         run: |
-          uv run "${{ matrix.notebook }}"
+          uvx uv run "${{ matrix.notebook }}"
+          # uvx → creates a fresh ephemeral environment
+          # uv run → runs the notebook as a script in that ephemeral env
+          # No project packages are pre-installed
+          # ✅ This forces the notebook to explicitly handle dependencies (e.g., uv install ., or pip install inside the script).
+          # ✅ It’s a true integration smoke test.
+          # Benefits of this pattern
+          # Confirms the notebook can bootstrap itself in a fresh environment
+          # Catches missing uv install or pip steps early
+          # Ensures CI/other users can run the notebook without manual setup
         shell: bash
