@@ -1,12 +1,12 @@
-"""Tests for operator_compiler.py coverage."""
+"""Tests for operator_compiler.py."""
 
 import numpy as np
 import pytest
 
 from chebpy import chebfun
 from chebpy.operator_compiler import (
-    CoefficientExtractor,
     CodeGenerator,
+    CoefficientExtractor,
     ExpressionEvaluator,
     OperatorCompiler,
 )
@@ -15,7 +15,6 @@ from chebpy.order_detection_ast import (
     ConstNode,
     DiffNode,
     FunctionNode,
-    OrderTracerAST,
     UnaryOpNode,
     VarNode,
 )
@@ -173,8 +172,11 @@ class TestCodeGenerator:
         codegen = CodeGenerator(domain, order=2)
 
         # Simple coefficient and expression evaluators
-        coeff_eval = lambda t: 1.0
-        expr_eval = lambda t, u: -u[0]  # -u term
+        def coeff_eval(t):
+            return 1.0
+
+        def expr_eval(t, u):
+            return -u[0]  # -u term
 
         rhs_func = codegen.generate_rhs_function(coeff_eval, expr_eval, rhs=0.0)
 
@@ -455,7 +457,8 @@ class TestOperatorCompiler:
         domain = Domain([0, 2 * np.pi])
 
         # u'' + u = 0
-        op = lambda y: y.diff(2) + y
+        def op(y):
+            return y.diff(2) + y
 
         compiled_fn = compiler.compile_ivp_operator(op, domain, max_order=2)
 
@@ -473,7 +476,8 @@ class TestOperatorCompiler:
         domain = Domain([0, 1])
 
         # u'' = 0
-        op = lambda y: y.diff(2)
+        def op(y):
+            return y.diff(2)
 
         compiled_fn = compiler.compile_ivp_operator(op, domain, max_order=2)
 

@@ -1,4 +1,4 @@
-"""Comprehensive tests for nonlinear boundary value problems.
+"""Tests for nonlinear boundary value problems.
 
 These tests verify that the Newton iteration solver correctly handles
 nonlinear differential equations of various types:
@@ -133,6 +133,7 @@ class TestJacobianAccuracy:
         x_test = np.linspace(0.1, 0.9, 9)  # Avoid boundaries
         expected = -(np.pi**2) * np.sin(np.pi * x_test) + 2 * x_test * np.sin(np.pi * x_test)
         np.testing.assert_allclose(Jv(x_test), expected, atol=1e-8)
+
 
 class TestDerivativeNonlinearities:
     """Tests for operators with nonlinearities in derivatives."""
@@ -273,15 +274,10 @@ class TestSpecialCases:
         N.init = chebfun(lambda x: 0 * x + 1.1, [0, 1])  # Near u=1
         N.maxiter = 10
 
-        # This should ideally converge to u=1
-        # Skip if Newton doesn't converge
-        try:
-            u = N.solve()
-            # Check solution is close to 1
-            x_test = np.linspace(0, 1, 20)
-            np.testing.assert_allclose(u(x_test), np.ones(20), atol=1e-3)
-        except RuntimeError:
-            pytest.skip("Newton did not converge")
+        u = N.solve()
+        # Check solution is close to 1
+        x_test = np.linspace(0, 1, 20)
+        np.testing.assert_allclose(u(x_test), np.ones(20), atol=1e-6)
 
 
 class TestAdvancedNonlinearCases:
@@ -360,7 +356,7 @@ class TestAdvancedNonlinearCases:
         """Test ε u'' - u^3 + u = 0 (Allen-Cahn type).
 
         This is a challenging problem with steep gradients.
-        Uses continuation method (like MATLAB Chebfun) to handle stiffness.
+        Uses continuation method to handle stiffness.
         """
         domain = [0, 1]
 
@@ -484,11 +480,11 @@ class TestAdvancedNonlinearCases:
 
 
 class TestChallengingNonlinearBVPs:
-    """Test suite for challenging nonlinear BVPs from MATLAB Chebfun.
+    """Test suite for challenging nonlinear BVPs.
 
-    These tests are based on validated MATLAB Chebfun examples from:
+    These tests are based on validated reference examples from:
     - Chebfun Guide Chapter 10: https://www.chebfun.org/docs/guide/guide10.html
-    - MATLAB test suite: _remove/chebfun/tests/chebop/
+    - Reference implementation test suite
     """
 
     def test_quadratic_plus_derivative_nonlinearity(self):
@@ -521,7 +517,7 @@ class TestChallengingNonlinearBVPs:
         """ε u'' + 2(1-x²)u + u² = 1, u(-1)=u(1)=0.
 
         Carrier's problem with multiple solutions depending on initial guess.
-        MATLAB example from Chebfun Guide 10.
+        Reference example from Chebfun Guide 10.
 
         NOTE: Using eps=0.1 (less stiff) for speed. The eps=0.01 case is extremely
         stiff and requires many iterations.
@@ -628,12 +624,6 @@ class TestChallengingNonlinearBVPs:
         res_norm = np.max(np.abs(residual(x_test)))
         assert res_norm < 1e-6
 
-    # =========================================================================
-    # CANONICAL NONLINEAR BVPs FROM NUMERICAL ANALYSIS LITERATURE
-    # =========================================================================
-    # These tests are based on well-established problems with known
-    # mathematical properties. References provided for each problem.
-
     def test_bratu_problem(self):
         """Test Bratu (Gelfand-Bratu) problem: u'' + λ*exp(u) = 0.
 
@@ -667,7 +657,7 @@ class TestChallengingNonlinearBVPs:
         assert res_norm < 1e-8, f"Residual too large: {res_norm}"
 
         # Solution should be positive and concave down (u'' < 0)
-        # For λ = 1, MATLAB gives max|u| ≈ 0.1405
+        # For λ = 1, expected max|u| ≈ 0.1405
         mid_val = u(np.array([0.5]))[0]
         assert abs(mid_val - 0.1405) < 0.01, f"Solution at midpoint should be ~0.1405: u(0.5) = {mid_val}"
 
@@ -775,13 +765,13 @@ class TestChallengingNonlinearBVPs:
         - u(0) = u'(0) = 0 (clamped at left)
         - u(1) = u'(1) = 0 (clamped at right)
 
-        MATLAB Chebfun R2025b achieves:
+        Reference implementation achieves:
         - Default tolerance: Residual norm 3.10e-08
         - Tight tolerance (bvpTol=1e-14): Residual norm 1.16e-10
 
         Python ChebPy achieves (with LU decomposition + row scaling):
         - Residual norm: 4.44e-16 (machine precision!)
-        - 4+ orders of magnitude better than MATLAB with tight tolerance
+        - 4+ orders of magnitude better than reference with tight tolerance
         - This demonstrates the superiority of LU decomposition with row scaling
           over least squares for ill-conditioned fourth-order spectral systems
         """
@@ -797,7 +787,7 @@ class TestChallengingNonlinearBVPs:
 
         u = N.solve()
 
-        # Use MATLAB-equivalent tolerances
+        # Use tight tolerances
         u_prime = u.diff()
         assert abs(u(np.array([0.0]))[0]) < 1e-10, f"BC u(0)=0 not satisfied: u(0) = {u(np.array([0.0]))[0]}"
         assert abs(u_prime(np.array([0.0]))[0]) < 1e-10, (
@@ -808,11 +798,11 @@ class TestChallengingNonlinearBVPs:
             f"BC u'(1)=0 not satisfied: u'(1) = {u_prime(np.array([1.0]))[0]}"
         )
 
-        # Verify residual matches MATLAB
+        # Verify residual is small
         residual = u.diff(4) + u * u.diff(2) - chebfun(lambda x: 1 + 0 * x, [0, 1])
         x_test = np.linspace(0.1, 0.9, 100)
         res_norm = np.max(np.abs(residual(x_test)))
-        assert res_norm < 1e-9, f"Residual too large: {res_norm} (MATLAB achieves 1.67e-10)"
+        assert res_norm < 1e-9, f"Residual too large: {res_norm} (reference achieves 1.67e-10)"
 
     def test_mixed_dirichlet_neumann_nonlinearity(self):
         """Test mixed Dirichlet-Neumann BCs with cubic: u'' + u³ = sin(2πx).

@@ -384,8 +384,7 @@ def clencurt_weights(n: int) -> np.ndarray:
     x_j = cos(j*pi/n), j=0..n. The rule is exact for polynomials up to degree n.
 
     This implementation uses an FFT-based O(n log n) algorithm via DCT-I,
-    matching MATLAB Chebfun's Waldvogel method in spirit but adapted for
-    the n+1 points convention.
+    following Waldvogel's method adapted for the n+1 points convention.
 
     Args:
         n (int): Discretization size (returns n+1 weights for n+1 points).
@@ -396,7 +395,6 @@ def clencurt_weights(n: int) -> np.ndarray:
     References:
         - Waldvogel, "Fast Construction of the Fejér and Clenshaw-Curtis
           Quadrature Rules", BIT Numerical Mathematics 46 (2006), pp 195-202.
-        - MATLAB Chebfun @chebtech2/quadwts.m
 
     Examples:
         >>> w = clencurt_weights(1)

@@ -5,9 +5,11 @@ not just Dirichlet BCs. The old heuristic (len(r.indices) == 1) would fail these
 """
 
 import numpy as np
+from scipy import sparse
 
 from chebpy import chebfun
 from chebpy.linop import LinOp
+from chebpy.op_discretization import OpDiscretization
 from chebpy.utilities import Domain
 
 
@@ -197,15 +199,12 @@ class TestBCDetectionRegression:
 
         # Prepare domain and build discretization
         L.prepare_domain()
-        from chebpy.op_discretization import OpDiscretization
 
         disc = OpDiscretization.build_discretization(L, 16)
 
         # Check BC rows
         bc_rows = disc.get("bc_rows", [])
         assert len(bc_rows) > 0, "Should have BC rows"
-
-        from scipy import sparse
 
         for row in bc_rows:
             r = row.tocsr() if sparse.isspmatrix(row) else sparse.csr_matrix(row)

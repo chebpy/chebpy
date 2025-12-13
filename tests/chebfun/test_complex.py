@@ -6,6 +6,8 @@ including roots, rho ellipse construction, calculus, and real/imag methods.
 
 import numpy as np
 
+from chebpy import chebfun
+
 from ..generic.complex import (  # noqa: F401
     test_calculus,
     test_complexfun_properties,
@@ -20,8 +22,6 @@ class TestChebfunComplexEdgeCases:
 
     def test_real_of_complex_chebfun(self):
         """Test real() method on complex chebfun."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x + 1j * x**2, [-1, 1])
         f_real = f.real()
         xx = np.linspace(-1, 1, 50)
@@ -30,16 +30,12 @@ class TestChebfunComplexEdgeCases:
 
     def test_real_of_real_chebfun(self):
         """Test real() method on real chebfun (should return self)."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         f_real = f.real()
         assert f_real is f  # Should return the same object
 
     def test_imag_of_complex_chebfun(self):
         """Test imag() method on complex chebfun."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x + 1j * x**2, [-1, 1])
         f_imag = f.imag()
         xx = np.linspace(-1, 1, 50)
@@ -47,8 +43,6 @@ class TestChebfunComplexEdgeCases:
 
     def test_imag_of_real_chebfun(self):
         """Test imag() method on real chebfun (should return zero)."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         f_imag = f.imag()
         xx = np.linspace(-1, 1, 50)

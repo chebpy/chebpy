@@ -1,4 +1,4 @@
-"""Comprehensive tests for coefficient extraction from linear operators.
+"""Tests for coefficient extraction from linear operators.
 
 These tests verify that the coefficient extraction mechanism correctly
 identifies the coefficient functions c_k(x) for operators of the form:
@@ -251,7 +251,8 @@ class TestJacobianCoefficients:
     """Tests for coefficient extraction from Jacobians of nonlinear operators."""
 
     def test_u_squared_jacobian(self):
-        """N(u) = u^2 at u=x -> J[u](v) = 2u*v = 2x*v
+        """N(u) = u^2 at u=x -> J[u](v) = 2u*v = 2x*v.
+
         So c_0 = 2x, c_1 = c_2 = 0.
         """
         N = chebop([0, 1])
@@ -269,7 +270,8 @@ class TestJacobianCoefficients:
         np.testing.assert_allclose(coeffs[0](x_test), [0, 1, 2], atol=1e-9)
 
     def test_u_prime_squared_jacobian(self):
-        """N(u) = (u')^2 at u=x (so u'=1) -> J[u](v) = 2u'*v' = 2*v'
+        """N(u) = (u')^2 at u=x (so u'=1) -> J[u](v) = 2u'*v' = 2*v'.
+
         So c_0 = 0, c_1 = 2, c_2 = 0.
         """
         N = chebop([0, 1])
@@ -288,7 +290,8 @@ class TestJacobianCoefficients:
         np.testing.assert_allclose(coeffs[1](x_test), [2, 2, 2], atol=1e-9)
 
     def test_laplacian_plus_u_squared(self):
-        """N(u) = u'' + u^2 at u=x -> J[u](v) = v'' + 2u*v
+        """N(u) = u'' + u^2 at u=x -> J[u](v) = v'' + 2u*v.
+
         So c_0 = 2x, c_1 = 0, c_2 = 1.
         """
         N = chebop([0, 1])
@@ -308,7 +311,8 @@ class TestJacobianCoefficients:
         np.testing.assert_allclose(coeffs[2](x_test), [1, 1, 1], atol=1e-9)
 
     def test_cubic_jacobian(self):
-        """N(u) = u^3 at u=x -> J[u](v) = 3u^2*v = 3x^2*v
+        """N(u) = u^3 at u=x -> J[u](v) = 3u^2*v = 3x^2*v.
+
         So c_0 = 3x^2.
         """
         N = chebop([0, 1])
@@ -344,7 +348,8 @@ class TestJacobianCoefficients:
         np.testing.assert_allclose(coeffs[0](x_test), expected, atol=1e-9)
 
     def test_jacobian_u_times_uprime(self):
-        """N(u) = u*u' at u=x -> J[u](v) = u'*v + u*v' = 1*v + x*v'
+        """N(u) = u*u' at u=x -> J[u](v) = u'*v + u*v' = 1*v + x*v'.
+
         So c_0 = 1, c_1 = x.
         """
         N = chebop([0, 1])
@@ -410,7 +415,8 @@ class TestComplexOperators:
         np.testing.assert_allclose(coeffs[2](x_test), [0, 0.25, 1], atol=1e-10)
 
     def test_sturm_liouville_form(self):
-        """Sturm-Liouville: (p(x)u')' + q(x)u with p=1+x, q=x
+        """Sturm-Liouville: (p(x)u')' + q(x)u with p=1+x, q=x.
+
         Expands to: p*u'' + p'*u' + q*u = (1+x)u'' + u' + x*u.
         """
         N = chebop([0, 1])

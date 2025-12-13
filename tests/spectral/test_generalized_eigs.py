@@ -239,7 +239,7 @@ class TestGeneralizedEigenvaluesRegression:
     """Regression tests to ensure generalized eigenvalues work correctly."""
 
     def test_no_mass_matrix_unchanged(self):
-        """Verify that not providing mass_matrix gives same results as before."""
+        """Verify that eigenvalue problems work without mass_matrix parameter."""
         domain = Domain([0, 1])
 
         a0 = chebfun(lambda x: 0 * x, [0, 1])

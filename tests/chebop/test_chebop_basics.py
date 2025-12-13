@@ -1,4 +1,4 @@
-"""Comprehensive tests for the new chebop system.
+"""Tests for the chebop system.
 
 Tests cover:
 - chebop construction

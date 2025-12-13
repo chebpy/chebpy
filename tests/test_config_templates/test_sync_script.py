@@ -6,6 +6,7 @@ particularly for nested files within directories.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -190,8 +191,6 @@ class TestSyncScriptRootFixture:
 
     def test_sync_script_is_executable(self, root):
         """Sync script should be executable."""
-        import os
-
         sync_script = root / ".github" / "scripts" / "sync.sh"
         assert os.access(sync_script, os.X_OK)
 

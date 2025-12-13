@@ -9,8 +9,6 @@ import subprocess
 import pytest
 
 MOCK_UV_SCRIPT = """#!/usr/bin/env python3
-import sys
-import re
 
 def get_version():
     with open("pyproject.toml", "r") as f:

@@ -1,8 +1,7 @@
-"""Direct tests to cover specific uncovered code paths in trigtech.
+"""Tests for trigtech coefficient handling.
 
-This module uses direct coefficient manipulation to test code paths
-that are difficult to reach through normal function construction due
-to test environment limitations.
+This module uses direct coefficient manipulation to test specific
+scenarios that are difficult to reach through normal function construction.
 """
 
 import numpy as np
@@ -11,10 +10,10 @@ from chebpy.trigtech import Trigtech
 
 
 class TestDirectCodePaths:
-    """Direct tests for specific uncovered lines."""
+    """Test specific code paths using direct manipulation."""
 
     def test_simplify_no_significant_coeffs(self):
-        """Test simplify returns const 0 when no coeffs significant (line 447)."""
+        """Test simplify returns const 0 when no coeffs significant."""
         # Create trigtech with all near-zero coefficients
         coeffs = np.array([0.0, 1e-16, 1e-17, 1e-16], dtype=complex)
         f = Trigtech(coeffs)
@@ -24,7 +23,7 @@ class TestDirectCodePaths:
         assert f.size == 4
 
     def test_simplify_max_sig_freq_calculation(self):
-        """Test simplify calculates max significant frequency (line 451)."""
+        """Test simplify calculates max significant frequency."""
         # Create coefficients with specific frequency pattern
         n = 64
         coeffs = np.zeros(n, dtype=complex)
@@ -37,7 +36,7 @@ class TestDirectCodePaths:
         assert f.size == n
 
     def test_simplify_n_min_calculation(self):
-        """Test simplify calculates n_min correctly (line 455)."""
+        """Test simplify calculates n_min correctly."""
         # Create with moderate frequency content
         n = 32
         coeffs = np.zeros(n, dtype=complex)
@@ -50,7 +49,7 @@ class TestDirectCodePaths:
         assert f.size == n
 
     def test_simplify_power_of_2_rounding(self):
-        """Test simplify rounds to power of 2 (line 458)."""
+        """Test simplify rounds to power of 2."""
         # Create coefficients that need specific size
         n = 128
         coeffs = np.zeros(n, dtype=complex)
@@ -63,7 +62,7 @@ class TestDirectCodePaths:
         assert f.size == n
 
     def test_simplify_dont_increase_size(self):
-        """Test simplify doesn't increase size (line 461)."""
+        """Test simplify doesn't increase size."""
         # Already small coeffs array
         coeffs = np.array([1.0, 0.5, 0.3, 0.5], dtype=complex)
         f = Trigtech(coeffs)
@@ -72,7 +71,7 @@ class TestDirectCodePaths:
         assert f.size == 4
 
     def test_simplify_early_return_no_reduction(self):
-        """Test simplify returns copy if n_keep >= n (line 463-464)."""
+        """Test simplify returns copy if n_keep >= n."""
         # Small function that's already optimal
         coeffs = np.array([1.0, 0.5], dtype=complex)
         f = Trigtech(coeffs)
@@ -81,7 +80,7 @@ class TestDirectCodePaths:
         assert f.size == 2
 
     def test_simplify_resampling_real_values(self):
-        """Test simplify resampling with real values (line 473)."""
+        """Test simplify resampling with real values."""
         # Create function with real coefficients
         n = 64
         coeffs = np.zeros(n, dtype=complex)
@@ -96,7 +95,7 @@ class TestDirectCodePaths:
         assert len(vals) == n
 
     def test_simplify_resampling_complex_values(self):
-        """Test simplify resampling with complex values (line 474-475)."""
+        """Test simplify resampling with complex values."""
         # Create function with complex coefficients
         n = 32
         coeffs = np.zeros(n, dtype=complex)
@@ -110,7 +109,7 @@ class TestDirectCodePaths:
         assert np.iscomplexobj(vals)
 
     def test_add_zero_check_succeeds(self):
-        """Test addition recognizes zero result (lines 521-524)."""
+        """Test addition recognizes zero result."""
         # Create two small Trigtech that should sum to ~zero
         coeffs = np.array([1e-16, 1e-17], dtype=complex)
         f = Trigtech(coeffs)
@@ -120,7 +119,7 @@ class TestDirectCodePaths:
         assert f.size == g.size
 
     def test_add_prolong_smaller_operand_n_less_m(self):
-        """Test addition prolongs when n < m (line 512-513)."""
+        """Test addition prolongs when n < m."""
         # f is smaller
         coeffs_f = np.array([1.0], dtype=complex)
         coeffs_g = np.array([1.0, 0.5, 0.3], dtype=complex)
@@ -132,7 +131,7 @@ class TestDirectCodePaths:
         # Addition would prolong f
 
     def test_add_prolong_smaller_operand_m_less_n(self):
-        """Test addition prolongs when m < n (line 514-515)."""
+        """Test addition prolongs when m < n."""
         # g is smaller
         coeffs_f = np.array([1.0, 0.5, 0.3], dtype=complex)
         coeffs_g = np.array([1.0], dtype=complex)
@@ -144,7 +143,7 @@ class TestDirectCodePaths:
         # Addition would prolong g
 
     def test_ufunc_finds_trigtech_obj(self):
-        """Test ufunc loop finds Trigtech object (line 651)."""
+        """Test ufunc loop finds Trigtech object."""
         # Create Trigtech
         f = Trigtech.initfun_fixedlen(lambda x: np.sin(x), 16)
 
@@ -155,7 +154,7 @@ class TestDirectCodePaths:
         assert isinstance(result, Trigtech)
 
     def test_ufunc_tracks_max_size_iteration(self):
-        """Test ufunc iterates to find max_size (line 661)."""
+        """Test ufunc iterates to find max_size."""
         # Create multiple Trigtech with different sizes
         f = Trigtech.initfun_fixedlen(lambda x: np.sin(x), 8)
 
@@ -166,7 +165,7 @@ class TestDirectCodePaths:
         assert result.size >= 8
 
     def test_norm_l2_result_real_extraction(self):
-        """Test norm L2 extracts real from complex (line 772)."""
+        """Test norm L2 extracts real from complex."""
         # Create function with real values
         f = Trigtech.initfun_fixedlen(lambda x: np.cos(x), 16)
 
@@ -179,7 +178,7 @@ class TestDirectCodePaths:
         assert not np.iscomplex(norm)
 
     def test_sum_real_output_when_negligible_imag(self):
-        """Test sum returns real when imag negligible (line 796)."""
+        """Test sum returns real when imag negligible."""
         # Function with tiny imaginary part in coefficients
         coeffs = np.array([1.0 + 1e-15j, 0.5, 0.3], dtype=complex)
         f = Trigtech(coeffs)
@@ -192,7 +191,7 @@ class TestDirectCodePaths:
             assert np.abs(result.imag) < 1e-12
 
     def test_cumsum_adjust_constant_for_f0_zero(self):
-        """Test cumsum adjusts DC to make F(0)=0 (line 822)."""
+        """Test cumsum adjusts DC to make F(0)=0."""
         # Create function with DC component
         coeffs = np.array([2.0, 0.5, 0.3, 0.5], dtype=complex)
         f = Trigtech(coeffs)
@@ -204,7 +203,7 @@ class TestDirectCodePaths:
         assert F.size == f.size
 
     def test_diff_const_with_positive_n(self):
-        """Test diff of const with n>0 returns zero (line 870)."""
+        """Test diff of const with n>0 returns zero."""
         # Constant Trigtech
         f = Trigtech.initconst(3.14)
 
@@ -215,7 +214,7 @@ class TestDirectCodePaths:
         assert df.size == 1
 
     def test_chop_coeffs_n_min_le_4(self):
-        """Test _chop_coeffs with n_min <= 4 uses n_keep=4 (line 926)."""
+        """Test _chop_coeffs with n_min <= 4 uses n_keep=4."""
         # Very simple coefficients
         coeffs = np.array([1.0, 0.0, 0.0, 0.0], dtype=complex)
 
@@ -225,7 +224,7 @@ class TestDirectCodePaths:
         assert len(result) >= 1
 
     def test_chop_coeffs_freq_exceeds_nyquist_check(self):
-        """Test _chop_coeffs checks max_sig_freq > n_keep//2 (lines 957-958)."""
+        """Test _chop_coeffs checks max_sig_freq > n_keep//2."""
         # High frequency coefficients
         n = 64
         coeffs = np.zeros(n, dtype=complex)
@@ -276,8 +275,8 @@ class TestDirectCodePaths:
         assert f_copy is not f
 
 
-class TestStaticMethodCoverage:
-    """Test static methods that might not be fully covered."""
+class TestStaticMethods:
+    """Test static methods in Trigtech."""
 
     def test_trigpts_with_zero(self):
         """Test _trigpts with n=0."""

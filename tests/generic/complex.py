@@ -20,8 +20,6 @@ def test_complexfun_properties(complexfun):
     Args:
         complexfun: Fixture providing a complex function object.
     """
-    import numpy as np
-
     # Test basic properties
     assert complexfun.iscomplex
     assert not complexfun.isempty

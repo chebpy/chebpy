@@ -28,6 +28,7 @@ from typing import Any
 
 import numpy as np
 from scipy import sparse
+from scipy.integrate import solve_ivp
 from scipy.interpolate import BarycentricInterpolator
 from scipy.sparse.linalg import spsolve
 
@@ -38,7 +39,9 @@ from .chebfun import Chebfun
 from .chebtech import Chebtech
 from .chebyshev import vals2coeffs2
 from .linop import LinOp
+from .operator_compiler import OperatorCompiler
 from .order_detection_ast import OrderTracerAST
+from .settings import _preferences
 from .sparse_utils import sparse_to_dense
 from .spectral import cheb_points_scaled, diff_matrix
 from .utilities import Domain, Interval, InvalidDomain
@@ -177,7 +180,7 @@ class Chebop:
 
         # Solver options
         self.tol = kwargs.get("tol", 1e-10)  # Convergence tolerance
-        self.maxiter = kwargs.get("maxiter", 50)  # Max iterations for nonlinear (MATLAB uses 25)
+        self.maxiter = kwargs.get("maxiter", 50)  # Max iterations for nonlinear solver
         self.damping = kwargs.get("damping", 1.0)  # Damping parameter for Newton
         self.discretization_size = kwargs.get("discretization_size", 16)  # Initial grid size
         self.verbose = kwargs.get("verbose", False)  # Print Newton iteration info
@@ -233,8 +236,6 @@ class Chebop:
         Returns:
             True if this is an IVP/FVP (use time-stepping), False if BVP (use collocation)
         """
-        import numpy as np
-
         # Check if lbc is numerical values (scalar, list, or array), not a callable
         lbc_is_values = (
             self.lbc is not None
@@ -784,7 +785,7 @@ class Chebop:
         abs_tol = 1e-10  # Absolute tolerance for near-zero outputs
 
         try:
-            # FAST PATH: Quick check with simple low-degree polynomials
+            # Quick check with simple low-degree polynomials
             # This catches obvious nonlinearity (like y^2, y*diff(y), etc.) cheaply
             if not self._is_system:
                 # Use functions with non-zero derivatives to catch nonlinearities like (u')^2
@@ -856,7 +857,7 @@ class Chebop:
                 except Exception:
                     # Quick test failed, fall through to full test
                     pass
-            # END FAST PATH
+
             if self._is_system:
                 # For systems, create test function vectors
                 # Each test is a vector of functions, one per variable
@@ -1154,10 +1155,10 @@ class Chebop:
 
                 # The challenge: we can't easily decompose a lambda that returns a list
                 # Solution: Keep the lambda as-is but ensure discretization handles it
-                # The list handling code at lines 2228-2239 should work IF we
-                # ensure it's called correctly during both linear solve and Newton iteration
+                # The list handling code should work if we ensure it's called correctly
+                # during both linear solve and Newton iteration
 
-                # For now, mark this BC as multi-valued by converting to a list format
+                # Mark this BC as multi-valued by converting to a list format
                 # that linop can recognize and process correctly
                 expanded = []
                 for i in range(len(traced_result)):
@@ -1235,8 +1236,6 @@ class Chebop:
                     # Convert to L(u) + c = rhs, so L(u) = rhs - c
                     rhs_for_linop = rhs_for_linop - N_zero
 
-                # CRITICAL: The coeffs extracted by _extract_coefficients include the constant
-                # We need to re-extract coefficients for the LINEAR part only: L(u) = N(u) - c
                 # Create a new operator that subtracts the constant
                 original_op = self.op
 
@@ -1411,11 +1410,10 @@ class Chebop:
         if not self._analyzed:
             self.analyze_operator()
 
-        # Validate boundary conditions for systems (MATLAB compatibility)
+        # Validate boundary conditions for systems
         if self._is_system:
             # Check if scalar BCs are being applied to a system
-            # MATLAB rejects this with: "Specifying boundary conditions as a vector
-            # for systems is only supported for first order systems"
+            # Scalar boundary conditions for systems are only supported for first-order systems
             lbc_is_scalar = (
                 self.lbc is not None and not callable(self.lbc) and isinstance(self.lbc, (int, float, np.number))
             )
@@ -1438,9 +1436,9 @@ class Chebop:
             if self._is_linear:
                 solution = self._solve_linear_system()
             else:
-                # Nonlinear systems will be implemented later
+                # Nonlinear systems not implemented
                 raise NotImplementedError(
-                    "Nonlinear systems not yet implemented. Only linear coupled ODE systems are currently supported."
+                    "Nonlinear systems not implemented. Only linear coupled ODE systems are supported."
                 )
             return solution
         else:
@@ -1665,7 +1663,7 @@ class Chebop:
         if n_target is not None:
             n_values = [n_target]
         else:
-            # Match MATLAB's dimensionValues
+            # Generate sequence of discretization sizes
             min_pow = np.log2(min_n)
             max_pow = np.log2(max_n)
 
@@ -1808,9 +1806,9 @@ class Chebop:
         if isinstance(flat_solution, np.ndarray):
             coeffs = flat_solution
         else:
-            # Legacy: Chebfun input
+            # Chebfun input
             if len(flat_solution.funs) != 1:
-                raise ValueError("System reconstruction with breakpoints not yet supported.")
+                raise ValueError("System reconstruction with breakpoints not supported.")
             coeffs = flat_solution.funs[0].onefun.coeffs
 
         total_size = len(coeffs)
@@ -1854,8 +1852,7 @@ class Chebop:
     def _solve_nonlinear(self):
         """Solve a nonlinear BVP using damped Newton iteration with robustness improvements.
 
-        Implements Deuflhard's affine-invariant damped Newton method
-        as described in MATLAB Chebfun's solvebvpNonlinear.m, with additional
+        Implements Deuflhard's affine-invariant damped Newton method with additional
         robustness for very stiff problems like Van der Pol and Carrier equations.
 
         Returns:
@@ -1872,7 +1869,6 @@ class Chebop:
             a, b = self.domain.support
 
             # Build initial guess from BC values using polynomial interpolation
-            # This mimics MATLAB's fitBCs approach
             u = self._create_initial_guess_from_bcs(a, b)
 
         # Force minimum resolution for nonlinear problems
@@ -1892,12 +1888,12 @@ class Chebop:
 
             u = Chebfun.initfun(eval_u, [a, b], n=MIN_RESOLUTION_FOR_NONLINEAR)
 
-        # Relaxed tolerance for nonlinear (MATLAB uses 200*tol)
+        # Relaxed tolerance for nonlinear problems
         nonlinear_tol = 200 * self.tol
 
         # Damping parameters
         lambda_val = 1.0
-        lambda_min = 1e-6  # Match MATLAB Chebfun default (was 1e-4)
+        lambda_min = 1e-6  # Minimum damping factor
         damping = True
         pref_damping = True
 
@@ -1921,7 +1917,6 @@ class Chebop:
         # This provides 5x speedup by preventing coefficients from hitting 65537-point limit
         # Default maxpow2=16 (65537 pts), use maxpow2=12 (4097 pts) for intermediate Jacobian coefficients
         # This still provides excellent accuracy (residuals ~1e-16) but much faster
-        from .settings import _preferences
 
         original_maxpow2 = _preferences.maxpow2
         _preferences.maxpow2 = 12  # Use 4097 max points instead of 65537 for Jacobian coefficients
@@ -1943,15 +1938,9 @@ class Chebop:
                 # Disable diagnostics during Newton iteration for performance (2x speedup)
                 # Diagnostics are expensive and don't provide useful info during iteration
                 jacobian_linop._disable_diagnostics = True
-
-                # CRITICAL FIX: For AdChebfun path, we need to recompute the residual
-                # at the discretization points rather than using the coarse chebfun representation.
-                # The residual chebfun may have very few points (e.g., 2) if u is coarse,
-                # but we need accurate residual values at all discretization points.
                 if hasattr(jacobian_linop, "_jacobian_computer"):
                     # Store a residual evaluator function that will be called at discretization time
                     # This ensures we get accurate residual values at the collocation points
-                    # CRITICAL: Capture u and self.rhs by value to avoid closure issues
                     u_current = u
                     rhs_current = self.rhs
                     op_current = self.op
@@ -1971,25 +1960,11 @@ class Chebop:
                         # Return negative residual: -(N(u) - rhs) = rhs - N(u)
                         return rhs_vals - Nu_vals
 
-                    # CRITICAL FIX: Do NOT set _residual_evaluator as a closure!
-                    # The closure captures the current u and rhs, which means when we update
-                    # jacobian_linop.rhs in the damping step, the _residual_evaluator still
-                    # uses the OLD rhs values from when the Jacobian was computed.
-                    # Instead, let LinOp.solve() use self.rhs directly by evaluating the chebfun.
-                    # jacobian_linop._residual_evaluator = residual_evaluator
-
-                # MATLAB optimization: Use current solution size as starting point for adaptive refinement
-                # This avoids restarting from min_n=9 every Newton iteration
-                # See MATLAB's solvebfvpNonlinear.m line 196: len = max(cellfun(@length, u.blocks(:)))
                 if iteration > 0:
                     current_size = max(fun.size for fun in u.funs)
                     # Start adaptive search from current size (or slightly smaller to allow reduction)
                     jacobian_linop.min_n = max(jacobian_linop.min_n, current_size // 2)
                 else:
-                    # CRITICAL FIX: For first Newton iteration, ensure minimum discretization
-                    # based on differential order. Fourth-order problems need at least n=12-16
-                    # to capture solution accurately. User's simple initial guess may be too coarse.
-                    # This matches MATLAB's behavior of refining during Newton iteration.
                     diff_order = jacobian_linop.diff_order
                     if diff_order >= 4:
                         # Fourth-order and higher: need fine discretization
@@ -2058,7 +2033,7 @@ class Chebop:
                         )
                     )
 
-                    # Update damping mode based on _damping_step's decision (MATLAB lines 176-181)
+                    # Update damping mode based on _damping_step's decision
                     damping = stay_damped
 
                     if self.verbose:
@@ -2166,10 +2141,10 @@ class Chebop:
     ):
         """Perform one damped Newton step using error-based strategy with backtracking.
 
-        This implements the predictor-corrector damping from MATLAB's
-        dampingErrorBased.m with additional robustness improvements for stiff problems.
+        This implements predictor-corrector damping with robustness improvements
+        for stiff problems.
 
-        Key improvements over basic MATLAB implementation:
+        Key improvements:
         1. Backtracking line search when simplified Newton fails
         2. Detection of repeated failures and aggressive damping reduction
         3. Better handling of LSMR convergence issues
@@ -2191,10 +2166,10 @@ class Chebop:
         # Damping iteration to find acceptable step size
         max_damping_iter = 20
         for damping_iter in range(max_damping_iter):
-            # Predictor: estimate good lambda based on previous step (MATLAB lines 82-89)
+            # Predictor: estimate good lambda based on previous step
             if iteration > 0 and init_prediction and norm_delta_old is not None:
                 if delta_bar is not None and norm_delta_bar is not None:
-                    # Predictor uses deltaBar - delta (MATLAB line 85)
+                    # Predictor uses deltaBar - delta
                     diff_norm = self._function_norm(delta_bar - delta)
                     if diff_norm > 1e-14:
                         mu = (norm_delta_old * norm_delta_bar) / (diff_norm * norm_delta) * lambda_val
@@ -2204,7 +2179,7 @@ class Chebop:
 
             # Check if lambda too small - try multiple fallback strategies
             if lambda_val < lambda_min:
-                # Strategy 1: Try full Newton step (MATLAB approach)
+                # Strategy 1: Try full Newton step
                 u_trial = u + delta
                 lambda_val = 1.0
                 give_up += 0.5
@@ -2212,13 +2187,13 @@ class Chebop:
                 stay_damped = True
                 break
 
-            # Take trial step (MATLAB line 109)
+            # Take trial step
             u_trial = u + lambda_val * delta
             if self.verbose:
                 x_test = np.linspace(u.domain.support[0], u.domain.support[1], 10)
                 u_trial(x_test)
 
-            # Evaluate operator at trial point (MATLAB lines 111-125)
+            # Evaluate operator at trial point
             try:
                 residual_trial = self._compute_residual(u_trial)
                 if self.verbose:
@@ -2237,7 +2212,7 @@ class Chebop:
                 lambda_val *= 0.5
                 continue
 
-            # Solve for simplified Newton step (reuse Jacobian) (MATLAB lines 129-142)
+            # Solve for simplified Newton step (reuse Jacobian)
             jacobian_linop.rhs = -residual_trial
             try:
                 delta_bar = jacobian_linop.solve()
@@ -2245,7 +2220,6 @@ class Chebop:
                     delta_bar(x_test)
                 consecutive_failures = 0  # Reset on success
             except Exception:
-                # Simplified Newton solve failed - this is critical
                 # Use backtracking: try smaller lambda values
                 if self.verbose:
                     print(
@@ -2263,7 +2237,6 @@ class Chebop:
                     break
 
                 # Backtracking: Try sequence of smaller lambda values
-                # This is more aggressive than MATLAB to handle very stiff problems
                 backtrack_factors = [0.5, 0.25, 0.125, 0.0625]
                 found_good_lambda = False
 
@@ -2304,15 +2277,15 @@ class Chebop:
                 # If we found a good lambda via backtracking, proceed with that
 
             norm_delta_bar = self._function_norm(delta_bar)
-            # Contraction factor (MATLAB line 151)
+            # Contraction factor
             c_factor = norm_delta_bar / norm_delta
-            # Correction factor for step-size (MATLAB line 154)
+            # Correction factor for step-size
             diff_norm = self._function_norm(delta_bar - (1.0 - lambda_val) * delta)
             if diff_norm > 1e-14:
                 mu_prime = (0.5 * norm_delta * lambda_val**2) / diff_norm
             else:
                 mu_prime = lambda_val
-            # If not contracting, decrease lambda (MATLAB lines 157-161)
+            # If not contracting, decrease lambda
             if c_factor >= 1.0:
                 lambda_val = min(mu_prime, 0.5 * lambda_val)
                 if self.verbose:
@@ -2322,10 +2295,10 @@ class Chebop:
                     )
                 continue
 
-            # New potential candidate for lambda (MATLAB line 164)
+            # New potential candidate for lambda
             lambda_prime = min(1.0, mu_prime)
 
-            # Check for convergence within damped phase (MATLAB lines 166-173)
+            # Check for convergence within damped phase
             if lambda_prime == 1.0 and norm_delta_bar < err_tol:
                 success = True
                 give_up = 0
@@ -2333,20 +2306,20 @@ class Chebop:
                     print(f"    Damping iter {damping_iter}: Converged in damped phase!")
                 break
 
-            # Switch to pure Newton if experiencing good convergence (MATLAB lines 176-181)
+            # Switch to pure Newton if experiencing good convergence
             if lambda_prime == 1.0 and c_factor < 0.5:
                 stay_damped = False
             else:
                 stay_damped = True
 
-            # If lambda_prime >= 4*lambda, increase lambda and continue (MATLAB lines 184-187)
+            # If lambda_prime >= 4*lambda, increase lambda and continue
             if lambda_prime >= 4.0 * lambda_val:
                 lambda_val = lambda_prime
                 if self.verbose:
                     print(f"    Damping iter {damping_iter}: Increasing lambda to {lambda_val:.4f}")
                 continue
 
-            # Accept this step (MATLAB lines 191-192)
+            # Accept this step
             give_up = 0
             if self.verbose:
                 print(
@@ -2409,12 +2382,7 @@ class Chebop:
             RuntimeError: If IVP solver fails to converge
             ValueError: If highest derivative has zero coefficient
         """
-        import inspect
-
-        import numpy as np
-        from scipy.integrate import solve_ivp
-
-        # MATLAB-compatible tolerances (from cheboppref.m lines 466-467)
+        # Default tolerances for IVP solver
         # ivpAbsTol = 1e5*eps ≈ 2.22e-11
         # ivpRelTol = 100*eps ≈ 2.22e-14
         eps = np.finfo(float).eps
@@ -2450,13 +2418,11 @@ class Chebop:
         except Exception:
             op_nargs = 1  # Default to single argument
 
-        # Try to use operator pre-compilation (MATLAB-style optimization)
+        # Try to use operator pre-compilation
         use_precompiled = False
         compiled_rhs = None
 
         try:
-            from .operator_compiler import OperatorCompiler
-
             # Only try pre-compilation for single-argument operators (op(y))
             # Multi-argument operators (op(x, y)) need PointEval approach
             # Only try pre-compilation for single-argument operators (op(y))
@@ -2491,7 +2457,7 @@ class Chebop:
                     use_precompiled = True
 
                     if self.verbose:
-                        print("Using pre-compiled operator (MATLAB-style optimization)")
+                        print("Using pre-compiled operator")
         except Exception as e:
             # If pre-compilation fails, fall back to PointEval approach
             if self.verbose:
@@ -2750,8 +2716,6 @@ class Chebop:
 
         # Create chebfun from solution using dense output with breakpoints
         # Use scipy's solution points as breakpoints for better accuracy
-        # This matches MATLAB's approach and improves residual accuracy by 100-1000x
-        from chebpy import chebfun
 
         # Select subset of scipy's time points as breakpoints
         # Too many breaks = slow, too few = poor accuracy
@@ -2771,7 +2735,7 @@ class Chebop:
             breakpoints[0] = a
             breakpoints[-1] = b
 
-        u_solution = chebfun(lambda x: sol.sol(x)[0], breakpoints)
+        u_solution = Chebfun.initfun(lambda x: sol.sol(x)[0], breakpoints)
 
         # Validate solution for NaN/Inf values
         testpts = np.linspace(a, b, min(100, len(u_solution)))
@@ -2830,10 +2794,9 @@ class Chebop:
         For operator N(u), the Fréchet derivative J(u) is defined by:
             N(u + εv) = N(u) + J(u)[v] + O(ε²)
 
-        This uses AdChebfun-based automatic differentiation matching MATLAB's
-        operator block approach. The Jacobian is stored as a sparse matrix that
-        operates on discretized collocation point values, not as explicit
-        coefficient functions.
+        This uses AdChebfun-based automatic differentiation with an operator
+        block approach. The Jacobian is stored as a sparse matrix that operates
+        on discretized collocation point values, not as explicit coefficient functions.
 
         For operators of the form N(x, u), x is the independent variable
         and should be kept fixed when computing the derivative with respect to u.
@@ -2878,13 +2841,6 @@ class Chebop:
         # This will be the RHS of the linearized BC: δu(a) = c - u(a)
         a_val, b_val = self.domain.support
         lbc_residual, rbc_residual = self._compute_bc_residuals(u, a_val, b_val)
-
-        # CRITICAL DECISION: Should we use AdChebfun or coefficient-based AD?
-        #
-        # AdChebfun pros: Avoids coefficient explosion, matches MATLAB architecture
-        # AdChebfun cons: Requires well-resolved u (not a coarse initial guess)
-        #
-        # Solution: Refine u upfront if it's too coarse, then always use AdChebfun
         u_size = max(fun.size for fun in u.funs)
 
         # If u is too coarse for AdChebfun, refine it first
@@ -2904,28 +2860,14 @@ class Chebop:
 
         use_adchebfun = True  # Always use AdChebfun after refinement
 
-        # Use AdChebfun-based automatic differentiation (matches MATLAB's approach)
+        # Use AdChebfun-based automatic differentiation
         if use_adchebfun:
             try:
                 # Store a function that computes the Jacobian at any discretization size n
                 # This allows LinOp's adaptive loop to recompute at different sizes
                 def compute_jacobian_at_n(n: int):
-                    """Compute Jacobian matrix at discretization size n.
-
-                    CRITICAL: AdChebfun requires u to have adequate resolution for accurate
-                    Jacobian computation. If u is too coarse (e.g., 2 points), nonlinear
-                    terms like (1-u^2) will be poorly represented, leading to numerically
-                    unstable Jacobian matrices.
-
-                    Solution: Refine u to match the requested discretization size n before
-                    computing the Jacobian. This matches MATLAB Chebfun's behavior.
-                    """
+                    """Compute Jacobian matrix at discretization size n."""
                     try:
-                        # CRITICAL FIX: Refine u to adequate resolution before AdChebfun
-                        # If u is too coarse, AdChebfun will produce garbage Jacobians
-                        # We need u to have at least n points to accurately represent
-                        # nonlinear terms at the target discretization
-
                         u_size = max(fun.size for fun in u.funs)
 
                         # If u is too coarse relative to target n, refine it
@@ -3200,8 +3142,7 @@ class Chebop:
     def _create_initial_guess_from_bcs(self, a: float, b: float) -> Chebfun:
         """Create an initial guess that satisfies the boundary conditions.
 
-        Constructs a low-order polynomial that exactly satisfies the BCs,
-        mimicking MATLAB Chebfun's fitBCs approach.
+        Constructs a low-order polynomial that exactly satisfies the BCs.
 
         This is used when no initial guess is provided by the user.
 
@@ -3324,10 +3265,9 @@ class Chebop:
     def _project_to_satisfy_bcs(self, u_init: Chebfun) -> Chebfun:
         """Project initial guess to satisfy boundary conditions.
 
-        MATLAB Chebfun approach: For nonlinear problems with derivative BCs,
-        DO NOT project the initial guess. Newton iteration handles BC violations.
-        Projection can destroy good guesses (e.g., turning a reasonable linear
-        function into a constant).
+        For nonlinear problems with derivative BCs, do not project the initial guess.
+        Newton iteration handles BC violations. Projection can destroy good guesses
+        (e.g., turning a reasonable linear function into a constant).
 
         Only do minimal correction for value BCs if violations are very large.
 
@@ -3337,9 +3277,6 @@ class Chebop:
         Returns:
             u_proj: Possibly corrected guess (or original if BCs involve derivatives)
         """
-        # CRITICAL: MATLAB Chebfun does NOT project initial guesses for nonlinear problems!
-        # See solvebvpNonlinear.m - it trusts the user's initial guess.
-        # Newton iteration is designed to handle BC violations.
 
         # Helper to check if BC involves derivatives
         def has_derivative_bc(bc):
@@ -3360,7 +3297,7 @@ class Chebop:
 
         # No BCs or only simple value BCs
         # Still, be conservative - only correct large violations
-        # This follows MATLAB's philosophy of trusting the user's initial guess
+        # Trust the user's initial guess
         return u_init
 
     def _function_norm(self, f: Chebfun) -> float:

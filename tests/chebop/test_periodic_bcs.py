@@ -1,7 +1,7 @@
-"""Comprehensive tests for periodic boundary conditions in Chebop.
+"""Tests for periodic boundary conditions in Chebop.
 
-This module contains extensive tests to verify that periodic boundary conditions
-work correctly with both Fourier (trigtech) and Chebyshev (chebtech) discretizations.
+This module tests that periodic boundary conditions work correctly
+with both Fourier (trigtech) and Chebyshev (chebtech) discretizations.
 """
 
 import numpy as np

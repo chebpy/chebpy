@@ -7,6 +7,7 @@ including sum, diff, cumsum, and dot product.
 import numpy as np
 import pytest
 
+from chebpy import chebfun
 from chebpy.chebfun import Chebfun
 
 from ..utilities import exp, sin
@@ -263,8 +264,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_diff_edge_cases(self):
         """Test diff with n=0 and negative n."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**3, [-1, 1])
 
         # n=0 should return original function
@@ -277,8 +276,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_diff_higher_order(self):
         """Test higher order derivatives."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**4, [-1, 1])
         # Fourth derivative of x^4 is 24
         f4 = f.diff(4)
@@ -287,8 +284,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_multipiece_cumsum_with_many_pieces(self):
         """Test cumsum with more than 2 pieces."""
-        from chebpy import chebfun
-
         # Test that continuity is enforced across multiple pieces
         f = chebfun(lambda x: x * 0 + 1, [-1, -0.5, 0, 0.5, 1])
         f_int = f.cumsum()
@@ -300,8 +295,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_cumsum_multipiece_continuity(self):
         """Test that cumsum maintains continuity across pieces."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: np.sign(x), [-1, 0, 1])
         f_cumsum = f.cumsum()
         # Check continuity at x=0
@@ -312,8 +305,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_l1(self):
         """Test L1 norm."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         # L1 norm = integral(|x|) from -1 to 1 = 2 * integral(x) from 0 to 1 = 1
         norm_l1 = f.norm(p=1)
@@ -321,8 +312,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_l2(self):
         """Test L2 norm (default)."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         # L2 norm = sqrt(integral(x^2)) from -1 to 1 = sqrt(2/3)
         norm_l2 = f.norm()
@@ -330,8 +319,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_linf(self):
         """Test L-infinity norm."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x**2, [-1, 1])
         # L-inf norm = max|x^2| on [-1, 1] = 1
         norm_linf = f.norm(np.inf)
@@ -339,8 +326,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_l3(self):
         """Test L3 norm."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x * 0 + 1, [-1, 1])  # Constant function workaround
         # L3 norm of constant 1 = (integral(1) from -1 to 1)^(1/3) = 2^(1/3)
         norm_l3 = f.norm(p=3)
@@ -348,8 +333,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_invalid_p(self):
         """Test norm with invalid p value."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 1])
         with pytest.raises(ValueError, match="must be positive"):
             f.norm(p=-1)
@@ -359,8 +342,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_l2_multipiece(self):
         """Test L2 norm on multipiece function."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: x, [-1, 0, 1])
         norm = f.norm()  # L2 by default
         # L2 norm of x on [-1,1] = sqrt(2/3)
@@ -368,8 +349,6 @@ class TestChebfunCalculusEdgeCases:
 
     def test_norm_linf_with_multiple_extrema(self):
         """Test L-infinity norm with multiple local maxima."""
-        from chebpy import chebfun
-
         f = chebfun(lambda x: np.sin(3 * x), [-np.pi, np.pi])
         norm_inf = f.norm(np.inf)
         # Should be 1 (max of |sin|)

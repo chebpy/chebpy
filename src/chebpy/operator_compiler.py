@@ -1,10 +1,10 @@
 """Operator pre-compilation for IVP solving.
 
-This module provides MATLAB-style operator pre-compilation, converting
-differential operators into optimized functions for ODE solvers. This
-eliminates per-step overhead from dynamic operator evaluation.
+This module provides operator pre-compilation, converting differential
+operators into optimized functions for ODE solvers. This eliminates
+per-step overhead from dynamic operator evaluation.
 
-The approach mirrors MATLAB Chebfun's treeVar.toFirstOrder():
+The approach:
 1. Trace operator with AST to extract structure
 2. Identify and pre-evaluate chebfun coefficients
 3. Generate optimized Python function with coefficients in closure
@@ -17,8 +17,8 @@ Example:
     >>> coef = chebfun(lambda t: sin(t/10), [0, 200])
     >>> L.op = lambda y: y.diff(2) + 0.06*coef*y.diff() + y
     >>>
-    >>> # Without pre-compilation: ~24s (calls operator at every time step)
-    >>> # With pre-compilation: ~1-2s (matches MATLAB performance)
+    >>> # Without pre-compilation: slower due to operator overhead at every time step
+    >>> # With pre-compilation: much faster performance
 """
 
 from collections.abc import Callable
@@ -26,7 +26,7 @@ from typing import Any
 
 import numpy as np
 
-from .order_detection_ast import BinOpNode, ConstNode, DiffNode, OrderTracerAST
+from .order_detection_ast import BinOpNode, ConstNode, DiffNode, FunctionNode, OrderTracerAST, UnaryOpNode, VarNode
 
 
 class CoefficientExtractor:
@@ -44,9 +44,8 @@ class CoefficientExtractor:
     def extract(self, ast_root) -> tuple[Any, Any]:
         """Extract coefficient of highest derivative and remaining expression.
 
-        This follows MATLAB's approach: walk the tree to identify the term
-        containing the highest derivative, extract its coefficient, and
-        return the rest of the expression.
+        Walk the tree to identify the term containing the highest derivative,
+        extract its coefficient, and return the rest of the expression.
 
         Args:
             ast_root: Root node of the AST.
@@ -97,7 +96,6 @@ class CoefficientExtractor:
             return self._split_sum(node.left) + self._split_sum(node.right)
         elif isinstance(node, BinOpNode) and node.op == "-":
             # Subtraction: left + (-right)
-            from .order_detection_ast import UnaryOpNode
 
             return self._split_sum(node.left) + [UnaryOpNode("-", node.right)]
         else:
@@ -259,8 +257,6 @@ class ExpressionEvaluator:
 
     def _eval_node(self, node, t, u):
         """Recursively evaluate an AST node."""
-        from .order_detection_ast import FunctionNode, UnaryOpNode, VarNode
-
         if isinstance(node, ConstNode):
             # Check if it's a wrapped chebfun
             if hasattr(node, "value") and hasattr(node.value, "domain"):
@@ -359,7 +355,7 @@ class OperatorCompiler:
     def compile_ivp_operator(self, op: Callable, domain, max_order: int, rhs: float = 0.0) -> Callable:
         """Compile a differential operator into an optimized ODE RHS function.
 
-        This follows MATLAB's approach:
+        Process:
         1. Trace operator to build AST
         2. Extract coefficient of highest derivative
         3. Pre-evaluate chebfun coefficients on grid

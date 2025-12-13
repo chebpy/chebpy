@@ -229,10 +229,7 @@ def test_vals2coeffs_coeffs2vals_inverse():
 
 
 def test_simplify_chops_coefficients():
-    """Test that simplify() properly chops negligible Fourier coefficients.
-
-    This test verifies Issue #6 fix: coefficient chopping with conjugate-pair preservation.
-    """
+    """Test that simplify() properly chops negligible Fourier coefficients."""
 
     # Create a function with few significant frequencies but evaluate on large grid
     def fun(x):

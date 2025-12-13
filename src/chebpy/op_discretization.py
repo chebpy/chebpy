@@ -19,13 +19,19 @@ from .algorithms import clencurt_weights
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .chebtech import Chebtech
-from .sparse_utils import (extract_scalar, is_nearly_zero, prune_sparse,
-                           sparse_to_dense)
-from .spectral import (barycentric_matrix, cheb_points_scaled, diff_matrix,
-                       diff_matrix_driscoll_hale, diff_matrix_rectangular,
-                       fourier_diff_matrix, fourier_points_scaled,
-                       identity_matrix, mult_matrix,
-                       projection_matrix_rectangular)
+from .sparse_utils import extract_scalar, is_nearly_zero, prune_sparse, sparse_to_dense
+from .spectral import (
+    barycentric_matrix,
+    cheb_points_scaled,
+    diff_matrix,
+    diff_matrix_driscoll_hale,
+    diff_matrix_rectangular,
+    fourier_diff_matrix,
+    fourier_points_scaled,
+    identity_matrix,
+    mult_matrix,
+    projection_matrix_rectangular,
+)
 from .utilities import Interval
 
 
@@ -831,7 +837,7 @@ class OpDiscretization:
                 # Apply weight function if specified
                 if weight_fun is not None:
                     g_vals = weight_fun(x_pts)
-                    # Ensure g_vals is 1D (MATLAB Chebfun returns column vectors)
+                    # Ensure g_vals is 1D
                     g_vals = np.atleast_1d(g_vals).ravel()
                     weights = weights * g_vals
 

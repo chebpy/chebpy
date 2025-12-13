@@ -1,12 +1,7 @@
 """Tests for periodic BC integration with Fourier collocation.
 
 These tests verify that the periodic boundary condition implementation
-correctly integrates with Fourier spectral methods, matching MATLAB Chebfun behavior.
-
-NOTE: These tests are currently skipped due to Trigtech/Chebtech arithmetic issues.
-When performing operations like u.diff(2) - rhs where u is Trigtech (periodic solution)
-and rhs is Chebtech (standard chebfun), the conversion produces complex coefficients.
-This needs a proper fix in the Trigtech arithmetic or RHS conversion system.
+correctly integrates with Fourier spectral methods.
 """
 
 import numpy as np
@@ -90,30 +85,6 @@ class TestPeriodicBVPBasics:
         x_test = np.linspace(0.1, 2 * np.pi - 0.1, 50)
         res_norm = np.max(np.abs(residual(x_test)))
         assert res_norm < 1e-8, f"Residual: {res_norm}"
-
-    def test_periodic_constant_rhs(self):
-        """Test u'' = 1 with periodic BCs.
-
-        This should fail - not well-posed (compatibility condition violated).
-        For periodic u'' = f, need ∫f dx = 0 over the period.
-        """
-        N = chebop([0, 2 * np.pi])
-        N.op = lambda u: u.diff(2)
-        N.bc = "periodic"
-        N.rhs = chebfun(lambda x: 1.0, [0, 2 * np.pi])
-
-        # Should either raise an error or return a solution with large residual
-        try:
-            u = N.solve()
-            # If it doesn't raise, check that residual is large
-            residual = u.diff(2) - N.rhs
-            x_test = np.linspace(0, 2 * np.pi, 50)
-            res_norm = np.max(np.abs(residual(x_test)))
-            # This is not well-posed, so residual should be large
-            assert res_norm > 0.1 or True  # Allow for now
-        except Exception:
-            # Expected - problem not well-posed
-            pass
 
     def test_periodic_zero_mean_rhs(self):
         """Test u'' = sin(x) - mean(sin(x)) with periodic BCs.
@@ -215,17 +186,12 @@ class TestPeriodicVsNonPeriodic:
         N_dir.rbc = lambda u: u - 0  # u(2π) = 0
         N_dir.rhs = chebfun(lambda x: np.sin(3 * x), [0, 2 * np.pi])
 
-        # This might fail if non-periodic not working, so wrap in try
-        try:
-            u_dir = N_dir.solve()
-            n_dir = u_dir.funs[0].onefun.size
+        u_dir = N_dir.solve()
+        n_dir = u_dir.funs[0].onefun.size
 
-            # Periodic should be more efficient (fewer points)
-            # For this smooth periodic function
-            assert n_per <= n_dir or True  # Relaxed for now
-        except Exception:
-            # If non-periodic fails, that's okay for this test
-            pass
+        # Periodic should be more efficient (fewer points)
+        # For this smooth periodic function
+        assert n_per < n_dir
 
 
 class TestPeriodicIntervals:
@@ -273,10 +239,8 @@ class TestPeriodicDifferentialOrders:
 
         Exact: u = sin(x) + C
 
-        NOTE: First-order periodic BVPs are known to be ill-conditioned.
-        MATLAB Chebfun also fails this test with warning "Linear system solution
-        may not have converged" and residual ~0.07. This is a fundamental limitation
-        of the spectral collocation approach for first-order periodic problems.
+        First-order periodic BVPs are ill-conditioned with spectral methods.
+        Spectral collocation produces O(0.01) residuals even with large n.
         """
         N = chebop([0, 2 * np.pi])
         N.op = lambda u: u.diff()
@@ -285,27 +249,20 @@ class TestPeriodicDifferentialOrders:
 
         # Limit max_n to avoid slow adaptive convergence loop
         linop = N.to_linop()
-        linop.max_n = 64  # First-order should converge quickly
+        linop.max_n = 64
         u = linop.solve(N.rhs)
 
         # Check periodicity
         assert np.abs(u(np.array([0.0]))[0] - u(np.array([2 * np.pi]))[0]) < 1e-10
 
-        # Check residual (relaxed tolerance due to ill-conditioning)
+        # Check residual (loose tolerance: first-order periodic problems are ill-conditioned)
         residual = u.diff() - N.rhs
         x_test = np.linspace(0, 2 * np.pi, 50)
         res_norm = np.max(np.abs(residual(x_test)))
-        assert res_norm < 0.1  # Relaxed from 1e-9 due to known ill-conditioning
+        assert res_norm < 0.1
 
     def test_third_order_periodic(self):
-        """Test u''' = -6*sin(2x) with periodic BCs.
-
-        NOTE: This test exhibits convergence issues similar to first-order periodic BVPs.
-        The solver produces a solution with size ~4096 (max allowed), and small imaginary
-        roundoff errors in the Fourier coefficients get amplified by k^3 factors in
-        differentiation, leading to O(1e-7) imaginary components in higher derivatives.
-        This appears to be a conditioning issue with odd-order periodic BVPs.
-        """
+        """Test u''' = -6*sin(2x) with periodic BCs."""
         N = chebop([0, 2 * np.pi])
         N.op = lambda u: u.diff(3)
         N.bc = "periodic"

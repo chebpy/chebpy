@@ -1,6 +1,6 @@
-"""Extensive tests for chebop operator analysis methods.
+"""Tests for chebop operator analysis methods.
 
-This module provides comprehensive tests for the core operator analysis
+This module provides tests for the core operator analysis
 functionality of the chebop class:
 
 1. _detect_order(): Detects the highest derivative order in an operator

@@ -1,8 +1,4 @@
-"""Final targeted tests to push trigtech coverage above 95%.
-
-This module specifically targets the remaining uncovered lines identified
-in the coverage report.
-"""
+"""Test fourier ops in trigtech."""
 
 import numpy as np
 import pytest
@@ -11,7 +7,7 @@ from chebpy.trigtech import Trigtech
 
 
 class TestSimplifyResamplingLogic:
-    """Target lines 432-479 in simplify() method."""
+    """Test simplify() method resampling logic."""
 
     def test_simplify_triggers_interpolation(self):
         """Test simplify method that requires resampling/interpolation."""
@@ -42,7 +38,7 @@ class TestSimplifyResamplingLogic:
 
 
 class TestAdditionWithZeroCheck:
-    """Target lines 515, 521-524 in __add__ method."""
+    """Test __add__ method zero check."""
 
     def test_add_checking_zero_tolerance(self):
         """Test addition that checks for zero result."""
@@ -75,7 +71,7 @@ class TestAdditionWithZeroCheck:
 
 
 class TestUfuncSpecialCases:
-    """Target lines 651, 661 in __array_ufunc__."""
+    """Test __array_ufunc__ edge cases."""
 
     def test_ufunc_with_only_trigtech(self):
         """Test ufunc identifies Trigtech from inputs."""
@@ -108,10 +104,10 @@ class TestUfuncSpecialCases:
 
 
 class TestCalculusRealOutputs:
-    """Target lines 772, 796, 822, 870 in calculus methods."""
+    """Test calculus methods real outputs."""
 
     def test_norm_l2_complex_to_real(self):
-        """Test norm returns real value from complex intermediate (line 772)."""
+        """Test norm returns real value from complex intermediate."""
         # Create function that might have complex intermediate values
         f = Trigtech.initfun_fixedlen(lambda x: np.cos(x), 32)
 
@@ -126,7 +122,7 @@ class TestCalculusRealOutputs:
         assert not np.iscomplex(norm)
 
     def test_sum_imaginary_part_negligible(self):
-        """Test sum returns real when imag part negligible (line 796)."""
+        """Test sum returns real when imag part negligible."""
         # Real-valued periodic function
         f = Trigtech.initfun_fixedlen(lambda x: np.cos(x), 32)
 
@@ -139,7 +135,7 @@ class TestCalculusRealOutputs:
             assert np.abs(np.imag(result)) < 1e-12
 
     def test_cumsum_adjusts_dc_component(self):
-        """Test cumsum adjusts DC for F(0)=0 (line 822)."""
+        """Test cumsum adjusts DC for F(0)=0."""
         # Function with non-zero mean
         coeffs = np.array([1.0, 0.5, 0.3], dtype=complex)  # DC = 1.0
         f = Trigtech(coeffs)
@@ -154,7 +150,7 @@ class TestCalculusRealOutputs:
         assert np.abs(val_0) < 1e-10
 
     def test_diff_handles_const_specially(self):
-        """Test diff on constant with n>0 returns zero (line 870)."""
+        """Test diff on constant with n>0 returns zero."""
         # Constant function
         f = Trigtech.initconst(5.0)
 
@@ -169,10 +165,10 @@ class TestCalculusRealOutputs:
 
 
 class TestChopCoeffsEdgeCases:
-    """Target lines 926, 957-958 in _chop_coeffs."""
+    """Test _chop_coeffs edge cases."""
 
     def test_chop_coeffs_n_min_less_than_4(self):
-        """Test _chop_coeffs when n_min <= 4 uses n_keep=4 (line 926)."""
+        """Test _chop_coeffs when n_min <= 4 uses n_keep=4."""
         # Small coeffs array with only DC and freq 1
         coeffs = np.array([1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5], dtype=complex)
 
@@ -182,7 +178,7 @@ class TestChopCoeffsEdgeCases:
         assert len(result) >= 1  # At minimum, keeps DC
 
     def test_chop_coeffs_frequency_exceeds_nyquist(self):
-        """Test _chop_coeffs when max_sig_freq > n_keep//2 (lines 957-958)."""
+        """Test _chop_coeffs when max_sig_freq > n_keep//2."""
         # Create coeffs with high significant frequency
         n = 64
         coeffs = np.zeros(n, dtype=complex)
@@ -201,10 +197,10 @@ class TestChopCoeffsEdgeCases:
 
 
 class TestPlotMethods:
-    """Target lines 1051, 1063-1064 in plotting methods."""
+    """Test plotting methods specifics."""
 
     def test_plot_returns_line_object(self):
-        """Test plot method returns line object (line 1051)."""
+        """Test plot method returns line object."""
         f = Trigtech.initfun_fixedlen(lambda x: np.sin(x), 32)
 
         # Verify plot method exists
@@ -214,7 +210,7 @@ class TestPlotMethods:
         # The actual plotting is tested elsewhere; just verify the method is callable
 
     def test_plotcoeffs_uses_abs(self):
-        """Test plotcoeffs plots absolute values (lines 1063-1064)."""
+        """Test plotcoeffs plots absolute values."""
         f = Trigtech.initfun_fixedlen(lambda x: np.sin(x), 32)
 
         # Verify plotcoeffs method exists
@@ -229,7 +225,7 @@ class TestPlotMethods:
 
 
 class TestAdaptiveConvergenceWarning:
-    """Test that non-convergent adaptive triggers warning (line 207)."""
+    """Test that non-convergent adaptive triggers warning."""
 
     def test_adaptive_warning_on_nonconvergence(self):
         """Test adaptive constructor warns when not converging."""
@@ -250,7 +246,7 @@ class TestAdaptiveConvergenceWarning:
 
 
 class TestEvenOddBranchesInPairing:
-    """Test even/odd branches in _pair_fourier_coeffs (lines 153-160)."""
+    """Test even/odd branches in _pair_fourier_coeffs."""
 
     def test_pair_even_size_branches(self):
         """Test the even-size branch in _pair_fourier_coeffs."""
