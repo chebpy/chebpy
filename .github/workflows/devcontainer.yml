@@ -1,5 +1,5 @@
-# This file is part of the tschm/.config-templates repository
-# (https://github.com/tschm/.config-templates).
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
 #
 # Devcontainer CI Workflow
 #
@@ -43,7 +43,7 @@ on:
       - ".github/workflows/devcontainer.yml"
 
   pull_request:
-    branches: [ main, master ]  
+    branches: [ main, master ]
     paths:
       - ".devcontainer/**"
       - ".github/workflows/devcontainer.yml"
@@ -75,7 +75,7 @@ jobs:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       # Additional gate to skip build if no devcontainer.json exists
       - name: Check devcontainer exists
         id: check
@@ -90,7 +90,7 @@ jobs:
       - name: Get lowercase repository owner
         id: repo_owner
         run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-      
+
       - name: Get Image Name
         if: steps.check.outputs.exists == 'true'
         id: image_name
@@ -108,25 +108,25 @@ jobs:
             IMAGE_NAME="${{ vars.DEVCONTAINER_IMAGE_NAME }}"
             echo "Using custom image name component: $IMAGE_NAME"
           fi
-          
+
           # Validate the image component matches [a-z0-9]+([._-][a-z0-9]+)* with optional / separators
           if ! echo "$IMAGE_NAME" | grep -qE '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*$'; then
             echo "::error::Invalid image name component: $IMAGE_NAME"
             echo "::error::Each component must match [a-z0-9]+([._-][a-z0-9]+)* separated by /"
             exit 1
           fi
-          
+
           IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$IMAGE_NAME"
           echo "✅ Final image name: $IMAGE_NAME"
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT 
-      
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
       - name: Sanitize Image Tag
         if: steps.check.outputs.exists == 'true'
         id: sanitized_tag
         run: |
           SANITIZED_TAG=$(echo "${{ github.ref_name }}-${{ github.sha }}" | tr '/' '-')
           echo "sanitized_tag=$SANITIZED_TAG" >> $GITHUB_OUTPUT
-      
+
       - name: Build Devcontainer Image
         uses: devcontainers/ci@v0.3
         if: steps.check.outputs.exists == 'true'

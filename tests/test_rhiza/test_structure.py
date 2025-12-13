@@ -28,7 +28,7 @@ class TestRootFixture:
 
     def test_root_resolves_correctly_from_nested_location(self, root):
         """Root should correctly resolve to repository root from tests/test_config_templates/."""
-        conftest_path = root / "tests" / "test_config_templates" / "conftest.py"
+        conftest_path = root / "tests" / "test_rhiza" / "conftest.py"
         assert conftest_path.exists()
 
     def test_root_contains_expected_directories(self, root):
