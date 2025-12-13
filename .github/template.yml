@@ -1,4 +1,4 @@
-template-repository: "tschm/.config-templates"
+template-repository: "jebel-quant/rhiza"
 template-branch: "main"
 include: |
     .devcontainer/
