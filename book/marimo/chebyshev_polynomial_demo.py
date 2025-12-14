@@ -8,7 +8,7 @@
 #
 # [tool.uv.sources]
 # chebpy = { path = "../..", editable=True }
-# ]
+# 
 # ///
 
 import marimo
