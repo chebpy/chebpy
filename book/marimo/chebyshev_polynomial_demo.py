@@ -1,5 +1,16 @@
 """Marimo ChebyshevPolynomial Demonstration."""
 
+# /// script
+# dependencies = [
+#     "marimo==0.18.4",
+#     "chebpy",
+# ]
+#
+# [tool.uv.sources]
+# chebpy = { path = "../..", editable=True }
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.14.16"
