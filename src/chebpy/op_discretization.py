@@ -88,7 +88,6 @@ class OpDiscretization:
         """Check if the LinOp has periodic boundary conditions.
 
         Periodic BCs are detected if continuity_constraints contain 'periodic' type entries.
-        This follows MATLAB Chebfun's approach where periodic BCs trigger Fourier collocation.
 
         Args:
             linop: LinOp instance
@@ -135,8 +134,7 @@ class OpDiscretization:
             for_eigenvalue_problem: If True, prepare discretization for eigenvalue solving.
             bc_enforcement: Strategy for enforcing boundary conditions:
                           - 'append': Append BC rows to operator (overdetermined system, least squares)
-                          - 'replace': Replace operator rows with BC rows (square system, exact BCs)
-                                     This is the MATLAB Chebfun approach for spectral accuracy.
+                          - 'replace': Replace operator rows with BC rows (square system, exact BCs).
                           - 'driscoll_hale': Use Driscoll-Hale rectangular collocation where the
                                      operator matrix is (n-k+1) × (n+1) for k-th order ODE, then
                                      k BC rows are added to form a square (n+1) × (n+1) system.
@@ -935,8 +933,7 @@ class OpDiscretization:
 
         For periodic problems with Fourier collocation and even-order derivatives >= 2,
         the differentiation matrix has constants in its nullspace. This causes the
-        system to be singular. Following MATLAB Chebfun's approach, we add a mean-zero
-        constraint to make the system well-determined:
+        system to be singular. We add a mean-zero constraint to make the system well-determined:
 
             ∫ u(x) dx = 0   (mean-zero constraint)
 

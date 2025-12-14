@@ -376,7 +376,6 @@ def _barydiff_matrix(x, w, order, t=None):
     D[ii, ii] = 0.0
     D[ii, ii] = -np.sum(D, axis=1)  # Negative sum trick
 
-    # Force symmetry for even N (from MATLAB baryDiffMat.m line 82-83)
     # This forces the diagonal to be symmetric about the center
     if N >= 2:
         half_N = N // 2
@@ -469,8 +468,7 @@ def projection_matrix_rectangular(n, m, interval):
     """Construct projection matrix for rectangular spectral collocation.
 
     This matrix projects from m+1 collocation points down to n+1 coefficient points
-    using barycentric interpolation. This is the "PS" matrix in MATLAB Chebfun's
-    rectangular spectral collocation for eigenvalue problems.
+    using barycentric interpolation.
 
     Following Driscoll & Hale (2016), the projection matrix maps values at
     m+1 > n+1 collocation points to values at n+1 coefficient points, enabling
@@ -630,9 +628,6 @@ def ultraspherical_diff(n, lmbda=0):
 
     Maps Chebyshev coefficients (C^(λ) basis) to C^(λ+1) basis.
 
-    Following MATLAB's diffmat convention: returns n×n matrix operating on
-    n coefficients (not n+1).
-
     The derivative of a Chebyshev T_k polynomial is:
         d/dx T_k(x) = k * U_{k-1}(x) = k * C^(1)_{k-1}(x)
 
@@ -655,11 +650,9 @@ def ultraspherical_diff(n, lmbda=0):
 
     if lmbda == 0:
         # Chebyshev case: d/dx T_k = k * U_{k-1} = k * C^(1)_{k-1}
-        # MATLAB diffmat: spdiags((0 : n - 1)', 1, n, n)
         diag = np.arange(0, n)
     else:
         # General case: d/dx C^(λ)_k = 2λ * C^(λ+1)_{k-1}
-        # MATLAB diffmat: for m>0, multiplies by spdiags(2*m*ones(n,1), 1, n, n)
         diag = 2 * lmbda * np.ones(n)
 
     # Build sparse matrix: D[i, i+1] = diag[i] (n×n matrix with superdiagonal)
@@ -671,9 +664,6 @@ def ultraspherical_conversion(n, lmbda):
     """Compute conversion matrix between ultraspherical bases.
 
     Maps C^(λ) coefficients to C^(λ+1) coefficients.
-
-    Following MATLAB's convertmat convention: returns n×n matrix operating on
-    n coefficients.
 
     The conversion uses the recurrence relation:
         C^(λ)_k(x) = (λ/(λ+k)) * [C^(λ+1)_k(x) - C^(λ+1)_{k-2}(x)]
@@ -695,7 +685,6 @@ def ultraspherical_conversion(n, lmbda):
 
     if lmbda == 0:
         # Special case: Chebyshev T → C^(1)
-        # MATLAB spconvert: relation is C_n^(0) = 0.5*(C_n^(1) - C_{n-2}^(1))
         # Inverting: C_n^(1) = 2*C_n^(0) + C_{n-2}^(1)
         # In matrix form with superdiagonal structure:
         # S[0,0] = 1, S[1,1] = 0.5, S[k,k] = 0.5 for k >= 2
@@ -716,7 +705,6 @@ def ultraspherical_conversion(n, lmbda):
 
     else:
         # General case: C^(λ) → C^(λ+1)
-        # MATLAB implementation uses superdiagonal structure
         # S[0,0] = 1, S[1,1] = lam/(lam+1)
         # S[k,k] = lam/(lam+k) for k >= 2
         # S[k, k+2] = -lam/(lam+k) for k >= 0
@@ -868,8 +856,6 @@ def ultraspherical_bc_row(n, interval, bc_order, bc_side):
 def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
     """Solve a linear ODE using the ultraspherical method.
 
-    Follows MATLAB's ultraspherical implementation approach.
-
     For an ODE of the form:
         a_2(x) * u''(x) + a_1(x) * u'(x) + a_0(x) * u(x) = f(x)
 
@@ -895,13 +881,6 @@ def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
     # Only support 2nd order
     if diff_order != 2:
         raise NotImplementedError(f"Ultraspherical method supports 2nd order ODEs only, got order {diff_order}")
-
-    # Following MATLAB's approach:
-    # 1. Build matrices: D0 (n×n), D1 ((n-1)×(n-1)), S0 (n×n), S1 (n×n)
-    # 2. Build operator: L = D1 @ D0 + a1 * S1_reduced @ D0 + a0 * S1 @ S0
-    # 3. Project: remove last m=2 rows
-    # 4. Add BC rows
-    # 5. Build RHS and solve
 
     # Get conversion and differentiation matrices (all n×n now)
     D0 = ultraspherical_diff(n, 0) / L  # d/dx: T → C^(1), scaled for interval
@@ -929,7 +908,7 @@ def ultraspherical_solve(coeffs, rhs_coeffs, n, interval, lbc, rbc):
         # S1 @ S0: convert T → C^(1) → C^(2)
         L_op = L_op + a0_val * (S1 @ S0).tocsr()
 
-    # PROJECTION STEP: Remove last m=2 rows (MATLAB's reduce() operation)
+    # Projection step
     m = diff_order  # For 2nd order ODE, m = 2
     if L_op.shape[0] > m:
         L_op_reduced = L_op[:-m, :]

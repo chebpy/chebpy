@@ -1085,7 +1085,7 @@ class Chebfun:
             Chebfun with potentially multiple pieces
         """
         # Constants from MATLAB Chebfun
-        split_max_length = 6000  # Maximum total points (MATLAB default: prevent pathological subdivision)
+        split_max_length = 6000  # Maximum total points
         split_length = 160  # Target points per piece for splitting
         max_pow2_split = int(np.ceil(np.log2(split_length - 1)))  # = 8
 
@@ -1099,8 +1099,6 @@ class Chebfun:
         hscale = domain.support[1] - domain.support[0]
         vscale = 0.0
 
-        # Minimum interval threshold - use aggressive value to prevent pathological subdivision
-        # MATLAB uses 4e-14*hscale in getFun, but we need larger threshold to stop earlier
         min_interval = 1e-12 * hscale
 
         # Initial pass: try to construct on each interval in domain
@@ -1116,7 +1114,7 @@ class Chebfun:
 
         # Splitting loop - process sad intervals until all resolved or limit reached
         total_points = sum(fun.size for fun in funs)
-        max_iterations = 100  # Safety limit (MATLAB typically needs ~10-20 for most functions)
+        max_iterations = 100  # Safety limit
 
         iteration = 0
         while sad_intervals and total_points < split_max_length and iteration < max_iterations:
@@ -1313,9 +1311,9 @@ class Chebfun:
             if max_der is None:
                 return (ends[0] + ends[1]) / 2.0
 
-            # Check which derivatives are growing (MATLAB criterion line 144-145)
+            # Check which derivatives are growing
             # Growth factor must be > (5.5 - d) where d is derivative order
-            # AND derivative must be > 10*vscale/hscale^d
+            # and derivative must be > 10*vscale/hscale^d
             vscale_eff = max(vscale, np.finfo(float).eps)
             growing = []
             for d in range(1, num_test_ders + 1):
@@ -1474,8 +1472,6 @@ class Chebfun:
     @classmethod
     def _find_jump(cls, f, a, b, vscale, hscale):
         """Locate a jump discontinuity using bisection.
-
-        Implements MATLAB's findJump algorithm from detectEdge.m.
 
         Args:
             f: Function

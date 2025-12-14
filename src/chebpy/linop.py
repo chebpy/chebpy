@@ -554,7 +554,7 @@ class LinOp:
             [A_cont  ]      [b_cont  ]
            Overdetermined system, solved by least squares. BCs satisfied approximately.
 
-        2. 'replace' (MATLAB Chebfun approach for spectral accuracy):
+        2. 'replace':
             [A_bc    ]      [b_bc    ]
             [A_proj  ]  u = [b_proj  ]
             [A_cont  ]      [b_cont  ]
@@ -641,9 +641,6 @@ class LinOp:
 
         # Assemble system based on BC enforcement strategy
         if bc_enforcement == "replace" and n_bc > 0:
-            # MATLAB Chebfun approach: Replace operator rows with BC rows
-            # This creates a square system where BCs are satisfied to machine precision
-
             # Total number of constraints to replace
             n_constraints = n_bc + n_int + n_point + n_mean_zero
 
@@ -655,10 +652,6 @@ class LinOp:
                 raise ValueError(
                     f"Too many constraints ({n_constraints}) for system size ({n_rows_op}). System is over-constrained."
                 )
-
-            # Strategy: Remove rows uniformly from operator matrix
-            # MATLAB approach: Use projection matrices to reduce dimension while
-            # maintaining spectral accuracy. We approximate this by uniform sampling.
 
             # Calculate how many rows to keep from operator
             n_rows_to_keep = n_rows_op - n_constraints
@@ -691,7 +684,7 @@ class LinOp:
 
         For square systems (m == n):
         - Row scaling: s = 1 / max(1, max(abs(A), [], 2))
-        - LU factorization with partial pivoting (MATLAB Chebfun approach)
+        - LU factorization with partial pivoting
         - Solve using forward/backward substitution
 
         For overdetermined systems (m > n) from rectangularization:
@@ -759,7 +752,6 @@ class LinOp:
         # Convert to dense for LU decomposition
         A_dense = sparse_to_dense(mat)
 
-        # Row scaling to improve accuracy (MATLAB @valsDiscretization/mldivide.m:19-20)
         # s = 1 / max(1, max(abs(A), [], 2))
         row_maxes = np.max(np.abs(A_dense), axis=1)
         s = 1.0 / np.maximum(1.0, row_maxes)
@@ -768,7 +760,7 @@ class LinOp:
         A_scaled = A_dense * s[:, np.newaxis]
         sb = s * b
 
-        # For square systems, use LU decomposition (MATLAB approach) - fast for most cases
+        # For square systems, use LU decomposition
         if m == n:
             try:
                 lu, piv = lu_factor(A_scaled)
@@ -876,7 +868,6 @@ class LinOp:
                 diagnose_linop(self, verbose=True)
 
             # Determine discretization sequence
-            # Match MATLAB's dimensionValues: powers of 2 up to 512, then half powers
             # See _remove/chebfun/@valsDiscretization/valsDiscretization.m
             if n is not None:
                 n_values = [n]
@@ -944,10 +935,7 @@ class LinOp:
                 # Accept solution if residual is small enough
                 is_last_n = n_current == n_values[-1]
 
-                # MATLAB Chebfun approach: happinessCheck via standardCheck
                 # Checks if cutoff < n where cutoff = standardChop(coeffs, tol)
-                # NO residual check - only coefficient decay!
-
                 solution_is_happy = False
                 for fun in solution.funs:
                     # Get coefficients of the solution piece
@@ -955,25 +943,20 @@ class LinOp:
                     if len(coeffs) > 0:
                         # For Trigtech (Fourier basis), pair k and -k modes before checking decay
                         # Without pairing, standard_chop sees large values at both ends with
-                        # noise in between, confusing the plateau detection
+                        # noise in between. This confuses the plateau detection
 
                         if isinstance(fun.onefun, Trigtech):
                             coeffs_to_check = Trigtech._pair_fourier_coeffs(coeffs)
                         else:
                             coeffs_to_check = coeffs
 
-                        # MATLAB: cutoff = standardChop(coeffs, tol)
-                        # Use the linop tolerance (matches MATLAB's pref.chebfuneps)
                         cutoff = standard_chop(coeffs_to_check, tol=self.tol)
-                        # MATLAB: ishappy = (cutoff < n)
+
                         # Accept if cutoff < current discretization size
                         if cutoff < n_current:
                             solution_is_happy = True
                             break
 
-                # MATLAB returns immediately when happy, no residual check needed
-                # However, for problems with oscillatory coefficients, we need to also
-                # verify that BCs are satisfied to avoid premature convergence
                 if solution_is_happy:
                     # Check BC satisfaction for Dirichlet BCs
                     bc_satisfied = True
@@ -1410,7 +1393,6 @@ class LinOp:
             self.prepare_domain()
 
         # Adaptive refinement sequence scaled by operator order
-        # Go in powers of 2 from base up to max_n (like MATLAB Chebfun)
         base = self._discretization_size()
         n_list = []
         n = base
@@ -1466,7 +1448,6 @@ class LinOp:
                 if is_rectangular:
                     # Rectangular without BCs: Solve generalized eigenvalue problem
                     # A_rect @ v = λ * PS.T @ v
-                    # Following MATLAB's approach where PS projects solution space
                     PS_matrices = disc.get("projection_matrices", [])
                     if not PS_matrices:
                         raise RuntimeError("Rectangular discretization missing projection matrices")
@@ -1677,13 +1658,6 @@ class LinOp:
                             continue
                 else:
                     # Standard eigenvalue problem
-
-                    # For rectangular discretization, the projected matrix Q.T @ A_rect @ bc_proj
-                    # is generally NON-SYMMETRIC, which causes ARPACK convergence issues.
-                    # MATLAB Chebfun uses dense eig() for rectangular discretization (see eigs.m line 362-363).
-                    # We follow the same approach: use dense solver for all eigenvalue problems
-                    # or when matrix is small enough.
-
                     if A_eig.shape[0] <= 500 or is_rectangular:
                         # Use dense solver for small matrices or rectangular discretization
 
@@ -1709,13 +1683,10 @@ class LinOp:
             final_vecs = vecs
             final_bc_proj = bc_proj
 
-            # Check convergence by testing eigenfunction resolution (like MATLAB)
             # Create a linear combination of eigenfunctions and check if coefficients have decayed
             # This ensures eigenfunctions are well-resolved, not just eigenvalues
             converged = False
             if prev_vals is not None and len(prev_vals) == len(vals):
-                # MATLAB's approach: combine eigenfunctions with nontrivial coefficients
-                # to avoid accidental cancellations
                 coeff_vec = 1.0 / (2.0 * np.arange(1, len(vals) + 1))
 
                 # Reconstruct the combined eigenfunction
