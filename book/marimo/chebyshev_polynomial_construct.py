@@ -8,6 +8,10 @@ Chebyshev polynomials.
 # /// script
 # dependencies = [
 #     "marimo==0.18.4",
+#     "chebpy"
+#
+# [tool.uv.sources]
+# chebpy = { path = "../..", editable=True }
 # ]
 # ///
 
