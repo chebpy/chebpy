@@ -12,7 +12,7 @@ Chebyshev polynomials.
 # ]
 #
 # [tool.uv.sources]
-# chebpy = { path = "../..", editable=True }
+# chebpy = { path = "../..", editable=true }
 #
 # ///
 
