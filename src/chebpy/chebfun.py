@@ -1293,7 +1293,6 @@ class Chebfun:
         iteration = 0
 
         # Main loop: continues while derivatives are finite and interval is large enough
-        # MATLAB: while (maxDer(numTestDers) ~= inf) && ~isnan(maxDer) && (diff(ends) > eps*hscale)
         while (
             max_der[num_test_ders - 1] != np.inf
             and not np.isnan(max_der[num_test_ders - 1])
@@ -1326,7 +1325,7 @@ class Chebfun:
                 # Derivatives not growing - no edge detected
                 return None
 
-            # Use lowest growing derivative (MATLAB: find(..., 1, 'first'))
+            # Use lowest growing derivative
             num_test_ders = growing[0]
 
             if num_test_ders == 1 and (ends[1] - ends[0]) < 1e-3 * hscale:
@@ -1435,7 +1434,7 @@ class Chebfun:
                 return new_a, new_b, max_der
             return None, None, None
 
-        # Compute undivided differences (MATLAB's approach)
+        # Compute undivided differences
         dy = y.copy()
         x_mid = x.copy()
         for d in range(num_ders):
