@@ -1,5 +1,17 @@
 """Marimo notebook explaining the implementation details and class structure of ChebPy."""
 
+# /// script
+# dependencies = [
+#     "marimo==0.18.4",
+#     "chebpy",
+#     "seaborn"
+# ]
+#
+# [tool.uv.sources]
+# chebpy = { path = "../..", editable=true }
+#
+# ///
+
 import marimo
 
 __generated_with = "0.14.16"

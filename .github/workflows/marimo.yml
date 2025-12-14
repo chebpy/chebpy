@@ -75,18 +75,11 @@ jobs:
         with:
           lfs: true
 
-      # Determine the Python version to use
-      - name: Get Python version
-        id: get-python
-        run: |
-          echo "python-version=$(python ./.github/workflows/scripts/version_max.py)" >> "$GITHUB_OUTPUT"
-
-      # Use the composite action to set up the project
-      - name: Setup the project
-        uses: ./.github/actions/setup-project
+      # Install uv/uvx
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ steps.get-python.outputs.python-version }}
-          uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
+          version: "0.9.17"
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook

@@ -5,6 +5,17 @@ from the chebpy library. Each cell showcases a different aspect of working with
 Chebyshev polynomials.
 """
 
+# /// script
+# dependencies = [
+#     "marimo==0.18.4",
+#     "chebpy",
+# ]
+#
+# [tool.uv.sources]
+# chebpy = { path = "../..", editable=true }
+#
+# ///
+
 import marimo
 
 __generated_with = "0.14.16"
