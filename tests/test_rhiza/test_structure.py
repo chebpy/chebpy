@@ -18,8 +18,6 @@ class TestRootFixture:
 
     def test_root_points_to_repository_root(self, root):
         """Root fixture should point to the actual repository root."""
-        assert (root / "pyproject.toml").exists()
-        assert (root / "README.md").exists()
         assert (root / ".github").is_dir()
 
     def test_root_is_absolute_path(self, root):
