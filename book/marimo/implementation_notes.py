@@ -4,6 +4,7 @@
 # dependencies = [
 #     "marimo==0.18.4",
 #     "chebpy",
+#     "seaborn"
 # ]
 #
 # [tool.uv.sources]
