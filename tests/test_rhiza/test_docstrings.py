@@ -1,4 +1,3 @@
-
 """Tests for module docstrings using doctest.
 
 Automatically discovers all packages under `src/`
