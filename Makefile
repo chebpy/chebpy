@@ -19,7 +19,7 @@ RESET := \033[0m
 # Declare phony targets (they don't produce files)
 .PHONY: install-uv install clean test marimo marimushka book fmt deptry docs release release-dry-run post-release sync help all update-readme
 
-UV_INSTALL_DIR := ./bin
+UV_INSTALL_DIR ?= ./bin
 UV_BIN := ${UV_INSTALL_DIR}/uv
 UVX_BIN := ${UV_INSTALL_DIR}/uvx
 MARIMO_FOLDER := book/marimo
@@ -110,8 +110,7 @@ marimo: install ## fire up Marimo server
 	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
 	  printf " ${YELLOW}[WARN] Marimo folder '${MARIMO_FOLDER}' not found, skipping start${RESET}\n"; \
 	else \
-	  ${UV_BIN} pip install marimo; \
-	  ${UV_BIN} run marimo edit "${MARIMO_FOLDER}"; \
+	  ${UV_BIN} run --with marimo marimo edit "${MARIMO_FOLDER}"; \
 	fi
 
 marimushka: install-uv ## export Marimo notebooks to HTML
@@ -119,7 +118,6 @@ marimushka: install-uv ## export Marimo notebooks to HTML
 	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
 	  printf "${YELLOW}[WARN] Directory '${MARIMO_FOLDER}' does not exist. Skipping marimushka.${RESET}\n"; \
 	else \
-	  ${UV_BIN} pip install marimo; \
 	  MARIMO_FOLDER="${MARIMO_FOLDER}" UV_BIN="${UV_BIN}" UVX_BIN="${UVX_BIN}" /bin/sh "${SCRIPTS_FOLDER}/marimushka.sh"; \
 	fi
 

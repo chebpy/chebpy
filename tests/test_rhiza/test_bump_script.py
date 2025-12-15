@@ -23,7 +23,7 @@ def test_bump_updates_version_no_commit(git_repo, choice, expected_version):
     result = subprocess.run([str(script)], cwd=git_repo, input=input_str, capture_output=True, text=True)
 
     assert result.returncode == 0
-    assert f"Version bumped to {expected_version}" in result.stdout
+    assert f"-> {expected_version} in pyproject.toml" in result.stdout
 
     # Verify pyproject.toml updated
     with open(git_repo / "pyproject.toml") as f:
@@ -74,21 +74,44 @@ def test_uncommitted_changes_failure(git_repo):
     assert "You have uncommitted changes" in result.stdout
 
 
-def test_bump_explicit_version(git_repo):
+@pytest.mark.parametrize(
+    "input_version, expected_version",
+    [
+        ("1.2.3", "1.2.3"),
+        ("v1.2.4", "1.2.4"),
+        ("2.0.0rc1", "2.0.0rc1"),
+        ("2.0.0a1", "2.0.0a1"),
+        ("2.0.0.post1", "2.0.0.post1"),
+    ],
+)
+def test_bump_explicit_version(git_repo, input_version, expected_version):
     """Bump with explicit version."""
     script = git_repo / ".github" / "scripts" / "bump.sh"
-    version = "1.2.3"
 
-    # Input: 4 (explicit) -> 1.2.3 -> n (no commit)
-    input_str = f"4\n{version}\nn\n"
+    # Input: 4 (explicit) -> input_version -> n (no commit)
+    input_str = f"4\n{input_version}\nn\n"
 
     result = subprocess.run([str(script)], cwd=git_repo, input=input_str, capture_output=True, text=True)
 
     assert result.returncode == 0
-    assert f"Version bumped to {version}" in result.stdout
+    assert f"-> {expected_version} in pyproject.toml" in result.stdout
     with open(git_repo / "pyproject.toml") as f:
         content = f.read()
-        assert f'version = "{version}"' in content
+        assert f'version = "{expected_version}"' in content
+
+
+def test_bump_explicit_version_invalid(git_repo):
+    """Bump fails with invalid explicit version."""
+    script = git_repo / ".github" / "scripts" / "bump.sh"
+    version = "not-a-version"
+
+    # Input: 4 (explicit) -> not-a-version
+    input_str = f"4\n{version}\n"
+
+    result = subprocess.run([str(script)], cwd=git_repo, input=input_str, capture_output=True, text=True)
+
+    assert result.returncode == 1
+    assert f"Invalid version format: {version}" in result.stdout
 
 
 def test_bump_fails_existing_tag(git_repo):
