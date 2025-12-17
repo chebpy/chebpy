@@ -12,6 +12,12 @@ MOCK_UV_SCRIPT = """#!/usr/bin/env python3
 import sys
 import re
 
+try:
+    from packaging.version import parse, InvalidVersion
+    HAS_PACKAGING = True
+except ImportError:
+    HAS_PACKAGING = False
+
 def get_version():
     with open("pyproject.toml", "r") as f:
         content = f.read()
@@ -65,6 +71,16 @@ def main():
 
     # uv version <version> --dry-run
     if len(args) >= 2 and not args[1].startswith("-") and "--dry-run" in args:
+        version = args[1]
+        if HAS_PACKAGING:
+            try:
+                parse(version)
+            except InvalidVersion:
+                sys.exit(1)
+        else:
+            # Simple validation: must start with a digit
+            if not re.match(r"^\\d", version):
+                sys.exit(1)
         # Just exit 0 if valid
         return
 

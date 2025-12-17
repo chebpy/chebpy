@@ -1,5 +1,5 @@
 {
-    "name": "Python 3.14",
+    "name": "Python 3.14 (Rhiza)",
     "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "hostRequirements": {
         "cpus": 4
@@ -12,7 +12,8 @@
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
     ],
     "containerEnv": {
-        "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
+        "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+        "UV_INSTALL_DIR": "/home/vscode/.local/bin"
     },
     "forwardPorts": [8080],
     "customizations": {

@@ -68,10 +68,18 @@ prompt_yes_no() {
 
 # Function: Bump version
 do_bump() {
-  printf "%bSelect bump type:%b\n" "$BLUE" "$RESET"
-  printf "1) patch\n"
-  printf "2) minor\n"
-  printf "3) major\n"
+  # Get current version
+  CURRENT_VERSION=$("$UV_BIN" version --short 2>/dev/null || echo "unknown")
+
+  # Calculate next versions
+  NEXT_PATCH=$("$UV_BIN" version --bump patch --dry-run --short 2>/dev/null)
+  NEXT_MINOR=$("$UV_BIN" version --bump minor --dry-run --short 2>/dev/null)
+  NEXT_MAJOR=$("$UV_BIN" version --bump major --dry-run --short 2>/dev/null)
+
+  printf "%bSelect bump type (Current: %s):%b\n" "$BLUE" "$CURRENT_VERSION" "$RESET"
+  printf "1) patch (%b%s -> %s%b)\n" "$YELLOW" "$CURRENT_VERSION" "$NEXT_PATCH" "$RESET"
+  printf "2) minor (%b%s -> %s%b)\n" "$YELLOW" "$CURRENT_VERSION" "$NEXT_MINOR" "$RESET"
+  printf "3) major (%b%s -> %s%b)\n" "$YELLOW" "$CURRENT_VERSION" "$NEXT_MAJOR" "$RESET"
   printf "4) Enter specific version\n"
   printf "Enter choice [1-4]: "
   read -r choice
@@ -112,8 +120,6 @@ do_bump() {
     prompt_continue "Proceed with version bump on '$CURRENT_BRANCH'?"
   fi
 
-  # Get current version
-  CURRENT_VERSION=$("$UV_BIN" version --short 2>/dev/null || echo "unknown")
   printf "%b[INFO] Current version: %s%b\n" "$BLUE" "$CURRENT_VERSION" "$RESET"
 
   # Determine the new version using uv version with --dry-run first
@@ -178,7 +184,7 @@ do_bump() {
     exit 1
   fi
 
-  printf "%b[SUCCESS] Version bumped to %s in pyproject.toml%b\n" "$GREEN" "$NEW_VERSION" "$RESET"
+  printf "%b[SUCCESS] 🚀 Version bumped: %s -> %s in pyproject.toml%b\n" "$GREEN" "$CURRENT_VERSION" "$NEW_VERSION" "$RESET"
 
   # Handle commit if requested
   if [ -z "$DO_COMMIT" ]; then
