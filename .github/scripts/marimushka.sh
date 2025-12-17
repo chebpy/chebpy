@@ -43,11 +43,21 @@ case "$UVX_BIN" in
   *) ;;
 esac
 
+# Resolve UV_BIN to absolute path
+case "$UV_BIN" in
+  /*) ;;
+  */*) UV_BIN="$CURRENT_DIR/$UV_BIN" ;;
+  *) ;;
+esac
+
+# Derive UV_INSTALL_DIR from UV_BIN
+UV_INSTALL_DIR=$(dirname "$UV_BIN")
+
 # Change to the notebook directory to ensure relative paths in notebooks work correctly
 cd "$MARIMO_FOLDER"
 
 # Run marimushka export
-"$UVX_BIN" "marimushka>=0.1.9" export --notebooks "." --output "$OUTPUT_DIR" --bin-path "$CURRENT_DIR/bin"
+"$UVX_BIN" "marimushka>=0.1.9" export --notebooks "." --output "$OUTPUT_DIR" --bin-path "$UV_INSTALL_DIR"
 
 # Ensure GitHub Pages does not process with Jekyll
 : > "$OUTPUT_DIR/.nojekyll"

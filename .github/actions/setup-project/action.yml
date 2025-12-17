@@ -4,8 +4,7 @@
 # Action: Setup Project (composite action)
 #
 # Purpose: Bootstrap a Python project in GitHub Actions by:
-#   - Installing Task, uv, and uvx into a local ./bin directory
-#   - Optionally rendering the repository from a Copier template for tests
+#   - Installing Task, uv, and uvx
 #   - Detecting presence of pyproject.toml and exposing it as an output
 #   - Creating a virtual environment with uv and syncing dependencies
 #
@@ -43,28 +42,7 @@ runs:
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
-        version: "0.9.17"
-
-    - name: Render the project
-      if: hashFiles('tests/resources/render.yml') != ''
-      shell: bash
-      run: |
-        pip install copier
-
-        # Render the current folder in-place
-        copier copy . . \
-          --data-file ./tests/resources/render.yml \
-          --force \
-          --overwrite \
-          --quiet
-
-        # Delete all remaining .jinja files
-        find . -type f -name "*.jinja" -exec rm -f {} +
-
-        # Delete all folders that still contain {{ ... }}
-        find . -depth -type d -name "*{{*}}*" -exec rm -rf {} +
-
-        ls -R
+        version: "0.9.18"
 
     - name: Check for pyproject.toml
       id: check_pyproject

@@ -1,5 +1,8 @@
 """Tests for the Makefile targets and help output using safe dry‑runs.
 
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
 These tests validate that the Makefile exposes expected targets and emits
 the correct commands without actually executing them, by invoking `make -n`
 (dry-run). We also pass `-s` to reduce noise in CI logs. This approach keeps
@@ -22,6 +25,12 @@ def strip_ansi(text: str) -> str:
     """Strip ANSI escape sequences from text."""
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", text)
+
+
+@pytest.fixture
+def expected_uv_install_dir() -> str:
+    """Get the expected UV_INSTALL_DIR from environment or default to ./bin."""
+    return os.environ.get("UV_INSTALL_DIR", "./bin")
 
 
 @pytest.fixture(autouse=True)
@@ -97,32 +106,40 @@ class TestMakefile:
         assert "Targets:" in out
         assert "Bootstrap" in out or "Meta" in out  # section headers
 
-    def test_fmt_target_dry_run(self, logger):
+    def test_fmt_target_dry_run(self, logger, expected_uv_install_dir):
         """Fmt target should invoke pre-commit via uvx in dry-run output."""
         proc = run_make(logger, ["fmt"])
         out = proc.stdout
-        assert "./bin/uvx pre-commit run --all-files" in out
+        # Check for uvx command with the configured path
+        expected_uvx = f"{expected_uv_install_dir}/uvx"
+        assert f"{expected_uvx} pre-commit run --all-files" in out
 
-    def test_deptry_target_dry_run(self, logger):
+    def test_deptry_target_dry_run(self, logger, expected_uv_install_dir):
         """Deptry target should invoke deptry via uvx in dry-run output."""
         proc = run_make(logger, ["deptry"])
         out = proc.stdout
-        assert './bin/uvx deptry "src"' in out
+        # Check for uvx command with the configured path
+        expected_uvx = f"{expected_uv_install_dir}/uvx"
+        assert f'{expected_uvx} deptry "src"' in out
 
-    def test_test_target_dry_run(self, logger):
+    def test_test_target_dry_run(self, logger, expected_uv_install_dir):
         """Test target should invoke pytest via uv with coverage and HTML outputs in dry-run output."""
         proc = run_make(logger, ["test"])
         out = proc.stdout
         # Expect key steps
         assert "mkdir -p _tests/html-coverage _tests/html-report" in out
-        assert "./bin/uv run pytest" in out
+        # Check for uv command with the configured path
+        expected_uv = f"{expected_uv_install_dir}/uv"
+        assert f"{expected_uv} run pytest" in out
 
-    def test_book_target_dry_run(self, logger):
+    def test_book_target_dry_run(self, logger, expected_uv_install_dir):
         """Book target should run inline commands to assemble the book without go-task."""
         proc = run_make(logger, ["book"])
         out = proc.stdout
         # Expect marimushka export to install marimo and minibook to be invoked
-        assert "./bin/uvx minibook" in out
+        # Check for uvx command with the configured path
+        expected_uvx = f"{expected_uv_install_dir}/uvx"
+        assert f"{expected_uvx} minibook" in out
 
     def test_all_target_dry_run(self, logger):
         """All target echoes a composite message in dry-run output."""
@@ -137,23 +154,28 @@ class TestMakefile:
         out = strip_ansi(proc.stdout)
         assert "Value of UV_NO_MODIFY_PATH:\n1" in out
 
-    def test_uv_install_dir_is_bin(self, logger):
-        """`UV_INSTALL_DIR` should point to `./bin`."""
+    def test_uv_install_dir_is_bin(self, logger, expected_uv_install_dir):
+        """`UV_INSTALL_DIR` can be configured via environment variable or defaults to ./bin."""
         proc = run_make(logger, ["print-UV_INSTALL_DIR"], dry_run=False)
         out = strip_ansi(proc.stdout)
-        assert "Value of UV_INSTALL_DIR:\n./bin" in out
+        # Check if UV_INSTALL_DIR is set in environment, otherwise expect default ./bin
+        assert f"Value of UV_INSTALL_DIR:\n{expected_uv_install_dir}" in out
 
-    def test_uv_bin_is_bin_uv(self, logger):
-        """`UV_BIN` should point to `./bin/uv`."""
+    def test_uv_bin_is_bin_uv(self, logger, expected_uv_install_dir):
+        """`UV_BIN` is derived from UV_INSTALL_DIR environment variable or defaults to ./bin/uv."""
         proc = run_make(logger, ["print-UV_BIN"], dry_run=False)
         out = strip_ansi(proc.stdout)
-        assert "Value of UV_BIN:\n./bin/uv" in out
+        # Check if UV_INSTALL_DIR is set in environment, otherwise expect default ./bin
+        expected_bin = f"{expected_uv_install_dir}/uv"
+        assert f"Value of UV_BIN:\n{expected_bin}" in out
 
-    def test_uvx_bin_is_bin_uvx(self, logger):
-        """`UVX_BIN` should point to `./bin/uvx`."""
+    def test_uvx_bin_is_bin_uvx(self, logger, expected_uv_install_dir):
+        """`UVX_BIN` is derived from UV_INSTALL_DIR environment variable or defaults to ./bin/uvx."""
         proc = run_make(logger, ["print-UVX_BIN"], dry_run=False)
         out = strip_ansi(proc.stdout)
-        assert "Value of UVX_BIN:\n./bin/uvx" in out
+        # Check if UV_INSTALL_DIR is set in environment, otherwise expect default ./bin
+        expected_bin = f"{expected_uv_install_dir}/uvx"
+        assert f"Value of UVX_BIN:\n{expected_bin}" in out
 
     def test_script_folder_is_github_scripts(self, logger):
         """`SCRIPTS_FOLDER` should point to `.github/scripts`."""

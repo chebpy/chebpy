@@ -1,4 +1,10 @@
-"""Tests for the bump.sh script using a sandboxed git environment."""
+"""Tests for the bump.sh script using a sandboxed git environment.
+
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
+Provides test fixtures for testing git-based workflows and version management.
+"""
 
 import subprocess
 
