@@ -199,7 +199,7 @@ Whether you're fixing bugs, adding features, or improving documentation, your he
 
 ### Acknowledgments 🙏
 
-- [tschm/.config-templates](https://github.com/tschm/.config-templates) for standardised CI/CD templates and auto-syncing
+- [Jebel-Quant/rhiza](https://github.com/Jebel-Quant/rhiza) for standardised CI/CD templates and project tooling
 
 
 ---
