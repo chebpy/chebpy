@@ -9,8 +9,8 @@ import subprocess
 import pytest
 
 MOCK_UV_SCRIPT = """#!/usr/bin/env python3
-import sys
 import re
+import sys
 
 try:
     from packaging.version import parse, InvalidVersion

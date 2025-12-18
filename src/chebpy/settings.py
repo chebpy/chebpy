@@ -27,6 +27,7 @@ class DefaultPreferences:
     maxiter = 10
     sortroots = False
     mergeroots = True
+    splitting = False
 
     @classmethod
     def _defaults(cls):

@@ -15,10 +15,12 @@ from .exceptions import IntervalMismatch, NotSubinterval
 from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
+from .trigtech import Trigtech
 from .utilities import Interval
 
 techdict = {
     "Chebtech": Chebtech,
+    "Trigtech": Trigtech,
 }
 
 
@@ -87,7 +89,7 @@ class Classicfun(Fun, ABC):
         return cls(onefun, interval)
 
     @classmethod
-    def initfun_adaptive(cls, f, interval):
+    def initfun_adaptive(cls, f, interval, maxpow2=None):
         """Initialize from a callable function using adaptive sampling.
 
         This constructor determines the appropriate number of points needed to
@@ -96,11 +98,13 @@ class Classicfun(Fun, ABC):
         Args:
             f (callable): The function to be approximated.
             interval: The interval on which to define the function.
+            maxpow2 (int, optional): Maximum power of 2 for adaptive refinement.
+                Used during splitting to limit the size of each piece.
 
         Returns:
             Classicfun: A new instance representing the function f.
         """
-        onefun = techdict[prefs.tech].initfun(lambda y: f(interval(y)), interval=interval)
+        onefun = techdict[prefs.tech].initfun_adaptive(lambda y: f(interval(y)), interval=interval, maxpow2=maxpow2)
         return cls(onefun, interval)
 
     @classmethod
@@ -124,7 +128,7 @@ class Classicfun(Fun, ABC):
     # -------------------
     #  'private' methods
     # -------------------
-    def __call__(self, x, how="clenshaw"):
+    def __call__(self, x, how=None):
         """Evaluate the function at points x.
 
         This method evaluates the function at the specified points by mapping them
@@ -132,13 +136,27 @@ class Classicfun(Fun, ABC):
 
         Args:
             x (float or array-like): Points at which to evaluate the function.
-            how (str, optional): Method to use for evaluation. Defaults to "clenshaw".
+            how (str, optional): Method to use for evaluation. If None, uses the default
+                method for the onefun type ("clenshaw" for Chebtech, "fft" for Trigtech).
 
         Returns:
             float or array-like: The value(s) of the function at the specified point(s).
                 Returns a scalar if x is a scalar, otherwise an array of the same size as x.
         """
-        y = self.interval.invmap(x)
+        # Determine default evaluation method based on onefun type
+        if how is None:
+            if isinstance(self.onefun, Trigtech):
+                how = "fft"
+            else:
+                how = "clenshaw"
+
+        # For Trigtech, do not remap coordinates as Trigtech is defined directly on its interval
+        # For Chebtech, remap from [a,b] to [-1,1]
+        if isinstance(self.onefun, Trigtech):
+            y = x
+        else:
+            y = self.interval.invmap(x)
+
         return self.onefun(y, how)
 
     def __init__(self, onefun, interval):
@@ -396,8 +414,13 @@ class Classicfun(Fun, ABC):
         Returns:
             Classicfun: A new function representing the derivative of this function.
         """
-        a, b = self.support
-        onefun = 2.0 / (b - a) * self.onefun.diff()
+        # For Trigtech, no scaling needed as it's defined directly on the interval
+        # For Chebtech, apply chain rule scaling: d/dx = (d/dy)(dy/dx) = (d/dy) * 2/(b-a)
+        if isinstance(self.onefun, Trigtech):
+            onefun = self.onefun.diff()
+        else:
+            a, b = self.support
+            onefun = 2.0 / (b - a) * self.onefun.diff()
         return self.__class__(onefun, self.interval)
 
     def sum(self):

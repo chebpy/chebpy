@@ -11,14 +11,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from .decorators import cast_other
-from .exceptions import (
-    IntervalGap,
-    IntervalOverlap,
-    IntervalValues,
-    InvalidDomain,
-    NotSubdomain,
-    SupportMismatch,
-)
+from .exceptions import IntervalGap, IntervalOverlap, IntervalValues, InvalidDomain, NotSubdomain, SupportMismatch
 from .settings import _preferences as prefs
 
 
@@ -29,6 +22,37 @@ def htol() -> float:
         float: 5 times the machine epsilon from preferences.
     """
     return 5 * prefs.eps
+
+
+def is_scalar_type(x) -> bool:
+    """Check if x is a scalar numeric type.
+
+    Args:
+        x: Value to check
+
+    Returns:
+        bool: True if x is int, float, or numpy scalar
+    """
+    return isinstance(x, (int, float, np.number))
+
+
+def ensure_interval(x) -> "Interval":
+    """Convert various types to Interval.
+
+    Args:
+        x: Interval, list, tuple, or array-like with 2 elements
+
+    Returns:
+        Interval: Validated Interval object
+
+    Raises:
+        ValueError: If x cannot be converted to Interval
+    """
+    if isinstance(x, Interval):
+        return x
+    if hasattr(x, "__iter__") and len(x) == 2:
+        return Interval(x[0], x[1])
+    raise ValueError(f"Cannot convert {type(x)} to Interval")
 
 
 class Interval(np.ndarray):

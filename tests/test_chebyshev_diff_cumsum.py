@@ -1,4 +1,4 @@
-"""Tests for the comprehensive functionality of Chebyshev polynomials."""
+"""Tests for Chebyshev polynomial differentiation and integration."""
 
 import numpy as np
 

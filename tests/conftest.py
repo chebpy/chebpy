@@ -40,7 +40,7 @@ def testfunctions() -> list:
     Each function is represented as a tuple containing:
     1. The function itself
     2. A name for the function (used in test printouts)
-    3. The Matlab chebfun adaptive degree on [-1,1]
+    3. The expected adaptive degree on [-1,1]
     4. A boolean indicating whether the function has roots on the real line
 
     These functions are used to test various aspects of the chebpy library,
@@ -54,7 +54,7 @@ def testfunctions() -> list:
         # Use the convention:
         #  function,
         #  name for the test printouts,
-        #  Matlab chebfun adaptive degree on [-1,1],
+        #  expected adaptive degree on [-1,1],
         #  Any roots on the real line?
         (lambda x: x**3 + x**2 + x + 1.1, "poly3(x)", 4, True),
         (lambda x: np.exp(x), "exp(x)", 15, False),
@@ -153,7 +153,6 @@ def constfun(request):
 
     if "bndfun" in module_name:
         # Bndfun requires an interval
-        from chebpy.utilities import Interval
 
         fun = Bndfun.initconst(1.0, Interval())
     elif "chebfun" in module_name:
@@ -190,7 +189,6 @@ def complexfun(request):
 
     if "bndfun" in module_name:
         # Bndfun requires an interval
-        from chebpy.utilities import Interval
 
         fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
     elif "chebfun" in module_name:

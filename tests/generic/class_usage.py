@@ -5,6 +5,8 @@ with any type of function object (Bndfun, Chebfun, or Chebtech). These tests
 focus on common operations and properties of function objects.
 """
 
+import numpy as np
+
 from chebpy.utilities import Domain
 
 
@@ -17,8 +19,6 @@ def test_constfun_value(constfun):
     Args:
         constfun: Fixture providing a constant function object.
     """
-    import numpy as np
-
     # Test at multiple points to ensure it's truly constant
     xx = np.linspace(-1, 1, 10)
     values = constfun(xx)
