@@ -79,7 +79,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.17"
+          version: "0.9.18"
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook

@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Sync Template
         id: sync
-        uses: jebel-quant/sync_template@v0.4.2
+        uses: jebel-quant/sync_template@v0.4.3
         with:
           token: ${{ secrets.PAT_TOKEN }}
           source: ".github/template.yml"

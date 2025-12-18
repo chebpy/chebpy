@@ -1,5 +1,8 @@
 """Tests for README code examples.
 
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
 This module extracts Python code and expected result blocks from README.md,
 executes the code, and verifies the output matches the documented result.
 """

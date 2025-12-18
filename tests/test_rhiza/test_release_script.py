@@ -1,5 +1,8 @@
 """Tests for the release.sh script using a sandboxed git environment.
 
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
 The script exposes the `release` command (creates and pushes tags).
 Tests call the script from a temporary clone and use a small mock `uv`
 to avoid external dependencies.

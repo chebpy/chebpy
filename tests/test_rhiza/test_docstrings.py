@@ -1,7 +1,9 @@
 """Tests for module docstrings using doctest.
 
-Automatically discovers all packages under `src/`
-and runs doctests for each.
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
+Automatically discovers all packages under `src/` and runs doctests for each.
 """
 
 from __future__ import annotations
