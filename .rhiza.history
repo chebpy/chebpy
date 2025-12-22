@@ -1,0 +1,58 @@
+# Rhiza Template History
+# This file lists all files managed by the Rhiza template.
+# Template repository: jebel-quant/rhiza
+# Template branch: main
+#
+# Files under template control:
+.devcontainer/bootstrap.sh
+.devcontainer/devcontainer.json
+.editorconfig
+.github/CONFIG.md
+.github/TOKEN_SETUP.md
+.github/actions/setup-project/action.yml
+.github/dependabot.yml
+.github/renovate.json
+.github/scripts/book.sh
+.github/scripts/bump.sh
+.github/scripts/customisations/build-extras.sh
+.github/scripts/customisations/post-release.sh
+.github/scripts/marimushka.sh
+.github/scripts/release.sh
+.github/scripts/update-readme-help.sh
+.github/workflows/book.yml
+.github/workflows/ci.yml
+.github/workflows/deptry.yml
+.github/workflows/devcontainer.yml
+.github/workflows/marimo.yml
+.github/workflows/pre-commit.yml
+.github/workflows/release.yml
+.github/workflows/rhiza.yml
+.github/workflows/scripts/version_matrix.py
+.github/workflows/scripts/version_max.py
+.github/workflows/security.yml
+.github/workflows/sync.yml
+.gitignore
+.pre-commit-config.yaml
+Makefile
+book/Makefile.book
+book/minibook-templates/custom.html.jinja2
+book/pdoc-templates/module.html.jinja2
+presentation/Makefile.presentation
+pytest.ini
+ruff.toml
+tests/Makefile.tests
+tests/test_rhiza/README.md
+tests/test_rhiza/benchmarks/.gitignore
+tests/test_rhiza/benchmarks/README.md
+tests/test_rhiza/benchmarks/__init__.py
+tests/test_rhiza/benchmarks/analyze_benchmarks.py
+tests/test_rhiza/conftest.py
+tests/test_rhiza/test_bump_script.py
+tests/test_rhiza/test_docstrings.py
+tests/test_rhiza/test_git_repo_fixture.py
+tests/test_rhiza/test_makefile.py
+tests/test_rhiza/test_marimushka_script.py
+tests/test_rhiza/test_readme.py
+tests/test_rhiza/test_release_script.py
+tests/test_rhiza/test_structure.py
+tests/test_rhiza/test_updatereadme_script.py

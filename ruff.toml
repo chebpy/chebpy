@@ -1,3 +1,6 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
 # Maximum line length for the entire project
 line-length = 120
 # Target Python version
@@ -56,6 +59,15 @@ exclude = ["**/[{][{]*/", "**/*[}][}]*/"]
 # W: pycodestyle warnings - PEP 8 style guide warnings
 # UP: pyupgrade - Upgrade syntax for newer Python
 select = ["D", "E", "F", "I", "N", "W", "UP"]
+
+# Ensure docstrings are required for magic methods (e.g., __init__) and
+# private/underscored modules by explicitly selecting the relevant pydocstyle
+# rules in addition to the D set. This makes the intent clear and future-proof
+# if the default pydocstyle selection changes.
+extend-select = ["D105", "D107"]
+
+# Resolve incompatible pydocstyle rules: prefer D211 and D212 over D203 and D213
+ignore = ["D203", "D213"]
 
 [lint.pydocstyle]
 convention = "google"

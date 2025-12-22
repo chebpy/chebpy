@@ -1,4 +1,4 @@
-name: SYNC
+name: RHIZA SYNC
 # This workflow synchronizes the repository with its template.
 # IMPORTANT: When workflow files (.github/workflows/*.yml) are modified,
 # a Personal Access Token (PAT) with 'workflow' scope is required.
@@ -21,7 +21,7 @@ on:
 
 jobs:
   sync:
-    if: ${{ github.repository != 'jebel-quant/rhiza' && github.ref_name != 'rhiza_update' }}
+    if: ${{ github.repository != 'jebel-quant/rhiza' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +30,11 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN || github.token }}
           fetch-depth: 0
+
+      - name: Define sync branch name
+        id: branch
+        run: |
+          echo "name=rhiza/${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
       - name: Check PAT_TOKEN configuration
         shell: bash
@@ -47,91 +52,39 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Validate repository
-        shell: bash
-        run: |
-          uvx rhiza validate .
-
       - name: Sync template
         id: sync
         shell: bash
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           set -euo pipefail
-
-          git checkout -B rhiza_update
 
           uvx rhiza materialize --force .
 
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No changes detected."
-            {
-              echo "changes_detected=false"
-              echo "workflows_changed=false"
-              echo "push_succeeded=false"
-            } >> "$GITHUB_OUTPUT"
+            echo "changes_detected=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "changes_detected=true" >> "$GITHUB_OUTPUT"
 
-          workflows_changed=false
-          can_push=true
-
-          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
-            workflows_changed=true
-            echo "⚠️ Workflow files modified."
-            echo ""
-            echo "ℹ️  Pushing workflow changes requires a PAT with 'workflow' scope."
-
-            if [ -n "$PAT_TOKEN" ]; then
-              git remote set-url origin \
-                "https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git"
-              echo "✓ Using PAT_TOKEN for authentication."
-            else
-              echo "::error::Workflow files changed but PAT_TOKEN secret is not set."
-              echo "::error::GitHub requires a PAT with 'workflow' scope to push workflow changes."
-              echo "::error::See .github/TOKEN_SETUP.md for setup instructions."
-              can_push=false
-            fi
-          fi
-
-          echo "workflows_changed=$workflows_changed" >> "$GITHUB_OUTPUT"
-
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git commit -m "chore: Update via rhiza"
-
-          if [ "$can_push" = true ]; then
-            if git push origin HEAD:rhiza_update --force-with-lease; then
-              echo "push_succeeded=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "push_succeeded=false" >> "$GITHUB_OUTPUT"
-              echo "::error::Failed to push branch 'rhiza_update'."
-              echo "::error::If workflow files were changed, this is likely because:"
-              echo "::error::  1. PAT_TOKEN is not set, OR"
-              echo "::error::  2. PAT_TOKEN lacks the 'workflow' scope"
-              echo "::error::See .github/TOKEN_SETUP.md for setup instructions."
-              exit 1
-            fi
-          else
-            echo "push_succeeded=false" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
+          
       - name: Create pull request
-        if: ${{ inputs.create-pr && steps.sync.outputs.changes_detected == 'true' && steps.sync.outputs.push_succeeded == 'true' }}
+        if: >
+          (github.event_name == 'schedule' || inputs.create-pr == true)
+          && steps.sync.outputs.changes_detected == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN || github.token }}
           base: ${{ github.event.repository.default_branch }}
-          branch: rhiza_update
-          delete-branch: false
-          title: "chore: Update via rhiza"
+          branch: ${{ steps.branch.outputs.name }}
+          delete-branch: true
+          title: "chore: Sync with rhiza"
           body: |
             This pull request synchronizes the repository with its template.
 

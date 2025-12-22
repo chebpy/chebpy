@@ -20,6 +20,13 @@ from pathlib import Path
 
 import pytest
 
+# Split Makefile paths that are included in the main Makefile
+SPLIT_MAKEFILES = [
+    "tests/Makefile.tests",
+    "book/Makefile.book",
+    "presentation/Makefile.presentation",
+]
+
 
 def strip_ansi(text: str) -> str:
     """Strip ANSI escape sequences from text."""
@@ -35,14 +42,23 @@ def expected_uv_install_dir() -> str:
 
 @pytest.fixture(autouse=True)
 def setup_tmp_makefile(logger, root, tmp_path: Path):
-    """Copy only the Makefile into a temp directory and chdir there.
+    """Copy the Makefile and split Makefiles into a temp directory and chdir there.
 
     We rely on `make -n` so that no real commands are executed.
     """
     logger.debug("Setting up temporary Makefile test dir: %s", tmp_path)
 
-    # Copy the Makefile into the temporary working directory
+    # Copy the main Makefile into the temporary working directory
     shutil.copy(root / "Makefile", tmp_path / "Makefile")
+
+    # Copy split Makefiles if they exist (maintaining directory structure)
+    for split_file in SPLIT_MAKEFILES:
+        source_path = root / split_file
+        if source_path.exists():
+            dest_path = tmp_path / split_file
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(source_path, dest_path)
+            logger.debug("Copied %s to %s", source_path, dest_path)
 
     # Move into tmp directory for isolation
     old_cwd = Path.cwd()
@@ -141,13 +157,6 @@ class TestMakefile:
         expected_uvx = f"{expected_uv_install_dir}/uvx"
         assert f"{expected_uvx} minibook" in out
 
-    def test_all_target_dry_run(self, logger):
-        """All target echoes a composite message in dry-run output."""
-        proc = run_make(logger, ["all"])
-        out = proc.stdout
-        # The composite target should echo a message
-        assert "Run fmt, deptry, test and book" in out
-
     def test_uv_no_modify_path_is_exported(self, logger):
         """`UV_NO_MODIFY_PATH` should be set to `1` in the Makefile."""
         proc = run_make(logger, ["print-UV_NO_MODIFY_PATH"], dry_run=False)
@@ -206,9 +215,15 @@ class TestMakefileRootFixture:
         assert len(content) > 0
 
     def test_makefile_contains_targets(self, root):
-        """Makefile should contain expected targets."""
+        """Makefile should contain expected targets (including split files)."""
         makefile = root / "Makefile"
         content = makefile.read_text()
+
+        # Read split Makefiles as well
+        for split_file in SPLIT_MAKEFILES:
+            split_path = root / split_file
+            if split_path.exists():
+                content += "\n" + split_path.read_text()
 
         expected_targets = ["install", "fmt", "test", "deptry", "book", "help"]
         for target in expected_targets:
