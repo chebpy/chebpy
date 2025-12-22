@@ -15,6 +15,8 @@ HELP_TEMP=$(mktemp)
 
 # Generate the help output from Makefile
 # Strip ANSI color codes and filter out make[1] directory messages
+# The sed command removes ANSI escape sequences (color codes) from the output
+# The grep commands filter out make's directory change messages
 make help 2>/dev/null | \
     sed 's/\x1b\[[0-9;]*m//g' | \
     grep -v "^make\[" | \
@@ -25,6 +27,8 @@ make help 2>/dev/null | \
 # Using a temporary file to avoid awk escaping issues
 # Temporarily disable exit-on-error to handle pattern not found gracefully
 set +e
+# The awk script processes the README.md file to find and replace the help section
+# It looks for the marker pattern, preserves the structure, and inserts updated help text
 awk -v helpfile="$HELP_TEMP" '
 BEGIN {
     in_help_block = 0
@@ -32,6 +36,7 @@ BEGIN {
 }
 
 # Detect start of help output block
+# This marker indicates where the Makefile help output should be inserted
 /^Run `make help` to see all available targets:$/ {
     print
     pattern_found = 1
@@ -40,6 +45,7 @@ BEGIN {
         print
     }
     getline
+    # If we find the code fence, start replacing the content
     if ($0 ~ /^```makefile$/) {
         print "```makefile"
         # Read and print help output from file
@@ -53,22 +59,26 @@ BEGIN {
 }
 
 # Skip lines inside the old help block
+# Once we hit the closing code fence, we stop skipping lines
 in_help_block == 1 && /^```$/ {
     print "```"
     in_help_block = 0
     next
 }
 
+# Continue skipping lines that are part of the old help output
 in_help_block == 1 {
     next
 }
 
-# Print all other lines
+# Print all other lines (outside the help block) unchanged
 {
     print
 }
 
 END {
+    # If we never found the pattern, notify but don'\''t fail
+    # This allows the script to work even if README structure changes
     if (pattern_found == 0) {
         print "INFO: No help section marker found in README.md - skipping update" > "/dev/stderr"
         exit 2
@@ -77,6 +87,8 @@ END {
 ' "$README_FILE" > "$TEMP_FILE"
 
 # Check if awk succeeded or pattern was not found
+# Exit code 2 means the pattern wasn't found (not an error)
+# Other non-zero codes indicate genuine errors
 awk_status=$?
 set -e
 if [ $awk_status -eq 2 ]; then

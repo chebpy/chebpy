@@ -24,17 +24,22 @@ def max_supported_version() -> str:
     Returns:
         str: The maximum Python version (e.g., "3.13") satisfying the spec.
     """
+    # Load and parse pyproject.toml
     with PYPROJECT.open("rb") as f:
         data = tomllib.load(f)
 
+    # Extract and validate the requires-python constraint
     spec_str = data.get("project", {}).get("requires-python")
     if not spec_str:
         msg = "pyproject.toml: missing 'project.requires-python'"
         raise KeyError(msg)
 
+    # Create a SpecifierSet to check version compatibility
     spec = SpecifierSet(spec_str)
     max_version = None
 
+    # Iterate through candidates in order (ascending)
+    # The last matching version will be the maximum
     for v in CANDIDATES:
         if Version(v) in spec:
             max_version = v
@@ -47,6 +52,9 @@ def max_supported_version() -> str:
 
 
 if __name__ == "__main__":
+    # Check if pyproject.toml exists at the expected location
+    # If found, determine max version from requires-python
+    # Otherwise, default to 3.13 (latest stable as of this code)
     if PYPROJECT.exists():
         print(json.dumps(max_supported_version()))
     else:

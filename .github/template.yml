@@ -1,11 +1,3 @@
-template-repository: "jebel-quant/rhiza"
-template-branch: "main"
-include: 
-    - .devcontainer/
-    - .github/
-    - tests/
-    - .editorconfig
-    - .pre-commit-config.yaml
-    - Makefile
-exclude:
-    - .github/workflows/docker.yml
+template-repository: jebel-quant/rhiza
+include:
+- .github

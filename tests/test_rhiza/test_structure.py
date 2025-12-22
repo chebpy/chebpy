@@ -63,5 +63,3 @@ class TestRootFixture:
                 warnings.warn("Expected script release.sh not found", stacklevel=2)
             if not (scripts_dir / "bump.sh").exists():
                 warnings.warn("Expected script bump.sh not found", stacklevel=2)
-            if not (scripts_dir / "sync.sh").exists():
-                warnings.warn("Expected script sync.sh not found", stacklevel=2)
