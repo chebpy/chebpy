@@ -221,7 +221,7 @@ class Chebfun:
             iterator: An iterator over the functions (funs) in this Chebfun.
         """
         return self.funs.__iter__()
-    
+
     def __len__(self):
         """Return the total number of coefficients across all funs.
 
@@ -284,7 +284,7 @@ class Chebfun:
             Chebfun: This Chebfun object (unchanged).
         """
         return self
-    
+
     def __abs__(self):
         """Return the absolute value of this Chebfun.
 
@@ -823,7 +823,7 @@ class Chebfun:
             float or complex: The dot product of this Chebfun with f.
         """
         return (self * f).sum()
-    
+
     def norm(self, p=2):
         """Compute the Lp norm of the Chebfun over its domain.
 
@@ -872,7 +872,6 @@ class Chebfun:
             return integral ** (1.0 / p)
         else:
             raise ValueError(f"norm(p={p}): p must be positive or np.inf")
-
 
     # ----------
     #  utilities
