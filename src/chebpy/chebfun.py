@@ -284,6 +284,18 @@ class Chebfun:
             Chebfun: This Chebfun object (unchanged).
         """
         return self
+    
+    def __abs__(self):
+        """Return the absolute value of this Chebfun.
+
+        Returns:
+            Chebfun: A new Chebfun representing |f(x)|.
+        """
+        # Apply abs to each fun piece using the absolute() method
+        abs_funs = []
+        for fun in self.funs:
+            abs_funs.append(fun.absolute())
+        return self.__class__(abs_funs)
 
     def __pow__(self, f):
         """Raise this Chebfun to a power.
