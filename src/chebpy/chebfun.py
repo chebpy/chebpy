@@ -291,7 +291,6 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing |f(x)|.
         """
-        # Apply abs to each fun piece using the absolute() method
         abs_funs = []
         for fun in self.funs:
             abs_funs.append(fun.absolute())
@@ -765,18 +764,37 @@ class Chebfun:
             prevfun = integral
         return self.__class__(newfuns)
 
-    def diff(self):
+    def diff(self, n=1):
         """Compute the derivative of the Chebfun.
 
-        This method calculates the derivative of the Chebfun with respect to x.
+        This method calculates the nth derivative of the Chebfun with respect to x.
         It creates a new Chebfun where each piece is the derivative of the
         corresponding piece in the original Chebfun.
 
+        Args:
+            n: Order of differentiation (default: 1). Must be non-negative integer.
+
         Returns:
-            Chebfun: A new Chebfun representing the derivative of this Chebfun.
+            Chebfun: A new Chebfun representing the nth derivative of this Chebfun.
+
+        Examples:
+            f = chebfun(lambda x: x**3)
+            f.diff()    # first derivative: 3*x**2
+            f.diff(2)   # second derivative: 6*x
+            f.diff(3)   # third derivative: 6
         """
-        dfuns = np.array([fun.diff() for fun in self])
-        return self.__class__(dfuns)
+        if not isinstance(n, int):
+            raise TypeError("Derivative order must be an integer")
+        if n == 0:
+            return self
+        if n < 0:
+            raise ValueError("Derivative order must be non-negative")
+
+        result = self
+        for _ in range(n):
+            dfuns = np.array([fun.diff() for fun in result])
+            result = self.__class__(dfuns)
+        return result
 
     def sum(self):
         """Compute the definite integral of the Chebfun over its domain.
