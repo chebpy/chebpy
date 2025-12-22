@@ -221,6 +221,14 @@ class Chebfun:
             iterator: An iterator over the functions (funs) in this Chebfun.
         """
         return self.funs.__iter__()
+    
+    def __len__(self):
+        """Return the total number of coefficients across all funs.
+
+        Returns:
+            int: The sum of sizes of all constituent funs.
+        """
+        return sum(f.size for f in self.funs)
 
     def __eq__(self, other):
         """Test for equality between two Chebfun objects.
