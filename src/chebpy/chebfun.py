@@ -785,6 +785,56 @@ class Chebfun:
             float or complex: The dot product of this Chebfun with f.
         """
         return (self * f).sum()
+    
+    def norm(self, p=2):
+        """Compute the Lp norm of the Chebfun over its domain.
+
+        This method calculates the Lp norm of the Chebfun. The L2 norm is the
+        default and is computed as sqrt(integral(|f|^2)). For p=inf, returns
+        the maximum absolute value by checking critical points (extrema).
+
+        Args:
+            p (int or float): The norm type. Supported values are 1, 2, positive
+                integers/floats, or np.inf. Defaults to 2 (L2 norm).
+
+        Returns:
+            float: The Lp norm of the Chebfun.
+
+        Examples:
+            >>> from chebpy import chebfun
+            >>> import numpy as np
+            >>> f = chebfun(lambda x: x**2, [-1, 1])
+            >>> np.allclose(f.norm(), 0.6324555320336759)  # L2 norm
+            True
+            >>> np.allclose(f.norm(np.inf), 1.0)  # Maximum absolute value
+            True
+        """
+        if p == 2:
+            # L2 norm: sqrt(integral(|f|^2))
+            return np.sqrt(self.dot(self))
+        elif p == np.inf:
+            # L-infinity norm: max|f(x)|
+            df = self.diff()
+            critical_pts = df.roots()
+            # Add endpoints
+            endpoints = np.array([self.domain[0], self.domain[-1]])
+            # Combine all test points
+            test_pts = np.concatenate([critical_pts, endpoints])
+            # Evaluate and find max
+            vals = np.abs(self(test_pts))
+            return np.max(vals)
+        elif p == 1:
+            # L1 norm: integral(|f|)
+            return self.absolute().sum()
+        elif p > 0:
+            # General Lp norm: (integral(|f|^p))^(1/p)
+            f_abs = self.absolute()
+            f_pow_p = f_abs**p
+            integral = f_pow_p.sum()
+            return integral ** (1.0 / p)
+        else:
+            raise ValueError(f"norm(p={p}): p must be positive or np.inf")
+
 
     # ----------
     #  utilities
