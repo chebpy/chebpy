@@ -7,7 +7,7 @@
 #
 # 📋 Pipeline Phases:
 #   1. 🔍 Validate Tag - Check tag format and ensure release doesn't already exist
-#   2. 🏗️  Build - Build Python package with Hatch (if pyproject.toml exists)
+#   2. 🏗️  Build - Build Python package with Hatch (if [build-system] is defined in pyproject.toml
 #   3. 📝 Draft Release - Create draft GitHub release with build artifacts
 #   4. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
 #   5. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
@@ -76,7 +76,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: ${{ github.ref }}
 
       - name: Set Tag Variable
         id: set_tag
@@ -130,16 +129,24 @@ jobs:
           fi
           echo "Version verified: $PROJECT_VERSION matches tag"
 
+      - name: Detect buildable Python package
+        id: buildable
+        run: |
+          if [[ -f pyproject.toml ]] && grep -q '^\[build-system\]' pyproject.toml; then
+            echo "buildable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "buildable=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build
-        if: hashFiles('pyproject.toml') != ''
+        if: steps.buildable.outputs.buildable == 'true'
         run: |
           printf "[INFO] Building package...\n"
           uvx hatch build
 
 
       - name: Upload dist artifact
-        # not tested at runtime!
-        if: hashFiles('pyproject.toml') != ''
+        if: steps.buildable.outputs.buildable == 'true'
         uses: actions/upload-artifact@v6
         with:
           name: dist
@@ -174,7 +181,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: ${{ github.ref }}
+          #ref: ${{ github.ref }}
 
       - name: Download dist artifact
         uses: actions/download-artifact@v7

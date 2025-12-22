@@ -17,7 +17,7 @@ RESET := \033[0m
 .DEFAULT_GOAL := help
 
 # Declare phony targets (they don't produce files)
-.PHONY: install-uv install clean test marimo marimushka book fmt deptry docs release release-dry-run post-release sync help all update-readme
+.PHONY: install-uv install clean test marimo marimushka book fmt deptry docs presentation presentation-pdf presentation-serve release release-dry-run post-release sync help all update-readme
 
 UV_INSTALL_DIR ?= ./bin
 UV_BIN := ${UV_INSTALL_DIR}/uv
@@ -160,6 +160,70 @@ docs: install ## create documentation with pdoc
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping docs${RESET}\n"; \
 	fi
 
+presentation: ## generate presentation slides from PRESENTATION.md using Marp
+	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
+	@if ! command -v marp >/dev/null 2>&1; then \
+	  if command -v npm >/dev/null 2>&1; then \
+	    printf "${YELLOW}[WARN] Marp CLI not found. Installing with npm...${RESET}\n"; \
+	    npm install -g @marp-team/marp-cli || { \
+	      printf "${RED}[ERROR] Failed to install Marp CLI. Please install manually:${RESET}\n"; \
+	      printf "${BLUE}  npm install -g @marp-team/marp-cli${RESET}\n"; \
+	      exit 1; \
+	    }; \
+	  else \
+	    printf "${RED}[ERROR] npm not found. Please install Node.js and npm first.${RESET}\n"; \
+	    printf "${BLUE}  See: https://nodejs.org/${RESET}\n"; \
+	    printf "${BLUE}  Then run: npm install -g @marp-team/marp-cli${RESET}\n"; \
+	    exit 1; \
+	  fi; \
+	fi
+	@printf "${BLUE}[INFO] Generating HTML presentation...${RESET}\n"
+	@marp PRESENTATION.md -o presentation.html
+	@printf "${GREEN}[SUCCESS] Presentation generated: presentation.html${RESET}\n"
+	@printf "${BLUE}[TIP] Open presentation.html in a browser to view slides${RESET}\n"
+
+presentation-pdf: ## generate PDF presentation from PRESENTATION.md using Marp
+	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
+	@if ! command -v marp >/dev/null 2>&1; then \
+	  if command -v npm >/dev/null 2>&1; then \
+	    printf "${YELLOW}[WARN] Marp CLI not found. Installing with npm...${RESET}\n"; \
+	    npm install -g @marp-team/marp-cli || { \
+	      printf "${RED}[ERROR] Failed to install Marp CLI. Please install manually:${RESET}\n"; \
+	      printf "${BLUE}  npm install -g @marp-team/marp-cli${RESET}\n"; \
+	      exit 1; \
+	    }; \
+	  else \
+	    printf "${RED}[ERROR] npm not found. Please install Node.js and npm first.${RESET}\n"; \
+	    printf "${BLUE}  See: https://nodejs.org/${RESET}\n"; \
+	    printf "${BLUE}  Then run: npm install -g @marp-team/marp-cli${RESET}\n"; \
+	    exit 1; \
+	  fi; \
+	fi
+	@printf "${BLUE}[INFO] Generating PDF presentation...${RESET}\n"
+	@marp PRESENTATION.md -o presentation.pdf --allow-local-files
+	@printf "${GREEN}[SUCCESS] Presentation generated: presentation.pdf${RESET}\n"
+
+presentation-serve: ## serve presentation interactively with Marp
+	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
+	@if ! command -v marp >/dev/null 2>&1; then \
+	  if command -v npm >/dev/null 2>&1; then \
+	    printf "${YELLOW}[WARN] Marp CLI not found. Installing with npm...${RESET}\n"; \
+	    npm install -g @marp-team/marp-cli || { \
+	      printf "${RED}[ERROR] Failed to install Marp CLI. Please install manually:${RESET}\n"; \
+	      printf "${BLUE}  npm install -g @marp-team/marp-cli${RESET}\n"; \
+	      exit 1; \
+	    }; \
+	  else \
+	    printf "${RED}[ERROR] npm not found. Please install Node.js and npm first.${RESET}\n"; \
+	    printf "${BLUE}  See: https://nodejs.org/${RESET}\n"; \
+	    printf "${BLUE}  Then run: npm install -g @marp-team/marp-cli${RESET}\n"; \
+	    exit 1; \
+	  fi; \
+	fi
+	@printf "${BLUE}[INFO] Starting Marp server...${RESET}\n"
+	@printf "${GREEN}[INFO] Press Ctrl+C to stop the server${RESET}\n"
+	@marp -s .
+
 book: test docs marimushka ## compile the companion book
 	@${UV_BIN} pip install marimo
 	@/bin/sh "${SCRIPTS_FOLDER}/book.sh"
@@ -197,7 +261,7 @@ post-release: install-uv ## perform post-release tasks
 
 ##@ Meta
 sync: install-uv ## sync with template repository as defined in .github/template.yml
-	@${UVX_BIN} rhiza materialize .
+	@${UVX_BIN} rhiza materialize --force .
 
 help: ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"

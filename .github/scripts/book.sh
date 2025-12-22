@@ -21,12 +21,15 @@ printf "%b[INFO] Create empty _book folder...%b\n" "$BLUE" "$RESET"
 mkdir -p _book
 
 # Start building links.json content without jq
+# We manually construct JSON by concatenating strings
+# This avoids the dependency on jq while maintaining valid JSON output
 LINKS_ENTRIES=""
 
 printf "%b[INFO] Copy API docs...%b\n" "$BLUE" "$RESET"
 if [ -f _pdoc/index.html ]; then
   mkdir -p _book/pdoc
   cp -r _pdoc/* _book/pdoc
+  # Start building JSON entries - first entry doesn't need a comma prefix
   LINKS_ENTRIES='"API": "./pdoc/index.html"'
 fi
 
@@ -34,6 +37,7 @@ printf "%b[INFO] Copy coverage report...%b\n" "$BLUE" "$RESET"
 if [ -f _tests/html-coverage/index.html ]; then
   mkdir -p _book/tests/html-coverage
   cp -r _tests/html-coverage/* _book/tests/html-coverage
+  # Add comma separator if there are existing entries
   if [ -n "$LINKS_ENTRIES" ]; then
     LINKS_ENTRIES="$LINKS_ENTRIES, \"Coverage\": \"./tests/html-coverage/index.html\""
   else
@@ -71,9 +75,12 @@ else
 fi
 
 # Write final links.json
+# Wrap the accumulated entries in JSON object syntax
 if [ -n "$LINKS_ENTRIES" ]; then
+  # If we have entries, create a proper JSON object with them
   printf '{%s}\n' "$LINKS_ENTRIES" > _book/links.json
 else
+  # If no entries were found, create an empty JSON object
   printf '{}\n' > _book/links.json
 fi
 
