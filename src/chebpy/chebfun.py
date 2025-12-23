@@ -778,10 +778,11 @@ class Chebfun:
             Chebfun: A new Chebfun representing the nth derivative of this Chebfun.
 
         Examples:
-            f = chebfun(lambda x: x**3)
-            f.diff()    # first derivative: 3*x**2
-            f.diff(2)   # second derivative: 6*x
-            f.diff(3)   # third derivative: 6
+            >>> from chebpy import chebfun
+            >>> f = chebfun(lambda x: x**3)
+            >>> df1 = f.diff()    # first derivative: 3*x**2
+            >>> df2 = f.diff(2)   # second derivative: 6*x
+            >>> df3 = f.diff(3)   # third derivative: 6
         """
         if not isinstance(n, int):
             raise TypeError("Derivative order must be an integer")
