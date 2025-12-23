@@ -12,7 +12,7 @@ DOCFORMAT :=
 .PHONY: docs marimushka book
 
 ##@ Documentation
-docs: install ## create documentation with pdoc
+docs:: install ## create documentation with pdoc
 	@if [ -d "${SOURCE_FOLDER}" ]; then \
 	  PKGS=""; for d in "${SOURCE_FOLDER}"/*; do [ -d "$$d" ] && PKGS="$$PKGS $$(basename "$$d")"; done; \
 	  if [ -z "$$PKGS" ]; then \
@@ -42,7 +42,7 @@ docs: install ## create documentation with pdoc
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping docs${RESET}\n"; \
 	fi
 
-marimushka: install-uv ## export Marimo notebooks to HTML
+marimushka:: install-uv ## export Marimo notebooks to HTML
 	@printf "${BLUE}[INFO] Exporting notebooks from ${MARIMO_FOLDER}...${RESET}\n"
 	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
 	  printf "${YELLOW}[WARN] Directory '${MARIMO_FOLDER}' does not exist. Skipping marimushka.${RESET}\n"; \
@@ -50,7 +50,7 @@ marimushka: install-uv ## export Marimo notebooks to HTML
 	  MARIMO_FOLDER="${MARIMO_FOLDER}" UV_BIN="${UV_BIN}" UVX_BIN="${UVX_BIN}" /bin/sh "${SCRIPTS_FOLDER}/marimushka.sh"; \
 	fi
 
-book: test docs marimushka ## compile the companion book
+book:: test docs marimushka ## compile the companion book
 	@${UV_BIN} pip install marimo
 	@/bin/sh "${SCRIPTS_FOLDER}/book.sh"
 	@TEMPLATE_ARG=""; \
