@@ -61,6 +61,14 @@ class Interval(np.ndarray):
 
         Returns:
             Interval: A new Interval instance.
+
+        Examples:
+            >>> import numpy as np
+            >>> interval = Interval(-1, 1)
+            >>> interval.tolist()
+            [-1.0, 1.0]
+            >>> float(interval.formap(0))
+            0.0
         """
         if a >= b:
             raise IntervalValues
