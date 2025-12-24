@@ -55,7 +55,7 @@ class TestRootFixture:
 
     def test_root_can_locate_github_scripts(self, root):
         """Root should allow locating GitHub scripts."""
-        scripts_dir = root / ".github" / "scripts"
+        scripts_dir = root / ".github" / "rhiza" / "scripts"
         if not scripts_dir.exists():
             warnings.warn("GitHub scripts directory not found", stacklevel=2)
         else:

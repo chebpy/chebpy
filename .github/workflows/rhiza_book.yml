@@ -44,11 +44,11 @@ jobs:
       - name: Get Python version
         id: get-python
         run: |
-          echo "python-version=$(python ./.github/workflows/scripts/version_max.py)" >> "$GITHUB_OUTPUT"
+          echo "python-version=$(python ./.github/rhiza/utils/version_max.py)" >> "$GITHUB_OUTPUT"
 
       # Use the composite action to set up the project
       - name: Setup the project
-        uses: ./.github/actions/setup-project
+        uses: ./.github/rhiza/actions/setup-project
         with:
           python-version: ${{ steps.get-python.outputs.python-version }}
           uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}

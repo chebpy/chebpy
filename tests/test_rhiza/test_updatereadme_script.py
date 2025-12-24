@@ -9,7 +9,7 @@ import subprocess
 
 def test_update_readme_success(git_repo):
     """Test successful update of README.md."""
-    script = git_repo / ".github" / "scripts" / "update-readme-help.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "update-readme-help.sh"
     readme_path = git_repo / "README.md"
 
     # Create a README with the target section
@@ -42,7 +42,7 @@ Footer content.
 
 def test_update_readme_no_marker(git_repo):
     """Test script behavior when README.md lacks the marker."""
-    script = git_repo / ".github" / "scripts" / "update-readme-help.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "update-readme-help.sh"
     readme_path = git_repo / "README.md"
 
     # Create a README without the target section
@@ -72,7 +72,7 @@ No help section here.
 
 def test_update_readme_preserves_surrounding_content(git_repo):
     """Test that content before and after the help block is preserved."""
-    script = git_repo / ".github" / "scripts" / "update-readme-help.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "update-readme-help.sh"
     readme_path = git_repo / "README.md"
 
     initial_content = """Header
