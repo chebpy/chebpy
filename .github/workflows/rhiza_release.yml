@@ -111,7 +111,7 @@ jobs:
 
       # Use the composite action to set up the project
       - name: Setup the project
-        uses: ./.github/actions/setup-project
+        uses: ./.github/rhiza/actions/setup-project
         with:
           python-version: ${{ vars.PYTHON_DEFAULT_VERSION || '3.14' }}
           uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
@@ -321,7 +321,7 @@ jobs:
       - name: Get Python version
         id: get-python
         run: |
-          echo "python-version=$(python ./.github/workflows/scripts/version_max.py)" >> "$GITHUB_OUTPUT"
+          echo "python-version=$(python ./.github/rhiza/utils/version_max.py)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v6

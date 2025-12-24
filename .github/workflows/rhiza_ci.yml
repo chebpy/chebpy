@@ -28,7 +28,7 @@ jobs:
       - id: versions
         run: |
           # Generate Python versions JSON from the script
-          JSON=$(python ./.github/workflows/scripts/version_matrix.py)
+          JSON=$(python ./.github/rhiza/utils/version_matrix.py)
           echo "list=$JSON" >> "$GITHUB_OUTPUT"
 
       - name: Debug matrix
@@ -50,7 +50,7 @@ jobs:
           lfs: true
 
       - name: Setup the project
-        uses: ./.github/actions/setup-project
+        uses: ./.github/rhiza/actions/setup-project
         with:
           python-version: ${{ matrix.python-version }}
           uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
