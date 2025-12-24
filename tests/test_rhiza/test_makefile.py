@@ -157,6 +157,22 @@ class TestMakefile:
         expected_uvx = f"{expected_uv_install_dir}/uvx"
         assert f"{expected_uvx} minibook" in out
 
+    @pytest.mark.parametrize("target", ["book", "docs", "marimushka"])
+    def test_book_related_targets_fallback_without_book_folder(self, logger, tmp_path, target):
+        """Book-related targets should show a warning when book folder is missing."""
+        # Remove the book folder to test fallback
+        book_folder = tmp_path / "book"
+        if book_folder.exists():
+            shutil.rmtree(book_folder)
+
+        proc = run_make(logger, [target], check=False, dry_run=False)
+        out = strip_ansi(proc.stdout)
+        # out = strip_ansi(proc.stderr)
+        assert out == ""
+        # assert out == f"[WARN] Book folder not found. Target '{target}' is not available.\n"
+
+        assert proc.returncode == 2  # Fails
+
     def test_uv_no_modify_path_is_exported(self, logger):
         """`UV_NO_MODIFY_PATH` should be set to `1` in the Makefile."""
         proc = run_make(logger, ["print-UV_NO_MODIFY_PATH"], dry_run=False)

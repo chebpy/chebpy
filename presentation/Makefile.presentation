@@ -5,7 +5,7 @@
 .PHONY: presentation presentation-pdf presentation-serve
 
 ##@ Presentation
-presentation: ## generate presentation slides from PRESENTATION.md using Marp
+presentation:: ## generate presentation slides from PRESENTATION.md using Marp
 	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
 	@if ! command -v marp >/dev/null 2>&1; then \
 	  if command -v npm >/dev/null 2>&1; then \
@@ -27,7 +27,7 @@ presentation: ## generate presentation slides from PRESENTATION.md using Marp
 	@printf "${GREEN}[SUCCESS] Presentation generated: presentation.html${RESET}\n"
 	@printf "${BLUE}[TIP] Open presentation.html in a browser to view slides${RESET}\n"
 
-presentation-pdf: ## generate PDF presentation from PRESENTATION.md using Marp
+presentation-pdf:: ## generate PDF presentation from PRESENTATION.md using Marp
 	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
 	@if ! command -v marp >/dev/null 2>&1; then \
 	  if command -v npm >/dev/null 2>&1; then \
@@ -48,7 +48,7 @@ presentation-pdf: ## generate PDF presentation from PRESENTATION.md using Marp
 	@marp PRESENTATION.md -o presentation.pdf --allow-local-files
 	@printf "${GREEN}[SUCCESS] Presentation generated: presentation.pdf${RESET}\n"
 
-presentation-serve: ## serve presentation interactively with Marp
+presentation-serve:: ## serve presentation interactively with Marp
 	@printf "${BLUE}[INFO] Checking for Marp CLI...${RESET}\n"
 	@if ! command -v marp >/dev/null 2>&1; then \
 	  if command -v npm >/dev/null 2>&1; then \

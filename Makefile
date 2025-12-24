@@ -16,13 +16,22 @@ RESET := \033[0m
 # Default goal when running `make` with no target
 .DEFAULT_GOAL := help
 
-# Include split Makefiles
--include tests/Makefile.tests
--include book/Makefile.book
--include presentation/Makefile.presentation
-
 # Declare phony targets (they don't produce files)
-.PHONY: install-uv install clean marimo fmt deptry release release-dry-run post-release sync help all update-readme
+.PHONY: \
+	install-uv \
+	install \
+	install-extras \
+	clean \
+	marimo \
+	fmt \
+	deptry \
+	bump \
+	release \
+	release-dry-run \
+	post-release \
+	sync \
+	help \
+	update-readme
 
 UV_INSTALL_DIR ?= ./bin
 UV_BIN := ${UV_INSTALL_DIR}/uv
@@ -34,6 +43,11 @@ CUSTOM_SCRIPTS_FOLDER := .github/scripts/customisations
 
 export UV_NO_MODIFY_PATH := 1
 export UV_VENV_CLEAR := 1
+
+# Include split Makefiles
+-include tests/Makefile.tests
+-include book/Makefile.book
+-include presentation/Makefile.presentation
 
 ##@ Bootstrap
 install-uv: ## ensure uv/uvx is installed
@@ -83,6 +97,8 @@ install: install-uv install-extras ## install
 	  printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"; \
 	fi
 
+sync: install-uv ## sync with template repository as defined in .github/rhiza/template.yml
+	@${UVX_BIN} rhiza materialize --force .
 
 clean: ## clean
 	@printf "${BLUE}Cleaning project...${RESET}\n"
@@ -134,8 +150,6 @@ post-release: install-uv ## perform post-release tasks
 	fi
 
 ##@ Meta
-sync: install-uv ## sync with template repository as defined in .github/template.yml
-	@${UVX_BIN} rhiza materialize --force .
 
 help: ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"
