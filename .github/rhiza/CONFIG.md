@@ -10,15 +10,15 @@ This directory contains the GitHub-specific configuration for the repository.
 
 The repository uses several automated workflows:
 
-- **SYNC** (`workflows/sync.yml`) - Synchronizes with the template repository
+- **SYNC** (`workflows/rhiza_sync.yml`) - Synchronizes with the template repository
   - **Requires:** `PAT_TOKEN` secret with `workflow` scope when modifying workflow files
   - See [TOKEN_SETUP.md](TOKEN_SETUP.md) for configuration
-- **CI** (`workflows/ci.yml`) - Continuous integration tests
-- **Pre-commit** (`workflows/pre-commit.yml`) - Code quality checks
-- **Book** (`workflows/book.yml`) - Documentation deployment
-- **Release** (`workflows/release.yml`) - Package publishing
-- **Deptry** (`workflows/deptry.yml`) - Dependency checks
-- **Marimo** (`workflows/marimo.yml`) - Interactive notebooks
+- **CI** (`workflows/rhiza_ci.yml`) - Continuous integration tests
+- **Pre-commit** (`workflows/rhiza_pre-commit.yml`) - Code quality checks
+- **Book** (`workflows/rhiza_book.yml`) - Documentation deployment
+- **Release** (`workflows/rhiza_release.yml`) - Package publishing
+- **Deptry** (`workflows/rhiza_deptry.yml`) - Dependency checks
+- **Marimo** (`workflows/rhiza_marimo.yml`) - Interactive notebooks
 
 ## Template Synchronization
 

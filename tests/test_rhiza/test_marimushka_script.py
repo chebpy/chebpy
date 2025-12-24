@@ -12,7 +12,7 @@ import subprocess
 
 def test_marimushka_script_success(git_repo):
     """Test successful execution of the marimushka script."""
-    script = git_repo / ".github" / "scripts" / "marimushka.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "marimushka.sh"
 
     # Setup directories in the git repo
     marimo_folder = git_repo / "book" / "marimo"
@@ -39,7 +39,7 @@ def test_marimushka_script_success(git_repo):
 
 def test_marimushka_missing_folder(git_repo):
     """Test script behavior when MARIMO_FOLDER is missing."""
-    script = git_repo / ".github" / "scripts" / "marimushka.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "marimushka.sh"
 
     env = os.environ.copy()
     env["MARIMO_FOLDER"] = "missing"
@@ -52,7 +52,7 @@ def test_marimushka_missing_folder(git_repo):
 
 def test_marimushka_no_python_files(git_repo):
     """Test script behavior when MARIMO_FOLDER has no python files."""
-    script = git_repo / ".github" / "scripts" / "marimushka.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "marimushka.sh"
 
     marimo_folder = git_repo / "book" / "marimo"
     marimo_folder.mkdir(parents=True)

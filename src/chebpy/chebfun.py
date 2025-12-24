@@ -63,6 +63,11 @@ class Chebfun:
 
         Returns:
             Chebfun: An empty Chebfun object with no functions.
+
+        Examples:
+            >>> f = Chebfun.initempty()
+            >>> f.isempty
+            True
         """
         return cls([])
 
@@ -76,6 +81,14 @@ class Chebfun:
 
         Returns:
             Chebfun: A Chebfun object representing the identity function on the specified domain.
+
+        Examples:
+            >>> import numpy as np
+            >>> x = Chebfun.initidentity([-1, 1])
+            >>> float(x(0.5))
+            0.5
+            >>> np.allclose(x([0, 0.5, 1]), [0, 0.5, 1])
+            True
         """
         return cls(generate_funs(domain, Bndfun.initidentity))
 
@@ -90,6 +103,16 @@ class Chebfun:
 
         Returns:
             Chebfun: A Chebfun object representing the constant function on the specified domain.
+
+        Examples:
+            >>> import numpy as np
+            >>> f = Chebfun.initconst(3.14, [-1, 1])
+            >>> float(f(0))
+            3.14
+            >>> float(f(0.5))
+            3.14
+            >>> np.allclose(f([0, 0.5, 1]), [3.14, 3.14, 3.14])
+            True
         """
         return cls(generate_funs(domain, Bndfun.initconst, {"c": c}))
 
@@ -107,6 +130,14 @@ class Chebfun:
 
         Returns:
             Chebfun: A Chebfun object representing the function on the specified domain.
+
+        Examples:
+            >>> import numpy as np
+            >>> f = Chebfun.initfun_adaptive(lambda x: np.sin(x), [-np.pi, np.pi])
+            >>> bool(abs(f(0)) < 1e-10)
+            True
+            >>> bool(abs(f(np.pi/2) - 1) < 1e-10)
+            True
         """
         return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
 
@@ -712,6 +743,15 @@ class Chebfun:
 
         Returns:
             numpy.ndarray: Array of roots sorted in ascending order.
+
+        Examples:
+            >>> import numpy as np
+            >>> f = Chebfun.initfun_adaptive(lambda x: x**2 - 1, [-2, 2])
+            >>> roots = f.roots()
+            >>> len(roots)
+            2
+            >>> np.allclose(sorted(roots), [-1, 1])
+            True
         """
         merge = merge if merge is not None else prefs.mergeroots
         allrts = []
@@ -750,6 +790,15 @@ class Chebfun:
 
         Returns:
             Chebfun: A new Chebfun representing the indefinite integral of this Chebfun.
+
+        Examples:
+            >>> import numpy as np
+            >>> f = Chebfun.initconst(1.0, [-1, 1])
+            >>> F = f.cumsum()
+            >>> bool(abs(F(-1)) < 1e-10)
+            True
+            >>> bool(abs(F(1) - 2.0) < 1e-10)
+            True
         """
         newfuns = []
         prevfun = None
@@ -783,6 +832,12 @@ class Chebfun:
             >>> df1 = f.diff()    # first derivative: 3*x**2
             >>> df2 = f.diff(2)   # second derivative: 6*x
             >>> df3 = f.diff(3)   # third derivative: 6
+            >>> abs(df1(0.5) - 0.75) < 1e-10
+            True
+            >>> abs(df2(0.5) - 3.0) < 1e-10
+            True
+            >>> abs(df3(0.5) - 6.0) < 1e-10
+            True
         """
         if not isinstance(n, int):
             raise TypeError("Derivative order must be an integer")
@@ -806,6 +861,15 @@ class Chebfun:
 
         Returns:
             float or complex: The definite integral of the Chebfun over its domain.
+
+        Examples:
+            >>> import numpy as np
+            >>> f = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
+            >>> bool(abs(f.sum() - 2.0/3.0) < 1e-10)
+            True
+            >>> g = Chebfun.initconst(1.0, [-1, 1])
+            >>> bool(abs(g.sum() - 2.0) < 1e-10)
+            True
         """
         return np.sum([fun.sum() for fun in self])
 

@@ -21,7 +21,7 @@ import pytest
 )
 def test_bump_updates_version_no_commit(git_repo, choice, expected_version):
     """Running `bump` interactively updates pyproject.toml correctly."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Input: choice -> n (no commit)
     input_str = f"{choice}\nn\n"
@@ -43,7 +43,7 @@ def test_bump_updates_version_no_commit(git_repo, choice, expected_version):
 
 def test_bump_commit_push(git_repo):
     """Bump with commit and push."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Input: 1 (patch) -> y (commit) -> y (push)
     input_str = "1\ny\ny\n"
@@ -61,7 +61,7 @@ def test_bump_commit_push(git_repo):
 
 def test_uncommitted_changes_failure(git_repo):
     """Script fails if there are uncommitted changes."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Create a tracked file and commit it
     tracked_file = git_repo / "tracked_file.txt"
@@ -92,7 +92,7 @@ def test_uncommitted_changes_failure(git_repo):
 )
 def test_bump_explicit_version(git_repo, input_version, expected_version):
     """Bump with explicit version."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Input: 4 (explicit) -> input_version -> n (no commit)
     input_str = f"4\n{input_version}\nn\n"
@@ -108,7 +108,7 @@ def test_bump_explicit_version(git_repo, input_version, expected_version):
 
 def test_bump_explicit_version_invalid(git_repo):
     """Bump fails with invalid explicit version."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
     version = "not-a-version"
 
     # Input: 4 (explicit) -> not-a-version
@@ -122,7 +122,7 @@ def test_bump_explicit_version_invalid(git_repo):
 
 def test_bump_fails_existing_tag(git_repo):
     """Bump fails if tag already exists."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Create tag v0.1.1
     subprocess.run(["git", "tag", "v0.1.1"], cwd=git_repo, check=True)
@@ -137,7 +137,7 @@ def test_bump_fails_existing_tag(git_repo):
 
 def test_warn_on_non_default_branch(git_repo):
     """Script warns if not on default branch."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Create and switch to new branch
     subprocess.run(["git", "checkout", "-b", "feature"], cwd=git_repo, check=True)
@@ -152,7 +152,7 @@ def test_warn_on_non_default_branch(git_repo):
 
 def test_bump_fails_if_pyproject_toml_dirty(git_repo):
     """Bump fails if pyproject.toml has uncommitted changes."""
-    script = git_repo / ".github" / "scripts" / "bump.sh"
+    script = git_repo / ".github" / "rhiza" / "scripts" / "bump.sh"
 
     # Modify pyproject.toml
     with open(git_repo / "pyproject.toml", "a") as f:

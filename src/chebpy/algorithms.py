@@ -180,6 +180,14 @@ def clenshaw(xx: np.ndarray, ak: np.ndarray) -> np.ndarray:
     References:
         C. W. Clenshaw, "A note on the summation of Chebyshev series",
         Mathematics of Computation, Vol. 9, No. 51, 1955, pp. 118-120.
+
+    Examples:
+        >>> import numpy as np
+        >>> coeffs = np.array([1.0])
+        >>> x = np.array([0.0])
+        >>> result = clenshaw(x, coeffs)
+        >>> bool(abs(float(result[0]) - 1.0) < 1e-10)
+        True
     """
     bk1 = 0 * xx
     bk2 = 0 * xx

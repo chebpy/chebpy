@@ -4,7 +4,7 @@ This document explains how to set up a Personal Access Token (PAT) for the repos
 
 ## Why is PAT_TOKEN needed?
 
-The repository uses the `SYNC` workflow (`.github/workflows/sync.yml`) to automatically synchronize with a template repository. When this workflow modifies files in `.github/workflows/`, GitHub requires special permissions that the default `GITHUB_TOKEN` doesn't have.
+The repository uses the `SYNC` workflow (`.github/workflows/rhiza_sync.yml`) to automatically synchronize with a template repository. When this workflow modifies files in `.github/workflows/`, GitHub requires special permissions that the default `GITHUB_TOKEN` doesn't have.
 
 According to GitHub's security policy:
 - The default `GITHUB_TOKEN` **cannot** create or update workflow files (`.github/workflows/*.yml`)

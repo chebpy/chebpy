@@ -6,8 +6,8 @@
 
 set -eu
 
-# Navigate to repository root
-cd "$(dirname "$0")/../.."
+# Navigate to repository root (from .github/rhiza/scripts/ up three levels to repo root)
+cd "$(dirname "$0")/../../.."
 
 README_FILE="README.md"
 TEMP_FILE=$(mktemp)

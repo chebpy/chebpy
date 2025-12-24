@@ -47,6 +47,14 @@ class ChebyshevPolynomial(cheb.Chebyshev):
                 If None, the default window [-1, 1] is used.
             symbol: Symbol used to represent the independent variable in string
                 representations of the polynomial expression. Default is 'x'.
+
+        Examples:
+            >>> import numpy as np
+            >>> p = ChebyshevPolynomial([1, 2, 3])
+            >>> p.coef.tolist()
+            [1.0, 2.0, 3.0]
+            >>> p.domain.tolist()
+            [-1.0, 1.0]
         """
         if window is None:
             window = np.array([-1, 1])
@@ -94,6 +102,14 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         Returns:
             If arg is a scalar, returns a scalar value.
             If arg is an array, returns an array of values.
+
+        Examples:
+            >>> import numpy as np
+            >>> p = ChebyshevPolynomial([1])
+            >>> float(p(0))
+            1.0
+            >>> float(p(1))
+            1.0
         """
         # If the input is a scalar, directly evaluate the polynomial
         if np.isscalar(arg):
@@ -288,6 +304,14 @@ def from_coefficients(
 
     Raises:
         ValueError: If the coefficient array is empty.
+
+    Examples:
+        >>> import numpy as np
+        >>> p = from_coefficients([3.14])
+        >>> p.coef.tolist()
+        [3.14]
+        >>> float(p(0))
+        3.14
     """
     if len(coef) == 0:
         raise ValueError("Empty coefficients")
@@ -378,6 +402,14 @@ def from_constant(
 
     Raises:
         ValueError: If the input is not a scalar value.
+
+    Examples:
+        >>> import numpy as np
+        >>> p = from_constant(3.14)
+        >>> float(p(0))
+        3.14
+        >>> float(p(1))
+        3.14
     """
     if not np.isscalar(c):
         raise ValueError("Input must be a scalar value")
