@@ -832,11 +832,11 @@ class Chebfun:
             >>> df1 = f.diff()    # first derivative: 3*x**2
             >>> df2 = f.diff(2)   # second derivative: 6*x
             >>> df3 = f.diff(3)   # third derivative: 6
-            >>> abs(df1(0.5) - 0.75) < 1e-10
+            >>> bool(abs(df1(0.5) - 0.75) < 1e-10)
             True
-            >>> abs(df2(0.5) - 3.0) < 1e-10
+            >>> bool(abs(df2(0.5) - 3.0) < 1e-10)
             True
-            >>> abs(df3(0.5) - 6.0) < 1e-10
+            >>> bool(abs(df3(0.5) - 6.0) < 1e-10)
             True
         """
         if not isinstance(n, int):
