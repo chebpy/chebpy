@@ -253,6 +253,14 @@ class Chebfun:
         """
         return self.funs.__iter__()
 
+    def __len__(self):
+        """Return the total number of coefficients across all funs.
+
+        Returns:
+            int: The sum of sizes of all constituent funs.
+        """
+        return sum(f.size for f in self.funs)
+
     def __eq__(self, other):
         """Test for equality between two Chebfun objects.
 
@@ -307,6 +315,17 @@ class Chebfun:
             Chebfun: This Chebfun object (unchanged).
         """
         return self
+
+    def __abs__(self):
+        """Return the absolute value of this Chebfun.
+
+        Returns:
+            Chebfun: A new Chebfun representing |f(x)|.
+        """
+        abs_funs = []
+        for fun in self.funs:
+            abs_funs.append(fun.absolute())
+        return self.__class__(abs_funs)
 
     def __pow__(self, f):
         """Raise this Chebfun to a power.
@@ -794,25 +813,44 @@ class Chebfun:
             prevfun = integral
         return self.__class__(newfuns)
 
-    def diff(self):
+    def diff(self, n=1):
         """Compute the derivative of the Chebfun.
 
-        This method calculates the derivative of the Chebfun with respect to x.
+        This method calculates the nth derivative of the Chebfun with respect to x.
         It creates a new Chebfun where each piece is the derivative of the
         corresponding piece in the original Chebfun.
 
+        Args:
+            n: Order of differentiation (default: 1). Must be non-negative integer.
+
         Returns:
-            Chebfun: A new Chebfun representing the derivative of this Chebfun.
+            Chebfun: A new Chebfun representing the nth derivative of this Chebfun.
 
         Examples:
-            >>> import numpy as np
-            >>> f = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 1])
-            >>> df = f.diff()
-            >>> bool(abs(df(0.5) - 1.0) < 1e-10)
+            >>> from chebpy import chebfun
+            >>> f = chebfun(lambda x: x**3)
+            >>> df1 = f.diff()    # first derivative: 3*x**2
+            >>> df2 = f.diff(2)   # second derivative: 6*x
+            >>> df3 = f.diff(3)   # third derivative: 6
+            >>> bool(abs(df1(0.5) - 0.75) < 1e-10)
+            True
+            >>> bool(abs(df2(0.5) - 3.0) < 1e-10)
+            True
+            >>> bool(abs(df3(0.5) - 6.0) < 1e-10)
             True
         """
-        dfuns = np.array([fun.diff() for fun in self])
-        return self.__class__(dfuns)
+        if not isinstance(n, int):
+            raise TypeError("Derivative order must be an integer")
+        if n == 0:
+            return self
+        if n < 0:
+            raise ValueError("Derivative order must be non-negative")
+
+        result = self
+        for _ in range(n):
+            dfuns = np.array([fun.diff() for fun in result])
+            result = self.__class__(dfuns)
+        return result
 
     def sum(self):
         """Compute the definite integral of the Chebfun over its domain.
@@ -850,6 +888,55 @@ class Chebfun:
             float or complex: The dot product of this Chebfun with f.
         """
         return (self * f).sum()
+
+    def norm(self, p=2):
+        """Compute the Lp norm of the Chebfun over its domain.
+
+        This method calculates the Lp norm of the Chebfun. The L2 norm is the
+        default and is computed as sqrt(integral(|f|^2)). For p=inf, returns
+        the maximum absolute value by checking critical points (extrema).
+
+        Args:
+            p (int or float): The norm type. Supported values are 1, 2, positive
+                integers/floats, or np.inf. Defaults to 2 (L2 norm).
+
+        Returns:
+            float: The Lp norm of the Chebfun.
+
+        Examples:
+            >>> from chebpy import chebfun
+            >>> import numpy as np
+            >>> f = chebfun(lambda x: x**2, [-1, 1])
+            >>> np.allclose(f.norm(), 0.6324555320336759)  # L2 norm
+            True
+            >>> np.allclose(f.norm(np.inf), 1.0)  # Maximum absolute value
+            True
+        """
+        if p == 2:
+            # L2 norm: sqrt(integral(|f|^2))
+            return np.sqrt(self.dot(self))
+        elif p == np.inf:
+            # L-infinity norm: max|f(x)|
+            df = self.diff()
+            critical_pts = df.roots()
+            # Add endpoints
+            endpoints = np.array([self.domain[0], self.domain[-1]])
+            # Combine all test points
+            test_pts = np.concatenate([critical_pts, endpoints])
+            # Evaluate and find max
+            vals = np.abs(self(test_pts))
+            return np.max(vals)
+        elif p == 1:
+            # L1 norm: integral(|f|)
+            return self.absolute().sum()
+        elif p > 0:
+            # General Lp norm: (integral(|f|^p))^(1/p)
+            f_abs = self.absolute()
+            f_pow_p = f_abs**p
+            integral = f_pow_p.sum()
+            return integral ** (1.0 / p)
+        else:
+            raise ValueError(f"norm(p={p}): p must be positive or np.inf")
 
     # ----------
     #  utilities
