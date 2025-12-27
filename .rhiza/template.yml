@@ -1,0 +1,17 @@
+template-repository: jebel-quant/rhiza
+template-branch: main
+include:
+- .devcontainer
+- .github
+- tests
+- .editorconfig
+- .gitignore
+- .pre-commit-config.yaml
+- Makefile
+- ruff.toml
+- pytest.ini
+- presentation
+- book
+- .rhiza
+exclude:
+- .github/workflows/docker.yml
