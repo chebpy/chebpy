@@ -47,7 +47,7 @@ repos:
     hooks:
       - id: update-readme-help
         name: Update README with Makefile help output
-        entry: /bin/sh .github/rhiza/scripts/update-readme-help.sh
+        entry: /bin/sh .rhiza/scripts/update-readme-help.sh
         language: system
         files: '^Makefile$'
         pass_filenames: false

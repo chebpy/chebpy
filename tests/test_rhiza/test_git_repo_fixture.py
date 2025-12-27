@@ -47,7 +47,7 @@ class TestGitRepoFixture:
 
     def test_git_repo_has_github_scripts_directory(self, git_repo):
         """Git repo should have .github/rhiza/scripts directory."""
-        scripts_dir = git_repo / ".github" / "rhiza" / "scripts"
+        scripts_dir = git_repo / ".rhiza" / "scripts"
         assert scripts_dir.exists()
         assert (scripts_dir / "release.sh").exists()
         assert (scripts_dir / "bump.sh").exists()
@@ -55,7 +55,7 @@ class TestGitRepoFixture:
     def test_git_repo_scripts_are_executable(self, git_repo):
         """GitHub scripts should be executable."""
         for script in ["release.sh", "bump.sh"]:
-            script_path = git_repo / ".github" / "rhiza" / "scripts" / script
+            script_path = git_repo / ".rhiza" / "scripts" / script
             assert os.access(script_path, os.X_OK), f"{script} is not executable"
 
     def test_git_repo_is_initialized(self, git_repo):

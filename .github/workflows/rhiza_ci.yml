@@ -28,7 +28,7 @@ jobs:
       - id: versions
         run: |
           # Generate Python versions JSON from the script
-          JSON=$(python ./.github/rhiza/utils/version_matrix.py)
+          JSON=$(python ./.rhiza/utils/version_matrix.py)
           echo "list=$JSON" >> "$GITHUB_OUTPUT"
 
       - name: Debug matrix
@@ -49,11 +49,17 @@ jobs:
         with:
           lfs: true
 
-      - name: Setup the project
-        uses: ./.github/rhiza/actions/setup-project
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ matrix.python-version }}
-          uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
+          version: "0.9.18"
+
+      - name: "Sync the virtual environment for ${{ github.repository }}"
+        shell: bash
+        run: |
+          export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
+          uv venv --python ${{ matrix.python-version }}
+          uv sync --all-extras --frozen
 
       - name: Install dependencies
         run: |

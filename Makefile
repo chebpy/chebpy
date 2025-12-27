@@ -38,8 +38,8 @@ UV_BIN := ${UV_INSTALL_DIR}/uv
 UVX_BIN := ${UV_INSTALL_DIR}/uvx
 MARIMO_FOLDER := book/marimo
 SOURCE_FOLDER := src
-SCRIPTS_FOLDER := .github/rhiza/scripts
-CUSTOM_SCRIPTS_FOLDER := .github/rhiza/scripts/customisations
+SCRIPTS_FOLDER := .rhiza/scripts
+CUSTOM_SCRIPTS_FOLDER := .rhiza/scripts/customisations
 
 export UV_NO_MODIFY_PATH := 1
 export UV_VENV_CLEAR := 1
@@ -79,7 +79,7 @@ install-extras: ## run custom build script (if exists)
 install: install-uv install-extras ## install
 	# Create the virtual environment only if it doesn't exist
 	@if [ ! -d ".venv" ]; then \
-	  ${UV_BIN} venv --python 3.12 || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }; \
+	  ${UV_BIN} venv $(if $(PYTHON_VERSION),--python $(PYTHON_VERSION)) || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }; \
 	else \
 	  printf "${BLUE}[INFO] Using existing virtual environment at .venv, skipping creation${RESET}\n"; \
 	fi
@@ -91,16 +91,21 @@ install: install-uv install-extras ## install
 
 	# Install the dependencies from pyproject.toml (if it exists)
 	@if [ -f "pyproject.toml" ]; then \
-	  printf "${BLUE}[INFO] Installing dependencies${RESET}\n"; \
-	  ${UV_BIN} sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	  if [ -f "uv.lock" ]; then \
+	    printf "${BLUE}[INFO] Installing dependencies from lock file${RESET}\n"; \
+	    ${UV_BIN} sync --all-extras --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	  else \
+	    printf "${YELLOW}[WARN] uv.lock not found. Generating lock file and installing dependencies...${RESET}\n"; \
+	    ${UV_BIN} sync --all-extras || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	  fi; \
 	else \
 	  printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"; \
 	fi
 
-sync: install-uv ## sync with template repository as defined in .github/rhiza/template.yml
+sync: install-uv ## sync with template repository as defined in .github/template.yml
 	@${UVX_BIN} "rhiza>=0.7.1" materialize --force .
 
-validate: install-uv ## validate project structure against template repository as defined in .github/rhiza/template.yml
+validate: install-uv ## validate project structure against template repository as defined in .github/template.yml
 	@${UVX_BIN} "rhiza>=0.7.1" validate .
 
 clean: ## clean

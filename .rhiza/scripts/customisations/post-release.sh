@@ -14,7 +14,7 @@
 #
 # How to use:
 #   1. Add your custom post-release commands below
-#   2. Make sure the script is executable: chmod +x .github/rhiza/scripts/customisations/post-release.sh
+#   2. Make sure the script is executable: chmod +x .rhiza/scripts/customisations/post-release.sh
 #   3. Commit to your repository
 #
 # Examples:
@@ -26,7 +26,7 @@
 # Note: If you customize this file in your repository, add it to the exclude list
 #       in template.yml to prevent it from being overwritten by template updates:
 #       exclude: |
-#         .github/rhiza/scripts/customisations/post-release.sh
+#         .rhiza/scripts/customisations/post-release.sh
 #
 
 set -euo pipefail

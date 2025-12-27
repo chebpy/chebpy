@@ -20,10 +20,11 @@ These tests validate the foundational infrastructure and workflows that are shar
 - `test_docstrings.py` - Doctest validation across all modules
 - `test_git_repo_fixture.py` - Validation of the mock git repository fixture
 - `test_makefile.py` - Makefile target validation using dry-runs
+- `test_marimushka` - Testing the link into Marimushka (a tool to run notebooks and produce static html pages)
 - `test_readme.py` - README code example execution and validation
 - `test_release_script.py` - Release and tagging workflow tests
 - `test_structure.py` - Project structure and file existence checks
-- `test_sync_script.py` - Template synchronization exclusion tests
+- `test_updatereadme_script` - Testing our abilities to embed the output of make directly in markdown files.
 
 ## Exclusion from Sync
 

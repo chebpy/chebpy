@@ -11,7 +11,7 @@ from pathlib import Path
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-PYPROJECT = Path(__file__).resolve().parents[3] / "pyproject.toml"
+PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
 CANDIDATES = ["3.11", "3.12", "3.13", "3.14"]  # extend as needed
 
 

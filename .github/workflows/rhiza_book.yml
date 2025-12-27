@@ -40,18 +40,17 @@ jobs:
         with:
           lfs: true
 
-      # Determine the Python version to use
-      - name: Get Python version
-        id: get-python
-        run: |
-          echo "python-version=$(python ./.github/rhiza/utils/version_max.py)" >> "$GITHUB_OUTPUT"
-
-      # Use the composite action to set up the project
-      - name: Setup the project
-        uses: ./.github/rhiza/actions/setup-project
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ steps.get-python.outputs.python-version }}
-          uv-extra-index-url: ${{ secrets.UV_EXTRA_INDEX_URL }}
+          version: "0.9.18"
+
+      - name: "Sync the virtual environment for ${{ github.repository }}"
+        shell: bash
+        run: |
+          export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
+          # will just use .python-version?
+          uv sync --all-extras --frozen
 
       - name: "Make the book"
         run: |

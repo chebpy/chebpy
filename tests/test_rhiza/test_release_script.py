@@ -13,7 +13,7 @@ import subprocess
 
 def test_release_creates_tag(git_repo):
     """Release creates a tag."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Run release
     # 1. Prompts to create tag -> y
@@ -34,7 +34,7 @@ def test_release_creates_tag(git_repo):
 
 def test_release_fails_if_local_tag_exists(git_repo):
     """If the target tag already exists locally, release should warn and abort if user says no."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Create a local tag that matches current version
     subprocess.run(["git", "tag", "v0.1.0"], cwd=git_repo, check=True)
@@ -49,7 +49,7 @@ def test_release_fails_if_local_tag_exists(git_repo):
 
 def test_release_fails_if_remote_tag_exists(git_repo):
     """Release fails if tag exists on remote."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Create tag locally and push to remote
     subprocess.run(["git", "tag", "v0.1.0"], cwd=git_repo, check=True)
@@ -63,7 +63,7 @@ def test_release_fails_if_remote_tag_exists(git_repo):
 
 def test_release_uncommitted_changes_failure(git_repo):
     """Release fails if there are uncommitted changes (even pyproject.toml)."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Modify pyproject.toml (which is allowed in bump but NOT in release)
     with open(git_repo / "pyproject.toml", "a") as f:
@@ -77,7 +77,7 @@ def test_release_uncommitted_changes_failure(git_repo):
 
 def test_release_pushes_if_ahead_of_remote(git_repo):
     """Release prompts to push if local branch is ahead of remote."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Create a commit locally that isn't on remote
     tracked_file = git_repo / "file.txt"
@@ -100,7 +100,7 @@ def test_release_pushes_if_ahead_of_remote(git_repo):
 
 def test_release_fails_if_behind_remote(git_repo):
     """Release fails if local branch is behind remote."""
-    script = git_repo / ".github" / "rhiza" / "scripts" / "release.sh"
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
 
     # Create a commit on remote that isn't local
     # We need to clone another repo to push to remote

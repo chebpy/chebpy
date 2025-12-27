@@ -3,7 +3,7 @@ name: RHIZA SYNC
 # IMPORTANT: When workflow files (.github/workflows/rhiza_*.yml) are modified,
 # a Personal Access Token (PAT) with 'workflow' scope is required.
 # The PAT_TOKEN secret must be set in repository secrets.
-# See .github/TOKEN_SETUP.md for setup instructions.
+# See .github/rhiza/TOKEN_SETUP.md for setup instructions.
 
 permissions:
   contents: write

@@ -202,13 +202,13 @@ def git_repo(root, tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ.get('PATH', '')}")
 
     # Copy scripts
-    script_dir = local_dir / ".github" / "rhiza" / "scripts"
+    script_dir = local_dir / ".rhiza" / "scripts"
     script_dir.mkdir(parents=True)
 
-    shutil.copy(root / ".github" / "rhiza" / "scripts" / "release.sh", script_dir / "release.sh")
-    shutil.copy(root / ".github" / "rhiza" / "scripts" / "bump.sh", script_dir / "bump.sh")
-    shutil.copy(root / ".github" / "rhiza" / "scripts" / "marimushka.sh", script_dir / "marimushka.sh")
-    shutil.copy(root / ".github" / "rhiza" / "scripts" / "update-readme-help.sh", script_dir / "update-readme-help.sh")
+    shutil.copy(root / ".rhiza" / "scripts" / "release.sh", script_dir / "release.sh")
+    shutil.copy(root / ".rhiza" / "scripts" / "bump.sh", script_dir / "bump.sh")
+    shutil.copy(root / ".rhiza" / "scripts" / "marimushka.sh", script_dir / "marimushka.sh")
+    shutil.copy(root / ".rhiza" / "scripts" / "update-readme-help.sh", script_dir / "update-readme-help.sh")
 
     (script_dir / "release.sh").chmod(0o755)
     (script_dir / "bump.sh").chmod(0o755)

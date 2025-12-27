@@ -19,10 +19,6 @@ class TestRootFixture:
         """Root fixture should return a pathlib.Path object."""
         assert isinstance(root, Path)
 
-    def test_root_points_to_repository_root(self, root):
-        """Root fixture should point to the actual repository root."""
-        assert (root / ".github").is_dir()
-
     def test_root_is_absolute_path(self, root):
         """Root fixture should return an absolute path."""
         assert root.is_absolute()
@@ -34,7 +30,7 @@ class TestRootFixture:
 
     def test_root_contains_expected_directories(self, root):
         """Root should contain all expected project directories."""
-        expected_dirs = [".github", "src", "tests", "book"]
+        expected_dirs = [".rhiza", "src", "tests", "book"]
         for dirname in expected_dirs:
             if not (root / dirname).exists():
                 warnings.warn(f"Expected directory {dirname} not found", stacklevel=2)
@@ -55,7 +51,7 @@ class TestRootFixture:
 
     def test_root_can_locate_github_scripts(self, root):
         """Root should allow locating GitHub scripts."""
-        scripts_dir = root / ".github" / "rhiza" / "scripts"
+        scripts_dir = root / ".rhiza" / "scripts"
         if not scripts_dir.exists():
             warnings.warn("GitHub scripts directory not found", stacklevel=2)
         else:

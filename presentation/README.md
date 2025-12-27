@@ -1,6 +1,6 @@
 # Presentation Generation with Marp
 
-REmThis directory contains the presentation generation system for Rhiza.
+This directory contains the presentation generation system for Rhiza.
 The project uses [Marp](https://marp.app/) to convert Markdown files into beautiful presentation slides.
 
 ## Overview
