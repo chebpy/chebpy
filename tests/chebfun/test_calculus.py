@@ -298,8 +298,8 @@ class TestChebfunCalculusEdgeCases:
         f = pwc(domain=[-1, 0, 1], values=[-1, 1])
         f_cumsum = f.cumsum()
         # Check continuity at x=0
-        left_val = f_cumsum(-1e-14)
-        right_val = f_cumsum(1e-14)
+        left_val = f_cumsum(-1e-13)
+        right_val = f_cumsum(1e-13)
         # Should be continuous (within tolerance)
         assert np.abs(left_val - right_val) < 1e-12
 
