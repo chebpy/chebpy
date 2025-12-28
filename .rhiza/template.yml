@@ -1,9 +1,11 @@
 template-repository: jebel-quant/rhiza
 template-branch: main
 include:
-- .devcontainer
-- .github
-- tests
+- .devcontainer/
+- .github/
+- .rhiza/
+- book/Makefile.book
+- tests/
 - .editorconfig
 - .gitignore
 - .pre-commit-config.yaml
@@ -11,8 +13,8 @@ include:
 - ruff.toml
 - pytest.ini
 - presentation
-- book
-- .rhiza
 - renovate.json
 exclude:
-- .github/workflows/docker.yml
+- .github/workflows/rhiza_docker.yml
+- .rhiza/CONFIG.md
+- .rhiza/TOKEN_SETUP.md
