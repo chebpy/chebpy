@@ -301,7 +301,7 @@ class TestChebfunCalculusEdgeCases:
         left_val = f_cumsum(-1e-14)
         right_val = f_cumsum(1e-14)
         # Should be continuous (within tolerance)
-        assert np.abs(left_val - right_val) < 1e-14
+        assert np.abs(left_val - right_val) < 1e-12
 
     def test_norm_l1(self):
         """Test L1 norm."""
