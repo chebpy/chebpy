@@ -7,7 +7,7 @@ including sum, diff, cumsum, and dot product.
 import numpy as np
 import pytest
 
-from chebpy import chebfun
+from chebpy import chebfun, pwc
 from chebpy.chebfun import Chebfun
 
 from ..utilities import exp, sin
@@ -295,13 +295,13 @@ class TestChebfunCalculusEdgeCases:
 
     def test_cumsum_multipiece_continuity(self):
         """Test that cumsum maintains continuity across pieces."""
-        f = chebfun(lambda x: np.sign(x), [-1, 0, 1])
+        f = pwc(domain=[-1, 0, 1], values=[-1, 1])
         f_cumsum = f.cumsum()
         # Check continuity at x=0
-        left_val = f_cumsum(-1e-10)
-        right_val = f_cumsum(1e-10)
+        left_val = f_cumsum(-1e-13)
+        right_val = f_cumsum(1e-13)
         # Should be continuous (within tolerance)
-        assert np.abs(left_val - right_val) < 1e-6
+        assert np.abs(left_val - right_val) < 1e-12
 
     def test_norm_l1(self):
         """Test L1 norm."""
