@@ -136,7 +136,7 @@ class TestMakefile:
         out = proc.stdout
         # Check for uvx command with the configured path
         expected_uvx = f"{expected_uv_install_dir}/uvx"
-        assert f'{expected_uvx} deptry "src"' in out
+        assert f"{expected_uvx} deptry ." in out
 
     def test_test_target_dry_run(self, logger, expected_uv_install_dir):
         """Test target should invoke pytest via uv with coverage and HTML outputs in dry-run output."""

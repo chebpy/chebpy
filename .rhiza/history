@@ -10,9 +10,9 @@
 .github/dependabot.yml
 .github/workflows/rhiza_book.yml
 .github/workflows/rhiza_ci.yml
+.github/workflows/rhiza_codeql.yml
 .github/workflows/rhiza_deptry.yml
 .github/workflows/rhiza_devcontainer.yml
-.github/workflows/rhiza_docker.yml
 .github/workflows/rhiza_marimo.yml
 .github/workflows/rhiza_pre-commit.yml
 .github/workflows/rhiza_release.yml
@@ -20,8 +20,6 @@
 .github/workflows/rhiza_validate.yml
 .gitignore
 .pre-commit-config.yaml
-.rhiza/CONFIG.md
-.rhiza/TOKEN_SETUP.md
 .rhiza/scripts/book.sh
 .rhiza/scripts/bump.sh
 .rhiza/scripts/customisations/build-extras.sh
@@ -33,10 +31,6 @@
 .rhiza/utils/version_max.py
 Makefile
 book/Makefile.book
-book/marimo/README.md
-book/marimo/rhiza.py
-book/minibook-templates/custom.html.jinja2
-book/pdoc-templates/module.html.jinja2
 presentation/Makefile.presentation
 presentation/README.md
 pytest.ini
