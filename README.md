@@ -5,7 +5,7 @@
 ### A Python implementation of Chebfun
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE.rst)
-[![Python versions](https://img.shields.io/badge/Python-33.11%20•%203.12%20•%203.13%20•%203.14-blue?logo=python)](https://www.python.org/)
+[![Python versions](https://img.shields.io/badge/Python-3.11%20•%203.12%20•%203.13%20•%203.14-blue?logo=python)](https://www.python.org/)
 [![PyPI - Version](https://img.shields.io/pypi/v/chebfun.svg)](https://pypi.org/project/chebfun/)
 
 ![Github](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github)
