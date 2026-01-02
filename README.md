@@ -24,6 +24,7 @@
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/chebpy/chebpy)
 
 **🔬 Numerical computing with Chebyshev series approximations**
+
 Symbolic-numeric computation with functions, not just numbers
 
 </div>
