@@ -1,12 +1,12 @@
 <div align="center">
 
-# 📊 ChebPy
+# ChebPy
 
-### A Python implementation of Chebfun for numerical computing
+### A Python implementation of Chebfun
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE.rst)
 [![Python versions](https://img.shields.io/badge/Python-3.10%20•%203.11%20•%203.12%20•%203.13-blue?logo=python)](https://www.python.org/)
-[![PyPI - Version](https://img.shields.io/pypi/v/chebpy.svg)](https://pypi.org/project/chebfun/)
+[![PyPI - Version](https://img.shields.io/pypi/v/chebfun.svg)](https://pypi.org/project/chebfun/)
 
 ![Github](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=white)
@@ -23,11 +23,12 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/chebpy/chebpy)
 
-**🔬 Numerical computing with Chebyshev series approximations** - Symbolic-numeric computation with functions, not just numbers
+**🔬 Numerical computing with Chebyshev series approximations**
+Symbolic-numeric computation with functions, not just numbers
 
 </div>
 
-ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision.
+ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision accuracy.
 ---
 
 ## Table of Contents
