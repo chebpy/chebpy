@@ -1,21 +1,35 @@
 <div align="center">
 
-# 📊 ChebPy
+# ChebPy
 
-### *A Python implementation of Chebfun for numerical computing*
+### A Python implementation of Chebfun
 
-[![CI](https://github.com/chebpy/chebpy/actions/workflows/ci.yml/badge.svg)](https://github.com/chebpy/chebpy/actions/workflows/ci.yml)
-[![Coverage](https://coveralls.io/repos/github/chebpy/chebpy/badge.svg?branch=master)](https://coveralls.io/github/chebpy/chebpy?branch=master)
-[![Python](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://github.com/chebpy/chebpy/actions/workflows/unittest.yml)
-[![Codespaces](https://img.shields.io/badge/Codespaces-Open-blue.svg?logo=github)](https://codespaces.new/chebpy/chebpy)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE.rst)
+[![Python versions](https://img.shields.io/badge/Python-3.11%20•%203.12%20•%203.13%20•%203.14-blue?logo=python)](https://www.python.org/)
+[![PyPI - Version](https://img.shields.io/pypi/v/chebfun.svg)](https://pypi.org/project/chebfun/)
 
-**🔬 Numerical computing with Chebyshev series approximations in Python**
+![Github](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=white)
+![MAC OS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?logo=ruff)](https://github.com/astral-sh/ruff)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 
-*ChebPy enables symbolic-numeric computation with functions, not just numbers*
+[![CI](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
+[![PRE-COMMIT](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml)
+[![DEPTRY](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml)
+[![MARIMO](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml)
+[![DEVCONTAINER](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/chebpy/chebpy)
+
+**🔬 Numerical computing with Chebyshev series approximations**
+
+Symbolic-numeric computation with functions
 
 </div>
 
-ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision.
+ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision accuracy.
 ---
 
 ## Table of Contents
