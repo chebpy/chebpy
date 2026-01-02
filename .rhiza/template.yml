@@ -18,3 +18,4 @@ exclude:
 - .github/workflows/rhiza_docker.yml
 - .rhiza/CONFIG.md
 - .rhiza/TOKEN_SETUP.md
+- pytest.ini
