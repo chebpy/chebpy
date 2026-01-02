@@ -7,7 +7,11 @@ Provides test fixtures for testing git-based workflows and version management.
 """
 
 import os
+import shutil
 import subprocess
+
+# Get shell path once at module level
+SHELL = shutil.which("sh") or "/bin/sh"
 
 
 def test_marimushka_script_success(git_repo):
@@ -28,7 +32,7 @@ def test_marimushka_script_success(git_repo):
     env["MARIMUSHKA_OUTPUT"] = "_marimushka"
     # UVX_BIN is defaulted to ./bin/uvx in the script, which matches our mock setup in git_repo
 
-    result = subprocess.run([str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
+    result = subprocess.run([SHELL, str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
 
     assert result.returncode == 0
     assert "Exporting notebooks" in result.stdout
@@ -44,7 +48,7 @@ def test_marimushka_missing_folder(git_repo):
     env = os.environ.copy()
     env["MARIMO_FOLDER"] = "missing"
 
-    result = subprocess.run([str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
+    result = subprocess.run([SHELL, str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
 
     assert result.returncode == 0
     assert "does not exist" in result.stdout
@@ -64,7 +68,7 @@ def test_marimushka_no_python_files(git_repo):
     env["MARIMO_FOLDER"] = "book/marimo"
     env["MARIMUSHKA_OUTPUT"] = "_marimushka"
 
-    result = subprocess.run([str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
+    result = subprocess.run([SHELL, str(script)], env=env, cwd=git_repo, capture_output=True, text=True)
 
     assert result.returncode == 0
     assert "No Python files found" in result.stdout

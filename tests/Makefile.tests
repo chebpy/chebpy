@@ -9,23 +9,22 @@ TESTS_FOLDER := tests
 
 ##@ Development and Testing
 test: install ## run all tests
-	@if [ -d ${SOURCE_FOLDER} ] && [ -d ${TESTS_FOLDER} ]; then \
+	@if [ -d ${TESTS_FOLDER} ]; then \
 	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ${UV_BIN} pip install pytest pytest-cov pytest-html; \
-	  ${UV_BIN} run pytest ${TESTS_FOLDER} --ignore=${TESTS_FOLDER}/benchmarks --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --html=_tests/html-report/report.html; \
+	  ${VENV}/bin/python -m pytest ${TESTS_FOLDER} --ignore=${TESTS_FOLDER}/benchmarks --cov=${SOURCE_FOLDER} --cov-report=term --cov-report=html:_tests/html-coverage --cov-report=json:_tests/coverage.json --html=_tests/html-report/report.html; \
 	else \
-	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} or tests folder ${TESTS_FOLDER} not found, skipping tests${RESET}\n"; \
+	  printf "${YELLOW}[WARN] Test folder ${TESTS_FOLDER} not found, skipping tests${RESET}\n"; \
 	fi
 
 benchmark: install ## run performance benchmarks
 	@if [ -d "${TESTS_FOLDER}/benchmarks" ]; then \
 	  printf "${BLUE}[INFO] Running performance benchmarks...${RESET}\n"; \
 	  ${UV_BIN} pip install pytest-benchmark==5.2.3 pygal==3.1.0; \
-	  ${UV_BIN} run pytest "${TESTS_FOLDER}/benchmarks/" \
+	  ${VENV}/bin/python -m pytest "${TESTS_FOLDER}/benchmarks/" \
 	  		--benchmark-only \
 			--benchmark-histogram=tests/test_rhiza/benchmarks/benchmarks \
 			--benchmark-json=tests/test_rhiza/benchmarks/benchmarks.json; \
-	  ${UV_BIN} run tests/test_rhiza/benchmarks/analyze_benchmarks.py ; \
+	  ${VENV}/bin/python tests/test_rhiza/benchmarks/analyze_benchmarks.py ; \
 	else \
 	  printf "${YELLOW}[WARN] Benchmarks folder not found, skipping benchmarks${RESET}\n"; \
 	fi

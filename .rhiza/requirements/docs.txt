@@ -1,0 +1,2 @@
+# Documentation dependencies for rhiza
+pdoc>=16.0.0

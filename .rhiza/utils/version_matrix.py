@@ -5,14 +5,73 @@ This helper is used in GitHub Actions to compute the test matrix.
 """
 
 import json
+import re
 import tomllib
 from pathlib import Path
 
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
-
 PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
 CANDIDATES = ["3.11", "3.12", "3.13", "3.14"]  # extend as needed
+
+
+def parse_version(v: str) -> tuple[int, ...]:
+    """Parse a version string into a tuple of integers.
+
+    This is intentionally simple and only supports numeric components.
+    If a component contains non-numeric suffixes (e.g. '3.11.0rc1'),
+    the leading numeric portion will be used (e.g. '0rc1' -> 0). If a
+    component has no leading digits at all, a ValueError is raised.
+    """
+    parts: list[int] = []
+    for part in v.split("."):
+        match = re.match(r"\d+", part)
+        if not match:
+            msg = f"Invalid version component {part!r} in version {v!r}; expected a numeric prefix."
+            raise ValueError(msg)
+        parts.append(int(match.group(0)))
+    return tuple(parts)
+
+
+def _check_operator(version_tuple: tuple[int, ...], op: str, spec_v_tuple: tuple[int, ...]) -> bool:
+    """Check if a version tuple satisfies an operator constraint."""
+    operators = {
+        ">=": lambda v, s: v >= s,
+        "<=": lambda v, s: v <= s,
+        ">": lambda v, s: v > s,
+        "<": lambda v, s: v < s,
+        "==": lambda v, s: v == s,
+        "!=": lambda v, s: v != s,
+    }
+    return operators[op](version_tuple, spec_v_tuple)
+
+
+def satisfies(version: str, specifier: str) -> bool:
+    """Check if a version satisfies a comma-separated list of specifiers.
+
+    This is a simplified version of packaging.specifiers.SpecifierSet.
+    Supported operators: >=, <=, >, <, ==, !=
+    """
+    version_tuple = parse_version(version)
+
+    # Split by comma for multiple constraints
+    for spec in specifier.split(","):
+        spec = spec.strip()
+        # Match operator and version part
+        match = re.match(r"(>=|<=|>|<|==|!=)\s*([\d.]+)", spec)
+        if not match:
+            # If no operator, assume ==
+            if re.match(r"[\d.]+", spec):
+                if version_tuple != parse_version(spec):
+                    return False
+                continue
+            raise ValueError(f"Invalid specifier: {spec}")
+
+        op, spec_v = match.groups()
+        spec_v_tuple = parse_version(spec_v)
+
+        if not _check_operator(version_tuple, op, spec_v_tuple):
+            return False
+
+    return True
 
 
 def supported_versions() -> list[str]:
@@ -35,19 +94,14 @@ def supported_versions() -> list[str]:
         msg = "pyproject.toml: missing 'project.requires-python'"
         raise KeyError(msg)
 
-    # Parse the version specifier (e.g., ">=3.11,<3.14")
-    spec = SpecifierSet(spec_str)
-
     # Filter candidate versions to find which ones satisfy the constraint
     versions: list[str] = []
     for v in CANDIDATES:
-        # packaging.version.Version parses the version string
-        # The 'in' operator checks if the version satisfies the specifier
-        if Version(v) in spec:
+        if satisfies(v, spec_str):
             versions.append(v)
 
     if not versions:
-        msg = "pyproject.toml: no supported Python versions match 'project.requires-python'"
+        msg = f"pyproject.toml: no supported Python versions match '{spec_str}'"
         raise ValueError(msg)
 
     return versions

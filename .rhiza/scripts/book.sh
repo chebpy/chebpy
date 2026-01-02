@@ -8,6 +8,11 @@
 
 set -e
 
+# Determine SCRIPTS_FOLDER if not set
+if [ -z "${SCRIPTS_FOLDER}" ]; then
+  SCRIPTS_FOLDER="$(cd "$(dirname "$0")" && pwd)"
+fi
+
 BLUE="\033[36m"
 YELLOW="\033[33m"
 RESET="\033[0m"
@@ -42,6 +47,12 @@ if [ -f _tests/html-coverage/index.html ]; then
     LINKS_ENTRIES="$LINKS_ENTRIES, \"Coverage\": \"./tests/html-coverage/index.html\""
   else
     LINKS_ENTRIES='"Coverage": "./tests/html-coverage/index.html"'
+  fi
+  
+  # Generate coverage badge JSON if coverage.json exists
+  if [ -f _tests/coverage.json ]; then
+    printf "%b[INFO] Generating coverage badge...%b\n" "$BLUE" "$RESET"
+    /bin/sh "${SCRIPTS_FOLDER}/generate-coverage-badge.sh"
   fi
 else
   printf "%b[WARN] No coverage report found or directory is empty%b\n" "$YELLOW" "$RESET"

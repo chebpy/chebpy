@@ -1,0 +1,9 @@
+# Test dependencies for rhiza
+pytest==9.0.2
+pytest-cov>=7.0.0
+pytest-html>=4.1.1
+pytest-mock>=3.15.1
+
+# For benchmarks
+pytest-benchmark>=5.2.3
+pygal>=3.1.0

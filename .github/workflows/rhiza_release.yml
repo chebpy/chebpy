@@ -111,14 +111,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.18"
+          version: "0.9.21"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
         run: |
           export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
           # will just use .python-version?
-          uv sync --all-extras --frozen
+          uv sync --all-extras --all-groups --frozen
 
       - name: Verify version matches tag
         if: hashFiles('pyproject.toml') != ''
@@ -322,14 +322,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.18"
+          version: "0.9.21"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
         run: |
           export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
           # will just use .python-version?
-          uv sync --all-extras --frozen
+          uv sync --all-extras --all-groups --frozen
 
       - name: Set up Python
         uses: actions/setup-python@v6
