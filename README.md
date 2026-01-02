@@ -6,8 +6,7 @@
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE.rst)
 [![Python versions](https://img.shields.io/badge/Python-3.10%20•%203.11%20•%203.12%20•%203.13-blue?logo=python)](https://www.python.org/)
-[![PyPI - Version](https://img.shields.io/pypi/v/chebpy.svg)](https://pypi.python.org/pypi/chebpy)
-[![PyPI - Wheel](https://img.shields.io/pypi/wheel/chebpy.svg)](https://pypi.python.org/pypi/chebpy)
+[![PyPI - Version](https://img.shields.io/pypi/v/chebpy.svg)](https://pypi.org/project/chebfun/)
 
 ![Github](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=white)
