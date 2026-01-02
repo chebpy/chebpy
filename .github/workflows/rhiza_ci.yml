@@ -14,8 +14,9 @@ permissions:
 
 on:
   push:
+    branches: [ main, master ]
   pull_request:
-    branches: [main, master]
+    branches: [ main, master ]
 
 jobs:
   generate-matrix:
@@ -25,10 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.21"
+
       - id: versions
         run: |
           # Generate Python versions JSON from the script
-          JSON=$(python ./.rhiza/utils/version_matrix.py)
+          JSON=$(make -s version-matrix)
           echo "list=$JSON" >> "$GITHUB_OUTPUT"
 
       - name: Debug matrix
@@ -52,21 +58,17 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.18"
+          version: "0.9.21"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
         run: |
           export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
           uv venv --python ${{ matrix.python-version }}
-          uv sync --all-extras --frozen
+          uv sync --all-extras --all-groups --frozen
 
-      - name: Install dependencies
-        run: |
-          if [ -f "tests/requirements.txt" ]; then
-            uv pip install -r tests/requirements.txt
-          fi
-          uv pip install pytest
+      - name: Install dev dependencies
+        run: bash .rhiza/scripts/install-dev-deps.sh
 
       - name: Run tests
         run: uv run pytest tests

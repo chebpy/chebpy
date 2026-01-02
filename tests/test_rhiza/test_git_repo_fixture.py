@@ -9,8 +9,12 @@ fixture is expected to provide for integration-style tests.
 """
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
+
+# Get absolute path for git to avoid S607 warnings
+GIT = shutil.which("git") or "/usr/bin/git"
 
 
 class TestGitRepoFixture:
@@ -61,7 +65,7 @@ class TestGitRepoFixture:
     def test_git_repo_is_initialized(self, git_repo):
         """Git repo should be properly initialized."""
         result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
+            [GIT, "rev-parse", "--git-dir"],
             cwd=git_repo,
             capture_output=True,
             text=True,
@@ -72,7 +76,7 @@ class TestGitRepoFixture:
     def test_git_repo_has_master_branch(self, git_repo):
         """Git repo should be on master branch."""
         result = subprocess.run(
-            ["git", "branch", "--show-current"],
+            [GIT, "branch", "--show-current"],
             cwd=git_repo,
             capture_output=True,
             text=True,
@@ -83,7 +87,7 @@ class TestGitRepoFixture:
     def test_git_repo_has_initial_commit(self, git_repo):
         """Git repo should have an initial commit."""
         result = subprocess.run(
-            ["git", "log", "--oneline"],
+            [GIT, "log", "--oneline"],
             cwd=git_repo,
             capture_output=True,
             text=True,
@@ -94,7 +98,7 @@ class TestGitRepoFixture:
     def test_git_repo_has_remote_configured(self, git_repo):
         """Git repo should have origin remote configured."""
         result = subprocess.run(
-            ["git", "remote", "-v"],
+            [GIT, "remote", "-v"],
             cwd=git_repo,
             capture_output=True,
             text=True,
@@ -105,12 +109,12 @@ class TestGitRepoFixture:
     def test_git_repo_user_config_is_set(self, git_repo):
         """Git repo should have user.email and user.name configured."""
         email = subprocess.check_output(
-            ["git", "config", "user.email"],
+            [GIT, "config", "user.email"],
             cwd=git_repo,
             text=True,
         ).strip()
         name = subprocess.check_output(
-            ["git", "config", "user.name"],
+            [GIT, "config", "user.name"],
             cwd=git_repo,
             text=True,
         ).strip()
@@ -120,7 +124,7 @@ class TestGitRepoFixture:
     def test_git_repo_working_tree_is_clean(self, git_repo):
         """Git repo should start with a clean working tree."""
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
+            [GIT, "status", "--porcelain"],
             cwd=git_repo,
             capture_output=True,
             text=True,

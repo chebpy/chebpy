@@ -4,6 +4,7 @@
 # Template branch: main
 #
 # Files under template control:
+.devcontainer/README.md
 .devcontainer/bootstrap.sh
 .devcontainer/devcontainer.json
 .editorconfig
@@ -20,15 +21,23 @@
 .github/workflows/rhiza_validate.yml
 .gitignore
 .pre-commit-config.yaml
+.rhiza/docs/CONFIG.md
+.rhiza/docs/TOKEN_SETUP.md
+.rhiza/requirements/README.md
+.rhiza/requirements/docs.txt
+.rhiza/requirements/marimo.txt
+.rhiza/requirements/tests.txt
+.rhiza/requirements/tools.txt
 .rhiza/scripts/book.sh
 .rhiza/scripts/bump.sh
 .rhiza/scripts/customisations/build-extras.sh
 .rhiza/scripts/customisations/post-release.sh
+.rhiza/scripts/generate-coverage-badge.sh
+.rhiza/scripts/install-dev-deps.sh
 .rhiza/scripts/marimushka.sh
 .rhiza/scripts/release.sh
 .rhiza/scripts/update-readme-help.sh
 .rhiza/utils/version_matrix.py
-.rhiza/utils/version_max.py
 Makefile
 book/Makefile.book
 presentation/Makefile.presentation
@@ -43,11 +52,14 @@ tests/test_rhiza/benchmarks/README.md
 tests/test_rhiza/benchmarks/analyze_benchmarks.py
 tests/test_rhiza/conftest.py
 tests/test_rhiza/test_bump_script.py
+tests/test_rhiza/test_coverage_badge.py
 tests/test_rhiza/test_docstrings.py
 tests/test_rhiza/test_git_repo_fixture.py
 tests/test_rhiza/test_makefile.py
 tests/test_rhiza/test_marimushka_script.py
+tests/test_rhiza/test_notebooks.py
 tests/test_rhiza/test_readme.py
 tests/test_rhiza/test_release_script.py
+tests/test_rhiza/test_requirements_folder.py
 tests/test_rhiza/test_structure.py
 tests/test_rhiza/test_updatereadme_script.py

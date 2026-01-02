@@ -131,8 +131,7 @@ do_bump() {
   if [ -n "$TYPE" ]; then
     # For bump types (patch/minor/major), calculate what the new version will be
     printf "%b[INFO] Bumping version using: %s%b\n" "$BLUE" "$TYPE" "$RESET"
-    NEW_VERSION=$("$UV_BIN" version --bump "$TYPE" --dry-run --short 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$NEW_VERSION" ]; then
+    if ! NEW_VERSION=$("$UV_BIN" version --bump "$TYPE" --dry-run --short 2>/dev/null) || [ -z "$NEW_VERSION" ]; then
       printf "%b[ERROR] Failed to calculate new version with type: %s%b\n" "$RED" "$TYPE" "$RESET"
       exit 1
     fi

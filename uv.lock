@@ -41,7 +41,7 @@ dependencies = [
     { name = "numpy", version = "2.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "marimo" },
     { name = "pre-commit" },
@@ -52,15 +52,18 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "marimo", marker = "extra == 'dev'", specifier = "==0.18.4" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=2.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.2.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2.1" },
-    { name = "seaborn", marker = "extra == 'dev'", specifier = "==0.13.2" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "marimo", specifier = "==0.18.4" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "seaborn", specifier = "==0.13.2" },
+]
 
 [[package]]
 name = "click"

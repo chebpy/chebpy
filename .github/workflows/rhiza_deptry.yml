@@ -18,6 +18,7 @@ permissions:
 
 on:
   push:
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
@@ -26,17 +27,14 @@ jobs:
     name: Check dependencies with deptry
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/astral-sh/uv:0.9.18-python3.12-trixie
+      image: ghcr.io/astral-sh/uv:0.9.21-python3.12-trixie
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Run deptry
-        run: |
-          set -euo pipefail
-          if [ -d "src" ]; then
-            SOURCE_FOLDER="src"
-          else
-            SOURCE_FOLDER="."
-          fi
-          uvx deptry "$SOURCE_FOLDER"
+        run: make deptry
+        # NOTE: make deptry is good style because it encapsulates the folders to check
+        # (e.g. src and book/marimo) and keeps CI in sync with local development.
+        # Since we use a 'uv' container, the Makefile is optimized to use the
+        # pre-installed 'uv' and 'uvx' from the system PATH.
