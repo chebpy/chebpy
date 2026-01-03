@@ -11,9 +11,7 @@ include:
 - .pre-commit-config.yaml
 - Makefile
 - ruff.toml
-- pytest.ini
 - presentation
 - renovate.json
 exclude:
 - .github/workflows/rhiza_docker.yml
-- pytest.ini
