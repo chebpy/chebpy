@@ -13,11 +13,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    #"pytest-cov>=6.2.1",
-    #"pre-commit>=4.2.0",
     "seaborn==0.13.2",
     "marimo==0.18.4",
-    #"pytest>=8.4.1"
 ]
 
 [project.urls]
@@ -32,10 +29,7 @@ build-backend = "hatchling.build"
 packages = ["src/chebpy"]
 
 [tool.deptry.package_module_name_map]
-#pytest-cov = "pytest_cov"
-#pre-commit = "pre_commit"
 matplotlib = "matplotlib"
 seaborn = "seaborn"
 marimo = "marimo"
-#pytest = "pytest"
 numpy = "numpy"
