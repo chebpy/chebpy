@@ -209,12 +209,10 @@ def git_repo(root, tmp_path, monkeypatch):
     script_dir.mkdir(parents=True)
 
     shutil.copy(root / ".rhiza" / "scripts" / "release.sh", script_dir / "release.sh")
-    shutil.copy(root / ".rhiza" / "scripts" / "bump.sh", script_dir / "bump.sh")
     shutil.copy(root / ".rhiza" / "scripts" / "marimushka.sh", script_dir / "marimushka.sh")
     shutil.copy(root / ".rhiza" / "scripts" / "update-readme-help.sh", script_dir / "update-readme-help.sh")
 
     (script_dir / "release.sh").chmod(0o755)
-    (script_dir / "bump.sh").chmod(0o755)
     (script_dir / "marimushka.sh").chmod(0o755)
     (script_dir / "update-readme-help.sh").chmod(0o755)
 
