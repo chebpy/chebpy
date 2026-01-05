@@ -54,11 +54,10 @@ class TestGitRepoFixture:
         scripts_dir = git_repo / ".rhiza" / "scripts"
         assert scripts_dir.exists()
         assert (scripts_dir / "release.sh").exists()
-        assert (scripts_dir / "bump.sh").exists()
 
     def test_git_repo_scripts_are_executable(self, git_repo):
         """GitHub scripts should be executable."""
-        for script in ["release.sh", "bump.sh"]:
+        for script in ["release.sh"]:
             script_path = git_repo / ".rhiza" / "scripts" / script
             assert os.access(script_path, os.X_OK), f"{script} is not executable"
 
