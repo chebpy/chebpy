@@ -5,6 +5,7 @@
 
 ### Don't expose API keys, etc.
 .env
+!.rhiza/.env
 
 __marimo__
 

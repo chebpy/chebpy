@@ -11,7 +11,7 @@ sign_tags = false
 tag_name = "v{new_version}"
 tag_message = "Bump version: {current_version} → {new_version}"
 allow_dirty = false
-commit = false
+commit = true
 message = "Chore: bump version {current_version} → {new_version}"
 commit_args = ""
 
@@ -27,5 +27,10 @@ values = [
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "uv.lock"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
