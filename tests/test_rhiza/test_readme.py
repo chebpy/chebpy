@@ -18,6 +18,12 @@ CODE_BLOCK = re.compile(r"```python\n(.*?)```", re.DOTALL)
 
 RESULT = re.compile(r"```result\n(.*?)```", re.DOTALL)
 
+# Regex for Bash code blocks
+BASH_BLOCK = re.compile(r"```bash\n(.*?)```", re.DOTALL)
+
+# Bash executable used for syntax checking; subprocess.run below is trusted (noqa: S603).
+BASH = "bash"
+
 
 def test_readme_runs(logger, root):
     """Execute README code blocks and compare output to documented results."""
@@ -75,3 +81,51 @@ class TestReadmeTestEdgeCases:
                 compile(code, f"<readme_block_{i}>", "exec")
             except SyntaxError as e:
                 pytest.fail(f"Code block {i} has syntax error: {e}")
+
+
+class TestReadmeBashFragments:
+    """Tests for bash code fragments in README."""
+
+    def test_bash_blocks_are_non_empty(self, root):
+        """Bash code blocks in README should not be empty."""
+        readme = root / "README.md"
+        content = readme.read_text(encoding="utf-8")
+        bash_blocks = BASH_BLOCK.findall(content)
+
+        for i, code in enumerate(bash_blocks):
+            assert code.strip(), f"Bash block {i} should not be empty"
+
+    def test_bash_blocks_basic_syntax(self, root, logger):
+        """Bash code blocks should have basic valid syntax (can be parsed by bash -n)."""
+        readme = root / "README.md"
+        content = readme.read_text(encoding="utf-8")
+        bash_blocks = BASH_BLOCK.findall(content)
+
+        logger.info("Found %d bash code block(s) in README", len(bash_blocks))
+
+        for i, code in enumerate(bash_blocks):
+            # Skip directory tree representations and other non-executable blocks
+            if any(marker in code for marker in ["├──", "└──", "│"]):
+                logger.info("Skipping bash block %d (directory tree representation)", i)
+                continue
+
+            # Skip blocks that are primarily comments or documentation
+            lines = [line.strip() for line in code.split("\n") if line.strip()]
+            non_comment_lines = [line for line in lines if not line.startswith("#")]
+            if not non_comment_lines:
+                logger.info("Skipping bash block %d (only comments)", i)
+                continue
+
+            logger.debug("Checking bash block %d:\n%s", i, code)
+
+            # Use bash -n to check syntax without executing
+            # Trust boundary: we use bash -n which only parses without executing
+            result = subprocess.run(
+                [BASH, "-n"],  # noqa: S603
+                input=code,
+                capture_output=True,
+                text=True,
+            )
+
+            if result.returncode != 0:
+                pytest.fail(f"Bash block {i} has syntax errors:\nCode:\n{code}\nError:\n{result.stderr}")

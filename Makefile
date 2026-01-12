@@ -18,51 +18,61 @@ RESET := \033[0m
 
 # Declare phony targets (they don't produce files)
 .PHONY: \
-	install-uv \
+	bump \
+	clean \
+	customisations \
+	deptry \
+	fmt \
+	help \
 	install \
 	install-extras \
-	clean \
+	install-uv \
 	marimo \
-	fmt \
-	deptry \
-	bump \
-	release \
-	release-dry-run \
 	post-release \
+	release \
 	sync \
-	help \
-	update-readme
+	update-readme \
+	validate \
+	version-matrix
 
-UV_INSTALL_DIR ?= ./bin
-UV_BIN ?= $(shell command -v uv 2>/dev/null || echo ${UV_INSTALL_DIR}/uv)
-UVX_BIN ?= $(shell command -v uvx 2>/dev/null || echo ${UV_INSTALL_DIR}/uvx)
+INSTALL_DIR ?= ./bin
+UV_BIN ?= $(shell command -v uv 2>/dev/null || echo ${INSTALL_DIR}/uv)
+UVX_BIN ?= $(shell command -v uvx 2>/dev/null || echo ${INSTALL_DIR}/uvx)
 VENV ?= .venv
+
+# Read Python version from .python-version (single source of truth)
+PYTHON_VERSION ?= $(shell cat .python-version 2>/dev/null || echo "3.12")
+export PYTHON_VERSION
 
 export UV_NO_MODIFY_PATH := 1
 export UV_VENV_CLEAR := 1
 
-# Load .rhiza.env (if present) and export its variables so recipes see them.
-include .rhiza.env
+# Load .rhiza/.env (if present) and export its variables so recipes see them.
+-include .rhiza/.env
 
 # Include split Makefiles
 -include tests/Makefile.tests
 -include book/Makefile.book
 -include presentation/Makefile.presentation
+-include docker/Makefile.docker
 -include .rhiza/customisations/Makefile.customisations
+-include .rhiza/agentic/Makefile.agentic
+-include .rhiza/Makefile.rhiza
+-include .github/Makefile.gh
 
 ##@ Bootstrap
 install-uv: ## ensure uv/uvx is installed
-	# Ensure the ${UV_INSTALL_DIR} folder exists
-	@mkdir -p ${UV_INSTALL_DIR}
+	# Ensure the ${INSTALL_DIR} folder exists
+	@mkdir -p ${INSTALL_DIR}
 
 	# Install uv/uvx only if they are not already present in PATH or in the install dir
 	@if command -v uv >/dev/null 2>&1 && command -v uvx >/dev/null 2>&1; then \
 	  :; \
-	elif [ -x "${UV_INSTALL_DIR}/uv" ] && [ -x "${UV_INSTALL_DIR}/uvx" ]; then \
-	  printf "${BLUE}[INFO] uv and uvx already installed in ${UV_INSTALL_DIR}, skipping.${RESET}\n"; \
+	elif [ -x "${INSTALL_DIR}/uv" ] && [ -x "${INSTALL_DIR}/uvx" ]; then \
+	  printf "${BLUE}[INFO] uv and uvx already installed in ${INSTALL_DIR}, skipping.${RESET}\n"; \
 	else \
-	  printf "${BLUE}[INFO] Installing uv and uvx into ${UV_INSTALL_DIR}...${RESET}\n"; \
-	  if ! curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="${UV_INSTALL_DIR}" sh >/dev/null 2>&1; then \
+	  printf "${BLUE}[INFO] Installing uv and uvx into ${INSTALL_DIR}...${RESET}\n"; \
+	  if ! curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="${INSTALL_DIR}" sh >/dev/null 2>&1; then \
 	    printf "${RED}[ERROR] Failed to install uv${RESET}\n"; \
 	    exit 1; \
 	  fi; \
@@ -109,22 +119,6 @@ install: install-uv install-extras ## install
 	  ${UV_BIN} pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }; \
 	fi
 
-sync: ## sync with template repository as defined in .github/template.yml
-	@if git remote get-url origin 2>/dev/null | grep -iq 'jebel-quant/rhiza'; then \
-		printf "${BLUE}[INFO] Skipping sync in rhiza repository (no template.yml by design)${RESET}\n"; \
-	else \
-		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=0.7.1" materialize --force .; \
-	fi
-
-validate: ## validate project structure against template repository as defined in .github/template.yml
-	@if git remote get-url origin 2>/dev/null | grep -iq 'jebel-quant/rhiza'; then \
-		printf "${BLUE}[INFO] Skipping validate in rhiza repository (no template.yml by design)${RESET}\n"; \
-	else \
-		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=0.7.1" validate .; \
-	fi
-
 clean: ## Clean project artifacts and stale local branches
 	@printf "%bCleaning project...%b\n" "$(BLUE)" "$(RESET)"
 
@@ -139,7 +133,8 @@ clean: ## Clean project artifacts and stale local branches
 		build \
 		*.egg-info \
 		.coverage \
-		.pytest_cache
+		.pytest_cache \
+		.benchmarks
 
 	@printf "%bRemoving local branches with no remote counterpart...%b\n" "$(BLUE)" "$(RESET)"
 
@@ -169,8 +164,8 @@ deptry: install-uv ## Run deptry
 		fi \
 	fi
 
-fmt: install-uv ## check the pre-commit hooks and the linting
-	@${UVX_BIN} pre-commit run --all-files
+fmt: install ## check the pre-commit hooks and the linting
+	@${UV_BIN} run pre-commit run --all-files
 
 ##@ Releasing and Versioning
 bump: ## bump version
@@ -181,7 +176,7 @@ bump: ## bump version
 		${UV_BIN} lock; \
 	else \
 		printf "${YELLOW}[WARN] No pyproject.toml found, skipping bump${RESET}\n"; \
-	fi 
+	fi
 
 release: install-uv ## create tag and push to remote with prompts
 	@UV_BIN="${UV_BIN}" /bin/sh "${SCRIPTS_FOLDER}/release.sh"
@@ -192,7 +187,7 @@ post-release:: install-uv ## perform post-release tasks
 
 ##@ Meta
 
-help: ## Display this help message
+help: print-logo ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"
 	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
 	+@printf "$(BOLD)Targets:$(RESET)\n"

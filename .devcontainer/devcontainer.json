@@ -1,19 +1,21 @@
 {
-    "name": "Python 3.14 (Rhiza)",
+    "name": "Python Dev (Rhiza)",
     "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "hostRequirements": {
         "cpus": 4
     },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {},
-        "ghcr.io/devcontainers/features/git:1": {}
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/copilot-cli:1": {}
     },
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
     ],
     "containerEnv": {
         "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
-        "UV_INSTALL_DIR": "/home/vscode/.local/bin"
+        "INSTALL_DIR": "/home/vscode/.local/bin"
     },
     "forwardPorts": [8080],
     "customizations": {

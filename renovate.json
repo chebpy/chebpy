@@ -18,5 +18,12 @@
     "timezone": "Asia/Dubai",
     "schedule": [
         "before 10am on tuesday"
+    ],
+    "packageRules": [
+      {
+        "matchManagers": ["pep621"],
+        "matchPackageNames": ["python"],
+        "enabled": false
+      }
     ]
 }

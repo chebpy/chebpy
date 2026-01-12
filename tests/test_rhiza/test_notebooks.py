@@ -7,15 +7,15 @@ from pathlib import Path
 import pytest
 from dotenv import dotenv_values
 
-# Read .rhiza.env at collection time (no environment side-effects).
+# Read .rhiza/.rhiza.env at collection time (no environment side-effects).
 # dotenv_values returns a dict of key -> value (or None for missing).
-RHIZA_ENV_PATH = Path(".rhiza.env")
+RHIZA_ENV_PATH = Path(".rhiza/.env")
 
 
 def collect_marimo_notebooks(env_path: Path = RHIZA_ENV_PATH):
-    """Return a sorted list of notebook script Paths discovered from .rhiza.env.
+    """Return a sorted list of notebook script Paths discovered from .rhiza/.rhiza.env.
 
-    - Reads MARIMO_FOLDER from .rhiza.env (if present), otherwise falls back to "book/marimo".
+    - Reads MARIMO_FOLDER from .rhiza/.rhiza.env (if present), otherwise falls back to "book/marimo".
     - Returns [] if the folder does not exist.
     """
     values = {}
