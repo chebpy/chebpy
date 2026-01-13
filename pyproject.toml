@@ -14,7 +14,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.18.4",
+    "marimo==0.19.2",
 ]
 
 [project.urls]
