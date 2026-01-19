@@ -9,7 +9,7 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.11'
+    rev: 'v0.14.13'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -36,18 +36,30 @@ repos:
     rev: v1.7.10
     hooks:
       - id: actionlint
-        args: [ -ignore, SC ]
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
 
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.2
+    hooks:
+      - id: bandit
+        args: ["--skip", "B101", "--exclude", ".venv,tests,.git,.pytest_cache"]
+
   - repo: local
     hooks:
       - id: update-readme-help
         name: Update README with Makefile help output
-        entry: /bin/sh .rhiza/scripts/update-readme-help.sh
+        entry: make readme
         language: system
         files: '^Makefile$'
         pass_filenames: false
+
+      - id: check-rhiza-workflow-names
+        name: Check and Fix Rhiza workflow names
+        entry: python .rhiza/scripts/check_workflow_names.py
+        language: python
+        additional_dependencies: [PyYAML]
+        files: ^\.github/workflows/rhiza_.*\.ya?ml$

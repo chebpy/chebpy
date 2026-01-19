@@ -25,24 +25,6 @@ if len(sys.argv) > 1 and sys.argv[1] == "help":
     print("target: ## Description")
 """
 
-MOCK_UVX_SCRIPT = """#!/usr/bin/env python3
-import sys
-import os
-
-# args look like: marimushka>=0.1.9 export --notebooks . --output /path/to/output --bin-path ...
-args = sys.argv[1:]
-if "export" in args:
-    try:
-        if "--output" in args:
-            output_idx = args.index("--output")
-            output_dir = args[output_idx + 1]
-            os.makedirs(output_dir, exist_ok=True)
-            with open(os.path.join(output_dir, "index.html"), "w") as f:
-                f.write("<html>Mock Export</html>")
-    except ValueError:
-        pass
-"""
-
 MOCK_UV_SCRIPT = """#!/usr/bin/env python3
 import sys
 import re
@@ -191,11 +173,6 @@ def git_repo(root, tmp_path, monkeypatch):
         f.write(MOCK_UV_SCRIPT)
     uv_path.chmod(0o755)
 
-    uvx_path = bin_dir / "uvx"
-    with open(uvx_path, "w") as f:
-        f.write(MOCK_UVX_SCRIPT)
-    uvx_path.chmod(0o755)
-
     make_path = bin_dir / "make"
     with open(make_path, "w") as f:
         f.write(MOCK_MAKE_SCRIPT)
@@ -204,17 +181,18 @@ def git_repo(root, tmp_path, monkeypatch):
     # Ensure our bin comes first on PATH so 'uv' resolves to mock
     monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ.get('PATH', '')}")
 
-    # Copy scripts
+    # Copy scripts and core Rhiza Makefiles
     script_dir = local_dir / ".rhiza" / "scripts"
     script_dir.mkdir(parents=True)
 
     shutil.copy(root / ".rhiza" / "scripts" / "release.sh", script_dir / "release.sh")
-    shutil.copy(root / ".rhiza" / "scripts" / "marimushka.sh", script_dir / "marimushka.sh")
-    shutil.copy(root / ".rhiza" / "scripts" / "update-readme-help.sh", script_dir / "update-readme-help.sh")
+    shutil.copy(root / ".rhiza" / "rhiza.mk", local_dir / ".rhiza" / "rhiza.mk")
+    shutil.copy(root / "Makefile", local_dir / "Makefile")
+    os.makedirs(local_dir / "book" / "marimo", exist_ok=True)
+    shutil.copy(root / "book" / "book.mk", local_dir / "book" / "book.mk")
+    shutil.copy(root / "book" / "marimo" / "marimo.mk", local_dir / "book" / "marimo" / "marimo.mk")
 
     (script_dir / "release.sh").chmod(0o755)
-    (script_dir / "marimushka.sh").chmod(0o755)
-    (script_dir / "update-readme-help.sh").chmod(0o755)
 
     # Commit and push initial state
     subprocess.run([GIT, "config", "user.email", "test@example.com"], check=True)
@@ -223,4 +201,4 @@ def git_repo(root, tmp_path, monkeypatch):
     subprocess.run([GIT, "commit", "-m", "Initial commit"], check=True)
     subprocess.run([GIT, "push", "origin", "master"], check=True)
 
-    yield local_dir
+    return local_dir

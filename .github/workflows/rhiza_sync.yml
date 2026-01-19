@@ -1,4 +1,4 @@
-name: RHIZA SYNC
+name: (RHIZA) SYNC
 # This workflow synchronizes the repository with its template.
 # IMPORTANT: When workflow files (.github/workflows/rhiza_*.yml) are modified,
 # a Personal Access Token (PAT) with 'workflow' scope is required.

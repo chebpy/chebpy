@@ -74,9 +74,9 @@ fig.update_traces(texttemplate="%{text:.2f} ms", textposition="outside")
 fig.update_layout(
     xaxis_tickangle=-45,
     yaxis_title="Mean Runtime (ms)",
-    coloraxis_colorbar=dict(title="ms"),
+    coloraxis_colorbar={"title": "ms"},
     height=600,
-    margin=dict(t=100, b=200),
+    margin={"t": 100, "b": 200},
 )
 
 fig.show()

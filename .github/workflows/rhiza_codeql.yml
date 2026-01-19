@@ -9,7 +9,22 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL Advanced"
+# ******** IMPORTANT: GitHub Advanced Security Required ********
+# CodeQL is FREE for public repositories, but requires GitHub Advanced Security
+# (part of GitHub Enterprise) for private repositories.
+#
+# This workflow automatically:
+# - Runs on public repositories
+# - Skips on private repositories (unless Advanced Security is available)
+#
+# To control this behavior, set the CODEQL_ENABLED repository variable:
+# - Set to 'true' to force enable (if you have Advanced Security on private repos)
+# - Set to 'false' to disable entirely
+# - Leave unset for automatic behavior (recommended)
+#
+# For more information, see docs/CUSTOMIZATION.md
+#
+name: "(RHIZA) CODEQL"
 
 on:
   push:
@@ -28,7 +43,15 @@ jobs:
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    if: ${{ !github.event.repository.private }}
+    # CodeQL requires GitHub Advanced Security (part of GitHub Enterprise).
+    # For users without Enterprise license:
+    # - Public repositories: CodeQL is available for free
+    # - Private repositories: Requires GitHub Advanced Security
+    # To disable this workflow, set CODEQL_ENABLED repository variable to 'false'
+    # To enable this workflow for private repos with Advanced Security, set CODEQL_ENABLED to 'true'
+    if: |
+      vars.CODEQL_ENABLED == 'true' ||
+      (vars.CODEQL_ENABLED != 'false' && github.event.repository.visibility == 'public')
     permissions:
       # required for all workflows
       security-events: write

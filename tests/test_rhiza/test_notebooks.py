@@ -1,4 +1,4 @@
-"""Tests for Marimo notebooks in the book/marimo directory."""
+"""Tests for Marimo notebooks."""
 
 import shutil
 import subprocess
@@ -7,22 +7,22 @@ from pathlib import Path
 import pytest
 from dotenv import dotenv_values
 
-# Read .rhiza/.rhiza.env at collection time (no environment side-effects).
+# Read .rhiza/.env at collection time (no environment side-effects).
 # dotenv_values returns a dict of key -> value (or None for missing).
 RHIZA_ENV_PATH = Path(".rhiza/.env")
 
 
 def collect_marimo_notebooks(env_path: Path = RHIZA_ENV_PATH):
-    """Return a sorted list of notebook script Paths discovered from .rhiza/.rhiza.env.
+    """Return a sorted list of notebook script Paths discovered from .rhiza/.env.
 
-    - Reads MARIMO_FOLDER from .rhiza/.rhiza.env (if present), otherwise falls back to "book/marimo".
+    - Reads MARIMO_FOLDER from .rhiza/.env (if present), otherwise falls back to "marimo".
     - Returns [] if the folder does not exist.
     """
     values = {}
     if env_path.exists():
         values = dotenv_values(env_path)
 
-    marimo_folder = values.get("MARIMO_FOLDER") or "book/marimo"
+    marimo_folder = values.get("MARIMO_FOLDER", "book/marimo/notebooks")
     marimo_path = Path(marimo_folder)
 
     if not marimo_path.exists():
@@ -55,6 +55,8 @@ def test_notebook_execution(notebook_path: Path):
 
     cmd = [
         uvx_cmd,
+        "--with",
+        "typing_extensions",  # Workaround: marimo's starlette dep needs this
         "marimo",
         "export",
         "html",

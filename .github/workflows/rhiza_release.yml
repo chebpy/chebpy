@@ -33,6 +33,7 @@
 #   - No PyPI credentials stored; relies on Trusted Publishing via GitHub OIDC
 #   - For custom feeds, PYPI_TOKEN secret is used with default username __token__
 #   - Container registry uses GITHUB_TOKEN for authentication
+#   - SLSA provenance attestations generated for build artifacts (supply chain security)
 #
 # 📄 Requirements:
 #   - pyproject.toml with top-level version field (for Python packages)
@@ -53,7 +54,7 @@
 #   set to "true" or .devcontainer directory doesn't exist.
 
 
-name: RELEASE
+name: (RHIZA) RELEASE
 
 on:
   push:
@@ -61,9 +62,10 @@ on:
       - 'v*'
 
 permissions:
-  contents: write  # Needed to create releases
-  id-token: write  # Needed for OIDC authentication with PyPI
-  packages: write  # Needed to publish devcontainer image
+  contents: write       # Needed to create releases
+  id-token: write       # Needed for OIDC authentication with PyPI
+  packages: write       # Needed to publish devcontainer image
+  attestations: write   # Needed for SLSA provenance attestations
 
 jobs:
   tag:
@@ -81,7 +83,7 @@ jobs:
         id: set_tag
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Validate Release
         env:
@@ -111,7 +113,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
@@ -148,6 +150,11 @@ jobs:
           printf "[INFO] Building package...\n"
           uvx hatch build
 
+      - name: Generate SLSA provenance attestations
+        if: steps.buildable.outputs.buildable == 'true'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
 
       - name: Upload dist artifact
         if: steps.buildable.outputs.buildable == 'true'
@@ -199,15 +206,15 @@ jobs:
         run: |
           if [[ ! -d dist ]]; then
             echo "::warning::No folder dist/. Skipping PyPI publish."
-            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
           else
             if grep -R "Private :: Do Not Upload" pyproject.toml; then
-              echo "should_publish=false" >> $GITHUB_OUTPUT
+              echo "should_publish=false" >> "$GITHUB_OUTPUT"
             else
-              echo "should_publish=true" >> $GITHUB_OUTPUT
+              echo "should_publish=true" >> "$GITHUB_OUTPUT"
             fi
           fi
-          cat $GITHUB_OUTPUT
+          cat "$GITHUB_OUTPUT"
 
       # this should not take place, as "Private :: Do Not Upload" set in pyproject.toml
       # repository-url and password only used for custom feeds, not for PyPI with OIDC
@@ -240,10 +247,10 @@ jobs:
           PUBLISH_DEVCONTAINER: ${{ vars.PUBLISH_DEVCONTAINER }}
         run: |
           if [[ "$PUBLISH_DEVCONTAINER" == "true" ]] && [[ -d ".devcontainer" ]]; then
-            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
             echo "🚀 Will build and publish devcontainer image"
           else
-            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
             echo "⏭️  Skipping devcontainer publish (PUBLISH_DEVCONTAINER not true or .devcontainer missing)"
           fi
 
@@ -255,7 +262,7 @@ jobs:
           if [ -z "$REGISTRY" ]; then
             REGISTRY="ghcr.io"
           fi
-          echo "registry=$REGISTRY" >> $GITHUB_OUTPUT
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
 
       - name: Login to Container Registry
         if: steps.check_publish.outputs.should_publish == 'true'
@@ -268,7 +275,7 @@ jobs:
       - name: Get lowercase repository owner
         if: steps.check_publish.outputs.should_publish == 'true'
         id: repo_owner
-        run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+        run: echo "owner_lc=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Get Image Name
         if: steps.check_publish.outputs.should_publish == 'true'
@@ -297,7 +304,7 @@ jobs:
 
           IMAGE_NAME="${{ steps.registry.outputs.registry }}/${{ steps.repo_owner.outputs.owner_lc }}/$IMAGE_NAME"
           echo "✅ Final image name: $IMAGE_NAME"
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Build and Publish Devcontainer Image
         if: steps.check_publish.outputs.should_publish == 'true'
@@ -322,7 +329,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
@@ -338,7 +345,6 @@ jobs:
         id: devcontainer_link
         if: needs.devcontainer.outputs.should_publish == 'true' && needs.devcontainer.result == 'success'
         run: |
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           FULL_IMAGE="${{ needs.devcontainer.outputs.image_name }}:${{ needs.tag.outputs.tag }}"
           {
             echo "message<<EOF"
@@ -346,7 +352,7 @@ jobs:
             echo ""
             echo "\`$FULL_IMAGE\`"
             echo "EOF"
-          } >> $GITHUB_OUTPUT
+          } >> "$GITHUB_OUTPUT"
 
       - name: Generate PyPI Link
         id: pypi_link
@@ -371,7 +377,7 @@ jobs:
             echo ""
             echo "[$PACKAGE_NAME]($LINK)"
             echo "EOF"
-          } >> $GITHUB_OUTPUT
+          } >> "$GITHUB_OUTPUT"
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2.5.0

@@ -24,6 +24,11 @@ indent_size = 2
 # [*.{md,markdown}]
 # trim_trailing_whitespace = false
 
+# Makefiles require tabs
+[{Makefile,*.mk,*.make}]
+indent_style = tab
+indent_size = 4
+
 # Don't apply editorconfig rules to vendor/ resources
 # This is a "defensive" rule for the day we may have
 # the vendor folder

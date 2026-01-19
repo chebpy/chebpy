@@ -7,9 +7,10 @@
 # This script is POSIX-sh compatible and follows the style of other scripts
 # in this repository. It uses uv to read the current version.
 
-set -e
+set -eu
 
 UV_BIN=${UV_BIN:-./bin/uv}
+DRY_RUN=""
 
 BLUE="\033[36m"
 RED="\033[31m"
@@ -23,13 +24,19 @@ show_usage() {
   printf "Description:\n"
   printf "  Create tag and push to remote (with prompts)\n\n"
   printf "Options:\n"
+  printf "  -n, --dry-run  Show what would be done without making changes\n"
   printf "  -h, --help     Show this help message\n\n"
   printf "Examples:\n"
   printf "  %s                                      (create tag and push with prompts)\n" "$0"
+  printf "  %s --dry-run                            (simulate release without changes)\n" "$0"
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    -n|--dry-run)
+      DRY_RUN="true"
+      shift
+      ;;
     -h|--help)
       show_usage
       exit 0
@@ -60,11 +67,16 @@ if [ ! -x "$UV_BIN" ]; then
 fi
 
 # Helper function to prompt user to continue
+# In dry-run mode, automatically continues without prompting
 prompt_continue() {
-  local message="$1"
-  printf "\n%b[PROMPT] %s Continue? [y/N] %b" "$YELLOW" "$message" "$RESET"
-  read -r answer
-  case "$answer" in
+  _pc_message="$1"
+  if [ -n "$DRY_RUN" ]; then
+    printf "\n%b[DRY-RUN] %s Would prompt to continue%b\n" "$YELLOW" "$_pc_message" "$RESET"
+    return 0
+  fi
+  printf "\n%b[PROMPT] %s Continue? [y/N] %b" "$YELLOW" "$_pc_message" "$RESET"
+  read -r _pc_answer
+  case "$_pc_answer" in
     [Yy]*)
       return 0
       ;;
@@ -76,11 +88,16 @@ prompt_continue() {
 }
 
 # Helper function to prompt user for yes/no
+# In dry-run mode, automatically returns yes
 prompt_yes_no() {
-  local message="$1"
-  printf "\n%b[PROMPT] %s [y/N] %b" "$YELLOW" "$message" "$RESET"
-  read -r answer
-  case "$answer" in
+  _pyn_message="$1"
+  if [ -n "$DRY_RUN" ]; then
+    printf "\n%b[DRY-RUN] %s Would prompt yes/no%b\n" "$YELLOW" "$_pyn_message" "$RESET"
+    return 0
+  fi
+  printf "\n%b[PROMPT] %s [y/N] %b" "$YELLOW" "$_pyn_message" "$RESET"
+  read -r _pyn_answer
+  case "$_pyn_answer" in
     [Yy]*)
       return 0
       ;;
@@ -138,7 +155,7 @@ do_release() {
   printf "%b[INFO] Checking remote status...%b\n" "$BLUE" "$RESET"
   git fetch origin >/dev/null 2>&1
   # Get the upstream tracking branch (e.g., origin/main)
-  UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
+  UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)
   if [ -z "$UPSTREAM" ]; then
     printf "%b[ERROR] No upstream branch configured for %s%b\n" "$RED" "$CURRENT_BRANCH" "$RESET"
     exit 1
@@ -164,7 +181,11 @@ do_release() {
         printf "Unpushed commits:\n"
         git log --oneline --graph --decorate "$UPSTREAM..HEAD"
         prompt_continue "Push changes to remote before releasing?"
-        git push origin "$CURRENT_BRANCH"
+        if [ -n "$DRY_RUN" ]; then
+          printf "%b[DRY-RUN] Would run: git push origin %s%b\n" "$YELLOW" "$CURRENT_BRANCH" "$RESET"
+        else
+          git push origin "$CURRENT_BRANCH"
+        fi
     else
         # Branches have diverged (need to merge or rebase)
         printf "%b[ERROR] Your branch has diverged from '%s'. Please reconcile.%b\n" "$RED" "$UPSTREAM" "$RESET"
@@ -173,6 +194,7 @@ do_release() {
   fi
 
   # Check if tag already exists locally
+  SKIP_TAG_CREATE=""
   if git rev-parse "$TAG" >/dev/null 2>&1; then
     printf "%b[WARN] Tag '%s' already exists locally%b\n" "$YELLOW" "$TAG" "$RESET"
     prompt_continue "Tag exists. Skip tag creation and proceed to push?"
@@ -197,12 +219,24 @@ do_release() {
     # Signed tags provide cryptographic verification of release authenticity
     if git config --get user.signingkey >/dev/null 2>&1 || [ "$(git config --get commit.gpgsign)" = "true" ]; then
       printf "%b[INFO] GPG signing is enabled. Creating signed tag.%b\n" "$BLUE" "$RESET"
-      git tag -s "$TAG" -m "Release $TAG"
+      if [ -n "$DRY_RUN" ]; then
+        printf "%b[DRY-RUN] Would run: git tag -s %s -m \"Release %s\"%b\n" "$YELLOW" "$TAG" "$TAG" "$RESET"
+      else
+        git tag -s "$TAG" -m "Release $TAG"
+      fi
     else
       printf "%b[INFO] GPG signing is not enabled. Creating unsigned tag.%b\n" "$BLUE" "$RESET"
-      git tag -a "$TAG" -m "Release $TAG"
+      if [ -n "$DRY_RUN" ]; then
+        printf "%b[DRY-RUN] Would run: git tag -a %s -m \"Release %s\"%b\n" "$YELLOW" "$TAG" "$TAG" "$RESET"
+      else
+        git tag -a "$TAG" -m "Release $TAG"
+      fi
     fi
-    printf "%b[SUCCESS] Tag '%s' created locally%b\n" "$GREEN" "$TAG" "$RESET"
+    if [ -n "$DRY_RUN" ]; then
+      printf "%b[DRY-RUN] Tag '%s' would be created locally%b\n" "$YELLOW" "$TAG" "$RESET"
+    else
+      printf "%b[SUCCESS] Tag '%s' created locally%b\n" "$GREEN" "$TAG" "$RESET"
+    fi
   fi
 
   # Step 2: Push the tag to remote
@@ -219,16 +253,23 @@ do_release() {
   fi
   
   prompt_continue ""
-  
+
   # Push only the specific tag (not all tags) to trigger the release workflow
-  git push origin "refs/tags/$TAG"
-  
   # Extract repository name from remote URL for constructing GitHub Actions link
   # Converts git@github.com:user/repo.git or https://github.com/user/repo.git to user/repo
   REPO_URL=$(git remote get-url origin | sed 's/.*github.com[:/]\(.*\)\.git/\1/')
-  printf "\n%b[SUCCESS] Release tag %s pushed to remote!%b\n" "$GREEN" "$TAG" "$RESET"
-  printf "%b[INFO] The release workflow will now be triggered automatically.%b\n" "$BLUE" "$RESET"
-  printf "%b[INFO] Monitor progress at: https://github.com/%s/actions%b\n" "$BLUE" "$REPO_URL" "$RESET"
+
+  if [ -n "$DRY_RUN" ]; then
+    printf "%b[DRY-RUN] Would run: git push origin refs/tags/%s%b\n" "$YELLOW" "$TAG" "$RESET"
+    printf "\n%b[DRY-RUN] Release tag %s would be pushed to remote%b\n" "$YELLOW" "$TAG" "$RESET"
+    printf "%b[DRY-RUN] This would trigger the release workflow%b\n" "$YELLOW" "$RESET"
+    printf "%b[INFO] Monitor progress at: https://github.com/%s/actions%b\n" "$BLUE" "$REPO_URL" "$RESET"
+  else
+    git push origin "refs/tags/$TAG"
+    printf "\n%b[SUCCESS] Release tag %s pushed to remote!%b\n" "$GREEN" "$TAG" "$RESET"
+    printf "%b[INFO] The release workflow will now be triggered automatically.%b\n" "$BLUE" "$RESET"
+    printf "%b[INFO] Monitor progress at: https://github.com/%s/actions%b\n" "$BLUE" "$REPO_URL" "$RESET"
+  fi
 }
 
 # Main execution logic

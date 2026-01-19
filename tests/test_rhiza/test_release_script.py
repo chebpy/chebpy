@@ -8,11 +8,12 @@ Tests call the script from a temporary clone and use a small mock `uv`
 to avoid external dependencies.
 """
 
+import shutil
 import subprocess
 
-# Get shell path once at module level
-SHELL = "/bin/sh"
-GIT = "/usr/bin/git"
+# Get absolute paths for executables to avoid S607 warnings from CodeFactor/Bandit
+SHELL = shutil.which("sh") or "/bin/sh"
+GIT = shutil.which("git") or "/usr/bin/git"
 
 
 def test_release_creates_tag(git_repo):
@@ -127,3 +128,103 @@ def test_release_fails_if_behind_remote(git_repo):
 
     assert result.returncode == 1
     assert "Your branch is behind" in result.stdout
+
+
+def test_dry_run_flag_recognized(git_repo):
+    """Test that --dry-run flag is recognized and script executes."""
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
+
+    # Run with --dry-run flag
+    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)
+
+    # Should exit successfully
+    assert result.returncode == 0
+    # Should show dry-run messages
+    assert "[DRY-RUN]" in result.stdout
+
+
+def test_dry_run_no_git_operations(git_repo):
+    """Test that no actual git operations are performed in dry-run mode."""
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
+
+    # Get initial git state
+    tags_before = subprocess.run(
+        [GIT, "tag", "-l"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    ).stdout
+
+    # Run with --dry-run
+    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)
+
+    assert result.returncode == 0
+
+    # Verify no tags were created
+    tags_after = subprocess.run(
+        [GIT, "tag", "-l"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert tags_before == tags_after
+
+    # Verify tag doesn't exist using consistent pattern with other tests
+    tag_check = subprocess.run(
+        [GIT, "tag", "-l", "v0.1.0"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    )
+    assert "v0.1.0" not in tag_check.stdout
+
+
+def test_dry_run_shows_appropriate_messages(git_repo):
+    """Test that appropriate DRY-RUN messages are displayed."""
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
+
+    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)
+
+    assert result.returncode == 0
+
+    # Check for key dry-run messages indicating simulation mode
+    assert "[DRY-RUN]" in result.stdout
+    assert "Would prompt" in result.stdout
+    assert "Would run: git tag" in result.stdout
+    assert "would be created locally" in result.stdout
+    assert "Would run: git push origin refs/tags/v0.1.0" in result.stdout
+    assert "would be pushed to remote" in result.stdout
+    assert "would trigger the release workflow" in result.stdout
+
+
+def test_dry_run_exits_successfully_without_creating_tags(git_repo):
+    """Test that script exits successfully without creating or pushing tags in dry-run mode."""
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
+
+    # Run with --dry-run
+    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)
+
+    # Should exit successfully
+    assert result.returncode == 0
+
+    # Verify no local tag was created
+    local_tag_check = subprocess.run(
+        [GIT, "tag", "-l", "v0.1.0"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    )
+    assert "v0.1.0" not in local_tag_check.stdout
+
+    # Verify no remote tag was pushed
+    remote_tag_check = subprocess.run(
+        [GIT, "ls-remote", "--tags", "origin", "v0.1.0"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    )
+    assert "v0.1.0" not in remote_tag_check.stdout
+
+    # Verify output indicates dry-run mode with specific indicators
+    assert "[DRY-RUN]" in result.stdout
+    assert "Would run:" in result.stdout
