@@ -9,7 +9,7 @@ This directory contains platform-agnostic scripts and utilities for the reposito
 ## Structure
 
 - **scripts/** - Shell scripts for common tasks (book generation, release, etc.)
-- **scripts/customisations/** - Repository-specific customization hooks
+- **scripts/customisations/** - Repository-specific customisation hooks
 - **utils/** - Python utilities for version management
 
 GitHub-specific composite actions are located in `.github/rhiza/actions/`.

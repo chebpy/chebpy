@@ -1,4 +1,4 @@
-## Makefile.gh - github repo maintenance and helpers
+## github.mk - github repo maintenance and helpers
 # This file is included by the main Makefile
 
 # Declare phony targets

@@ -14,7 +14,7 @@
 #   - 🧪 Run tests and generate coverage reports
 #   - 🚀 Deploy combined documentation to GitHub Pages
 
-name: "BOOK"
+name: "(RHIZA) BOOK"
 
 on:
   push:
@@ -43,18 +43,21 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
         run: |
-          export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
           # will just use .python-version?
           uv sync --all-extras --all-groups --frozen
 
       - name: "Make the book"
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
         run: |
-          make book
+          make -f .rhiza/rhiza.mk book
 
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
@@ -66,7 +69,7 @@ jobs:
       # Step 6: Deploy the packaged artifacts to GitHub Pages
       # This step publishes the content to GitHub Pages
       # The deployment is conditional based on whether the repository is a fork and the PUBLISH_COMPANION_BOOK variable is set
-      # If the repository is a fork, deployment is skipped to avoid unauthorized publishing
+      # If the repository is a fork, deployment is skipped to avoid unauthorised publishing
       # If PUBLISH_COMPANION_BOOK is not set, it defaults to allowing deployment
       - name: Deploy to GitHub Pages
         if: ${{ !github.event.repository.fork && (vars.PUBLISH_COMPANION_BOOK == 'true' || vars.PUBLISH_COMPANION_BOOK == '') }}

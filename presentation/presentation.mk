@@ -1,4 +1,4 @@
-## Makefile.presentation - Presentation targets
+## presentation.mk - Presentation targets
 # This file is included by the main Makefile
 
 # Declare phony targets (they don't produce files)

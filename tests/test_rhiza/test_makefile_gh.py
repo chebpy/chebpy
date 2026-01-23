@@ -1,6 +1,6 @@
 """Tests for the GitHub Makefile targets using safe dry-runs.
 
-These tests validate that the .github/Makefile.gh targets are correctly exposed
+These tests validate that the .github/github.mk targets are correctly exposed
 and emit the expected commands without actually executing them.
 """
 
@@ -13,9 +13,12 @@ from pathlib import Path
 
 import pytest
 
+# Get absolute paths for executables to avoid S607 warnings from CodeFactor/Bandit
+MAKE = shutil.which("make") or "/usr/bin/make"
+
 # We need to copy these files to the temp dir for the tests to work
 REQUIRED_FILES = [
-    ".github/Makefile.gh",
+    ".github/github.mk",
 ]
 
 
@@ -27,6 +30,11 @@ def setup_gh_makefile(logger, root, tmp_path: Path):
     # Copy the main Makefile
     if (root / "Makefile").exists():
         shutil.copy(root / "Makefile", tmp_path / "Makefile")
+
+    # Copy core Rhiza Makefiles
+    if (root / ".rhiza" / "rhiza.mk").exists():
+        (tmp_path / ".rhiza").mkdir(exist_ok=True)
+        shutil.copy(root / ".rhiza" / "rhiza.mk", tmp_path / ".rhiza" / "rhiza.mk")
 
     if (root / ".rhiza" / ".env").exists():
         (tmp_path / ".rhiza").mkdir(exist_ok=True)
@@ -56,7 +64,7 @@ def run_make(
     logger, args: list[str] | None = None, check: bool = True, dry_run: bool = True
 ) -> subprocess.CompletedProcess:
     """Run `make` with optional arguments."""
-    cmd = ["make"]
+    cmd = [MAKE]
     if args:
         cmd.extend(args)
     flags = "-sn" if dry_run else "-s"

@@ -15,7 +15,7 @@
 #   - 🧪 Run each notebook in parallel using a matrix strategy
 #   - ✅ Fail-fast disabled to report all failing notebooks
 
-name: "MARIMO"
+name: "(RHIZA) MARIMO"
 
 permissions:
   contents: read
@@ -40,7 +40,10 @@ jobs:
       - name: Find notebooks and build matrix
         id: notebooks
         run: |
-          NOTEBOOK_DIR="book/marimo"
+          # Extract MARIMO_FOLDER from the project configuration (via Makefile)
+          # shellcheck disable=SC2016 # Single quotes intentional - Make syntax, not shell expansion
+          NOTEBOOK_DIR=$(make -s -f Makefile -f - <<< 'print: ; @echo $(or $(MARIMO_FOLDER),marimo)' print)
+
           echo "Searching notebooks in: $NOTEBOOK_DIR"
           # Check if directory exists
           if [ ! -d "$NOTEBOOK_DIR" ]; then
@@ -80,7 +83,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
