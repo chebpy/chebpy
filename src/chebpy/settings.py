@@ -13,6 +13,8 @@ The module creates a singleton instance of ChebPreferences called _preferences,
 which is imported by other modules to access the current settings.
 """
 
+from typing import ClassVar
+
 import numpy as np
 
 
@@ -71,7 +73,7 @@ class ChebPreferences(DefaultPreferences):
         return cls._instance
 
     # Context manager
-    _stash = []  # persistent stash for old prefs when entering context(s)
+    _stash: ClassVar[list] = []  # persistent stash for old prefs when entering context(s)
 
     def __enter__(self):
         """Save current preferences when entering a context.

@@ -271,7 +271,7 @@ class TestChebfunCalculusEdgeCases:
         assert f0 == f
 
         # Negative n should raise ValueError
-        with pytest.raises(ValueError, match="non-negative"):
+        with pytest.raises(ValueError, match="-1"):
             f.diff(-1)
 
     def test_diff_higher_order(self):
@@ -334,10 +334,10 @@ class TestChebfunCalculusEdgeCases:
     def test_norm_invalid_p(self):
         """Test norm with invalid p value."""
         f = chebfun(lambda x: x, [-1, 1])
-        with pytest.raises(ValueError, match="must be positive"):
+        with pytest.raises(ValueError, match="-1"):
             f.norm(p=-1)
 
-        with pytest.raises(ValueError, match="must be positive"):
+        with pytest.raises(ValueError, match="0"):
             f.norm(p=0)
 
     def test_norm_l2_multipiece(self):

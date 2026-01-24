@@ -106,7 +106,7 @@ def test_post_init_converts_interval_to_interval(valid_coeffs, valid_interval):
 
 def test_post_init_raises_error_on_invalid_interval(valid_coeffs):
     """Test that __post_init__ raises an error when interval is invalid."""
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError):
         ChebyshevPolynomial()
 
 
@@ -129,7 +129,7 @@ def test_from_coefficients_creates_chebyshev_polynomial(valid_coeffs, valid_inte
 
 def test_from_coefficients_with_empty_coeffs():
     """Test that from_coefficients works with empty coefficients."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[\]"):
         from_coefficients([])
 
 
@@ -160,7 +160,7 @@ def test_from_values_with_domain():
 
 def test_from_values_with_empty_values():
     """Test that from_values works with empty values."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[\]"):
         from_values([])
 
 
@@ -186,7 +186,7 @@ def test_from_roots_with_domain():
 
 def test_from_roots_with_empty_roots():
     """Test that from_roots works with empty roots."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[\]"):
         from_roots([])
 
 
@@ -266,7 +266,7 @@ def test_from_constant_with_interval_object():
 
 def test_from_constant_with_non_scalar_value():
     """Test that from_constant raises an error for non-scalar inputs."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[1, 2, 3\]"):
         from_constant([1, 2, 3])
 
 

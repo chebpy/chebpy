@@ -207,7 +207,7 @@ def test_domain_init_disallow():
         Domain([1, -1])
     with pytest.raises(InvalidDomain):
         Domain([-1, 0, 0])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="could not convert string to float"):
         Domain(["a", "b"])
 
 
@@ -229,9 +229,9 @@ def test_domain_iter():
     res_a = (-2, 1)
     res_b = (-2, 0, 1)
     res_c = (-1, 0, 1, 2)
-    assert all([x == y for x, y in zip(dom_a, res_a)])
-    assert all([x == y for x, y in zip(dom_b, res_b)])
-    assert all([x == y for x, y in zip(dom_c, res_c)])
+    assert all(x == y for x, y in zip(dom_a, res_a, strict=False))
+    assert all(x == y for x, y in zip(dom_b, res_b, strict=False))
+    assert all(x == y for x, y in zip(dom_c, res_c, strict=False))
 
 
 def test_domain_intervals():
@@ -252,9 +252,9 @@ def test_domain_intervals():
     res_a = [(-2, 1)]
     res_b = [(-2, 0), (0, 1)]
     res_c = [(-1, 0), (0, 1), (1, 2)]
-    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_a.intervals, res_a)])
-    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_b.intervals, res_b)])
-    assert all([itvl == Interval(a, b) for itvl, (a, b) in zip(dom_c.intervals, res_c)])
+    assert all(itvl == Interval(a, b) for itvl, (a, b) in zip(dom_a.intervals, res_a, strict=False))
+    assert all(itvl == Interval(a, b) for itvl, (a, b) in zip(dom_b.intervals, res_b, strict=False))
+    assert all(itvl == Interval(a, b) for itvl, (a, b) in zip(dom_c.intervals, res_c, strict=False))
 
 
 def test_domain_contains():
@@ -428,14 +428,14 @@ def test_domain_breakpoints_in():
 
     result1 = d1.breakpoints_in(d2)
     assert isinstance(result1, np.ndarray)
-    assert result1.size, 3
+    assert result1.size == 3
     assert not result1[0]
     assert not result1[1]
     assert result1[2]
 
     result2 = d2.breakpoints_in(d1)
     assert isinstance(result2, np.ndarray)
-    assert result2.size, 4
+    assert result2.size == 4
     assert not result2[0]
     assert not result2[1]
     assert result2[2]

@@ -82,7 +82,7 @@ def test_chebfun_float_arg() -> None:
 
 def test_chebfun_raises() -> None:
     """Test that invalid inputs raise appropriate exceptions."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="asdfasdf"):
         chebfun("asdfasdf")
 
 
@@ -92,7 +92,7 @@ def test_pwc() -> None:
     vals = [0, 1]
     f = pwc(dom, vals)
     assert f.funs.size == 2
-    for fun, val in zip(f, vals):
+    for fun, val in zip(f, vals, strict=False):
         assert fun.isconst
         assert fun.coeffs[0] == val
 

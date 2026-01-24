@@ -36,7 +36,7 @@ def test_ufuncs():
         a, b = interval
         ff = Chebfun.initfun_adaptive(f, np.linspace(a, b, 13))
 
-        def gg(x):
+        def gg(x, ufunc=ufunc, f=f):
             return ufunc(f(x))
 
         gg_result = getattr(ff, ufunc.__name__)()
