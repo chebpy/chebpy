@@ -19,7 +19,7 @@ app = marimo.App()
 
 with app.setup:
     import marimo as mo
-    import matplotlib
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import numpy as np
     import seaborn as sns
@@ -27,7 +27,7 @@ with app.setup:
     sns.set(font_scale=1.5)
     sns.set_style("whitegrid")
     sns.set_palette("deep")
-    matplotlib.rc("figure", figsize=(9, 5), dpi=100)
+    mpl.rc("figure", figsize=(9, 5), dpi=100)
 
 
 @app.cell(hide_code=True)
@@ -140,7 +140,7 @@ def _(chebfun):
 
     z0, z1, z2, z3 = keyhole(r=0.2, r_outer=2, e=0.1)
     _fig, _ax = plt.subplots()
-    kwds = dict(color="b", linewidth=3)
+    kwds = {"color": "b", "linewidth": 3}
     z0.plot(ax=_ax, **kwds)
     z1.plot(ax=_ax, **kwds)
     z2.plot(ax=_ax, **kwds)

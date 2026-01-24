@@ -40,7 +40,7 @@ def find(x: np.ndarray) -> np.ndarray:
     return np.where(x)[0]
 
 
-def rootsunit(ak: np.ndarray, htol: float = None) -> np.ndarray:
+def rootsunit(ak: np.ndarray, htol: float | None = None) -> np.ndarray:
     """Compute the roots of a function on [-1,1] using Chebyshev coefficients.
 
     This function finds the real roots of a function on the interval [-1,1]
@@ -202,7 +202,7 @@ def clenshaw(xx: np.ndarray, ak: np.ndarray) -> np.ndarray:
     return out
 
 
-def standard_chop(coeffs: np.ndarray, tol: float = None) -> int:
+def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
     """Determine where to truncate a Chebyshev series based on coefficient decay.
 
     This function determines an appropriate cutoff point for a Chebyshev series
@@ -276,7 +276,7 @@ def standard_chop(coeffs: np.ndarray, tol: float = None) -> int:
     return min((cutoff, n - 1))
 
 
-def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
+def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
@@ -312,7 +312,7 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points")
+            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points", stacklevel=2)
             break
     return coeffs
 
@@ -465,7 +465,7 @@ def coeffs2vals2(coeffs: np.ndarray) -> np.ndarray:
     return vals
 
 
-def newtonroots(fun: callable, rts: np.ndarray, tol: float = None, maxiter: int = None) -> np.ndarray:
+def newtonroots(fun: callable, rts: np.ndarray, tol: float | None = None, maxiter: int | None = None) -> np.ndarray:
     """Refine root approximations using Newton's method.
 
     This function applies Newton's method to refine the approximations of roots

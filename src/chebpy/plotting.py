@@ -19,7 +19,7 @@ import numpy as np
 from .settings import _preferences as prefs
 
 
-def plotfun(fun: callable, support: tuple, ax=None, n: int = None, **kwds) -> object:
+def plotfun(fun: callable, support: tuple, ax=None, n: int | None = None, **kwds) -> object:
     """Plot a function over a specified support interval.
 
     This function plots a callable object over a specified interval using

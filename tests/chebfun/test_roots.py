@@ -13,7 +13,7 @@ from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
 from ..utilities import pi, sin
 
 
-@pytest.mark.parametrize("f, roots", rootstestfuns)
+@pytest.mark.parametrize(("f", "roots"), rootstestfuns)
 def test_roots(f, roots):
     """Test that the roots of a function are correctly identified.
 

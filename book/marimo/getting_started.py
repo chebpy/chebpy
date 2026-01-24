@@ -19,7 +19,7 @@ app = marimo.App()
 
 with app.setup:
     import marimo as mo
-    import matplotlib
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import numpy as np
     import seaborn as sns
@@ -27,7 +27,7 @@ with app.setup:
     sns.set(font_scale=1.5)
     sns.set_style("whitegrid")
     sns.set_palette("deep")
-    matplotlib.rc("figure", figsize=(9, 5), dpi=100)
+    mpl.rc("figure", figsize=(9, 5), dpi=100)
 
 
 @app.cell
@@ -200,7 +200,7 @@ def _():
 
 @app.cell
 def _(f, g, h):
-    fig, _ax = plt.subplots()
+    _fig, _ax = plt.subplots()
     f.plot(ax=_ax, linewidth=3, linestyle="--", label="f")
     g.plot(ax=_ax, linewidth=3, linestyle="--", label="g")
     h.plot(ax=_ax, linewidth=3, label="max(f, g)")

@@ -48,6 +48,12 @@
 .rhiza/scripts/release.sh
 .rhiza/utils/version_matrix.py
 Makefile
+book/README.md
+book/book.mk
+book/marimo/README.md
+book/marimo/marimo.mk
+book/marimo/notebooks/rhiza.py
+book/minibook-templates/custom.html.jinja2
 presentation/README.md
 presentation/presentation.mk
 renovate.json

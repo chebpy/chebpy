@@ -103,13 +103,13 @@ def _():
 @app.cell
 def _():
     # optional plot settings
-    import matplotlib
+    import matplotlib as mpl
     import seaborn as sns
 
     sns.set(font_scale=1.5)
     sns.set_style("whitegrid")
     sns.set_palette("deep")
-    matplotlib.rc("figure", figsize=(9, 5), dpi=100)
+    mpl.rc("figure", figsize=(9, 5), dpi=100)
     return
 
 

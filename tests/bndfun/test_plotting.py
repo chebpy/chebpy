@@ -28,6 +28,6 @@ def test_plotcoeffs(plotting_fixtures):
     """Test the plotcoeffs method of Bndfun."""
     f0 = plotting_fixtures["f0"]
     f1 = plotting_fixtures["f1"]
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     f0.plotcoeffs(ax=ax)
     f1.plotcoeffs(ax=ax, color="r")

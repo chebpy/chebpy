@@ -15,6 +15,7 @@ dependencies = [
 dev = [
     "seaborn==0.13.2",
     "marimo==0.19.4",
+    "ruff>=0.14.14",
 ]
 
 [project.urls]

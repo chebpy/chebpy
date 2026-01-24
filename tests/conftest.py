@@ -20,7 +20,7 @@ import dataclasses
 import operator
 import os
 
-import matplotlib
+import matplotlib as mpl
 import numpy as np
 import pytest
 
@@ -30,7 +30,7 @@ from chebpy.chebtech import Chebtech
 from chebpy.utilities import Interval
 
 if os.environ.get("CI") == "true":  # pragma: no cover
-    matplotlib.use("Agg")
+    mpl.use("Agg")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -64,7 +64,7 @@ def testfunctions() -> list:
         (lambda x: 0.0 * x + 1.0, "constfun", 1, False),
         (lambda x: 0.0 * x, "zerofun", 1, True),
     ]
-    for k, items in enumerate(fun_details):
+    for _k, items in enumerate(fun_details):
         fun = items[0]
         fun.__name__ = items[1]
         test_functions.append((fun, items[2], items[3]))
@@ -88,13 +88,13 @@ def random_points() -> np.ndarray:
     return -1 + 2 * rng.random(1000)
 
 
-@pytest.fixture()
+@pytest.fixture
 def binops():
     """Binary operators for testing algebraic operations."""
     return [operator.add, operator.mul, operator.sub, operator.truediv]
 
 
-@pytest.fixture()
+@pytest.fixture
 def div_binops():
     """Binary operators for testing division."""
     return (operator.truediv,)

@@ -15,7 +15,7 @@ from ..utilities import eps
 
 
 # domain, test_tolerance
-@pytest.fixture()
+@pytest.fixture
 def testdomains() -> list:
     """List of domains and test tolerances for testing algebraic operations."""
     return [

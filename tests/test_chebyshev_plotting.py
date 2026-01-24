@@ -41,7 +41,7 @@ def complexfun():
 
 def test_plot_with_options(plotting_fixtures):
     """Test plotting a ChebyshevPolynomial with custom options."""
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     poly = plotting_fixtures["simple"]
     poly.plot(ax=ax, color="r", linestyle="--", linewidth=2)
     # No assertion needed; test passes if no exception is raised
@@ -49,7 +49,7 @@ def test_plot_with_options(plotting_fixtures):
 
 def test_plot_custom_domain(plotting_fixtures):
     """Test plotting a ChebyshevPolynomial with a custom domain."""
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     poly = plotting_fixtures["custom_domain"]
     poly.plot(ax=ax)
     # No assertion needed; test passes if no exception is raised
@@ -57,7 +57,7 @@ def test_plot_custom_domain(plotting_fixtures):
 
 def test_plot_complex_polynomial(plotting_fixtures):
     """Test plotting a complex ChebyshevPolynomial."""
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     poly = plotting_fixtures["complex"]
     poly.plot(ax=ax)
     # No assertion needed; test passes if no exception is raised
