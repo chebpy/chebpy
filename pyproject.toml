@@ -4,11 +4,11 @@ version = "0.0.0"
 description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
     "matplotlib>=3.10.0",
-    "numpy>=2.0"
+    "numpy>=2.4.1"
 ]
 
 [dependency-groups]
@@ -16,6 +16,8 @@ dev = [
     "seaborn==0.13.2",
     "marimo==0.19.4",
     "ruff>=0.14.14",
+    "pandas",
+    "plotly",
 ]
 
 [project.urls]
@@ -34,3 +36,6 @@ matplotlib = "matplotlib"
 seaborn = "seaborn"
 marimo = "marimo"
 numpy = "numpy"
+pandas = "pandas"
+plotly = "plotly"
+ruff = "ruff"
