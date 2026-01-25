@@ -47,7 +47,7 @@ fun_details = [
 ]
 
 
-@pytest.mark.parametrize("fun, name, interval, funlen", fun_details)
+@pytest.mark.parametrize(("fun", "name", "interval", "funlen"), fun_details)
 def test_adaptive(fun, name, interval, funlen):
     """Test adaptive construction of Bndfun.
 
@@ -62,7 +62,7 @@ def test_adaptive(fun, name, interval, funlen):
     assert ff.size in {funlen - 1, funlen}
 
 
-@pytest.mark.parametrize("fun, name, interval, _", fun_details)
+@pytest.mark.parametrize(("fun", "name", "interval", "_"), fun_details)
 def test_fixedlen(fun, name, interval, _):
     """Test fixed-length construction of Bndfun.
 

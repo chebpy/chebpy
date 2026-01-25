@@ -5,6 +5,7 @@ package, including interval operations, domain manipulations, and tolerance func
 It defines the core data structures for representing and manipulating intervals and domains.
 """
 
+import itertools
 from collections import OrderedDict
 from collections.abc import Iterable
 
@@ -272,7 +273,7 @@ class Domain(np.ndarray):
         Yields:
             Interval: Interval objects for each pair of adjacent breakpoints.
         """
-        for a, b in zip(self[:-1], self[1:]):
+        for a, b in itertools.pairwise(self):
             yield Interval(a, b)
 
     @property
@@ -407,7 +408,7 @@ def _sortindex(intervals: list[Interval]) -> np.ndarray:
         IntervalGap: If there are gaps between intervals.
     """
     # sort by the left endpoint Interval values
-    subintervals = np.array([x for x in intervals])
+    subintervals = np.array(list(intervals))
     leftbreakpts = np.array([s[0] for s in subintervals])
     idx = leftbreakpts.argsort()
 
@@ -476,10 +477,10 @@ def compute_breakdata(funs: np.ndarray) -> OrderedDict:
         y = 0.5 * (yy[::2] + yy[1::2])
         xout = np.append(np.append(xl, x), xr)
         yout = np.append(np.append(yl, y), yr)
-        return OrderedDict(zip(xout, yout))
+        return OrderedDict(zip(xout, yout, strict=False))
 
 
-def generate_funs(domain: Domain | list | None, bndfun_constructor: callable, kwds: dict = {}) -> list:
+def generate_funs(domain: Domain | list | None, bndfun_constructor: callable, kwds: dict | None = None) -> list:
     """Generate a collection of function objects over a domain.
 
     This method is used by several of the Chebfun classmethod constructors to
@@ -493,6 +494,8 @@ def generate_funs(domain: Domain | list | None, bndfun_constructor: callable, kw
     Returns:
         list: List of function objects covering the domain.
     """
+    if kwds is None:
+        kwds = {}
     domain = Domain(domain if domain is not None else prefs.domain)
     funs = []
     for interval in domain.intervals:

@@ -4,8 +4,8 @@ include:
 - .devcontainer/
 - .github/
 - .rhiza/
-- book/Makefile.book
-- tests/
+- book
+- tests
 - .editorconfig
 - .gitignore
 - .pre-commit-config.yaml

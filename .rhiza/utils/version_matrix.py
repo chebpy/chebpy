@@ -13,20 +13,41 @@ PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
 CANDIDATES = ["3.11", "3.12", "3.13", "3.14"]  # extend as needed
 
 
+class RhizaError(Exception):
+    """Base exception for Rhiza-related errors."""
+
+
+class VersionSpecifierError(RhizaError):
+    """Raised when a version string or specifier is invalid."""
+
+
+class PyProjectError(RhizaError):
+    """Raised when there are issues with pyproject.toml configuration."""
+
+
 def parse_version(v: str) -> tuple[int, ...]:
     """Parse a version string into a tuple of integers.
 
     This is intentionally simple and only supports numeric components.
     If a component contains non-numeric suffixes (e.g. '3.11.0rc1'),
     the leading numeric portion will be used (e.g. '0rc1' -> 0). If a
-    component has no leading digits at all, a ValueError is raised.
+    component has no leading digits at all, a VersionSpecifierError is raised.
+
+    Args:
+        v: Version string to parse (e.g., "3.11", "3.11.0rc1").
+
+    Returns:
+        Tuple of integers representing the version.
+
+    Raises:
+        VersionSpecifierError: If a version component has no numeric prefix.
     """
     parts: list[int] = []
     for part in v.split("."):
         match = re.match(r"\d+", part)
         if not match:
             msg = f"Invalid version component {part!r} in version {v!r}; expected a numeric prefix."
-            raise ValueError(msg)
+            raise VersionSpecifierError(msg)
         parts.append(int(match.group(0)))
     return tuple(parts)
 
@@ -49,6 +70,16 @@ def satisfies(version: str, specifier: str) -> bool:
 
     This is a simplified version of packaging.specifiers.SpecifierSet.
     Supported operators: >=, <=, >, <, ==, !=
+
+    Args:
+        version: Version string to check (e.g., "3.11").
+        specifier: Comma-separated specifier string (e.g., ">=3.11,<3.14").
+
+    Returns:
+        True if the version satisfies all specifiers, False otherwise.
+
+    Raises:
+        VersionSpecifierError: If the specifier format is invalid.
     """
     version_tuple = parse_version(version)
 
@@ -63,7 +94,8 @@ def satisfies(version: str, specifier: str) -> bool:
                 if version_tuple != parse_version(spec):
                     return False
                 continue
-            raise ValueError(f"Invalid specifier: {spec}")
+            msg = f"Invalid specifier {spec!r}; expected format like '>=3.11' or '3.11'"
+            raise VersionSpecifierError(msg)
 
         op, spec_v = match.groups()
         spec_v_tuple = parse_version(spec_v)
@@ -82,6 +114,9 @@ def supported_versions() -> list[str]:
 
     Returns:
         list[str]: The supported versions (e.g., ["3.11", "3.12"]).
+
+    Raises:
+        PyProjectError: If requires-python is missing or no candidates match.
     """
     # Load pyproject.toml using the tomllib standard library (Python 3.11+)
     with PYPROJECT.open("rb") as f:
@@ -92,7 +127,7 @@ def supported_versions() -> list[str]:
     spec_str = data.get("project", {}).get("requires-python")
     if not spec_str:
         msg = "pyproject.toml: missing 'project.requires-python'"
-        raise KeyError(msg)
+        raise PyProjectError(msg)
 
     # Filter candidate versions to find which ones satisfy the constraint
     versions: list[str] = []
@@ -101,8 +136,8 @@ def supported_versions() -> list[str]:
             versions.append(v)
 
     if not versions:
-        msg = f"pyproject.toml: no supported Python versions match '{spec_str}'"
-        raise ValueError(msg)
+        msg = f"pyproject.toml: no supported Python versions match '{spec_str}'. Evaluated candidates: {CANDIDATES}"
+        raise PyProjectError(msg)
 
     return versions
 

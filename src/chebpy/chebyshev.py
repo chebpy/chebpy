@@ -314,7 +314,7 @@ def from_coefficients(
         3.14
     """
     if len(coef) == 0:
-        raise ValueError("Empty coefficients")
+        raise ValueError(coef)
 
     return ChebyshevPolynomial(coef, domain, window, symbol)
 
@@ -344,7 +344,7 @@ def from_values(
         ValueError: If the values array is empty.
     """
     if len(values) == 0:
-        raise ValueError("Empty values")
+        raise ValueError(values)
 
     coef = vals2coeffs2(values)
     return ChebyshevPolynomial(coef, domain, window, symbol)
@@ -374,7 +374,7 @@ def from_roots(
         ValueError: If the roots array is empty.
     """
     if len(roots) == 0:
-        raise ValueError("Empty roots")
+        raise ValueError(roots)
 
     coef = cheb.chebfromroots(roots)
     return ChebyshevPolynomial(coef, domain, window, symbol)
@@ -412,7 +412,7 @@ def from_constant(
         3.14
     """
     if not np.isscalar(c):
-        raise ValueError("Input must be a scalar value")
+        raise ValueError(c)
 
     # Convert integer to float to match behavior in other parts of the codebase
     if isinstance(c, int):
@@ -473,7 +473,7 @@ def from_function(
     return ChebyshevPolynomial(coeffs, domain, window, symbol)
 
 
-def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
+def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
@@ -509,6 +509,6 @@ def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None)
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points")
+            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points", stacklevel=2)
             break
     return coeffs

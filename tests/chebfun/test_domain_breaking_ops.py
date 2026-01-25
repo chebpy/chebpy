@@ -80,7 +80,7 @@ def test_minimum_multipiece(domain_breaking_fixtures: dict) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,tol",
+    ("domain", "tol"),
     [
         ([-1, 1], eps),
         ([-1, 0, 1], eps),
@@ -114,7 +114,7 @@ def test_maximum_identity_constant(domain: list, tol: float) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,tol",
+    ("domain", "tol"),
     [
         ([-1, 1], eps),
         ([-1, 0, 1], eps),
@@ -148,7 +148,7 @@ def test_minimum_identity_constant(domain: list, tol: float) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,tol",
+    ("domain", "tol"),
     [
         ([-1, 1], eps),
         ([-1, 0, 1], eps),
@@ -185,7 +185,7 @@ def test_maximum_sin_cos(domain: list, tol: float) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,tol",
+    ("domain", "tol"),
     [
         ([-1, 1], eps),
         ([-1, 0, 1], eps),

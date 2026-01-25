@@ -115,9 +115,9 @@ def test_call_raises(chebtech_fixture):
     Args:
         chebtech_fixture: Fixture providing test Chebtech object and points.
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="notamethod"):
         chebtech_fixture["ff"](chebtech_fixture["xx"], "notamethod")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="notamethod"):
         chebtech_fixture["ff"](chebtech_fixture["xx"], how="notamethod")
 
 
@@ -195,7 +195,7 @@ vscales = [
 
 
 # Use pytest parametrization for vscale tests
-@pytest.mark.parametrize("fun, n, vscale", vscales)
+@pytest.mark.parametrize(("fun", "n", "vscale"), vscales)
 def test_vscale(fun, n, vscale):
     """Test vscale estimates for various functions.
 

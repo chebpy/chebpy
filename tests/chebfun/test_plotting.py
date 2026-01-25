@@ -97,7 +97,7 @@ def test_plotcoeffs_multiple(plotting_fixtures):
     f1 = plotting_fixtures["f1"]
     f2 = plotting_fixtures["f2"]
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     f1.plotcoeffs(ax=ax)
     f2.plotcoeffs(ax=ax, color="r")
 
@@ -113,7 +113,7 @@ def test_plot_with_options(plotting_fixtures):
     """
     f1 = plotting_fixtures["f1"]
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     f1.plot(ax=ax, color="r", linestyle="--", linewidth=2, marker="o", markersize=5)
 
 
@@ -128,7 +128,7 @@ def test_plotcoeffs_with_options(plotting_fixtures):
     """
     f1 = plotting_fixtures["f1"]
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     f1.plotcoeffs(ax=ax, color="g", marker="s", markersize=8, linestyle="-.")
 
 
@@ -143,5 +143,5 @@ def test_plot_multipiece():
     domain = np.linspace(-1, 1, 5)
     f_multi = Chebfun.initfun_adaptive(sin, domain)
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     f_multi.plot(ax=ax)

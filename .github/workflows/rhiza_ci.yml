@@ -7,7 +7,7 @@
 #
 # Trigger: On push and pull requests to main/master branches.
 
-name: CI
+name: (RHIZA) CI
 
 permissions:
   contents: read
@@ -29,12 +29,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
 
       - id: versions
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
         run: |
           # Generate Python versions JSON from the script
-          JSON=$(make -s version-matrix)
+          JSON=$(make -f .rhiza/rhiza.mk -s version-matrix)
           echo "list=$JSON" >> "$GITHUB_OUTPUT"
 
       - name: Debug matrix
@@ -58,9 +60,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.9.24"
+          version: "0.9.26"
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
         run: |
-          make test
+          make -f .rhiza/rhiza.mk test

@@ -54,6 +54,6 @@ def test_plotcoeffs(plotting_fixtures):
     Args:
         plotting_fixtures: Fixture providing test Chebtech objects.
     """
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plotting_fixtures["f0"].plotcoeffs(ax=ax)
     plotting_fixtures["f1"].plotcoeffs(ax=ax, color="r")

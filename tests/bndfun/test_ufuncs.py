@@ -17,7 +17,7 @@ def test_ufunc():
         subinterval = Interval(*interval)
         ff = Bndfun.initfun_adaptive(f, subinterval)
 
-        def gg(x):
+        def gg(x, ufunc=ufunc, f=f):
             return ufunc(f(x))
 
         gg_result = getattr(ff, ufunc.__name__)()

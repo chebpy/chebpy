@@ -170,7 +170,7 @@ class Chebfun:
             if not nn.size == domain.size - 1:
                 raise BadFunLengthArgument
             funs = []
-            for interval, length in zip(domain.intervals, nn):
+            for interval, length in zip(domain.intervals, nn, strict=False):
                 funs.append(Bndfun.initfun_fixedlen(f, interval, length))
         return cls(funs)
 
@@ -357,7 +357,10 @@ class Chebfun:
         def constfun(cheb, const):
             return 0.0 * cheb + const
 
-        newfuns = [fun.initfun_adaptive(lambda x: constfun(x, c) / fun(x), fun.interval) for fun in self]
+        def make_divfun(fun):
+            return lambda x: constfun(x, c) / fun(x)
+
+        newfuns = [fun.initfun_adaptive(make_divfun(fun), fun.interval) for fun in self]
         return self.__class__(newfuns)
 
     @self_empty("Chebfun<empty>")
@@ -492,7 +495,7 @@ class Chebfun:
             chbfn2 = f._break(newdom)
             simplify = True
         newfuns = []
-        for fun1, fun2 in zip(chbfn1, chbfn2):
+        for fun1, fun2 in zip(chbfn1, chbfn2, strict=False):
             newfun = op(fun1, fun2)
             if simplify:
                 newfun = newfun.simplify()
@@ -537,7 +540,7 @@ class Chebfun:
         Returns:
             numpy.ndarray: Array of breakpoints.
         """
-        return np.array([x for x in self.breakdata.keys()])
+        return np.array(list(self.breakdata.keys()))
 
     @property
     @self_empty(np.array([]))
@@ -766,7 +769,7 @@ class Chebfun:
                     rts = rts[1:]
             allrts.append(rts)
             prvrts = rts
-        return np.concatenate([x for x in allrts])
+        return np.concatenate(list(allrts))
 
     @self_empty()
     def simplify(self):
@@ -840,11 +843,11 @@ class Chebfun:
             True
         """
         if not isinstance(n, int):
-            raise TypeError("Derivative order must be an integer")
+            raise TypeError(n)
         if n == 0:
             return self
         if n < 0:
-            raise ValueError("Derivative order must be non-negative")
+            raise ValueError(n)
 
         result = self
         for _ in range(n):
@@ -936,7 +939,7 @@ class Chebfun:
             integral = f_pow_p.sum()
             return integral ** (1.0 / p)
         else:
-            raise ValueError(f"norm(p={p}): p must be positive or np.inf")
+            raise ValueError(p)
 
     # ----------
     #  utilities
@@ -1019,7 +1022,7 @@ class Chebfun:
         if switch.size > 0 and comparator(other(switch[0]), self(switch[0])):
             keys = 1 - keys
         funs = np.array([])
-        for interval, use_self in zip(switch.intervals, keys):
+        for interval, use_self in zip(switch.intervals, keys, strict=False):
             subdom = newdom.restrict(interval)
             if use_self:
                 subfun = self.restrict(subdom)

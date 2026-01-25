@@ -1,8 +1,8 @@
-## Makefile.customisations - User-defined scripts and overrides
+## customisations.mk - User-defined scripts and overrides
 # This file is included by the main Makefile
 
 # Declare phony targets
-.PHONY: install-copilot analyse-repo summarize-changes
+.PHONY: install-copilot analyse-repo summarise-changes
 
 COPILOT_BIN ?= $(shell command -v copilot 2>/dev/null || echo "$(INSTALL_DIR)/copilot")
 ##@ Agentic Workflows
@@ -17,8 +17,8 @@ analyse-repo: install-copilot ## run the analyser agent to update REPOSITORY_ANA
 		--allow-tool 'write' --deny-tool 'remove' \
 		--allow-all-paths
 
-summarize-changes: install-copilot ## summarize changes since the most recent release/tag
-	@"$(COPILOT_BIN)" -p "Show me the commits since the last release/tag and summarize them" --allow-tool 'shell(git)' --model "$(DEFAULT_AI_MODEL)" --agent summarise
+summarise-changes: install-copilot ## summarise changes since the most recent release/tag
+	@"$(COPILOT_BIN)" -p "Show me the commits since the last release/tag and summarise them" --allow-tool 'shell(git)' --model "$(DEFAULT_AI_MODEL)" --agent summarise
 
 install-copilot:  ## checks for copilot and prompts to install
 	@if command -v copilot >/dev/null 2>&1; then \

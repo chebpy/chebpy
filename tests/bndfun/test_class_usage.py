@@ -82,9 +82,9 @@ def test_call_raises(class_usage_fixtures):
     """
     ff = class_usage_fixtures["ff"]
     xx = class_usage_fixtures["xx"]
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="notamethod"):
         ff(xx, "notamethod")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="notamethod"):
         ff(xx, how="notamethod")
 
 
@@ -149,7 +149,7 @@ vscales = [
 ]
 
 
-@pytest.mark.parametrize("fun, interval, vscale", vscales)
+@pytest.mark.parametrize(("fun", "interval", "vscale"), vscales)
 def test_vscale(fun, interval, vscale):
     """Test the vscale property of Bndfun.
 

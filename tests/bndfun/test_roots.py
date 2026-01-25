@@ -19,7 +19,7 @@ roots_test_params = [
 ]
 
 
-@pytest.mark.parametrize("f, interval, roots_expected, tol", roots_test_params)
+@pytest.mark.parametrize(("f", "interval", "roots_expected", "tol"), roots_test_params)
 def test_roots(f, interval, roots_expected, tol):
     """Test the roots method on various Bndfun objects."""
     subinterval = Interval(*interval)

@@ -49,7 +49,7 @@ def test__add__radd__constant(ttt, random_points):
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
 
-            def f(x):
+            def f(x, const=const, fun=fun):
                 return const + fun.raw(x)
 
             f1 = const + fun.cheb
@@ -73,10 +73,10 @@ def test__sub__rsub__constant(ttt, random_points):
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
 
-            def f(x):
+            def f(x, const=const, fun=fun):
                 return const - fun.raw(x)
 
-            def g(x):
+            def g(x, fun=fun, const=const):
                 return fun.raw(x) - const
 
             ff = const - fun.cheb
@@ -99,10 +99,10 @@ def test__mul__rmul__constant(ttt, random_points):
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
 
-            def f(x):
+            def f(x, const=const, fun=fun):
                 return const * fun.cheb(x)
 
-            def g(x):
+            def g(x, fun=fun, const=const):
                 return fun.cheb(x) * const
 
             ff = const * fun.cheb
@@ -128,7 +128,7 @@ def test_truediv_constant(ttt, random_points):
     for fun in ttt:
         for const in (-1, 1, 10, -1e5):
 
-            def g(x):
+            def g(x, fun=fun, const=const):
                 return fun.raw(x) / const
 
             tol = eps * abs(const)
@@ -140,7 +140,7 @@ def test_truediv_constant(ttt, random_points):
             # don't do the following test for functions with roots
             if not fun.has_roots:
 
-                def f(x):
+                def f(x, const=const, fun=fun):
                     return const / fun.raw(x)
 
                 ff = const / fun.cheb
@@ -153,7 +153,7 @@ def test_pow_const(ttt, random_points):
     for fun in ttt:
         for c in (1, 2):
 
-            def f(x):
+            def f(x, fun=fun, c=c):
                 return fun.raw(x) ** c
 
             tol = 2e1 * eps * abs(c)
@@ -168,7 +168,7 @@ def test_rpow_const(ttt, random_points):
     for fun in ttt:
         for c in (1, 2):
 
-            def f(x):
+            def f(x, c=c, fun=fun):
                 return c ** fun.raw(x)
 
             ff = c**fun.cheb
@@ -214,7 +214,7 @@ def test_binary_operations(ttt, random_points, binop):
         if binop == operator.truediv and g.has_roots:
             continue
 
-        def fg_expected(x):
+        def fg_expected(x, f=f, g=g):
             return binop(f.raw(x), g.raw(x))
 
         fg = binop(f.cheb, g.cheb)

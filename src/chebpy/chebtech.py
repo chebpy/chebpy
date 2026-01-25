@@ -148,8 +148,8 @@ class Chebtech(Smoothfun, ABC):
         }
         try:
             return method[how](x)
-        except KeyError:
-            raise ValueError(how)
+        except KeyError as err:
+            raise ValueError(how) from err
 
     def __call__clenshaw(self, x):
         return clenshaw(x, self.coeffs)

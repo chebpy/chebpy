@@ -9,7 +9,7 @@ import pytest
 
 from chebpy.chebtech import Chebtech
 
-from ..utilities import cos, eps, exp, pi, sin  # noqa: F401
+from ..utilities import cos, eps, exp, pi, sin
 
 # Ensure reproducibility
 rng = np.random.default_rng(0)
@@ -32,7 +32,7 @@ def_integrals = [
 ]
 
 
-@pytest.mark.parametrize("fun, n, integral, tol", def_integrals)
+@pytest.mark.parametrize(("fun", "n", "integral", "tol"), def_integrals)
 def test_definite_integral(fun, n, integral, tol):
     """Test definite integration (sum method) of Chebtech objects.
 
@@ -65,7 +65,7 @@ indef_integrals = [
 ]
 
 
-@pytest.mark.parametrize("fun, dfn, n, tol", indef_integrals)
+@pytest.mark.parametrize(("fun", "dfn", "n", "tol"), indef_integrals)
 def test_indefinite_integral(fun, dfn, n, tol):
     """Test indefinite integration (cumsum method) of Chebtech objects.
 
@@ -101,7 +101,7 @@ derivatives = [
 ]
 
 
-@pytest.mark.parametrize("fun, der, n, tol", derivatives)
+@pytest.mark.parametrize(("fun", "der", "n", "tol"), derivatives)
 def test_derivative(fun, der, n, tol):
     """Test differentiation (diff method) of Chebtech objects.
 

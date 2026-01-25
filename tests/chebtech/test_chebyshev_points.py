@@ -127,7 +127,7 @@ chebpts2_testlist = [
 ]
 
 
-@pytest.mark.parametrize("n, expected, tol", chebpts2_testlist)
+@pytest.mark.parametrize(("n", "expected", "tol"), chebpts2_testlist)
 def test_chebpts_values(n, expected, tol):
     """Test that Chebyshev points have the expected values.
 

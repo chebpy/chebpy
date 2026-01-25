@@ -1,4 +1,4 @@
-name: RHIZA SYNC
+name: (RHIZA) SYNC
 # This workflow synchronizes the repository with its template.
 # IMPORTANT: When workflow files (.github/workflows/rhiza_*.yml) are modified,
 # a Personal Access Token (PAT) with 'workflow' scope is required.
@@ -52,13 +52,21 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
+      - name: Get Rhiza version
+        id: rhiza-version
+        run: |
+          VERSION=$(cat .rhiza/.rhiza-version 2>/dev/null || echo "0.9.0")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Sync template
         id: sync
         shell: bash
         run: |
           set -euo pipefail
 
-          uvx rhiza materialize --force .
+          RHIZA_VERSION="${{ steps.rhiza-version.outputs.version }}"
+
+          uvx "rhiza>=${RHIZA_VERSION}" materialize --force .
 
           git add -A
 
@@ -69,8 +77,12 @@ jobs:
 
           echo "changes_detected=true" >> "$GITHUB_OUTPUT"
 
+          # Generate PR description based on staged changes
+          uvx "rhiza>=${RHIZA_VERSION}" summarise --output "${RUNNER_TEMP}/pr-description.md"
+
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
           git commit -m "chore: Update via rhiza"
           
@@ -85,7 +97,4 @@ jobs:
           branch: ${{ steps.branch.outputs.name }}
           delete-branch: true
           title: "chore: Sync with rhiza"
-          body: |
-            This pull request synchronizes the repository with its template.
-
-            Changes were generated automatically using **rhiza**.
+          body-path: ${{ runner.temp }}/pr-description.md

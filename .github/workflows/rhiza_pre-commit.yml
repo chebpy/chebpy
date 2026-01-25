@@ -14,7 +14,7 @@
 # Components:
 #   - 🔍 Run pre-commit checks using reusable action
 
-name: "PRE-COMMIT"
+name: "(RHIZA) PRE-COMMIT"
 permissions:
   contents: read
 
@@ -34,4 +34,4 @@ jobs:
       # Run pre-commit
       - name: Run pre-commit
         run: |
-          make fmt
+          make -f .rhiza/rhiza.mk fmt

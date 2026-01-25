@@ -26,7 +26,7 @@ def_integrals = [
 ]
 
 
-@pytest.mark.parametrize("fun, interval, integral, tol", def_integrals)
+@pytest.mark.parametrize(("fun", "interval", "integral", "tol"), def_integrals)
 def test_sum(fun, interval, integral, tol):
     """Test the sum method of Bndfun."""
     subinterval = Interval(*interval)
@@ -53,7 +53,7 @@ indef_integrals = [
 ]
 
 
-@pytest.mark.parametrize("fun, ifn, interval, tol", indef_integrals)
+@pytest.mark.parametrize(("fun", "ifn", "interval", "tol"), indef_integrals)
 def test_cumsum(fun, ifn, interval, tol):
     """Test the cumsum method of Bndfun."""
     subinterval = Interval(*interval)
@@ -84,7 +84,7 @@ derivatives = [
 ]
 
 
-@pytest.mark.parametrize("fun, der, interval, tol", derivatives)
+@pytest.mark.parametrize(("fun", "der", "interval", "tol"), derivatives)
 def test_diff(fun, der, interval, tol):
     """Test the diff method of Bndfun."""
     subinterval = Interval(*interval)

@@ -55,7 +55,7 @@ def chebfun(f=None, domain=None, n=None):
     domain = domain if domain is not None else prefs.domain
 
     # Callable fct in chebfun(lambda x: f(x), ... )
-    if hasattr(f, "__call__"):
+    if callable(f):
         return Chebfun.initfun(f, domain, n)
 
     # Identity via chebfun('x', ... )
@@ -68,11 +68,11 @@ def chebfun(f=None, domain=None, n=None):
     try:
         # Constant fct via chebfun(3.14, ... ), chebfun('3.14', ... )
         return Chebfun.initconst(float(f), domain)
-    except (OverflowError, ValueError):
-        raise ValueError(f"Unable to construct const function from {{{f}}}")
+    except (OverflowError, ValueError) as err:
+        raise ValueError(f) from err
 
 
-def pwc(domain=[-1, 0, 1], values=[0, 1]):
+def pwc(domain=None, values=None):
     """Initialize a piecewise-constant Chebfun.
 
     Creates a piecewise-constant function represented as a Chebfun object.
@@ -93,8 +93,12 @@ def pwc(domain=[-1, 0, 1], values=[0, 1]):
         >>> # Create a custom piecewise-constant function
         >>> f = pwc(domain=[-2, -1, 0, 1, 2], values=[-1, 0, 1, 2])
     """
+    if values is None:
+        values = [0, 1]
+    if domain is None:
+        domain = [-1, 0, 1]
     funs = []
-    intervals = [x for x in Domain(domain).intervals]
-    for interval, value in zip(intervals, values):
+    intervals = list(Domain(domain).intervals)
+    for interval, value in zip(intervals, values, strict=False):
         funs.append(Bndfun.initconst(value, interval))
     return Chebfun(funs)

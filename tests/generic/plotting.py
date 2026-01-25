@@ -22,7 +22,7 @@ def test_plot_complex(complexfun):
     Args:
         complexfun: Fixture providing a complex function object.
     """
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
 
     # Plot Bernstein ellipses
     for rho in np.arange(1.1, 2, 0.1):
@@ -31,5 +31,5 @@ def test_plot_complex(complexfun):
 
 def test_plot(constfun):
     """Test the plot method of Bndfun."""
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     constfun.plot(ax=ax, color="g", marker="o", markersize=2, linestyle="")

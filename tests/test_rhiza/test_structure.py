@@ -54,6 +54,5 @@ class TestRootFixture:
         scripts_dir = root / ".rhiza" / "scripts"
         if not scripts_dir.exists():
             warnings.warn("GitHub scripts directory not found", stacklevel=2)
-        else:
-            if not (scripts_dir / "release.sh").exists():
-                warnings.warn("Expected script release.sh not found", stacklevel=2)
+        elif not (scripts_dir / "release.sh").exists():
+            warnings.warn("Expected script release.sh not found", stacklevel=2)

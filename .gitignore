@@ -5,7 +5,6 @@
 
 ### Don't expose API keys, etc.
 .env
-!.rhiza/.env
 
 __marimo__
 
@@ -13,11 +12,12 @@ _tests
 _book
 _pdoc
 _marimushka
+_benchmarks
 
 # temp file used by Junie
 .output.txt
 
-# folder used for task
+# folder used for programs, e.g. uv, uvx, task, etc.
 bin
 
 # Byte-compiled / optimized / DLL files
@@ -93,4 +93,6 @@ instance/
 # Cython debug symbols
 cython_debug/
 
+# Makefile
+local.mk
 

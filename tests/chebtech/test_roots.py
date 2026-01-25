@@ -13,8 +13,8 @@ from ..generic.roots import rootstestfuns, test_empty  # noqa: F401
 from ..utilities import eps
 
 
-@pytest.mark.parametrize("f, roots", rootstestfuns)
-def test_roots(f, roots, tol=eps):
+@pytest.mark.parametrize(("f", "roots"), rootstestfuns)
+def test_roots(f, roots):
     """Test that the roots of a function are correctly identified.
 
     This test verifies that the roots() method of a Chebtech object
@@ -24,8 +24,7 @@ def test_roots(f, roots, tol=eps):
     Args:
         f: Function to find roots of
         roots: Expected roots
-        tol: Tolerance for comparison
     """
     ff = Chebtech.initfun_adaptive(f)
     rts = ff.roots()
-    assert np.max(np.abs(rts - roots)) <= tol
+    assert np.max(np.abs(rts - roots)) <= eps
