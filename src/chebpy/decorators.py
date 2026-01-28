@@ -7,12 +7,14 @@ These decorators help reduce code duplication and ensure consistent behavior
 across the package.
 """
 
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 import numpy as np
 
 
-def cache(f: callable) -> callable:
+def cache(f: Callable[..., Any]) -> Callable[..., Any]:
     """Object method output caching mechanism.
 
     This decorator caches the output of zero-argument methods to speed up repeated
@@ -48,7 +50,7 @@ def cache(f: callable) -> callable:
     return wrapper
 
 
-def self_empty(resultif=None) -> callable:
+def self_empty(resultif: Any = None) -> Callable[..., Any]:
     """Factory method to produce a decorator for handling empty objects.
 
     This factory creates a decorator that checks whether the object whose method
@@ -83,7 +85,7 @@ def self_empty(resultif=None) -> callable:
     return decorator
 
 
-def preandpostprocess(f: callable) -> callable:
+def preandpostprocess(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator for pre- and post-processing tasks common to bary and clenshaw.
 
     This decorator handles several edge cases for functions like bary and clenshaw:
@@ -125,7 +127,7 @@ def preandpostprocess(f: callable) -> callable:
     return thewrapper
 
 
-def float_argument(f: callable) -> callable:
+def float_argument(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to ensure consistent input/output types for Chebfun __call__ method.
 
     This decorator ensures that when a Chebfun object is called with a float input,
@@ -156,7 +158,7 @@ def float_argument(f: callable) -> callable:
     return thewrapper
 
 
-def cast_arg_to_chebfun(f: callable) -> callable:
+def cast_arg_to_chebfun(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to cast the first argument to a chebfun object if needed.
 
     This decorator attempts to convert the first argument to a chebfun object
@@ -182,7 +184,7 @@ def cast_arg_to_chebfun(f: callable) -> callable:
     return wrapper
 
 
-def cast_other(f: callable) -> callable:
+def cast_other(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to cast the first argument to the same type as self.
 
     This generic decorator is applied to binary operator methods to ensure that

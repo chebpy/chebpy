@@ -5,7 +5,8 @@ polynomials and various factory functions to construct such polynomials.
 """
 
 import warnings
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeAlias
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,9 +17,9 @@ from .algorithms import coeffs2vals2, standard_chop, vals2coeffs2
 from .settings import _preferences as prefs
 
 # Type aliases
-ArrayLike = list[float] | tuple[float, ...] | np.ndarray
-DomainLike = tuple[float, float] | list[float] | np.ndarray
-ScalarLike = int | float | complex
+ArrayLike: TypeAlias = list[float] | tuple[float, ...] | np.ndarray
+DomainLike: TypeAlias = tuple[float, float] | list[float] | np.ndarray
+ScalarLike: TypeAlias = int | float | complex
 
 
 class ChebyshevPolynomial(cheb.Chebyshev):
@@ -422,7 +423,7 @@ def from_constant(
 
 
 def from_function(
-    fun: callable,
+    fun: Callable[..., Any],
     domain: DomainLike | None = None,
     window: DomainLike | None = None,
     symbol: str = "x",
@@ -473,7 +474,7 @@ def from_function(
     return ChebyshevPolynomial(coeffs, domain, window, symbol)
 
 
-def __adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
+def __adaptive(cls: type, fun: Callable[..., Any], hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
