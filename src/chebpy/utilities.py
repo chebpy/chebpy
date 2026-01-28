@@ -7,7 +7,8 @@ It defines the core data structures for representing and manipulating intervals 
 
 import itertools
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 
@@ -111,27 +112,31 @@ class Interval(np.ndarray):
         a, b = self  # pragma: no cover
         return 0.0 * y + 0.5 * (b - a)  # pragma: no cover
 
-    def __eq__(self, other: "Interval") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check if two intervals are equal.
 
         Args:
-            other (Interval): Another interval to compare with.
+            other: Another interval to compare with.
 
         Returns:
             bool: True if the intervals have the same endpoints, False otherwise.
         """
+        if not isinstance(other, Interval):
+            return NotImplemented
         (a, b), (x, y) = self, other
-        return (a == x) & (y == b)
+        return bool((a == x) & (y == b))
 
-    def __ne__(self, other: "Interval") -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if two intervals are not equal.
 
         Args:
-            other (Interval): Another interval to compare with.
+            other: Another interval to compare with.
 
         Returns:
             bool: True if the intervals have different endpoints, False otherwise.
         """
+        if not isinstance(other, Interval):
+            return NotImplemented
         return not self == other
 
     def __call__(self, y: float | np.ndarray) -> float | np.ndarray:
@@ -362,15 +367,21 @@ class Domain(np.ndarray):
             out[idx] = np.any(isin)
         return out
 
-    def __eq__(self, other: "Domain") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test for pointwise equality (within a tolerance) of two Domain objects.
 
         Args:
-            other (Domain): Another domain to compare with.
+            other: Another domain to compare with.
 
         Returns:
             bool: True if domains have the same size and all breakpoints match within tolerance.
         """
+        if not isinstance(other, Domain):
+            # Try to convert array-like objects to Domain for comparison
+            try:
+                other = Domain(other)
+            except Exception:
+                return NotImplemented
         if self.size != other.size:
             return False
         else:
@@ -378,19 +389,21 @@ class Domain(np.ndarray):
             tolerance = np.maximum(htol(), htol() * np.abs(self))
             return bool(np.all(dbpt <= tolerance))  # cast back to bool
 
-    def __ne__(self, other: "Domain") -> bool:
+    def __ne__(self, other: object) -> bool:
         """Test for inequality of two Domain objects.
 
         Args:
-            other (Domain): Another domain to compare with.
+            other: Another domain to compare with.
 
         Returns:
             bool: True if domains differ in size or any breakpoints don't match within tolerance.
         """
+        if not isinstance(other, Domain):
+            return NotImplemented
         return not self == other
 
 
-def _sortindex(intervals: list[Interval]) -> np.ndarray:
+def _sortindex(intervals: Iterable[Interval]) -> np.ndarray:
     """Return an index determining the ordering of interval objects.
 
     This helper function checks that the intervals:
@@ -424,7 +437,7 @@ def _sortindex(intervals: list[Interval]) -> np.ndarray:
     return idx
 
 
-def check_funs(funs: list) -> np.ndarray:
+def check_funs(funs: Any) -> np.ndarray:
     """Return an array of sorted funs with validation checks.
 
     This function checks that the provided funs do not overlap or have gaps
@@ -480,7 +493,9 @@ def compute_breakdata(funs: np.ndarray) -> OrderedDict:
         return OrderedDict(zip(xout, yout, strict=False))
 
 
-def generate_funs(domain: Domain | list | None, bndfun_constructor: callable, kwds: dict | None = None) -> list:
+def generate_funs(
+    domain: Domain | list | None, bndfun_constructor: Callable[..., Any], kwds: dict[str, Any] | None = None
+) -> list:
     """Generate a collection of function objects over a domain.
 
     This method is used by several of the Chebfun classmethod constructors to

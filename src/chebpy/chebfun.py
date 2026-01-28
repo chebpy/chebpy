@@ -543,7 +543,7 @@ class Chebfun:
         return np.array(list(self.breakdata.keys()))
 
     @property
-    @self_empty(np.array([]))
+    @self_empty(Domain([]))
     def domain(self):
         """Get the domain of this Chebfun.
 

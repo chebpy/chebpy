@@ -10,6 +10,8 @@ in Trefethen's "Approximation Theory and Approximation Practice".
 """
 
 import warnings
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from numpy.fft import fft, ifft
@@ -276,7 +278,7 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
     return min((cutoff, n - 1))
 
 
-def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
+def adaptive(cls: Any, fun: Callable[..., Any], hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
@@ -465,7 +467,7 @@ def coeffs2vals2(coeffs: np.ndarray) -> np.ndarray:
     return vals
 
 
-def newtonroots(fun: callable, rts: np.ndarray, tol: float | None = None, maxiter: int | None = None) -> np.ndarray:
+def newtonroots(fun: Any, rts: np.ndarray, tol: float | None = None, maxiter: int | None = None) -> np.ndarray:
     """Refine root approximations using Newton's method.
 
     This function applies Newton's method to refine the approximations of roots

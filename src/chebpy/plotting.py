@@ -13,13 +13,15 @@ These functions are typically used by higher-level classes like Chebfun and
 Chebtech to provide plotting capabilities.
 """
 
+from typing import Any
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .settings import _preferences as prefs
 
 
-def plotfun(fun: callable, support: tuple, ax=None, n: int | None = None, **kwds) -> object:
+def plotfun(fun: Any, support: tuple, ax: Any = None, n: int | None = None, **kwds: Any) -> Any:
     """Plot a function over a specified support interval.
 
     This function plots a callable object over a specified interval using
