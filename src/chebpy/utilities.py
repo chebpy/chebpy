@@ -124,7 +124,7 @@ class Interval(np.ndarray):
         if not isinstance(other, Interval):
             return NotImplemented
         (a, b), (x, y) = self, other
-        return (a == x) & (y == b)
+        return bool((a == x) & (y == b))
 
     def __ne__(self, other: object) -> bool:
         """Check if two intervals are not equal.
@@ -377,7 +377,11 @@ class Domain(np.ndarray):
             bool: True if domains have the same size and all breakpoints match within tolerance.
         """
         if not isinstance(other, Domain):
-            return NotImplemented
+            # Try to convert array-like objects to Domain for comparison
+            try:
+                other = Domain(other)
+            except Exception:
+                return NotImplemented
         if self.size != other.size:
             return False
         else:
