@@ -492,7 +492,7 @@ class Chebfun:
             return f
         if np.isscalar(f):
             chbfn1 = self
-            chbfn2 = f * np.ones(self.funs.size)  # type: ignore[arg-type]
+            chbfn2 = f * np.ones(self.funs.size)  # type: ignore[operator]
             simplify = False
         else:
             newdom = self.domain.union(f.domain)

@@ -93,7 +93,7 @@ class Chebtech(Smoothfun, ABC):
         """
         assert n is not None
         points = cls._chebpts(int(n))
-        values = fun(points)  # type: ignore[misc]
+        values = fun(points)
         coeffs = vals2coeffs2(values)
         return cls(coeffs, interval=interval)
 
@@ -106,7 +106,7 @@ class Chebtech(Smoothfun, ABC):
         """
         interval = interval if interval is not None else prefs.domain
         interval = Interval(*interval)
-        coeffs = adaptive(cls, fun, hscale=interval.hscale)  # type: ignore[arg-type]
+        coeffs = adaptive(cls, fun, hscale=interval.hscale)
         return cls(coeffs, interval=interval)
 
     @classmethod
