@@ -5,10 +5,6 @@
         "cpus": 4
     },
     "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "upgradePackages": false
-        },
-        "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers/features/copilot-cli:1": {}
     },
