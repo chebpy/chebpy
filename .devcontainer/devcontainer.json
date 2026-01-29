@@ -1,11 +1,13 @@
 {
     "name": "Python Dev (Rhiza)",
-    "image": "mcr.microsoft.com/devcontainers/python:3.14",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13",
     "hostRequirements": {
         "cpus": 4
     },
     "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "upgradePackages": false
+        },
         "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers/features/copilot-cli:1": {}
