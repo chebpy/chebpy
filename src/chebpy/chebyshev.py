@@ -35,7 +35,9 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         symbol (str): Symbol used to represent the independent variable.
     """
 
-    def __init__(self, coef: ArrayLike, domain: DomainLike | None = None, window=None, symbol: str = "x") -> None:
+    def __init__(
+        self, coef: ArrayLike, domain: DomainLike | None = None, window: DomainLike | None = None, symbol: str = "x"
+    ) -> None:
         """Initialize a ChebyshevPolynomial object.
 
         Args:
@@ -94,7 +96,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         else:
             return self
 
-    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:
+    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:  # type: ignore[override]
         """Evaluate the polynomial at points x.
 
         Args:
@@ -172,7 +174,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         Returns:
             float: The maximum absolute value of the polynomial at Chebyshev points.
         """
-        return np.abs(self.values).max()
+        return float(np.abs(self.values).max())
 
     def sum(self) -> float:
         """Return the definite integral of the polynomial over its domain [a, b].
@@ -183,13 +185,13 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         Returns:
             float: The definite integral of the polynomial over its domain.
         """
-        if self.isempty:
+        if self.isempty:  # pragma: no cover
             return 0.0
 
         a, b = self.domain
         ch = ChebyshevPolynomial(self.coef, domain=self.domain)  # window = [-1, 1] by default
         integral = ch.integ()
-        return integral(b) - integral(a)
+        return float(integral(b) - integral(a))  # type: ignore[arg-type]
 
     def plot(self, ax: Axes | None = None, n: int | None = None, **kwds: Any) -> Axes:
         """Plot the Chebyshev polynomial over its domain.
@@ -347,7 +349,7 @@ def from_values(
     if len(values) == 0:
         raise ValueError(values)
 
-    coef = vals2coeffs2(values)
+    coef = vals2coeffs2(np.asarray(values))
     return ChebyshevPolynomial(coef, domain, window, symbol)
 
 
@@ -419,7 +421,7 @@ def from_constant(
     if isinstance(c, int):
         c = float(c)
 
-    return ChebyshevPolynomial([c], domain, window, symbol)
+    return ChebyshevPolynomial([c], domain, window, symbol)  # type: ignore[list-item]
 
 
 def from_function(
@@ -455,11 +457,11 @@ def from_function(
     domain_arr = np.array([-1, 1]) if domain is None else np.array(domain)
 
     # Create a wrapper function that maps points from [-1, 1] to the custom domain
-    def mapped_fun(x):
+    def mapped_fun(x: np.ndarray) -> np.ndarray:
         # Map x from [-1, 1] to the custom domain
         a, b = domain_arr
         mapped_x = 0.5 * (b - a) * (x + 1) + a
-        return fun(mapped_x)
+        return np.asarray(fun(mapped_x))
 
     if n is None:
         # Use adaptive algorithm

@@ -95,3 +95,55 @@ class TestAdditionalCoverage:
 
         h_min = f.minimum(g)
         assert not h_min.isempty
+
+    def test_absolute_method(self):
+        """Test the absolute value method (__abs__) for Chebfun."""
+        # Create a Chebfun that has negative values
+        # Use a smooth function to avoid non-convergence warning for |x| near 0
+        f = chebfun(lambda x: x**2 - 0.5, domain=[-1, 1])
+
+        # Test __abs__
+        abs_f = abs(f)
+
+        # Check that it's a Chebfun
+        assert isinstance(abs_f, Chebfun)
+
+        # Check that it gives the correct values at sample points away from zeros
+        xx = np.array([-1, -0.5, 0, 0.5, 1])
+        expected = np.abs(xx**2 - 0.5)
+        actual = abs_f(xx)
+        assert np.max(np.abs(actual - expected)) < 1e-6
+
+    def test_imag_complex_chebfun(self):
+        """Test the imag() method on a complex Chebfun."""
+        # Create a complex Chebfun
+        f = chebfun(lambda x: np.exp(1j * np.pi * x), domain=[-1, 1])
+
+        # Verify it's complex
+        assert f.iscomplex
+
+        # Get the imaginary part
+        imag_f = f.imag()
+
+        # Check that it's a Chebfun
+        assert isinstance(imag_f, Chebfun)
+
+        # Check that it gives the correct values
+        xx = np.linspace(-1, 1, 100)
+        expected = np.imag(np.exp(1j * np.pi * xx))
+        actual = imag_f(xx)
+        assert np.max(np.abs(actual - expected)) < 1e-10
+
+    def test_diff_type_error(self):
+        """Test that diff() raises TypeError for non-integer n."""
+        import pytest
+
+        f = chebfun(lambda x: x**2)
+
+        # Should raise TypeError for float
+        with pytest.raises(TypeError):
+            f.diff(1.5)
+
+        # Should raise TypeError for string
+        with pytest.raises(TypeError):
+            f.diff("1")

@@ -97,3 +97,47 @@ def test_fixedlen_construction(testfunctions, n):
     for fun, _, _ in testfunctions:
         ff = Chebtech.initfun_fixedlen(fun, n)
         assert ff.size == n
+
+
+def test_initconst_with_non_scalar():
+    """Test that initconst raises ValueError for non-scalar input."""
+    with pytest.raises(ValueError):
+        Chebtech.initconst([1, 2, 3])
+
+    with pytest.raises(ValueError):
+        Chebtech.initconst(np.array([1, 2, 3]))
+
+
+def test_imag_complex_chebtech():
+    """Test the imag() method on a complex Chebtech."""
+    # Create a complex Chebtech
+    f = Chebtech.initfun_adaptive(lambda x: np.exp(1j * np.pi * x))
+
+    # Verify it's complex
+    assert f.iscomplex
+
+    # Get the imaginary part
+    imag_f = f.imag()
+
+    # Check that it's a Chebtech
+    assert isinstance(imag_f, Chebtech)
+
+    # Check that it gives the correct values at sample points
+    xx = np.linspace(-1, 1, 100)
+    expected = np.imag(np.exp(1j * np.pi * xx))
+    actual = imag_f(xx)
+    assert np.max(np.abs(actual - expected)) < 1e-10
+
+
+def test_chebtech_with_nan_coefficients():
+    """Test that evaluating a Chebtech with NaN coefficients returns NaN."""
+    # Create a Chebtech with NaN coefficients
+    nan_coeffs = np.array([1.0, np.nan, 2.0])
+    f = Chebtech(nan_coeffs)
+
+    # Evaluate at some points
+    xx = np.array([-1.0, 0.0, 1.0])
+    result = f(xx)
+
+    # Check that all results are NaN
+    assert np.all(np.isnan(result)), "Expected all NaN values when coefficients contain NaN"

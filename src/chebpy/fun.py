@@ -11,6 +11,9 @@ including algebraic operations, calculus operations, and utility functions.
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
+
+import numpy as np
 
 
 class Fun(ABC):
@@ -30,7 +33,7 @@ class Fun(ABC):
     # --------------------------
     @classmethod
     @abstractmethod
-    def initconst(cls):  # pragma: no cover
+    def initconst(cls, c: float, interval: Any) -> "Fun":  # pragma: no cover
         """Initialize a constant function.
 
         This constructor creates a function that represents a constant value
@@ -47,7 +50,7 @@ class Fun(ABC):
 
     @classmethod
     @abstractmethod
-    def initempty(cls):  # pragma: no cover
+    def initempty(cls) -> "Fun":  # pragma: no cover
         """Initialize an empty function.
 
         This constructor creates an empty function representation, which is
@@ -60,7 +63,7 @@ class Fun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun_adaptive(cls):  # pragma: no cover
+    def initfun_adaptive(cls, f: Any, interval: Any) -> "Fun":  # pragma: no cover
         """Initialize from a callable function using adaptive sampling.
 
         This constructor determines the appropriate number of points needed to
@@ -77,7 +80,7 @@ class Fun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun_fixedlen(cls):  # pragma: no cover
+    def initfun_fixedlen(cls, f: Any, interval: Any, n: int) -> "Fun":  # pragma: no cover
         """Initialize from a callable function using a fixed number of points.
 
         This constructor uses a specified number of points to represent the function,
@@ -97,7 +100,7 @@ class Fun(ABC):
     #  "private" methods
     # -------------------
     @abstractmethod
-    def __add__(self, other):  # pragma: no cover
+    def __add__(self, other: Any) -> "Fun":  # pragma: no cover
         """Add this function with another function or a scalar.
 
         This method implements the addition operation between this function
@@ -112,7 +115,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __call__(self, x):  # pragma: no cover
+    def __call__(self, x: Any) -> Any:  # pragma: no cover
         """Evaluate the function at points x.
 
         This method evaluates the function at the specified points.
@@ -127,7 +130,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __init__(self):  # pragma: no cover
+    def __init__(self) -> None:  # pragma: no cover
         """Initialize a new Fun instance.
 
         This method initializes a new function representation on the specified interval.
@@ -136,7 +139,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __mul__(self, other):  # pragma: no cover
+    def __mul__(self, other: Any) -> "Fun":  # pragma: no cover
         """Multiply this function with another function or a scalar.
 
         This method implements the multiplication operation between this function
@@ -151,7 +154,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __neg__(self):  # pragma: no cover
+    def __neg__(self) -> "Fun":  # pragma: no cover
         """Return the negative of this function.
 
         This method implements the unary negation operation for this function.
@@ -162,7 +165,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __pos__(self):  # pragma: no cover
+    def __pos__(self) -> "Fun":  # pragma: no cover
         """Return the positive of this function (which is the function itself).
 
         This method implements the unary plus operation for this function.
@@ -173,7 +176,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __pow__(self, power):  # pragma: no cover
+    def __pow__(self, power: Any) -> "Fun":  # pragma: no cover
         """Raise this function to a power.
 
         This method implements the power operation for this function.
@@ -187,7 +190,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __radd__(self, other):  # pragma: no cover
+    def __radd__(self, other: Any) -> "Fun":  # pragma: no cover
         """Add a scalar or another function to this function (from the right).
 
         This method is called when a scalar or another function is added to this function,
@@ -202,7 +205,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         """Return a string representation of the function.
 
         This method returns a string representation of the function that includes
@@ -214,7 +217,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __rmul__(self, other):  # pragma: no cover
+    def __rmul__(self, other: Any) -> "Fun":  # pragma: no cover
         """Multiply a scalar or another function with this function (from the right).
 
         This method is called when a scalar or another function is multiplied with this function,
@@ -229,7 +232,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __rsub__(self, other):  # pragma: no cover
+    def __rsub__(self, other: Any) -> "Fun":  # pragma: no cover
         """Subtract this function from a scalar or another function.
 
         This method is called when this function is subtracted from a scalar or another function,
@@ -244,7 +247,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __sub__(self, other):  # pragma: no cover
+    def __sub__(self, other: Any) -> "Fun":  # pragma: no cover
         """Subtract another function or a scalar from this function.
 
         This method implements the subtraction operation between this function
@@ -263,7 +266,7 @@ class Fun(ABC):
     # ------------
     @property
     @abstractmethod
-    def coeffs(self):  # pragma: no cover
+    def coeffs(self) -> np.ndarray:  # pragma: no cover
         """Get the coefficients of the function representation.
 
         This property returns the coefficients used in the function representation,
@@ -276,7 +279,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def interval(self):  # pragma: no cover
+    def interval(self) -> Any:  # pragma: no cover
         """Get the interval on which this function is defined.
 
         This property returns the interval object representing the domain
@@ -289,7 +292,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def isconst(self):  # pragma: no cover
+    def isconst(self) -> bool:  # pragma: no cover
         """Check if this function represents a constant.
 
         This property determines whether the function is constant (i.e., f(x) = c
@@ -302,7 +305,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def isempty(self):  # pragma: no cover
+    def isempty(self) -> bool:  # pragma: no cover
         """Check if this function is empty.
 
         This property determines whether the function is empty, which is a special
@@ -315,7 +318,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def iscomplex(self):  # pragma: no cover
+    def iscomplex(self) -> bool:  # pragma: no cover
         """Check if this function has complex values.
 
         This property determines whether the function has complex values or is
@@ -328,7 +331,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def size(self):  # pragma: no cover
+    def size(self) -> int:  # pragma: no cover
         """Get the size of the function representation.
 
         This property returns the number of coefficients or other measure of the
@@ -341,7 +344,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def support(self):  # pragma: no cover
+    def support(self) -> np.ndarray:  # pragma: no cover
         """Get the support interval of this function.
 
         This property returns the interval on which this function is defined,
@@ -354,7 +357,7 @@ class Fun(ABC):
 
     @property
     @abstractmethod
-    def vscale(self):  # pragma: no cover
+    def vscale(self) -> float:  # pragma: no cover
         """Get the vertical scale of the function.
 
         This property returns a measure of the range of function values, typically
@@ -369,7 +372,7 @@ class Fun(ABC):
     #  utilities
     # -----------
     @abstractmethod
-    def copy(self):  # pragma: no cover
+    def copy(self) -> "Fun":  # pragma: no cover
         """Create a deep copy of this function.
 
         This method creates a new function that is a deep copy of this function,
@@ -381,7 +384,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def imag(self):  # pragma: no cover
+    def imag(self) -> "Fun":  # pragma: no cover
         """Get the imaginary part of this function.
 
         This method returns a new function representing the imaginary part of this function.
@@ -393,7 +396,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def real(self):  # pragma: no cover
+    def real(self) -> "Fun":  # pragma: no cover
         """Get the real part of this function.
 
         This method returns a new function representing the real part of this function.
@@ -405,7 +408,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def restrict(self, subinterval):  # pragma: no cover
+    def restrict(self, subinterval: Any) -> "Fun":  # pragma: no cover
         """Restrict this function to a subinterval.
 
         This method creates a new function that is the restriction of this function
@@ -421,7 +424,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def simplify(self):  # pragma: no cover
+    def simplify(self) -> "Fun":  # pragma: no cover
         """Simplify the function representation.
 
         This method simplifies the function representation by removing unnecessary
@@ -433,7 +436,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def values(self):  # pragma: no cover
+    def values(self) -> np.ndarray:  # pragma: no cover
         """Get the values of the function at the points used for its representation.
 
         This method returns the values of the function at the points used for its
@@ -448,7 +451,7 @@ class Fun(ABC):
     #  rootfinding
     # -------------
     @abstractmethod
-    def roots(self):  # pragma: no cover
+    def roots(self) -> np.ndarray:  # pragma: no cover
         """Find the roots (zeros) of the function on its interval of definition.
 
         This method computes the points where the function equals zero
@@ -464,7 +467,7 @@ class Fun(ABC):
     #  calculus
     # ----------
     @abstractmethod
-    def cumsum(self):  # pragma: no cover
+    def cumsum(self) -> "Fun":  # pragma: no cover
         """Compute the indefinite integral of the function.
 
         This method calculates the indefinite integral (antiderivative) of the function,
@@ -477,7 +480,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def diff(self):  # pragma: no cover
+    def diff(self) -> "Fun":  # pragma: no cover
         """Compute the derivative of the function.
 
         This method calculates the derivative of the function with respect to x.
@@ -488,7 +491,7 @@ class Fun(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def sum(self):  # pragma: no cover
+    def sum(self) -> float:  # pragma: no cover
         """Compute the definite integral of the function over its interval of definition.
 
         This method calculates the definite integral of the function

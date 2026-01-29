@@ -5,6 +5,7 @@ by mapping them to a standard domain [-1, 1] and using a Onefun representation.
 """
 
 from abc import ABC
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,7 +39,7 @@ class Classicfun(Fun, ABC):
     #  alternative constructors
     # --------------------------
     @classmethod
-    def initempty(cls):
+    def initempty(cls) -> "Classicfun":
         """Initialize an empty function.
 
         This constructor creates an empty function representation, which is
@@ -54,7 +55,7 @@ class Classicfun(Fun, ABC):
         return cls(onefun, interval)
 
     @classmethod
-    def initconst(cls, c, interval):
+    def initconst(cls, c: Any, interval: Any) -> "Classicfun":
         """Initialize a constant function.
 
         This constructor creates a function that represents a constant value
@@ -71,7 +72,7 @@ class Classicfun(Fun, ABC):
         return cls(onefun, interval)
 
     @classmethod
-    def initidentity(cls, interval):
+    def initidentity(cls, interval: Any) -> "Classicfun":
         """Initialize the identity function f(x) = x.
 
         This constructor creates a function that represents f(x) = x
@@ -87,7 +88,7 @@ class Classicfun(Fun, ABC):
         return cls(onefun, interval)
 
     @classmethod
-    def initfun_adaptive(cls, f, interval):
+    def initfun_adaptive(cls, f: Any, interval: Any) -> "Classicfun":
         """Initialize from a callable function using adaptive sampling.
 
         This constructor determines the appropriate number of points needed to
@@ -104,7 +105,7 @@ class Classicfun(Fun, ABC):
         return cls(onefun, interval)
 
     @classmethod
-    def initfun_fixedlen(cls, f, interval, n):
+    def initfun_fixedlen(cls, f: Any, interval: Any, n: int) -> "Classicfun":
         """Initialize from a callable function using a fixed number of points.
 
         This constructor uses a specified number of points to represent the function,
@@ -124,7 +125,7 @@ class Classicfun(Fun, ABC):
     # -------------------
     #  'private' methods
     # -------------------
-    def __call__(self, x, how="clenshaw"):
+    def __call__(self, x: Any, how: str = "clenshaw") -> Any:
         """Evaluate the function at points x.
 
         This method evaluates the function at the specified points by mapping them
@@ -141,7 +142,7 @@ class Classicfun(Fun, ABC):
         y = self.interval.invmap(x)
         return self.onefun(y, how)
 
-    def __init__(self, onefun, interval):
+    def __init__(self, onefun: Any, interval: Any) -> None:
         """Initialize a new Classicfun instance.
 
         This method initializes a new function representation on the specified interval
@@ -154,7 +155,7 @@ class Classicfun(Fun, ABC):
         self.onefun = onefun
         self._interval = interval
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         """Return a string representation of the function.
 
         This method returns a string representation of the function that includes
@@ -170,7 +171,7 @@ class Classicfun(Fun, ABC):
     #  properties
     # ------------
     @property
-    def coeffs(self):
+    def coeffs(self) -> Any:
         """Get the coefficients of the function representation.
 
         This property returns the coefficients used in the function representation,
@@ -182,7 +183,7 @@ class Classicfun(Fun, ABC):
         return self.onefun.coeffs
 
     @property
-    def endvalues(self):
+    def endvalues(self) -> Any:
         """Get the values of the function at the endpoints of its interval.
 
         This property evaluates the function at the endpoints of its interval
@@ -195,7 +196,7 @@ class Classicfun(Fun, ABC):
         return self.__call__(self.support)
 
     @property
-    def interval(self):
+    def interval(self) -> Any:
         """Get the interval on which this function is defined.
 
         This property returns the interval object representing the domain
@@ -207,7 +208,7 @@ class Classicfun(Fun, ABC):
         return self._interval
 
     @property
-    def isconst(self):
+    def isconst(self) -> Any:
         """Check if this function represents a constant.
 
         This property determines whether the function is constant (i.e., f(x) = c
@@ -220,7 +221,7 @@ class Classicfun(Fun, ABC):
         return self.onefun.isconst
 
     @property
-    def iscomplex(self):
+    def iscomplex(self) -> Any:
         """Check if this function has complex values.
 
         This property determines whether the function has complex values or is
@@ -232,7 +233,7 @@ class Classicfun(Fun, ABC):
         return self.onefun.iscomplex
 
     @property
-    def isempty(self):
+    def isempty(self) -> Any:
         """Check if this function is empty.
 
         This property determines whether the function is empty, which is a special
@@ -245,7 +246,7 @@ class Classicfun(Fun, ABC):
         return self.onefun.isempty
 
     @property
-    def size(self):
+    def size(self) -> Any:
         """Get the size of the function representation.
 
         This property returns the number of coefficients or other measure of the
@@ -258,7 +259,7 @@ class Classicfun(Fun, ABC):
         return self.onefun.size
 
     @property
-    def support(self):
+    def support(self) -> Any:
         """Get the support interval of this function.
 
         This property returns the interval on which this function is defined,
@@ -270,7 +271,7 @@ class Classicfun(Fun, ABC):
         return np.asarray(self.interval)
 
     @property
-    def vscale(self):
+    def vscale(self) -> Any:
         """Get the vertical scale of the function.
 
         This property returns a measure of the range of function values, typically
@@ -286,7 +287,7 @@ class Classicfun(Fun, ABC):
     #  utilities
     # -----------
 
-    def imag(self):
+    def imag(self) -> "Classicfun":
         """Get the imaginary part of this function.
 
         This method returns a new function representing the imaginary part of this function.
@@ -300,7 +301,7 @@ class Classicfun(Fun, ABC):
         else:
             return self.initconst(0, interval=self.interval)
 
-    def real(self):
+    def real(self) -> "Classicfun":
         """Get the real part of this function.
 
         This method returns a new function representing the real part of this function.
@@ -314,7 +315,7 @@ class Classicfun(Fun, ABC):
         else:
             return self
 
-    def restrict(self, subinterval):
+    def restrict(self, subinterval: Any) -> "Classicfun":
         """Restrict this function to a subinterval.
 
         This method creates a new function that is the restriction of this function
@@ -338,7 +339,7 @@ class Classicfun(Fun, ABC):
         else:
             return self.__class__.initfun_fixedlen(self, subinterval, self.size)
 
-    def translate(self, c):
+    def translate(self, c: float) -> "Classicfun":
         """Translate this function by a constant c.
 
         This method creates a new function g(x) = f(x-c), which is the original
@@ -355,7 +356,7 @@ class Classicfun(Fun, ABC):
     # -------------
     #  rootfinding
     # -------------
-    def roots(self):
+    def roots(self) -> Any:
         """Find the roots (zeros) of the function on its interval of definition.
 
         This method computes the points where the function equals zero
@@ -372,7 +373,7 @@ class Classicfun(Fun, ABC):
     # ----------
     #  calculus
     # ----------
-    def cumsum(self):
+    def cumsum(self) -> "Classicfun":
         """Compute the indefinite integral of the function.
 
         This method calculates the indefinite integral (antiderivative) of the function,
@@ -386,7 +387,7 @@ class Classicfun(Fun, ABC):
         onefun = 0.5 * (b - a) * self.onefun.cumsum()
         return self.__class__(onefun, self.interval)
 
-    def diff(self):
+    def diff(self) -> "Classicfun":
         """Compute the derivative of the function.
 
         This method calculates the derivative of the function with respect to x,
@@ -400,7 +401,7 @@ class Classicfun(Fun, ABC):
         onefun = 2.0 / (b - a) * self.onefun.diff()
         return self.__class__(onefun, self.interval)
 
-    def sum(self):
+    def sum(self) -> Any:
         """Compute the definite integral of the function over its interval of definition.
 
         This method calculates the definite integral of the function
@@ -416,7 +417,7 @@ class Classicfun(Fun, ABC):
     # ----------
     #  plotting
     # ----------
-    def plot(self, ax=None, **kwds):
+    def plot(self, ax: Any = None, **kwds: Any) -> Any:
         """Plot the function over its interval of definition.
 
         This method plots the function over its interval of definition using matplotlib.
@@ -440,7 +441,7 @@ class Classicfun(Fun, ABC):
 methods_onefun_other = ("values", "plotcoeffs")
 
 
-def add_utility(methodname):
+def add_utility(methodname: str) -> None:
     """Add a utility method to the Classicfun class.
 
     This function creates a method that delegates to the corresponding method
@@ -454,7 +455,7 @@ def add_utility(methodname):
         corresponding method in the onefun object.
     """
 
-    def method(self, *args, **kwds):
+    def method(self: Any, *args: Any, **kwds: Any) -> Any:
         """Delegate to the corresponding method of the underlying onefun object.
 
         This method calls the same-named method on the underlying onefun object
@@ -488,7 +489,7 @@ for methodname in methods_onefun_other:
 methods_onefun_zeroargs = ("__pos__", "__neg__", "copy", "simplify")
 
 
-def add_zero_arg_op(methodname):
+def add_zero_arg_op(methodname: str) -> None:
     """Add a zero-argument operation method to the Classicfun class.
 
     This function creates a method that delegates to the corresponding method
@@ -504,7 +505,7 @@ def add_zero_arg_op(methodname):
         instance instead of an onefun instance.
     """
 
-    def method(self, *args, **kwds):
+    def method(self: Any, *args: Any, **kwds: Any) -> Any:
         """Apply a zero-argument operation and return a new Classicfun.
 
         This method calls the same-named method on the underlying onefun object
@@ -550,7 +551,7 @@ methods_onefun_binary = (
 )
 
 
-def add_binary_op(methodname):
+def add_binary_op(methodname: str) -> None:
     """Add a binary operation method to the Classicfun class.
 
     This function creates a method that implements a binary operation between
@@ -568,7 +569,7 @@ def add_binary_op(methodname):
     """
 
     @self_empty()
-    def method(self, f, *args, **kwds):
+    def method(self: Any, f: Any, *args: Any, **kwds: Any) -> Any:
         """Apply a binary operation and return a new Classicfun.
 
         This method implements a binary operation between this Classicfun and
@@ -616,7 +617,7 @@ for methodname in methods_onefun_binary:
 # ---------------------------
 
 
-def add_ufunc(op):
+def add_ufunc(op: Any) -> None:
     """Add a NumPy universal function method to the Classicfun class.
 
     This function creates a method that applies a NumPy universal function (ufunc)
@@ -631,7 +632,7 @@ def add_ufunc(op):
     """
 
     @self_empty()
-    def method(self):
+    def method(self: Any) -> Any:
         """Apply a NumPy universal function to this function.
 
         This method applies a NumPy universal function (ufunc) to the values

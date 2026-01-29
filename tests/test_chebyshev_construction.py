@@ -277,3 +277,26 @@ def test_from_function_with_complex_function():
     x_values = np.linspace(-1, 1, 10)
     for x in x_values:
         assert abs(poly(x) - fun(x)) < 1e-10, f"Polynomial does not approximate the function at x={x}."
+
+
+def test_from_function_non_convergence_warning():
+    """Test that from_function issues a warning for non-converging functions."""
+    import warnings
+    from unittest.mock import patch
+
+    # Create a function that is hard to approximate - a step function
+    def step_function(x):
+        return np.where(x > 0, 1.0, -1.0)
+
+    # Patch maxpow2 to a small value to force non-convergence quickly
+    with patch("chebpy.chebyshev.prefs") as mock_prefs:
+        mock_prefs.maxpow2 = 4
+        mock_prefs.eps = 2.220446049250313e-16
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            poly = from_function(step_function)
+            assert isinstance(poly, ChebyshevPolynomial)
+            # Check that a warning was issued
+            assert len(w) == 1
+            assert "did not converge" in str(w[0].message)

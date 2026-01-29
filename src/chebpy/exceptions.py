@@ -6,6 +6,7 @@ different error conditions related to intervals, domains, and function operation
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class ChebpyBaseError(Exception, ABC):
@@ -19,7 +20,7 @@ class ChebpyBaseError(Exception, ABC):
         message (str): The error message to be displayed.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize the exception with an optional custom message.
 
         Args:
@@ -31,17 +32,17 @@ class ChebpyBaseError(Exception, ABC):
         else:
             self.message = self.default_message
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the string representation of the exception.
 
         Returns:
             str: The error message.
         """
-        return self.message
+        return str(self.message)
 
     @property
     @abstractmethod
-    def default_message(self):
+    def default_message(self) -> str:
         """Default error message for the exception.
 
         This property must be implemented by all concrete subclasses.

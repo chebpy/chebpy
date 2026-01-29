@@ -34,7 +34,7 @@ def cache(f: Callable[..., Any]) -> Callable[..., Any]:
 
     # TODO: look into replacing this with one of the functools cache decorators
     @wraps(f)
-    def wrapper(self):
+    def wrapper(self: Any) -> Any:
         try:
             # f has been executed previously
             out = self._cache[f.__name__]
@@ -69,9 +69,9 @@ def self_empty(resultif: Any = None) -> Callable[..., Any]:
     """
 
     # TODO: add unit test for this
-    def decorator(f):
+    def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(f)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
             if self.isempty:
                 if resultif is not None:
                     return resultif
@@ -102,7 +102,7 @@ def preandpostprocess(f: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(f)
-    def thewrapper(*args, **kwargs):
+    def thewrapper(*args: Any, **kwargs: Any) -> Any:
         xx, akfk = args[:2]
         # are any of the first two arguments empty arrays?
         if (np.asarray(xx).size == 0) | (np.asarray(akfk).size == 0):
@@ -119,9 +119,9 @@ def preandpostprocess(f: Callable[..., Any]) -> Callable[..., Any]:
         # convert first argument to an array if it is a scalar and then
         # return the first (and only) element of the result if so
         else:
-            args = list(args)
-            args[0] = np.array([xx]) if np.isscalar(xx) else args[0]
-            out = f(*args, **kwargs)
+            args_list = list(args)
+            args_list[0] = np.array([xx]) if np.isscalar(xx) else args_list[0]
+            out = f(*args_list, **kwargs)
             return out[0] if np.isscalar(xx) else out
 
     return thewrapper
@@ -143,16 +143,16 @@ def float_argument(f: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(f)
-    def thewrapper(self, *args, **kwargs):
+    def thewrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         x = args[0]
         xx = np.array([x]) if np.isscalar(x) else np.array(x)
         # discern between the array(0.1) and array([0.1]) cases
         if xx.size == 1:
             if xx.ndim == 0:
                 xx = np.array([xx])
-        args = list(args)
-        args[0] = xx
-        out = f(self, *args, **kwargs)
+        args_list = list(args)
+        args_list[0] = xx
+        out = f(self, *args_list, **kwargs)
         return out[0] if np.isscalar(x) else out
 
     return thewrapper
@@ -173,12 +173,13 @@ def cast_arg_to_chebfun(f: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(f)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         other = args[0]
         if not isinstance(other, self.__class__):
             fun = self.initconst(args[0], self.support)
-            args = list(args)
-            args[0] = fun
+            args_list = list(args)
+            args_list[0] = fun
+            return f(self, *args_list, **kwargs)
         return f(self, *args, **kwargs)
 
     return wrapper
@@ -200,12 +201,13 @@ def cast_other(f: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(f)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         cls = self.__class__
         other = args[0]
         if not isinstance(other, cls):
-            args = list(args)
-            args[0] = cls(other)
+            args_list = list(args)
+            args_list[0] = cls(other)
+            return f(self, *args_list, **kwargs)
         return f(self, *args, **kwargs)
 
     return wrapper

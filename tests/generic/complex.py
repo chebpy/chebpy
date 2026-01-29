@@ -115,6 +115,14 @@ def test_real_imag(complexfun):
     z = complexfun
     # check definition of real and imaginary
     zreal = z.real()
+    zimag = z.imag()
+    # check that imag of complex function returns the imaginary part
+    assert not zimag.iscomplex  # imaginary part should be real
+    # check values at sample points
+    xx = np.array([0.0, 0.5, -0.5])
+    expected_imag = np.imag(np.exp(np.pi * 1j * xx))
+    actual_imag = zimag(xx)
+    assert np.all(np.abs(actual_imag - expected_imag) < 1e-10)
     # check real part of real chebtech is the same chebtech
     assert zreal.real() == zreal
     # check imaginary part of real chebtech is the zero chebtech

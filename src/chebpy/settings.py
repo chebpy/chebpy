@@ -13,7 +13,8 @@ The module creates a singleton instance of ChebPreferences called _preferences,
 which is imported by other modules to access the current settings.
 """
 
-from typing import ClassVar
+from types import TracebackType
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -31,7 +32,7 @@ class DefaultPreferences:
     mergeroots = True
 
     @classmethod
-    def _defaults(cls):
+    def _defaults(cls) -> dict[str, Any]:
         """Returns all defined class attributes."""
         return {k: v for k, v in cls.__dict__.items() if k[0] != "_"}
 
@@ -39,23 +40,22 @@ class DefaultPreferences:
 class ChebPreferences(DefaultPreferences):
     """Preferences object used in chebpy."""
 
-    def reset(self, *names):
+    def reset(self, *names: str) -> None:
         """Reset default preferences.
 
         `.reset()` resets all preferences to the DefaultPrefs state
         `.reset(*names)` resets only the selected ones.
         This leaves additional user-added prefs untouched.
         """
-        if len(names) == 0:
-            names = DefaultPreferences._defaults()
-        for name in names:
+        reset_names: Any = names if len(names) > 0 else DefaultPreferences._defaults()
+        for name in reset_names:
             if hasattr(DefaultPreferences, name):
                 setattr(self, name, getattr(DefaultPreferences, name))
 
     # Singleton
-    _instance = None  # persistent reference for the singleton object
+    _instance: ClassVar["ChebPreferences | None"] = None  # persistent reference for the singleton object
 
-    def __new__(cls):
+    def __new__(cls) -> "ChebPreferences":
         """Create or return the singleton instance of ChebPreferences.
 
         This method implements the singleton pattern, ensuring that only one
@@ -73,9 +73,9 @@ class ChebPreferences(DefaultPreferences):
         return cls._instance
 
     # Context manager
-    _stash: ClassVar[list] = []  # persistent stash for old prefs when entering context(s)
+    _stash: ClassVar[list[dict[str, Any]]] = []  # persistent stash for old prefs when entering context(s)
 
-    def __enter__(self):
+    def __enter__(self) -> "ChebPreferences":
         """Save current preferences when entering a context.
 
         This method is called when entering a context manager block. It saves
@@ -89,9 +89,14 @@ class ChebPreferences(DefaultPreferences):
             ChebPreferences: The preferences object (self._instance).
         """
         self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults().keys()})
-        return self._instance
+        return self._instance  # type: ignore[return-value]
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         """Restore previous preferences when exiting a context.
 
         This method is called when exiting a context manager block. It restores
