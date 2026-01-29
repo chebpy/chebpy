@@ -101,10 +101,10 @@ def test_fixedlen_construction(testfunctions, n):
 
 def test_initconst_with_non_scalar():
     """Test that initconst raises ValueError for non-scalar input."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[1"):
         Chebtech.initconst([1, 2, 3])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\[1"):
         Chebtech.initconst(np.array([1, 2, 3]))
 
 
