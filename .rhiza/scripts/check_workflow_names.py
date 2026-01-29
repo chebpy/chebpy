@@ -31,8 +31,17 @@ def check_file(filepath):
         print(f"Error: {filepath} missing 'name' field.")
         return False
 
-    if not name.startswith("(RHIZA) "):
-        print(f"Updating {filepath}: name '{name}' -> '(RHIZA) {name}'")
+    prefix = "(RHIZA) "
+    # Remove prefix if present to verify the rest of the string
+    if name.startswith(prefix):
+        clean_name = name[len(prefix) :]
+    else:
+        clean_name = name
+
+    expected_name = f"{prefix}{clean_name.upper()}"
+
+    if name != expected_name:
+        print(f"Updating {filepath}: name '{name}' -> '{expected_name}'")
 
         # Read file lines to perform replacement while preserving comments
         with open(filepath) as f_read:
@@ -47,7 +56,7 @@ def check_file(filepath):
                     # Simple check: does it contain reasonable parts of the name?
                     # Or just blinding replace top-level name:
                     # We'll use quotes to be safe
-                    f_write.write(f'name: "(RHIZA) {name}"\n')
+                    f_write.write(f'name: "{expected_name}"\n')
                     replaced = True
                 else:
                     f_write.write(line)

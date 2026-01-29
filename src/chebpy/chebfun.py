@@ -9,10 +9,15 @@ The Chebfun class is inspired by the MATLAB package of the same name and provide
 similar functionality for working with functions rather than numbers.
 """
 
+from __future__ import annotations
+
 import operator
+from collections.abc import Callable, Iterator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 
 from .bndfun import Bndfun
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
@@ -46,7 +51,7 @@ class Chebfun:
         transposed (bool): Flag indicating if the Chebfun is transposed.
     """
 
-    def __init__(self, funs):
+    def __init__(self, funs: Any) -> None:
         """Initialize a Chebfun object.
 
         Args:
@@ -58,7 +63,7 @@ class Chebfun:
         self.transposed = False
 
     @classmethod
-    def initempty(cls):
+    def initempty(cls) -> Chebfun:
         """Initialize an empty Chebfun.
 
         Returns:
@@ -72,7 +77,7 @@ class Chebfun:
         return cls([])
 
     @classmethod
-    def initidentity(cls, domain=None):
+    def initidentity(cls, domain: Any = None) -> Chebfun:
         """Initialize a Chebfun representing the identity function f(x) = x.
 
         Args:
@@ -93,7 +98,7 @@ class Chebfun:
         return cls(generate_funs(domain, Bndfun.initidentity))
 
     @classmethod
-    def initconst(cls, c, domain=None):
+    def initconst(cls, c: Any, domain: Any = None) -> Chebfun:
         """Initialize a Chebfun representing a constant function f(x) = c.
 
         Args:
@@ -117,7 +122,7 @@ class Chebfun:
         return cls(generate_funs(domain, Bndfun.initconst, {"c": c}))
 
     @classmethod
-    def initfun_adaptive(cls, f, domain=None):
+    def initfun_adaptive(cls, f: Callable[..., Any], domain: Any = None) -> Chebfun:
         """Initialize a Chebfun by adaptively sampling a function.
 
         This method determines the appropriate number of points needed to represent
@@ -142,7 +147,7 @@ class Chebfun:
         return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
 
     @classmethod
-    def initfun_fixedlen(cls, f, n, domain=None):
+    def initfun_fixedlen(cls, f: Callable[..., Any], n: Any, domain: Any = None) -> Chebfun:
         """Initialize a Chebfun with a fixed number of points.
 
         This method uses a specified number of points to represent the function,
@@ -175,7 +180,7 @@ class Chebfun:
         return cls(funs)
 
     @classmethod
-    def initfun(cls, f, domain=None, n=None):
+    def initfun(cls, f: Callable[..., Any], domain: Any = None, n: Any = None) -> Chebfun:
         """Initialize a Chebfun from a function.
 
         This is a general-purpose constructor that delegates to either initfun_adaptive
@@ -199,7 +204,7 @@ class Chebfun:
     # --------------------
     #  operator overloads
     # --------------------
-    def __add__(self, f):
+    def __add__(self, f: Any) -> Any:
         """Add a Chebfun with another Chebfun or a scalar.
 
         Args:
@@ -212,7 +217,7 @@ class Chebfun:
 
     @self_empty(np.array([]))
     @float_argument
-    def __call__(self, x):
+    def __call__(self, x: Any) -> Any:
         """Evaluate the Chebfun at points x.
 
         This method evaluates the Chebfun at the specified points. It handles interior
@@ -245,7 +250,7 @@ class Chebfun:
         out[rpts] = self.funs[-1](x[rpts])
         return out
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         """Return an iterator over the functions in this Chebfun.
 
         Returns:
@@ -253,7 +258,7 @@ class Chebfun:
         """
         return self.funs.__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the total number of coefficients across all funs.
 
         Returns:
@@ -261,7 +266,7 @@ class Chebfun:
         """
         return sum(f.size for f in self.funs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Test for equality between two Chebfun objects.
 
         Two Chebfun objects are considered equal if they have the same domain
@@ -287,9 +292,9 @@ class Chebfun:
         # Check function values at test points
         xx = np.linspace(self.support[0], self.support[1], 100)
         tol = 1e2 * max(self.vscale, other.vscale) * prefs.eps
-        return np.all(np.abs(self(xx) - other(xx)) <= tol)
+        return bool(np.all(np.abs(self(xx) - other(xx)) <= tol))
 
-    def __mul__(self, f):
+    def __mul__(self, f: Any) -> Any:
         """Multiply a Chebfun with another Chebfun or a scalar.
 
         Args:
@@ -300,7 +305,7 @@ class Chebfun:
         """
         return self._apply_binop(f, operator.mul)
 
-    def __neg__(self):
+    def __neg__(self) -> Chebfun:
         """Return the negative of this Chebfun.
 
         Returns:
@@ -308,7 +313,7 @@ class Chebfun:
         """
         return self.__class__(-self.funs)
 
-    def __pos__(self):
+    def __pos__(self) -> Chebfun:
         """Return the positive of this Chebfun (which is the Chebfun itself).
 
         Returns:
@@ -316,7 +321,7 @@ class Chebfun:
         """
         return self
 
-    def __abs__(self):
+    def __abs__(self) -> Chebfun:
         """Return the absolute value of this Chebfun.
 
         Returns:
@@ -327,7 +332,7 @@ class Chebfun:
             abs_funs.append(fun.absolute())
         return self.__class__(abs_funs)
 
-    def __pow__(self, f):
+    def __pow__(self, f: Any) -> Any:
         """Raise this Chebfun to a power.
 
         Args:
@@ -338,7 +343,7 @@ class Chebfun:
         """
         return self._apply_binop(f, operator.pow)
 
-    def __rtruediv__(self, c):
+    def __rtruediv__(self, c: Any) -> Chebfun:
         """Divide a scalar by this Chebfun.
 
         This method is called when a scalar is divided by a Chebfun, i.e., c / self.
@@ -354,17 +359,17 @@ class Chebfun:
             is not a Chebfun. We proceed on the assumption f is a scalar.
         """
 
-        def constfun(cheb, const):
+        def constfun(cheb: Any, const: Any) -> Any:
             return 0.0 * cheb + const
 
-        def make_divfun(fun):
+        def make_divfun(fun: Any) -> Callable[..., Any]:
             return lambda x: constfun(x, c) / fun(x)
 
         newfuns = [fun.initfun_adaptive(make_divfun(fun), fun.interval) for fun in self]
         return self.__class__(newfuns)
 
     @self_empty("Chebfun<empty>")
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the Chebfun.
 
         This method returns a detailed string representation of the Chebfun,
@@ -391,7 +396,7 @@ class Chebfun:
         btmxtr = "" if numpcs == 1 else f"    total length = {sum([f.size for f in self])}"
         return header + domain_info + toprow + rowdta + btmrow + btmxtr
 
-    def __rsub__(self, f):
+    def __rsub__(self, f: Any) -> Any:
         """Subtract this Chebfun from another object.
 
         This method is called when another object is subtracted by this Chebfun,
@@ -406,7 +411,7 @@ class Chebfun:
         return -(self - f)
 
     @cast_arg_to_chebfun
-    def __rpow__(self, f):
+    def __rpow__(self, f: Any) -> Any:
         """Raise another object to the power of this Chebfun.
 
         This method is called when another object is raised to the power of this Chebfun,
@@ -420,7 +425,7 @@ class Chebfun:
         """
         return f**self
 
-    def __truediv__(self, f):
+    def __truediv__(self, f: Any) -> Any:
         """Divide this Chebfun by another object.
 
         Args:
@@ -436,7 +441,7 @@ class Chebfun:
     __rdiv__ = __rtruediv__
     __radd__ = __add__
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a concise string representation of the Chebfun.
 
         This method returns a brief string representation of the Chebfun,
@@ -450,7 +455,7 @@ class Chebfun:
         out = f"<Chebfun-{rowcol},{self.funs.size},{sum([f.size for f in self])}, {domain_str}>\n"
         return out
 
-    def __sub__(self, f):
+    def __sub__(self, f: Any) -> Any:
         """Subtract another object from this Chebfun.
 
         Args:
@@ -465,7 +470,7 @@ class Chebfun:
     #  internal helpers
     # ------------------
     @self_empty()
-    def _apply_binop(self, f, op):
+    def _apply_binop(self, f: Any, op: Callable[..., Any]) -> Any:
         """Apply a binary operation between this Chebfun and another object.
 
         This is a funnel method used in the implementation of Chebfun binary
@@ -487,7 +492,7 @@ class Chebfun:
             return f
         if np.isscalar(f):
             chbfn1 = self
-            chbfn2 = f * np.ones(self.funs.size)
+            chbfn2 = f * np.ones(self.funs.size)  # type: ignore[operator]
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
@@ -502,7 +507,7 @@ class Chebfun:
             newfuns.append(newfun)
         return self.__class__(newfuns)
 
-    def _break(self, targetdomain):
+    def _break(self, targetdomain: Domain) -> Chebfun:
         """Resample this Chebfun to a new domain.
 
         This method resamples the Chebfun to the supplied Domain object. It is
@@ -516,7 +521,7 @@ class Chebfun:
             Chebfun: A new Chebfun resampled to the target domain.
         """
         newfuns = []
-        subintervals = targetdomain.intervals
+        subintervals = iter(targetdomain.intervals)
         interval = next(subintervals)  # next(..) for Python2/3 compatibility
         for fun in self:
             while interval in fun.interval:
@@ -532,7 +537,7 @@ class Chebfun:
     #  properties
     # ------------
     @property
-    def breakpoints(self):
+    def breakpoints(self) -> np.ndarray:
         """Get the breakpoints of this Chebfun.
 
         Breakpoints are the points where the Chebfun transitions from one piece to another.
@@ -544,7 +549,7 @@ class Chebfun:
 
     @property
     @self_empty(Domain([]))
-    def domain(self):
+    def domain(self) -> Domain:
         """Get the domain of this Chebfun.
 
         Returns:
@@ -553,7 +558,7 @@ class Chebfun:
         return Domain.from_chebfun(self)
 
     @domain.setter
-    def domain(self, new_domain):
+    def domain(self, new_domain: Any) -> None:
         """Set the domain of the Chebfun by restricting to the new domain.
 
         Args:
@@ -563,7 +568,7 @@ class Chebfun:
 
     @property
     @self_empty(Domain([]))
-    def support(self):
+    def support(self) -> Any:
         """Get the support interval of this Chebfun.
 
         The support is the interval between the first and last breakpoints.
@@ -575,7 +580,7 @@ class Chebfun:
 
     @property
     @self_empty(0.0)
-    def hscale(self):
+    def hscale(self) -> float:
         """Get the horizontal scale of this Chebfun.
 
         The horizontal scale is the maximum absolute value of the support interval.
@@ -587,7 +592,7 @@ class Chebfun:
 
     @property
     @self_empty(False)
-    def iscomplex(self):
+    def iscomplex(self) -> bool:
         """Check if this Chebfun has complex values.
 
         Returns:
@@ -598,7 +603,7 @@ class Chebfun:
 
     @property
     @self_empty(False)
-    def isconst(self):
+    def isconst(self) -> bool:
         """Check if this Chebfun represents a constant function.
 
         A Chebfun is constant if all of its pieces are constant with the same value.
@@ -613,7 +618,7 @@ class Chebfun:
         return all(fun.isconst and fun.coeffs[0] == c for fun in self)
 
     @property
-    def isempty(self):
+    def isempty(self) -> bool:
         """Check if this Chebfun is empty.
 
         An empty Chebfun contains no functions.
@@ -625,7 +630,7 @@ class Chebfun:
 
     @property
     @self_empty(0.0)
-    def vscale(self):
+    def vscale(self) -> Any:
         """Get the vertical scale of this Chebfun.
 
         The vertical scale is the maximum of the vertical scales of all pieces.
@@ -637,7 +642,7 @@ class Chebfun:
 
     @property
     @self_empty()
-    def x(self):
+    def x(self) -> Chebfun:
         """Get the identity function on the support of this Chebfun.
 
         This property returns a new Chebfun representing the identity function f(x) = x
@@ -652,7 +657,7 @@ class Chebfun:
     #  utilities
     # ----------
 
-    def imag(self):
+    def imag(self) -> Chebfun:
         """Get the imaginary part of this Chebfun.
 
         Returns:
@@ -664,7 +669,7 @@ class Chebfun:
         else:
             return self.initconst(0, domain=self.domain)
 
-    def real(self):
+    def real(self) -> Chebfun:
         """Get the real part of this Chebfun.
 
         Returns:
@@ -676,7 +681,7 @@ class Chebfun:
         else:
             return self
 
-    def copy(self):
+    def copy(self) -> Chebfun:
         """Create a deep copy of this Chebfun.
 
         Returns:
@@ -685,7 +690,7 @@ class Chebfun:
         return self.__class__([fun.copy() for fun in self])
 
     @self_empty()
-    def _restrict(self, subinterval):
+    def _restrict(self, subinterval: Any) -> Chebfun:
         """Restrict a Chebfun to a subinterval, without simplifying.
 
         This is an internal method that restricts the Chebfun to a subinterval
@@ -700,7 +705,7 @@ class Chebfun:
         newdom = self.domain.restrict(Domain(subinterval))
         return self._break(newdom)
 
-    def restrict(self, subinterval):
+    def restrict(self, subinterval: Any) -> Any:
         """Restrict a Chebfun to a subinterval.
 
         This method creates a new Chebfun that is restricted to the specified subinterval
@@ -715,7 +720,7 @@ class Chebfun:
         return self._restrict(subinterval).simplify()
 
     @self_empty()
-    def restrict_(self, subinterval):
+    def restrict_(self, subinterval: Any) -> Chebfun:
         """Restrict a Chebfun to a subinterval, modifying the object in place.
 
         This method modifies the current Chebfun by restricting it to the specified
@@ -734,7 +739,7 @@ class Chebfun:
 
     @cache
     @self_empty(np.array([]))
-    def roots(self, merge=None):
+    def roots(self, merge: Any = None) -> np.ndarray:
         """Compute the roots of a Chebfun.
 
         This method finds the values x for which f(x) = 0, by computing the roots
@@ -772,18 +777,18 @@ class Chebfun:
         return np.concatenate(list(allrts))
 
     @self_empty()
-    def simplify(self):
+    def simplify(self) -> Chebfun:
         """Simplify each fun in the chebfun."""
         return self.__class__([fun.simplify() for fun in self])
 
-    def translate(self, c):
+    def translate(self, c: Any) -> Chebfun:
         """Translate a chebfun by c, i.e., return f(x-c)."""
         return self.__class__([x.translate(c) for x in self])
 
     # ----------
     #  calculus
     # ----------
-    def cumsum(self):
+    def cumsum(self) -> Chebfun:
         """Compute the indefinite integral (antiderivative) of the Chebfun.
 
         This method computes the indefinite integral of the Chebfun, with the
@@ -816,7 +821,7 @@ class Chebfun:
             prevfun = integral
         return self.__class__(newfuns)
 
-    def diff(self, n=1):
+    def diff(self, n: int = 1) -> Chebfun:
         """Compute the derivative of the Chebfun.
 
         This method calculates the nth derivative of the Chebfun with respect to x.
@@ -855,7 +860,7 @@ class Chebfun:
             result = self.__class__(dfuns)
         return result
 
-    def sum(self):
+    def sum(self) -> Any:
         """Compute the definite integral of the Chebfun over its domain.
 
         This method calculates the definite integral of the Chebfun over its
@@ -876,7 +881,7 @@ class Chebfun:
         """
         return np.sum([fun.sum() for fun in self])
 
-    def dot(self, f):
+    def dot(self, f: Any) -> Any:
         """Compute the dot product of this Chebfun with another function.
 
         This method calculates the inner product (dot product) of this Chebfun
@@ -892,7 +897,7 @@ class Chebfun:
         """
         return (self * f).sum()
 
-    def norm(self, p=2):
+    def norm(self, p: Any = 2) -> Any:
         """Compute the Lp norm of the Chebfun over its domain.
 
         This method calculates the Lp norm of the Chebfun. The L2 norm is the
@@ -945,7 +950,7 @@ class Chebfun:
     #  utilities
     # ----------
     @self_empty()
-    def absolute(self):
+    def absolute(self) -> Chebfun:
         """Absolute value of a Chebfun."""
         newdom = self.domain.merge(self.roots())
         funs = [x.absolute() for x in self._break(newdom)]
@@ -955,17 +960,17 @@ class Chebfun:
 
     @self_empty()
     @cast_arg_to_chebfun
-    def maximum(self, other):
+    def maximum(self, other: Any) -> Any:
         """Pointwise maximum of self and another chebfun."""
         return self._maximum_minimum(other, operator.ge)
 
     @self_empty()
     @cast_arg_to_chebfun
-    def minimum(self, other):
+    def minimum(self, other: Any) -> Any:
         """Pointwise mimimum of self and another chebfun."""
         return self._maximum_minimum(other, operator.lt)
 
-    def _maximum_minimum(self, other, comparator):
+    def _maximum_minimum(self, other: Chebfun, comparator: Callable[..., bool]) -> Any:
         """Method for computing the pointwise maximum/minimum of two Chebfuns.
 
         This internal method implements the algorithm for computing the pointwise
@@ -989,7 +994,7 @@ class Chebfun:
         try:
             # Try to use union if supports match
             newdom = self.domain.union(other.domain)
-        except SupportMismatch:
+        except SupportMismatch:  # type: ignore[misc]
             # If supports don't match, find the intersection
             a_min, a_max = self.support
             b_min, b_max = other.support
@@ -1034,7 +1039,7 @@ class Chebfun:
     # ----------
     #  plotting
     # ----------
-    def plot(self, ax=None, **kwds):
+    def plot(self, ax: Axes | None = None, **kwds: Any) -> Any:
         """Plot the Chebfun over its domain.
 
         This method plots the Chebfun over its domain using matplotlib.
@@ -1050,7 +1055,7 @@ class Chebfun:
         """
         return plotfun(self, self.support, ax=ax, **kwds)
 
-    def plotcoeffs(self, ax=None, **kwds):
+    def plotcoeffs(self, ax: Axes | None = None, **kwds: Any) -> Axes:
         """Plot the coefficients of the Chebfun on a semilogy scale.
 
         This method plots the absolute values of the coefficients for each piece
@@ -1074,7 +1079,7 @@ class Chebfun:
 # ---------
 #  ufuncs
 # ---------
-def add_ufunc(op):
+def add_ufunc(op: Callable[..., Any]) -> None:
     """Add a NumPy universal function method to the Chebfun class.
 
     This function creates a method that applies a NumPy universal function (ufunc)
@@ -1089,7 +1094,7 @@ def add_ufunc(op):
     """
 
     @self_empty()
-    def method(self):
+    def method(self: Chebfun) -> Chebfun:
         """Apply a NumPy universal function to this Chebfun.
 
         This method applies a NumPy universal function (ufunc) to each piece

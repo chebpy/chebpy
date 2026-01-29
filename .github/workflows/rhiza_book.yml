@@ -36,33 +36,33 @@ jobs:
 
     steps:
       # Check out the repository code
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           lfs: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.2.0
         with:
-          version: "0.9.26"
+          version: "0.9.27"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
         env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           # will just use .python-version?
           uv sync --all-extras --all-groups --frozen
 
       - name: "Make the book"
         env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
-          make -f .rhiza/rhiza.mk book
+          make book
 
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
       - name: Upload static files as artifact
-        uses: actions/upload-pages-artifact@v4  # Official GitHub Pages artifact upload action
+        uses: actions/upload-pages-artifact@v4.0.0  # Official GitHub Pages artifact upload action
         with:
           path: _book/  # Path to the directory containing all artifacts to deploy
 
@@ -73,5 +73,5 @@ jobs:
       # If PUBLISH_COMPANION_BOOK is not set, it defaults to allowing deployment
       - name: Deploy to GitHub Pages
         if: ${{ !github.event.repository.fork && (vars.PUBLISH_COMPANION_BOOK == 'true' || vars.PUBLISH_COMPANION_BOOK == '') }}
-        uses: actions/deploy-pages@v4  # Official GitHub Pages deployment action
+        uses: actions/deploy-pages@v4.0.5  # Official GitHub Pages deployment action
         continue-on-error: true

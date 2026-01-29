@@ -18,7 +18,7 @@ class TestCheckFile:
     def test_correct_prefix_returns_true(self, tmp_path):
         """File with correct (RHIZA) prefix returns True."""
         workflow = tmp_path / "workflow.yml"
-        workflow.write_text('name: "(RHIZA) My Workflow"\non: push\n')
+        workflow.write_text('name: "(RHIZA) MY WORKFLOW"\non: push\n')
 
         assert check_file(str(workflow)) is True
 
@@ -31,7 +31,7 @@ class TestCheckFile:
 
         assert result is False
         content = workflow.read_text()
-        assert "(RHIZA) My Workflow" in content
+        assert "(RHIZA) MY WORKFLOW" in content
 
     def test_missing_name_field_returns_false(self, tmp_path, capsys):
         """File without name field returns False with error message."""
@@ -84,7 +84,7 @@ jobs:
 
         content = workflow.read_text()
         # Check name was updated
-        assert "(RHIZA) CI Pipeline" in content
+        assert "(RHIZA) CI PIPELINE" in content
         # Check other content preserved
         assert "branches: [main]" in content
         assert "runs-on: ubuntu-latest" in content
@@ -93,14 +93,14 @@ jobs:
     def test_quoted_name_with_prefix(self, tmp_path):
         """File with quoted name containing prefix returns True."""
         workflow = tmp_path / "workflow.yml"
-        workflow.write_text('name: "(RHIZA) Test"\non: push\n')
+        workflow.write_text('name: "(RHIZA) TEST"\non: push\n')
 
         assert check_file(str(workflow)) is True
 
     def test_unquoted_name_with_prefix(self, tmp_path):
         """File with unquoted name containing prefix returns True."""
         workflow = tmp_path / "workflow.yml"
-        workflow.write_text("name: (RHIZA) Test\non: push\n")
+        workflow.write_text("name: (RHIZA) TEST\non: push\n")
 
         assert check_file(str(workflow)) is True
 
@@ -112,4 +112,4 @@ jobs:
         check_file(str(workflow))
 
         content = workflow.read_text()
-        assert "(RHIZA) Build & Deploy" in content
+        assert "(RHIZA) BUILD & DEPLOY" in content

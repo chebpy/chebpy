@@ -21,7 +21,7 @@ import numpy as np
 from .settings import _preferences as prefs
 
 
-def plotfun(fun: Any, support: tuple, ax: Any = None, n: int | None = None, **kwds: Any) -> Any:
+def plotfun(fun: Any, support: tuple[float, float], ax: Any = None, n: int | None = None, **kwds: Any) -> Any:
     """Plot a function over a specified support interval.
 
     This function plots a callable object over a specified interval using
@@ -54,7 +54,7 @@ def plotfun(fun: Any, support: tuple, ax: Any = None, n: int | None = None, **kw
     return ax
 
 
-def plotfuncoeffs(abscoeffs: np.ndarray, ax=None, **kwds) -> object:
+def plotfuncoeffs(abscoeffs: np.ndarray, ax: Any = None, **kwds: Any) -> Any:
     """Plot the absolute values of function coefficients on a semilogy scale.
 
     This function creates a semilogy plot of the absolute values of function

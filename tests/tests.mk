@@ -50,7 +50,7 @@ test: install ## run all tests
 typecheck: install ## run mypy type checking
 	@if [ -d ${SOURCE_FOLDER} ]; then \
 	  printf "${BLUE}[INFO] Running mypy type checking...${RESET}\n"; \
-	  ${UVX_BIN} mypy ${SOURCE_FOLDER} --config-file pyproject.toml; \
+	  ${UV_BIN} run mypy ${SOURCE_FOLDER} --config-file pyproject.toml; \
 	else \
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping typecheck${RESET}\n"; \
 	fi

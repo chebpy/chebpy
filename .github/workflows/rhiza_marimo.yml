@@ -34,7 +34,7 @@ jobs:
       notebook-list: ${{ steps.notebooks.outputs.matrix }}
     steps:
       # Check out the repository code
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       # Find all Python files in the marimo folder and create a matrix for parallel execution
       - name: Find notebooks and build matrix
@@ -75,18 +75,20 @@ jobs:
     name: Run notebook ${{ matrix.notebook }}
     steps:
       # Check out the repository code
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           lfs: true
 
       # Install uv/uvx
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.2.0
         with:
-          version: "0.9.26"
+          version: "0.9.27"
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           uvx uv run "${{ matrix.notebook }}"
           # uvx → creates a fresh ephemeral environment

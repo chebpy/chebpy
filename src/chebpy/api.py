@@ -4,13 +4,22 @@ This module provides the main interface for users to create Chebfun objects,
 which are the core data structure in ChebPy for representing functions.
 """
 
+from collections.abc import Callable
+from typing import Any
+
+import numpy as np
+
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .settings import _preferences as prefs
 from .utilities import Domain
 
 
-def chebfun(f=None, domain=None, n=None):
+def chebfun(
+    f: Callable[..., Any] | str | float | None = None,
+    domain: np.ndarray | list[float] | None = None,
+    n: int | None = None,
+) -> "Chebfun":
     """Create a Chebfun object representing a function.
 
     A Chebfun object represents a function using Chebyshev polynomials. This constructor
@@ -72,7 +81,7 @@ def chebfun(f=None, domain=None, n=None):
         raise ValueError(f) from err
 
 
-def pwc(domain=None, values=None):
+def pwc(domain: list[float] | None = None, values: list[float] | None = None) -> "Chebfun":
     """Initialize a piecewise-constant Chebfun.
 
     Creates a piecewise-constant function represented as a Chebfun object.
@@ -97,7 +106,7 @@ def pwc(domain=None, values=None):
         values = [0, 1]
     if domain is None:
         domain = [-1, 0, 1]
-    funs = []
+    funs: list[Any] = []
     intervals = list(Domain(domain).intervals)
     for interval, value in zip(intervals, values, strict=False):
         funs.append(Bndfun.initconst(value, interval))

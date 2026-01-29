@@ -13,7 +13,7 @@
 #   - PRs will show a warning comment but not fail
 #   - Main branch updates the baseline for future comparisons
 
-name: (RHIZA) Benchmarks
+name: "(RHIZA) BENCHMARKS"
 
 permissions:
   contents: write
@@ -32,24 +32,24 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           lfs: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.2.0
         with:
-          version: "0.9.26"
+          version: "0.9.27"
           python-version: "3.12"
 
       - name: Run benchmarks
         env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           make benchmark
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6.0.0
         if: always()
         with:
           name: benchmark-results

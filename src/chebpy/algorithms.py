@@ -200,7 +200,7 @@ def clenshaw(xx: np.ndarray, ak: np.ndarray) -> np.ndarray:
         bk1 = ak[k - 1] + xx * bk2 - bk1
     if np.mod(ak.size - 1, 2) == 1:
         bk1, bk2 = ak[1] + xx * bk1 - bk2, bk1
-    out = ak[0] + 0.5 * xx * bk1 - bk2
+    out: np.ndarray = ak[0] + 0.5 * xx * bk1 - bk2
     return out
 
 
@@ -264,7 +264,7 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
     # Step 3: Fix cutoff at a point where envelope, plus a linear function
     # included to bias the result towards the left end, is minimal.
     if envelope[int(plateau_point)] == 0.0:
-        cutoff = plateau_point
+        cutoff = int(plateau_point)
     else:
         j3 = sum(envelope >= tol ** (7.0 / 6.0))
         if j3 < j2:
@@ -274,7 +274,7 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
         cc = cc + np.linspace(0, (-1.0 / 3.0) * np.log10(tol), int(j2))
         d = np.argmin(cc)
         # TODO: check this
-        cutoff = d  # + 2
+        cutoff = int(d)  # + 2
     return min((cutoff, n - 1))
 
 
@@ -302,6 +302,7 @@ def adaptive(cls: Any, fun: Callable[..., Any], hscale: float = 1, maxpow2: int 
     """
     minpow2 = 4  # 17 points
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
+    coeffs: np.ndarray = np.array([])
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
         points = cls._chebpts(n)

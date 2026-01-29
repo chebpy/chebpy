@@ -1,14 +1,12 @@
 """Marimo ChebyshevPolynomial Demonstration."""
 
 # /// script
-# dependencies = [
-#     "marimo==0.18.4",
-#     "chebpy",
-# ]
+# dependencies = ["marimo==0.18.4", "chebpy"]
+# requires-python = ">=3.13"
 #
-# [tool.uv.sources]
-# chebpy = { path = "../../..", editable=true }
-#
+# [tool.uv.sources.chebpy]
+# path = "../../.."
+# editable = true
 # ///
 
 import marimo

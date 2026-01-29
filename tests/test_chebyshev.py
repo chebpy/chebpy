@@ -564,3 +564,24 @@ def test_vscale_with_empty_polynomial():
     # Attempt to create an empty polynomial
     with pytest.raises(ValueError, match="Coefficient array is empty"):
         ChebyshevPolynomial(coef=[])
+
+
+def test_sum_method():
+    """Test the sum method returns the definite integral."""
+    # Create a simple polynomial: f(x) = 1 (constant)
+    poly = ChebyshevPolynomial(coef=[1.0])
+    # Integral of 1 from -1 to 1 is 2
+    result = poly.sum()
+    assert np.isclose(result, 2.0), f"Expected 2.0, got {result}"
+
+    # Create a polynomial: f(x) = x (which is T_1(x))
+    poly_x = ChebyshevPolynomial(coef=[0.0, 1.0])
+    # Integral of x from -1 to 1 is 0 (odd function)
+    result_x = poly_x.sum()
+    assert np.isclose(result_x, 0.0, atol=1e-14), f"Expected 0.0, got {result_x}"
+
+    # Test with custom domain
+    poly_domain = ChebyshevPolynomial(coef=[1.0], domain=(0, 2))
+    # Integral of 1 from 0 to 2 is 2
+    result_domain = poly_domain.sum()
+    assert np.isclose(result_domain, 2.0), f"Expected 2.0, got {result_domain}"

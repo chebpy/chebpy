@@ -112,6 +112,26 @@ def test__ne__(interval_fixtures):
     assert i2 != i3
 
 
+def test_interval_eq_with_non_interval():
+    """Test that Interval equality comparison with non-Interval returns NotImplemented."""
+    interval = Interval(-1, 1)
+
+    # These should return NotImplemented which makes Python return False/True
+    assert (interval == "not an interval") is False
+    assert (interval == 5) is False
+    assert (interval == [1, 2]) is False
+
+
+def test_interval_ne_with_non_interval():
+    """Test that Interval inequality comparison with non-Interval returns NotImplemented."""
+    interval = Interval(-1, 1)
+
+    # These should return NotImplemented which makes Python return True
+    assert (interval != "not an interval") is True
+    assert (interval != 5) is True
+    assert (interval != [1, 2]) is True
+
+
 def test__contains__(interval_fixtures):
     """Test containment operations of Interval objects.
 
@@ -393,6 +413,29 @@ def test_domain_ne_result_type():
     d3 = Domain([-1, 1])
     assert isinstance(d1 != d2, bool)
     assert isinstance(d1 != d3, bool)
+
+
+def test_domain_eq_with_non_domain():
+    """Test that Domain equality comparison with non-Domain objects."""
+    d = Domain([-1, 1])
+
+    # These should convert array-like to Domain or return NotImplemented
+    # Array-like can be converted to Domain
+    assert d == [-1, 1]
+    assert d == np.array([-1, 1])
+
+    # These should fail conversion and return NotImplemented (which becomes False)
+    assert (d == "not a domain") is False
+    assert (d == 5) is False
+
+
+def test_domain_ne_with_non_domain():
+    """Test that Domain inequality comparison with non-Domain objects."""
+    d = Domain([-1, 1])
+
+    # These should return NotImplemented which makes Python return True
+    assert (d != "not a domain") is True
+    assert (d != 5) is True
 
 
 def test_domain_from_chebfun():
