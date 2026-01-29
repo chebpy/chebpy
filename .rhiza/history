@@ -59,6 +59,7 @@ presentation/presentation.mk
 renovate.json
 ruff.toml
 tests/test_rhiza/README.md
+tests/test_rhiza/__init__.py
 tests/test_rhiza/benchmarks/.gitignore
 tests/test_rhiza/benchmarks/README.md
 tests/test_rhiza/benchmarks/analyze_benchmarks.py

@@ -33,7 +33,7 @@
 #   - No PyPI credentials stored; relies on Trusted Publishing via GitHub OIDC
 #   - For custom feeds, PYPI_TOKEN secret is used with default username __token__
 #   - Container registry uses GITHUB_TOKEN for authentication
-#   - SLSA provenance attestations generated for build artifacts (supply chain security)
+#   - SLSA provenance attestations generated for build artifacts (public repos only)
 #
 # 📄 Requirements:
 #   - pyproject.toml with top-level version field (for Python packages)
@@ -65,7 +65,7 @@ permissions:
   contents: write       # Needed to create releases
   id-token: write       # Needed for OIDC authentication with PyPI
   packages: write       # Needed to publish devcontainer image
-  attestations: write   # Needed for SLSA provenance attestations
+  attestations: write   # Needed for SLSA provenance attestations (public repos only)
 
 jobs:
   tag:
@@ -75,7 +75,7 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
@@ -106,21 +106,14 @@ jobs:
     needs: tag
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.2.0
         with:
-          version: "0.9.26"
-
-      - name: "Sync the virtual environment for ${{ github.repository }}"
-        shell: bash
-        run: |
-          export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
-          # will just use .python-version?
-          uv sync --all-extras --all-groups --frozen
+          version: "0.9.27"
 
       - name: Verify version matches tag
         if: hashFiles('pyproject.toml') != ''
@@ -151,14 +144,14 @@ jobs:
           uvx hatch build
 
       - name: Generate SLSA provenance attestations
-        if: steps.buildable.outputs.buildable == 'true'
+        if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: dist/*
 
       - name: Upload dist artifact
         if: steps.buildable.outputs.buildable == 'true'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: dist
           path: dist
@@ -189,12 +182,12 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: Download dist artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v7.0.0
         with:
           name: dist
           path: dist
@@ -237,7 +230,7 @@ jobs:
       image_name: ${{ steps.image_name.outputs.image_name }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
@@ -266,7 +259,7 @@ jobs:
 
       - name: Login to Container Registry
         if: steps.check_publish.outputs.should_publish == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3.6.0
         with:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
@@ -322,24 +315,24 @@ jobs:
     if: needs.pypi.result == 'success' || needs.devcontainer.result == 'success'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.2.0
         with:
-          version: "0.9.26"
+          version: "0.9.27"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
         run: |
-          export UV_EXTRA_INDEX_URL="${{ secrets.uv-extra-index-url }}"
+          export UV_EXTRA_INDEX_URL="${{ secrets.uv_extra_index_url }}"
           # will just use .python-version?
           uv sync --all-extras --all-groups --frozen
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.1.0
 
       - name: Generate Devcontainer Link
         id: devcontainer_link
@@ -358,7 +351,7 @@ jobs:
         id: pypi_link
         if: needs.pypi.outputs.should_publish == 'true' && needs.pypi.result == 'success'
         run: |
-          PACKAGE_NAME=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
+          PACKAGE_NAME=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
           VERSION="${{ needs.tag.outputs.tag }}"
           VERSION=${VERSION#v}
 

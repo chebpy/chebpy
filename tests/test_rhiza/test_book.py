@@ -10,7 +10,8 @@ MAKE = shutil.which("make") or "/usr/bin/make"
 
 def test_no_book_folder(git_repo):
     """Test that make targets fail gracefully when book folder is missing."""
-    shutil.rmtree(git_repo / "book")
+    if (git_repo / "book").exists():
+        shutil.rmtree(git_repo / "book")
     assert not (git_repo / "book").exists()
 
     for target in ["book", "docs", "marimushka"]:
@@ -24,7 +25,8 @@ def test_no_book_folder(git_repo):
 def test_book_folder_but_no_mk(git_repo):
     """Test behavior when book folder exists but book.mk is missing."""
     # ensure book folder exists but has no Makefile
-    shutil.rmtree(git_repo / "book")
+    if (git_repo / "book").exists():
+        shutil.rmtree(git_repo / "book")
     # create an empty book folder. Make treats an existing directory as an “up-to-date” target.
     (git_repo / "book").mkdir()
 

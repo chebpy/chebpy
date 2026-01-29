@@ -27,13 +27,13 @@ jobs:
     name: Check dependencies with deptry
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/astral-sh/uv:0.9.26-python3.12-trixie
+      image: ghcr.io/astral-sh/uv:0.9.27-python3.12-trixie
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Run deptry
-        run: make -f .rhiza/rhiza.mk deptry
+        run: make deptry
         # NOTE: make deptry is good style because it encapsulates the folders to check
         # (e.g. src and book/marimo) and keeps CI in sync with local development.
         # Since we use a 'uv' container, the Makefile is optimised to use the

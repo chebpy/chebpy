@@ -242,7 +242,7 @@ fmt: install-uv ## check the pre-commit hooks and the linting
 
 mypy: install-uv ## run mypy analysis
 	@if [ -d ${SOURCE_FOLDER} ]; then \
-		${UVX_BIN} -p ${PYTHON_VERSION} mypy ${SOURCE_FOLDER} --strict --config-file=pyproject.toml; \
+		${UV_BIN} run mypy ${SOURCE_FOLDER} --strict --config-file=pyproject.toml; \
 	fi
 
 ##@ Releasing and Versioning
