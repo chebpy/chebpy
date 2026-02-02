@@ -238,6 +238,12 @@ def git_repo(root, tmp_path, monkeypatch):
     shutil.copy(root / ".rhiza" / "rhiza.mk", local_dir / ".rhiza" / "rhiza.mk")
     shutil.copy(root / "Makefile", local_dir / "Makefile")
 
+    # Copy .rhiza/make.d/ directory (contains split makefiles)
+    make_d_src = root / ".rhiza" / "make.d"
+    if make_d_src.is_dir():
+        make_d_dst = local_dir / ".rhiza" / "make.d"
+        shutil.copytree(make_d_src, make_d_dst, dirs_exist_ok=True)
+
     book_src = root / "book"
     book_dst = local_dir / "book"
     if book_src.is_dir():

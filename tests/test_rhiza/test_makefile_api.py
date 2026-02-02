@@ -116,10 +116,8 @@ def test_api_delegation(setup_api_env):
     # "Rhiza Workflows" is a section in .rhiza/rhiza.mk
     assert "Rhiza Workflows" in result.stdout
 
-    # "docker-build" is a target in Makefile.rhiza (docker/docker.mk)
-    # Only assert if docker folder exists in setup_api_env (it is optional)
-    if (setup_api_env / "docker").exists():
-        assert "docker-build" in result.stdout
+    # Core targets from .rhiza/make.d/ should be available
+    assert "test" in result.stdout or "install" in result.stdout
 
 
 def test_minimal_setup_works(setup_api_env):
@@ -141,16 +139,9 @@ def test_minimal_setup_works(setup_api_env):
     assert "Rhiza Workflows" in result.stdout
     assert "sync" in result.stdout
 
-    # Check that optional targets do NOT exist
-    assert "docker-build" not in result.stdout
-    # "test" target (from tests/) should likely not be there OR be there but fail?
-    # Make check: Makefile.rhiza usually has `test:` delegating.
-    # If the include tests/tests.mk failed (silently), then `test` target might not be defined
-    # unless it's defined in Makefile.rhiza directly.
-    # In earlier steps I saw Makefile.rhiza includes tests/tests.mk.
-    # If tests.mk is gone, the target `test` (if defined ONLY in tests.mk) will be gone.
-    # If it is defined in Makefile.rhiza to check for file existence, it might be there.
-    # But usually splitting means the file owns the target.
+    # Note: docker-build and other targets from .rhiza/make.d/ are always present
+    # but they gracefully skip if their respective folders/files don't exist.
+    # This is by design - targets are always available but handle missing resources.
 
 
 def test_extension_mechanism(setup_api_env):

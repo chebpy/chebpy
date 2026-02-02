@@ -18,7 +18,7 @@ MAKE = shutil.which("make") or "/usr/bin/make"
 
 # We need to copy these files to the temp dir for the tests to work
 REQUIRED_FILES = [
-    ".github/github.mk",
+    ".rhiza/make.d/05-github.mk",
 ]
 
 
@@ -40,16 +40,14 @@ def setup_gh_makefile(logger, root, tmp_path: Path):
         (tmp_path / ".rhiza").mkdir(exist_ok=True)
         shutil.copy(root / ".rhiza" / ".env", tmp_path / ".rhiza" / ".env")
 
-    # Copy required split Makefiles
-    for rel_path in REQUIRED_FILES:
-        source_path = root / rel_path
-        if source_path.exists():
-            dest_path = tmp_path / rel_path
-            dest_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy(source_path, dest_path)
-            logger.debug("Copied %s to %s", source_path, dest_path)
-        else:
-            pytest.skip(f"Required file {rel_path} not found")
+    # Copy the entire .rhiza/make.d directory (rhiza.mk includes *.mk from there)
+    make_d_src = root / ".rhiza" / "make.d"
+    if make_d_src.exists():
+        make_d_dst = tmp_path / ".rhiza" / "make.d"
+        shutil.copytree(make_d_src, make_d_dst, dirs_exist_ok=True)
+        logger.debug("Copied %s to %s", make_d_src, make_d_dst)
+    else:
+        pytest.skip(".rhiza/make.d directory not found")
 
     # Move into tmp directory
     old_cwd = Path.cwd()

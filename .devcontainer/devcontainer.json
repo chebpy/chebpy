@@ -5,19 +5,20 @@
         "cpus": 4
     },
     "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {},
-        "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
-        "ghcr.io/devcontainers/features/copilot-cli:1": {}
+        "ghcr.io/devcontainers/features/copilot-cli:1": {},
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": false
+        }
     },
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
     ],
     "containerEnv": {
-        "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
         "INSTALL_DIR": "/home/vscode/.local/bin"
     },
-    "forwardPorts": [8080],
+    "forwardPorts": [8080, 2718],
     "customizations": {
         "vscode": {
             "settings": {
@@ -43,7 +44,8 @@
                 "ms-vscode.makefile-tools",
                 // AI Assistance
                 "github.copilot-chat",
-                "github.copilot"
+                "github.copilot",
+                "anthropic.claude-code"
             ]
         }
     },

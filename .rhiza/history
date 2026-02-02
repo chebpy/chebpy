@@ -4,16 +4,13 @@
 # Template branch: main
 #
 # Files under template control:
-.devcontainer/README.md
 .devcontainer/bootstrap.sh
 .devcontainer/devcontainer.json
 .editorconfig
-.github/agents/agentic.mk
 .github/agents/analyser.md
 .github/agents/summarise.md
 .github/copilot-instructions.md
 .github/dependabot.yml
-.github/github.mk
 .github/workflows/rhiza_benchmarks.yml
 .github/workflows/rhiza_book.yml
 .github/workflows/rhiza_ci.yml
@@ -33,9 +30,17 @@
 .rhiza/.env
 .rhiza/.gitignore
 .rhiza/.rhiza-version
+.rhiza/assets/rhiza-logo.svg
 .rhiza/docs/CONFIG.md
 .rhiza/docs/TOKEN_SETUP.md
-.rhiza/make.d/01-custom-env.mk
+.rhiza/make.d/00-custom-env.mk
+.rhiza/make.d/01-test.mk
+.rhiza/make.d/02-book.mk
+.rhiza/make.d/03-marimo.mk
+.rhiza/make.d/04-presentation.mk
+.rhiza/make.d/05-github.mk
+.rhiza/make.d/06-agentic.mk
+.rhiza/make.d/07-docker.mk
 .rhiza/make.d/10-custom-task.mk
 .rhiza/make.d/README.md
 .rhiza/requirements/README.md
@@ -45,16 +50,10 @@
 .rhiza/requirements/tools.txt
 .rhiza/rhiza.mk
 .rhiza/scripts/release.sh
+.rhiza/templates/minibook/custom.html.jinja2
 .rhiza/utils/version_matrix.py
 Makefile
-book/README.md
-book/book.mk
-book/marimo/README.md
-book/marimo/marimo.mk
 book/marimo/notebooks/rhiza.py
-book/minibook-templates/custom.html.jinja2
-presentation/README.md
-presentation/presentation.mk
 renovate.json
 ruff.toml
 tests/test_rhiza/README.md
@@ -77,4 +76,3 @@ tests/test_rhiza/test_requirements_folder.py
 tests/test_rhiza/test_rhiza_workflows.py
 tests/test_rhiza/test_structure.py
 tests/test_rhiza/test_version_matrix.py
-tests/tests.mk
