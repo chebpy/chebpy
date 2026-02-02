@@ -44,7 +44,6 @@
 .rhiza/requirements/tests.txt
 .rhiza/requirements/tools.txt
 .rhiza/rhiza.mk
-.rhiza/scripts/check_workflow_names.py
 .rhiza/scripts/release.sh
 .rhiza/utils/version_matrix.py
 Makefile
@@ -65,7 +64,6 @@ tests/test_rhiza/benchmarks/README.md
 tests/test_rhiza/benchmarks/analyze_benchmarks.py
 tests/test_rhiza/conftest.py
 tests/test_rhiza/test_book.py
-tests/test_rhiza/test_check_workflow_names.py
 tests/test_rhiza/test_docstrings.py
 tests/test_rhiza/test_git_repo_fixture.py
 tests/test_rhiza/test_makefile.py
