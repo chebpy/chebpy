@@ -70,7 +70,7 @@ jobs:
           echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
 
       - name: Login to Container Registry
-        uses: docker/login-action@v3.6.0
+        uses: docker/login-action@v3.7.0
         with:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
