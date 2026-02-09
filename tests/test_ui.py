@@ -97,6 +97,16 @@ def test_pwc() -> None:
         assert fun.coeffs[0] == val
 
 
+def test_pwc_defaults() -> None:
+    """Test creating piecewise constant functions with default arguments."""
+    f = pwc()
+    assert f.funs.size == 2
+    # Default values should be [0, 1] on domain [-1, 0, 1]
+    assert f.funs[0].coeffs[0] == 0
+    assert f.funs[1].coeffs[0] == 1
+    assert np.array_equal(f.domain, np.array([-1, 0, 1]))
+
+
 def test_evaluate() -> None:
     """Test that pickled/unpickled chebfun objects evaluate correctly."""
     f0 = chebfun(np.sin, [-2, 0, 1])
