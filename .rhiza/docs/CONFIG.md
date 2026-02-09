@@ -5,6 +5,7 @@ This directory contains platform-agnostic scripts and utilities for the reposito
 ## Important Documentation
 
 - **[TOKEN_SETUP.md](TOKEN_SETUP.md)** - Instructions for setting up the `PAT_TOKEN` secret required for the SYNC workflow
+- **[PRIVATE_PACKAGES.md](PRIVATE_PACKAGES.md)** - Guide for using private GitHub packages as dependencies
 
 ## Structure
 

@@ -9,7 +9,7 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.14'
+    rev: 'v0.15.0'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -38,7 +38,7 @@ repos:
       - id: actionlint
 
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.24.1
+    rev: v0.25
     hooks:
       - id: validate-pyproject
 
@@ -46,10 +46,15 @@ repos:
     rev: 1.9.3
     hooks:
       - id: bandit
-        args: ["--skip", "B101", "--exclude", ".venv,tests,.git,.pytest_cache"]
+        args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.10.0
+    hooks:
+      - id: uv-lock
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.1.2  # Use the latest release
+    rev: v0.1.6  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names
@@ -58,3 +63,4 @@ repos:
       - id: check-rhiza-config
       - id: check-makefile-targets
       - id: check-python-version-consistency
+      - id: check-template-bundles
