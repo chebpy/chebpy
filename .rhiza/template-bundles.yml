@@ -1,0 +1,291 @@
+# Rhiza Template Bundle Definitions
+#
+# This file defines template bundles - pre-configured sets of files that can be
+# included in downstream projects by selecting templates instead of listing
+# individual file paths.
+#
+# Usage in downstream projects (.rhiza/template.yml):
+#
+#   templates:
+#     - tests
+#     - docker
+#     - marimo
+#
+# Instead of manually listing:
+#
+#   include: |
+#     .rhiza/make.d/01-test.mk
+#     pytest.ini
+#     tests/**
+#     docker/Dockerfile
+#     ...
+
+# Schema version for this bundles file format
+version: "0.7.1"
+
+# Bundle Definitions
+bundles:
+  # ============================================================================
+  # CORE - Required infrastructure
+  # ============================================================================
+  core:
+    description: "Core Rhiza infrastructure"
+    required: true
+    standalone: true
+    files:
+      # Core Rhiza files
+      - .rhiza/rhiza.mk
+      - .rhiza/.cfg.toml
+      - .rhiza/.env
+      - .rhiza/.gitignore
+      - .rhiza/.rhiza-version
+      - .rhiza/make.d/00-custom-env.mk
+      - .rhiza/make.d/08-docs.mk
+      - .rhiza/make.d/10-custom-task.mk
+      - .rhiza/make.d/README.md
+      - .rhiza/scripts
+      - .rhiza/docs
+      - .rhiza/assets
+      - .rhiza/requirements/README.md
+      - .rhiza/requirements/docs.txt
+      - .rhiza/requirements/tools.txt
+
+      # Root configuration files
+      - Makefile
+      - .pre-commit-config.yaml
+      - .editorconfig
+      - .gitignore
+      - .python-version
+      - ruff.toml
+      - renovate.json
+
+      # Documentation files (project-specific docs)
+      - docs/SECURITY.md
+      - docs/ARCHITECTURE.md
+      - docs/CUSTOMIZATION.md
+      - docs/GLOSSARY.md
+      - docs/QUICK_REFERENCE.md
+      - docs/RELEASING.md
+      - docs/WORKFLOWS.md
+      - docs/ASSETS.md
+      - docs/DEMO.md
+
+  github:
+    description: "GitHub Actions workflows for CI/CD"
+    standalone: true
+    requires: [core]
+    files:
+      - .rhiza/make.d/05-github.mk
+      - .rhiza/make.d/06-agentic.mk
+      # Core GitHub Actions workflows
+      - .github/workflows/rhiza_validate.yml
+      - .github/workflows/rhiza_sync.yml
+      - .github/workflows/rhiza_pre-commit.yml
+      - .github/workflows/rhiza_deptry.yml
+      - .github/workflows/rhiza_release.yml
+      - .github/actions/configure-git-auth
+      - .github/dependabot.yml
+      - .github/copilot-instructions.md
+      - .github/agents
+
+  # ============================================================================
+  # LEGAL - Legal and community files
+  # ============================================================================
+  legal:
+    description: "Legal and community documentation files"
+    standalone: true
+    requires: []
+    files:
+      # Legal files
+      - LICENSE
+
+      # Community files
+      - CONTRIBUTING.md
+      - CODE_OF_CONDUCT.md
+
+  # ============================================================================
+  # DEVCONTAINER - VS Code DevContainer configuration
+  # ============================================================================
+  devcontainer:
+    description: "VS Code DevContainer configuration for consistent development environments"
+    standalone: true
+    requires: []
+    files:
+      # DevContainer configuration
+      - .devcontainer/devcontainer.json
+      - .devcontainer/bootstrap.sh
+
+      # Documentation
+      - docs/DEVCONTAINER.md
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_devcontainer.yml
+
+  # ============================================================================
+  # BENCHMARKS - Performance benchmarking with pytest-benchmark
+  # ============================================================================
+  benchmarks:
+    description: "Performance benchmarking infrastructure with pytest-benchmark"
+    standalone: true
+    requires: []
+    recommends:
+      - tests  # Benchmarks work best alongside tests
+    files:
+      # Benchmark make target (part of test.mk)
+      # Note: The benchmark target is in 01-test.mk
+
+      # Benchmark directory
+      - tests/test_rhiza/benchmarks
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_benchmarks.yml
+
+  # ============================================================================
+  # DOCKER - Docker containerization support
+  # ============================================================================
+  docker:
+    description: "Docker containerization support for building and running containers"
+    standalone: true
+    requires: []
+    files:
+      # Docker configuration and files
+      - docker/Dockerfile
+      - docker/Dockerfile.dockerignore
+
+      # Make targets
+      - .rhiza/make.d/07-docker.mk
+
+      # Documentation
+      - docs/DOCKER.md
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_docker.yml
+
+  # ============================================================================
+  # PRESENTATION - Presentation building with reveal.js
+  # ============================================================================
+  presentation:
+    description: "Presentation building using reveal.js and Marimo"
+    standalone: true
+    requires: []
+    recommends:
+      - marimo  # Presentations often use Marimo for interactive slides
+    files:
+      - .rhiza/make.d/04-presentation.mk
+      - docs/PRESENTATION.md
+
+  # ============================================================================
+  # GITLAB - GitLab CI/CD pipeline configuration
+  # ============================================================================
+  gitlab:
+    description: "GitLab CI/CD pipeline configuration and workflows"
+    standalone: true
+    requires: [core]
+    notes: |
+      GitLab workflows provide similar functionality to GitHub Actions.
+      Some workflows (like book, ci) may benefit from having their
+      corresponding feature templates (book, tests) also enabled.
+    files:
+      # Main GitLab CI configuration
+      - .gitlab-ci.yml
+
+      # GitLab workflow files
+      - .gitlab/workflows/rhiza_book.yml
+      - .gitlab/workflows/rhiza_ci.yml
+      - .gitlab/workflows/rhiza_deptry.yml
+      - .gitlab/workflows/rhiza_pre-commit.yml
+      - .gitlab/workflows/rhiza_release.yml
+      - .gitlab/workflows/rhiza_renovate.yml
+      - .gitlab/workflows/rhiza_sync.yml
+      - .gitlab/workflows/rhiza_validate.yml
+
+      # GitLab templates
+      - .gitlab/template
+
+      # GitLab documentation
+      - .gitlab/COMPARISON.md
+      - .gitlab/README.md
+      - .gitlab/SUMMARY.md
+      - .gitlab/TESTING.md
+
+  # ============================================================================
+  # TESTS - Testing infrastructure with pytest, coverage, and type checking
+  # ============================================================================
+  tests:
+    description: "Testing infrastructure with pytest, coverage, and type checking"
+    standalone: true
+    requires: []
+    files:
+      # Make targets and configuration
+      - .rhiza/utils/version_matrix.py
+      - .rhiza/make.d/01-test.mk
+      - .rhiza/requirements/tests.txt
+      - pytest.ini
+
+      # Core test infrastructure
+      #- tests/test_rhiza/__init__.py
+      #- tests/test_rhiza/conftest.py
+      #- tests/test_rhiza/README.md
+
+      # Core/generic test files
+      - .rhiza/tests
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_ci.yml
+      - .github/workflows/rhiza_mypy.yml
+      - .github/workflows/rhiza_security.yml
+      - .github/workflows/rhiza_codeql.yml
+
+  # ============================================================================
+  # MARIMO - Interactive Marimo notebooks
+  # ============================================================================
+  marimo:
+    description: "Interactive Marimo notebooks for data exploration and documentation"
+    standalone: true
+    requires: []
+    files:
+      # Marimo configuration
+      - .rhiza/make.d/03-marimo.mk
+      - .rhiza/requirements/marimo.txt
+
+      # Marimo notebooks directory
+      - book/marimo
+
+      # Marimo-specific tests
+      #- tests/test_rhiza/test_marimushka_target.py
+      #- tests/test_rhiza/test_notebooks.py
+
+      # Documentation
+      - docs/MARIMO.md
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_marimo.yml
+
+  # ============================================================================
+  # BOOK - Documentation book generation
+  # ============================================================================
+  book:
+    description: |
+      Comprehensive documentation book generation combining:
+      - API documentation (pdoc)
+      - Test coverage reports
+      - Test results
+      - Interactive notebooks (if marimo is enabled)
+    standalone: false
+    requires:
+      - tests  # Required: book needs test coverage and reports
+    recommends:
+      - marimo  # Optional: book works better with notebook exports
+    files:
+      # Book building configuration
+      - .rhiza/make.d/02-book.mk
+      - .rhiza/templates/minibook
+
+      # Book-specific tests
+      #- tests/test_rhiza/test_book.py
+
+      # Documentation
+      - docs/BOOK.md
+
+      # GitHub Actions workflows
+      - .github/workflows/rhiza_book.yml

@@ -1,0 +1,27 @@
+## .rhiza/make.d/12-quality.mk - Quality and Formatting
+# This file provides targets for code quality checks, linting, and formatting.
+
+# Declare phony targets (they don't produce files)
+.PHONY: deptry fmt mypy
+
+##@ Quality and Formatting
+deptry: install-uv ## Run deptry
+	@if [ -d ${SOURCE_FOLDER} ]; then \
+		$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${SOURCE_FOLDER}; \
+	fi
+
+	@if [ -d ${MARIMO_FOLDER} ]; then \
+		if [ -d ${SOURCE_FOLDER} ]; then \
+			$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${MARIMO_FOLDER} ${SOURCE_FOLDER} --ignore DEP004; \
+		else \
+		  	$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${MARIMO_FOLDER} --ignore DEP004; \
+		fi \
+	fi
+
+fmt: install-uv ## check the pre-commit hooks and the linting
+	@${UVX_BIN} -p ${PYTHON_VERSION} pre-commit run --all-files
+
+mypy: install ## run mypy analysis
+	@if [ -d ${SOURCE_FOLDER} ]; then \
+		${UV_BIN} run mypy ${SOURCE_FOLDER} --strict --config-file=pyproject.toml; \
+	fi

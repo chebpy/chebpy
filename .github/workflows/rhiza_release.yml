@@ -111,9 +111,14 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.2.1
+        uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.9.28"
+          version: "0.10.0"
+
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       - name: Verify version matches tag
         if: hashFiles('pyproject.toml') != ''
@@ -320,9 +325,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.2.1
+        uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.9.28"
+          version: "0.10.0"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash
