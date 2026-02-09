@@ -5,7 +5,6 @@ include:
 - .github/
 - .rhiza/
 - book
-- tests
 - .editorconfig
 - .gitignore
 - .pre-commit-config.yaml
