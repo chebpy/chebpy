@@ -24,10 +24,15 @@ jobs:
     name: Static type checking with mypy
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/astral-sh/uv:0.9.28-bookworm
+      image: ghcr.io/astral-sh/uv:0.9.30-bookworm
 
     steps:
       - uses: actions/checkout@v6
+
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       # to brutal for now
       # - name: Run mypy

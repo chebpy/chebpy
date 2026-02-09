@@ -14,6 +14,7 @@ allow_dirty = false
 commit = true
 message = "Chore: bump version {current_version} → {new_version}"
 commit_args = ""
+pre_commit_hooks = ["uv sync", "git add uv.lock"] # Ensure uv.lock is updated
 
 [tool.bumpversion.parts.release]
 optional_value = "prod"
@@ -30,7 +31,7 @@ filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
-[[tool.bumpversion.files]]
-filename = "uv.lock"
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
+# [[tool.bumpversion.files]]
+# filename = ".rhiza/template-bundles.yml"
+# search = 'version: "{current_version}"'
+# replace = 'version: "{new_version}"'

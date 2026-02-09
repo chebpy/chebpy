@@ -12,16 +12,26 @@ on:
 jobs:
   validation:
     runs-on: ubuntu-latest
-    # don't run this in rhiza itself. Rhiza has no template.yml file.
-    if: ${{ github.repository != 'jebel-quant/rhiza' }}
     container:
-      image: ghcr.io/astral-sh/uv:0.9.28-bookworm
+      image: ghcr.io/astral-sh/uv:0.9.30-bookworm
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
 
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
+
       - name: Validate Rhiza config
+        # don't run this in rhiza itself. Rhiza has no template.yml file.
+        if: ${{ github.repository != 'jebel-quant/rhiza' }}
         shell: bash
         run: |
           uvx "rhiza>=0.8.0" validate .
+        
+      - name: Run Rhiza Tests
+        shell: bash
+        run: |
+          make rhiza-test
