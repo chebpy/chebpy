@@ -1,4 +1,4 @@
-## .rhiza/make.d/10-custom-task.mk - Custom Repository Tasks
+## .rhiza/make.d/custom-task.mk - Custom Repository Tasks
 # This file example shows how to add new targets.
 
 .PHONY: hello-rhiza
