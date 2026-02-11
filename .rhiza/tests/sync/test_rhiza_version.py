@@ -11,8 +11,8 @@ These tests validate:
 
 from __future__ import annotations
 
-# Import from test_utils instead of relative import
-from test_utils import run_make, strip_ansi
+# Import from local conftest
+from sync.conftest import run_make, strip_ansi
 
 
 class TestRhizaVersion:

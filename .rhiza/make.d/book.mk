@@ -18,7 +18,7 @@ marimushka:: install-uv
 	fi
 
 # Define a default no-op mkdocs-build target that will be used
-# when .rhiza/make.d/08-docs.mk doesn't exist or doesn't define mkdocs-build
+# when .rhiza/make.d/docs.mk doesn't exist or doesn't define mkdocs-build
 mkdocs-build:: install-uv
 	@if [ ! -f "docs/mkdocs.yml" ]; then \
 	  printf "${BLUE}[INFO] No mkdocs.yml found, skipping MkDocs${RESET}\n"; \

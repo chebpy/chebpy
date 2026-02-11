@@ -14,9 +14,8 @@
 # Instead of manually listing:
 #
 #   include: |
-#     .rhiza/make.d/01-test.mk
+#     .rhiza/make.d/test.mk
 #     pytest.ini
-#     tests/**
 #     docker/Dockerfile
 #     ...
 
@@ -39,9 +38,12 @@ bundles:
       - .rhiza/.env
       - .rhiza/.gitignore
       - .rhiza/.rhiza-version
-      - .rhiza/make.d/00-custom-env.mk
-      - .rhiza/make.d/08-docs.mk
-      - .rhiza/make.d/10-custom-task.mk
+      - .rhiza/make.d/custom-env.mk
+      - .rhiza/make.d/docs.mk
+      - .rhiza/make.d/custom-task.mk
+      - .rhiza/make.d/quality.mk
+      - .rhiza/make.d/bootstrap.mk
+      - .rhiza/make.d/releasing.mk
       - .rhiza/make.d/README.md
       - .rhiza/scripts
       - .rhiza/docs
@@ -75,8 +77,8 @@ bundles:
     standalone: true
     requires: [core]
     files:
-      - .rhiza/make.d/05-github.mk
-      - .rhiza/make.d/06-agentic.mk
+      - .rhiza/make.d/github.mk
+      - .rhiza/make.d/agentic.mk
       # Core GitHub Actions workflows
       - .github/workflows/rhiza_validate.yml
       - .github/workflows/rhiza_sync.yml
@@ -132,7 +134,7 @@ bundles:
       - tests  # Benchmarks work best alongside tests
     files:
       # Benchmark make target (part of test.mk)
-      # Note: The benchmark target is in 01-test.mk
+      # Note: The benchmark target is in test.mk
 
       # Benchmark directory
       - tests/test_rhiza/benchmarks
@@ -153,13 +155,27 @@ bundles:
       - docker/Dockerfile.dockerignore
 
       # Make targets
-      - .rhiza/make.d/07-docker.mk
+      - .rhiza/make.d/docker.mk
 
       # Documentation
       - docs/DOCKER.md
 
       # GitHub Actions workflows
       - .github/workflows/rhiza_docker.yml
+
+  # ============================================================================
+  # LFS - Git Large File Storage support
+  # ============================================================================
+  lfs:
+    description: "Git LFS (Large File Storage) installation and management"
+    standalone: true
+    requires: []
+    files:
+      # Make targets for LFS
+      - .rhiza/make.d/lfs.mk
+
+      # Documentation
+      - docs/LFS.md
 
   # ============================================================================
   # PRESENTATION - Presentation building with reveal.js
@@ -171,7 +187,7 @@ bundles:
     recommends:
       - marimo  # Presentations often use Marimo for interactive slides
     files:
-      - .rhiza/make.d/04-presentation.mk
+      - .rhiza/make.d/presentation.mk
       - docs/PRESENTATION.md
 
   # ============================================================================
@@ -217,15 +233,9 @@ bundles:
     requires: []
     files:
       # Make targets and configuration
-      - .rhiza/utils/version_matrix.py
-      - .rhiza/make.d/01-test.mk
+      - .rhiza/make.d/test.mk
       - .rhiza/requirements/tests.txt
       - pytest.ini
-
-      # Core test infrastructure
-      #- tests/test_rhiza/__init__.py
-      #- tests/test_rhiza/conftest.py
-      #- tests/test_rhiza/README.md
 
       # Core/generic test files
       - .rhiza/tests
@@ -245,15 +255,11 @@ bundles:
     requires: []
     files:
       # Marimo configuration
-      - .rhiza/make.d/03-marimo.mk
+      - .rhiza/make.d/marimo.mk
       - .rhiza/requirements/marimo.txt
 
       # Marimo notebooks directory
       - book/marimo
-
-      # Marimo-specific tests
-      #- tests/test_rhiza/test_marimushka_target.py
-      #- tests/test_rhiza/test_notebooks.py
 
       # Documentation
       - docs/MARIMO.md
@@ -278,11 +284,8 @@ bundles:
       - marimo  # Optional: book works better with notebook exports
     files:
       # Book building configuration
-      - .rhiza/make.d/02-book.mk
+      - .rhiza/make.d/book.mk
       - .rhiza/templates/minibook
-
-      # Book-specific tests
-      #- tests/test_rhiza/test_book.py
 
       # Documentation
       - docs/BOOK.md

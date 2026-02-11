@@ -49,12 +49,12 @@ repos:
         args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.0
+    rev: 0.10.2
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.1.6  # Use the latest release
+    rev: v0.2.1  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names

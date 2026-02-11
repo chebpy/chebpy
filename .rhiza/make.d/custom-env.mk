@@ -1,4 +1,4 @@
-## .rhiza/make.d/01-custom-env.mk - Custom Environment Configuration
+## .rhiza/make.d/custom-env.mk - Custom Environment Configuration
 # This file example shows how to set variables for the project.
 
 # Custom variables for this repository

@@ -113,7 +113,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.10.0"
+          version: "0.10.2"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -327,7 +327,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.10.0"
+          version: "0.10.2"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash

@@ -45,6 +45,7 @@
 .rhiza/make.d/docker.mk
 .rhiza/make.d/docs.mk
 .rhiza/make.d/github.mk
+.rhiza/make.d/lfs.mk
 .rhiza/make.d/marimo.mk
 .rhiza/make.d/presentation.mk
 .rhiza/make.d/quality.mk
@@ -67,9 +68,12 @@
 .rhiza/tests/conftest.py
 .rhiza/tests/deps/test_dependency_health.py
 .rhiza/tests/integration/test_book_targets.py
+.rhiza/tests/integration/test_lfs.py
 .rhiza/tests/integration/test_marimushka.py
 .rhiza/tests/integration/test_notebook_execution.py
 .rhiza/tests/integration/test_release.py
+.rhiza/tests/integration/test_test_mk.py
+.rhiza/tests/structure/test_lfs_structure.py
 .rhiza/tests/structure/test_project_layout.py
 .rhiza/tests/structure/test_requirements.py
 .rhiza/tests/sync/conftest.py
@@ -77,10 +81,7 @@
 .rhiza/tests/sync/test_readme_validation.py
 .rhiza/tests/sync/test_rhiza_version.py
 .rhiza/tests/test_utils.py
-.rhiza/tests/utils/conftest.py
 .rhiza/tests/utils/test_git_repo_fixture.py
-.rhiza/tests/utils/test_version_matrix.py
-.rhiza/utils/version_matrix.py
 Makefile
 book/marimo/notebooks/rhiza.py
 renovate.json
