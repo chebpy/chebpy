@@ -38,7 +38,6 @@ Template sync, workflows, versioning, and content validation tests. These tests 
 Tests for utility code and test infrastructure. These tests validate the testing framework itself and utility scripts.
 
 - `test_git_repo_fixture.py` — Validates the `git_repo` fixture
-- `test_version_matrix.py` — Version matrix utility validation
 
 ### `deps/`
 Dependency validation tests. These tests ensure that project dependencies are correctly specified and healthy.
@@ -89,7 +88,6 @@ uv run pytest .rhiza/tests/ --cov
 ### Category-specific fixtures
 - `api/conftest.py` — `setup_tmp_makefile`, `run_make`, `setup_rhiza_git_repo`
 - `sync/conftest.py` — `setup_sync_env`
-- `utils/conftest.py` — sys.path setup for version_matrix imports
 
 ## Writing Tests
 

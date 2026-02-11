@@ -1,4 +1,4 @@
-## .rhiza/make.d/12-quality.mk - Quality and Formatting
+## .rhiza/make.d/quality.mk - Quality and Formatting
 # This file provides targets for code quality checks, linting, and formatting.
 
 # Declare phony targets (they don't produce files)
