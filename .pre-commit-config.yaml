@@ -9,7 +9,7 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.0'
+    rev: 'v0.15.1'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -49,12 +49,12 @@ repos:
         args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.0
+    rev: 0.10.2
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.1.6  # Use the latest release
+    rev: v0.3.0  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names
@@ -63,4 +63,4 @@ repos:
       - id: check-rhiza-config
       - id: check-makefile-targets
       - id: check-python-version-consistency
-      - id: check-template-bundles
+      # - id: check-template-bundles

@@ -75,6 +75,7 @@ coverage.json
 *.cover
 *.py,cover
 .hypothesis/
+.benchmarks/
 .pytest_cache/
 cover/
 

@@ -1,7 +1,7 @@
 # Rhiza Template History
 # This file lists all files managed by the Rhiza template.
 # Template repository: jebel-quant/rhiza
-# Template branch: main
+# Template branch: v0.7.5
 #
 # Files under template control:
 .devcontainer/bootstrap.sh
@@ -13,6 +13,7 @@
 .github/agents/summarise.md
 .github/copilot-instructions.md
 .github/dependabot.yml
+.github/workflows/rhiza_benchmarks.yml
 .github/workflows/rhiza_book.yml
 .github/workflows/rhiza_ci.yml
 .github/workflows/rhiza_codeql.yml
@@ -33,9 +34,13 @@
 .rhiza/.gitignore
 .rhiza/.rhiza-version
 .rhiza/assets/rhiza-logo.svg
+.rhiza/docs/ASSETS.md
 .rhiza/docs/CONFIG.md
+.rhiza/docs/LFS.md
 .rhiza/docs/PRIVATE_PACKAGES.md
+.rhiza/docs/RELEASING.md
 .rhiza/docs/TOKEN_SETUP.md
+.rhiza/docs/WORKFLOWS.md
 .rhiza/make.d/README.md
 .rhiza/make.d/agentic.mk
 .rhiza/make.d/book.mk
@@ -69,10 +74,13 @@
 .rhiza/tests/integration/test_marimushka.py
 .rhiza/tests/integration/test_notebook_execution.py
 .rhiza/tests/integration/test_release.py
+.rhiza/tests/integration/test_sbom.py
 .rhiza/tests/integration/test_test_mk.py
+.rhiza/tests/integration/test_virtual_env_unexport.py
 .rhiza/tests/structure/test_lfs_structure.py
 .rhiza/tests/structure/test_project_layout.py
 .rhiza/tests/structure/test_requirements.py
+.rhiza/tests/structure/test_template_bundles.py
 .rhiza/tests/sync/conftest.py
 .rhiza/tests/sync/test_docstrings.py
 .rhiza/tests/sync/test_readme_validation.py
@@ -82,7 +90,6 @@
 Makefile
 book/marimo/notebooks/rhiza.py
 docs/ARCHITECTURE.md
-docs/ASSETS.md
 docs/BOOK.md
 docs/CUSTOMIZATION.md
 docs/DEMO.md
@@ -91,9 +98,10 @@ docs/GLOSSARY.md
 docs/MARIMO.md
 docs/PRESENTATION.md
 docs/QUICK_REFERENCE.md
-docs/RELEASING.md
 docs/SECURITY.md
-docs/WORKFLOWS.md
+docs/TESTS.md
 pytest.ini
 renovate.json
 ruff.toml
+tests/benchmarks/conftest.py
+tests/benchmarks/test_benchmarks.py

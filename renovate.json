@@ -1,30 +1,56 @@
 {
-    "extends": [
-        "config:recommended",
-        ":enablePreCommit",
-        ":automergeMinor",
-        ":dependencyDashboard",
-        ":maintainLockFilesWeekly",
-        ":semanticCommits",
-        ":pinDevDependencies"
-    ],
-    "enabledManagers": [
-        "pep621",
-        "pre-commit",
-        "github-actions",
-        "gitlabci",
-        "devcontainer",
-        "dockerfile"
-    ],
-    "timezone": "Asia/Dubai",
-    "schedule": [
-        "before 10am on tuesday"
-    ],
-    "packageRules": [
-      {
-        "matchManagers": ["pep621"],
-        "matchPackageNames": ["python"],
-        "enabled": false
-      }
-    ]
+  "extends": [
+    "config:recommended",
+    ":enablePreCommit",
+    ":automergeMinor",
+    ":dependencyDashboard",
+    ":maintainLockFilesWeekly",
+    ":semanticCommits",
+    ":pinDevDependencies"
+  ],
+  "enabledManagers": [
+    "pep621",
+    "pre-commit",
+    "github-actions",
+    "gitlabci",
+    "devcontainer",
+    "dockerfile",
+    "custom.regex"
+  ],
+  "timezone": "Asia/Dubai",
+  "schedule": [
+    "before 10am on tuesday"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "enabled": false
+    },
+    {
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchPackageNames": [
+        "jebel-quant/rhiza"
+      ],
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)\\.rhiza/template\\.yml$/"
+      ],
+      "matchStrings": [
+        "(?:repository|template-repository):\\s*\"(?<depName>[^\"]+)\"[\\s\\S]*?(?:ref|template-branch):\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ]
 }

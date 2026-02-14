@@ -16,6 +16,17 @@ SHELL = shutil.which("sh") or "/bin/sh"
 GIT = shutil.which("git") or "/usr/bin/git"
 
 
+def run_release_dry_run(git_repo):
+    """Run release.sh in dry-run mode and return the result."""
+    script = git_repo / ".rhiza" / "scripts" / "release.sh"
+    return subprocess.run(  # nosec
+        [SHELL, str(script), "--dry-run"],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+    )
+
+
 def test_release_creates_tag(git_repo):
     """Release creates a tag."""
     script = git_repo / ".rhiza" / "scripts" / "release.sh"
@@ -132,10 +143,8 @@ def test_release_fails_if_behind_remote(git_repo):
 
 def test_dry_run_flag_recognized(git_repo):
     """Test that --dry-run flag is recognized and script executes."""
-    script = git_repo / ".rhiza" / "scripts" / "release.sh"
-
     # Run with --dry-run flag
-    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)  # nosec
+    result = run_release_dry_run(git_repo)
 
     # Should exit successfully
     assert result.returncode == 0
@@ -145,8 +154,6 @@ def test_dry_run_flag_recognized(git_repo):
 
 def test_dry_run_no_git_operations(git_repo):
     """Test that no actual git operations are performed in dry-run mode."""
-    script = git_repo / ".rhiza" / "scripts" / "release.sh"
-
     # Get initial git state
     tags_before = subprocess.run(  # nosec
         [GIT, "tag", "-l"],
@@ -156,7 +163,7 @@ def test_dry_run_no_git_operations(git_repo):
     ).stdout
 
     # Run with --dry-run
-    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)  # nosec
+    result = run_release_dry_run(git_repo)
 
     assert result.returncode == 0
 
@@ -181,9 +188,7 @@ def test_dry_run_no_git_operations(git_repo):
 
 def test_dry_run_shows_appropriate_messages(git_repo):
     """Test that appropriate DRY-RUN messages are displayed."""
-    script = git_repo / ".rhiza" / "scripts" / "release.sh"
-
-    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)  # nosec
+    result = run_release_dry_run(git_repo)
 
     assert result.returncode == 0
 
@@ -199,10 +204,8 @@ def test_dry_run_shows_appropriate_messages(git_repo):
 
 def test_dry_run_exits_successfully_without_creating_tags(git_repo):
     """Test that script exits successfully without creating or pushing tags in dry-run mode."""
-    script = git_repo / ".rhiza" / "scripts" / "release.sh"
-
     # Run with --dry-run
-    result = subprocess.run([SHELL, str(script), "--dry-run"], cwd=git_repo, capture_output=True, text=True)  # nosec
+    result = run_release_dry_run(git_repo)
 
     # Should exit successfully
     assert result.returncode == 0

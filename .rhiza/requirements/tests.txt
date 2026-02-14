@@ -5,6 +5,7 @@ pytest-cov>=6.0
 pytest-html>=4.0
 pytest-mock>=3.0
 PyYAML>=6.0
+defusedxml>=0.7.0
 
 # For property-based testing
 hypothesis>=6.150.0

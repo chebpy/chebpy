@@ -1,6 +1,7 @@
 ---
 name: summarise
 description: Agent for summarizing changes since the last release/tag
+model: claude-sonnet-4.5
 ---
 
 You are a software development assistant tasked with summarizing repository changes since the most recent release or tag.

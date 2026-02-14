@@ -13,6 +13,7 @@
 #
 # Components:
 #   - 🔍 Run pre-commit checks using reusable action
+#   - 💾 Cache pre-commit environments to speed up runs
 
 name: "(RHIZA) PRE-COMMIT"
 permissions:
@@ -35,6 +36,15 @@ jobs:
         uses: ./.github/actions/configure-git-auth
         with:
           token: ${{ secrets.GH_PAT }}
+
+      # Cache pre-commit environments and hooks
+      - name: Cache pre-commit environments
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
 
       # Run pre-commit
       - name: Run pre-commit

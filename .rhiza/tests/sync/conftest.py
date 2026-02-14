@@ -8,12 +8,16 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
 
-# Import from test_utils instead of relative import
-from test_utils import setup_rhiza_git_repo
+tests_root = Path(__file__).resolve().parents[1]
+if str(tests_root) not in sys.path:
+    sys.path.insert(0, str(tests_root))
+
+from test_utils import run_make, setup_rhiza_git_repo, strip_ansi  # noqa: E402, F401
 
 
 @pytest.fixture(autouse=True)
@@ -67,7 +71,7 @@ def setup_sync_env(logger, root, tmp_path: Path):
     logger.debug("Copied Makefile from %s to %s", root / "Makefile", tmp_path / "Makefile")
 
     # Create a minimal .rhiza/template.yml
-    (tmp_path / ".rhiza" / "template.yml").write_text("repository: Jebel-Quant/rhiza\nref: main\n")
+    (tmp_path / ".rhiza" / "template.yml").write_text("repository: Jebel-Quant/rhiza\nref: v0.7.1\n")
 
     # Sort out pyproject.toml
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "test-project"\nversion = "0.1.0"\n')

@@ -11,11 +11,15 @@ import os
 import pathlib
 import shutil
 import subprocess  # nosec B404
+import sys
 
 import pytest
 
-# Import shared helpers from test_utils (no __init__.py needed)
-from test_utils import GIT, MAKE, run_make, setup_rhiza_git_repo, strip_ansi  # noqa: F401
+tests_root = pathlib.Path(__file__).resolve().parent
+if str(tests_root) not in sys.path:
+    sys.path.insert(0, str(tests_root))
+
+from test_utils import GIT  # noqa: E402
 
 MOCK_MAKE_SCRIPT = """#!/usr/bin/env python3
 import sys

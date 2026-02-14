@@ -4,8 +4,13 @@ This directory contains platform-agnostic scripts and utilities for the reposito
 
 ## Important Documentation
 
+### CI/CD & Infrastructure
 - **[TOKEN_SETUP.md](TOKEN_SETUP.md)** - Instructions for setting up the `PAT_TOKEN` secret required for the SYNC workflow
 - **[PRIVATE_PACKAGES.md](PRIVATE_PACKAGES.md)** - Guide for using private GitHub packages as dependencies
+- **[WORKFLOWS.md](WORKFLOWS.md)** - Development workflows and dependency management
+- **[RELEASING.md](RELEASING.md)** - Release process and version management
+- **[LFS.md](LFS.md)** - Git LFS configuration and make targets
+- **[ASSETS.md](ASSETS.md)** - Information about `.rhiza/assets/` directory
 
 ## Structure
 

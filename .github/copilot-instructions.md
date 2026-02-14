@@ -7,14 +7,103 @@ As a Rhiza-based project, this workspace adheres to specific conventions for str
 
 ## Development Environment
 
-The project uses `make` and `uv` for development tasks.
+The project uses `make` and `uv` for development tasks. UV handles all dependency and Python version management automatically.
 
-- **Install Dependencies**: `make install` (installs `uv`, creates `.venv`, installs dependencies)
+### Prerequisites
+
+- **Git**: Required for version control
+- **Make**: Command runner for all development tasks
+- **curl**: Required for installing uv (usually pre-installed on most systems)
+
+**Note**: Python is NOT a prerequisite. UV will automatically download and install the correct Python version (specified in `.python-version`) when you run `make install`.
+
+### Environment Setup
+
+Setting up your environment is simple:
+
+```bash
+make install
+```
+
+This single command handles everything:
+1. Installs `uv` package manager (to `./bin/uv` if not already in PATH)
+2. Downloads and installs the correct Python version from `.python-version` (currently 3.13)
+3. Creates a `.venv` virtual environment with that Python version
+4. Installs all project dependencies from `pyproject.toml`
+
+### Verifying Installation
+
+After installation completes, verify everything works:
+
+```bash
+make test  # Should run successfully
+```
+
+### Environment Variables
+
+UV automatically uses these environment variables (set by the bootstrap process):
+- `UV_LINK_MODE=copy`: Ensures proper dependency linking across filesystems
+- `UV_VENV_CLEAR=1`: Clears existing venv on reinstall to avoid conflicts
+
+### Common Development Commands
+
+- **Install Dependencies**: `make install` (full setup: uv, Python, venv, dependencies)
 - **Run Tests**: `make test` (runs `pytest` with coverage)
 - **Format Code**: `make fmt` (runs `ruff format` and `ruff check --fix`)
-- **Check Dependencies**: `make deptry` (runs `deptry` to check for missing/unused dependencies)
-- **Marimo Notebooks**: `make marimo` (starts the Marimo server)
+- **Check Dependencies**: `make deptry` (checks for missing/unused dependencies)
+- **Marimo Notebooks**: `make marimo` (starts the Marimo notebook server)
 - **Build Documentation**: `make book` (builds the documentation book)
+- **Clean Environment**: `make clean` (removes build artifacts and stale branches)
+
+### Troubleshooting
+
+- **Installation fails**: Check internet connectivity (UV needs to download Python and packages)
+- **Python version issues**: The `.python-version` file is the single source of truth. UV uses this automatically.
+- **Pre-commit failures**: Run `make fmt` to auto-fix most formatting issues
+- **Stale environment**: Run `make clean` followed by `make install` to start fresh
+
+### Important Notes for Agents
+
+- **Virtual Environment Activation**: Most `make` commands automatically handle virtual environment activation. Manual activation is rarely needed.
+- **Python Version**: The repository specifies Python 3.13 in `.python-version`. UV installs this automatically.
+- **All Commands Through Make**: Always use `make` targets rather than running tools directly to ensure consistency.
+
+### Customizing Setup with Hooks
+
+The Makefile provides hooks for customizing the setup process. Add these to the root `Makefile`:
+
+```makefile
+# Run before make install
+pre-install::
+	@echo "Installing system dependencies..."
+	@command -v graphviz || brew install graphviz
+
+# Run after make install
+post-install::
+	@echo "Running custom setup..."
+	@./scripts/custom-setup.sh
+```
+
+**Available hooks:**
+- `pre-install` / `post-install`: Runs around `make install`
+- `pre-sync` / `post-sync`: Runs around template synchronization
+- `pre-validate` / `post-validate`: Runs around validation
+- `pre-release` / `post-release`: Runs around releases
+
+**Note**: Use double-colon syntax (`::`) for hooks to allow multiple definitions. See `.rhiza/make.d/README.md` for more details.
+
+### Cloud/CI Environment Setup
+
+The Copilot coding agent environment is automatically configured via official GitHub mechanisms:
+
+- **`.github/workflows/copilot-setup-steps.yml`**: Runs before the agent starts. Installs uv, configures git auth for private packages, and runs `make install` to set up a deterministic environment.
+- **`.github/hooks/hooks.json`**: Defines session lifecycle hooks:
+  - `sessionStart`: Validates the environment is correctly set up (uv available, .venv exists)
+  - `sessionEnd`: Runs `make fmt` and `make test` as quality gates after the agent finishes work
+
+These files must exist on the default branch. The agent does not need to run any setup commands manually.
+
+For DevContainers and Codespaces, the `.devcontainer/` configuration and `bootstrap.sh` handle setup automatically. See `docs/DEVCONTAINER.md` for details.
 
 ## Project Structure
 
@@ -46,3 +135,5 @@ The project uses `make` and `uv` for development tasks.
 - `Makefile`: Main entry point for tasks.
 - `pyproject.toml`: Project configuration and dependencies.
 - `.devcontainer/bootstrap.sh`: Bootstrap script for dev containers.
+- `.github/workflows/copilot-setup-steps.yml`: Agent environment setup (runs before agent starts).
+- `.github/hooks/hooks.json`: Agent session hooks (quality gates).

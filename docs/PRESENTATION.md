@@ -161,7 +161,7 @@ Templates stay up-to-date with Rhiza's latest improvements:
 
 ```yaml
 repository: Jebel-Quant/rhiza
-ref: main
+ref: v0.7.1
 
 include: |
   .github/workflows/*.yml

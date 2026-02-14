@@ -11,14 +11,16 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess  # nosec
+import sys
 from pathlib import Path
 
 import pytest
 
-# Import shared utilities (no __init__.py needed with new structure)
-# Note: we define our own run_make and setup_rhiza_git_repo here with enhanced functionality
-from test_utils import MAKE
+tests_root = Path(__file__).resolve().parents[1]
+if str(tests_root) not in sys.path:
+    sys.path.insert(0, str(tests_root))
+
+from test_utils import run_make, setup_rhiza_git_repo, strip_ansi  # noqa: E402, F401
 
 # Split Makefile paths that are included in the main Makefile
 # These are now located in .rhiza/make.d/ directory
@@ -87,49 +89,3 @@ def setup_tmp_makefile(logger, root, tmp_path: Path):
     finally:
         os.chdir(old_cwd)
         logger.debug("Restored working directory to %s", old_cwd)
-
-
-def run_make(
-    logger,
-    args: list[str] | None = None,
-    check: bool = True,
-    dry_run: bool = True,
-    env: dict[str, str] | None = None,
-) -> subprocess.CompletedProcess:
-    """Run `make` with optional arguments and return the completed process.
-
-    Args:
-        logger: Logger used to emit diagnostic messages during the run
-        args: Additional arguments for make
-        check: If True, raise on non-zero return code
-        dry_run: If True, use -n to avoid executing commands
-        env: Optional environment variables to pass to the subprocess
-    """
-    cmd = [MAKE]
-    if args:
-        cmd.extend(args)
-    # Use -s to reduce noise, -n to avoid executing commands
-    flags = "-sn" if dry_run else "-s"
-    cmd.insert(1, flags)
-    logger.info("Running command: %s", " ".join(cmd))
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env)  # nosec
-    logger.debug("make exited with code %d", result.returncode)
-    if result.stdout:
-        logger.debug("make stdout (truncated to 500 chars):\n%s", result.stdout[:500])
-    if result.stderr:
-        logger.debug("make stderr (truncated to 500 chars):\n%s", result.stderr[:500])
-    if check and result.returncode != 0:
-        msg = f"make failed with code {result.returncode}:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
-        raise AssertionError(msg)
-    return result
-
-
-def setup_rhiza_git_repo():
-    """Initialize a git repository and set remote to rhiza."""
-    git = shutil.which("git") or "/usr/bin/git"
-    subprocess.run([git, "init"], check=True, capture_output=True)  # nosec
-    subprocess.run(
-        [git, "remote", "add", "origin", "https://github.com/jebel-quant/rhiza"],
-        check=True,
-        capture_output=True,
-    )  # nosec

@@ -7,11 +7,19 @@
 #
 # 📋 Pipeline Phases:
 #   1. 🔍 Validate Tag - Check tag format and ensure release doesn't already exist
-#   2. 🏗️ Build - Build Python package with Hatch (if [build-system] is defined in pyproject.toml
-#   3. 📝 Draft Release - Create draft GitHub release with build artifacts
-#   4. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
-#   5. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
-#   6. ✅ Finalize Release - Publish the GitHub release with links
+#   2. 🏗️ Build - Build Python package with Hatch (if [build-system] is defined in pyproject.toml)
+#   3. 📦 Generate SBOM - Create Software Bill of Materials (CycloneDX format)
+#   4. 📝 Draft Release - Create draft GitHub release with build artifacts and SBOM
+#   5. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
+#   6. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
+#   7. ✅ Finalize Release - Publish the GitHub release with links
+#
+# 📦 SBOM Generation:
+#   - Generated using CycloneDX format (industry standard for software supply chain security)
+#   - Creates both JSON and XML formats for maximum compatibility
+#   - SBOM attestations are created and stored (public repos only)
+#   - Attached to GitHub releases for transparency and compliance
+#   - Skipped if pyproject.toml doesn't exist
 #
 # 🐳 Devcontainer Publishing:
 #   - Only occurs when PUBLISH_DEVCONTAINER repository variable is set to "true"
@@ -34,6 +42,7 @@
 #   - For custom feeds, PYPI_TOKEN secret is used with default username __token__
 #   - Container registry uses GITHUB_TOKEN for authentication
 #   - SLSA provenance attestations generated for build artifacts (public repos only)
+#   - SBOM attestations generated for supply chain transparency (public repos only)
 #
 # 📄 Requirements:
 #   - pyproject.toml with top-level version field (for Python packages)
@@ -113,7 +122,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.10.0"
+          version: "0.10.2"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -148,6 +157,47 @@ jobs:
           printf "[INFO] Building package...\n"
           uvx hatch build
 
+      - name: Install Python for SBOM generation
+        if: hashFiles('pyproject.toml') != ''
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: .python-version
+
+      - name: Sync environment for SBOM generation
+        if: hashFiles('pyproject.toml') != ''
+        run: |
+          export UV_EXTRA_INDEX_URL="${{ secrets.UV_EXTRA_INDEX_URL }}"
+          uv sync --all-extras --all-groups --frozen
+
+      - name: Generate SBOM (CycloneDX)
+        if: hashFiles('pyproject.toml') != ''
+        run: |
+          printf "[INFO] Generating SBOM in CycloneDX format...\n"
+          # Note: uvx caches the tool environment, so the second call is fast
+          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --of JSON -o sbom.cdx.json
+          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --of XML -o sbom.cdx.xml
+          printf "[INFO] SBOM generation complete\n"
+          printf "Generated files:\n"
+          ls -lh sbom.cdx.*
+
+      - name: Attest SBOM
+        # Attest only the JSON format as it's the canonical machine-readable format.
+        # The XML format is provided for compatibility but doesn't need separate attestation.
+        if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
+        uses: actions/attest-sbom@v3
+        with:
+          subject-path: sbom.cdx.json
+          sbom-path: sbom.cdx.json
+
+      - name: Upload SBOM artifacts
+        if: hashFiles('pyproject.toml') != ''
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: sbom
+          path: |
+            sbom.cdx.json
+            sbom.cdx.xml
+
       - name: Generate SLSA provenance attestations
         if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
         uses: actions/attest-build-provenance@v3
@@ -168,6 +218,14 @@ jobs:
     needs: [tag, build]
 
     steps:
+      - name: Download SBOM artifact
+        # Downloads sbom.cdx.json and sbom.cdx.xml into sbom/ directory
+        uses: actions/download-artifact@v6.0.0
+        with:
+          name: sbom
+          path: sbom
+        continue-on-error: true
+
       - name: Create GitHub Release with artifacts
         uses: softprops/action-gh-release@v2.5.0
         with:
@@ -175,6 +233,8 @@ jobs:
           name: ${{ needs.tag.outputs.tag }}
           generate_release_notes: true
           draft: true
+          files: |
+            sbom/*
 
   # Decide at step-level whether to publish
   pypi:
@@ -192,7 +252,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download dist artifact
-        uses: actions/download-artifact@v7.0.0
+        uses: actions/download-artifact@v6.0.0
         with:
           name: dist
           path: dist
@@ -327,7 +387,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.10.0"
+          version: "0.10.2"
 
       - name: "Sync the virtual environment for ${{ github.repository }}"
         shell: bash

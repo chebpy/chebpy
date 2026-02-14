@@ -121,6 +121,6 @@ The test suite aims for high coverage across:
 
 ## Notes
 
-- Benchmarks are located in `tests/test_rhiza/benchmarks/` and run via `make benchmark`
+- Benchmarks are located in `tests/benchmarks/` and run via `make benchmark`
 - Integration tests use sandboxed git repositories to avoid affecting the working tree
 - All Makefile tests use dry-run mode (`make -n`) to avoid side effects

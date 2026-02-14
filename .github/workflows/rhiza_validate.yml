@@ -12,13 +12,18 @@ on:
 jobs:
   validation:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/astral-sh/uv:0.9.30-bookworm
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
+        with:
+          lfs: true
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.3.0
+        with:
+          version: "0.10.2"
+          
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
         with:
