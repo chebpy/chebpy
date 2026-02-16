@@ -1,0 +1,87 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Performance Benchmarks
+#
+# Purpose: Run performance benchmarks and detect regressions.
+#
+# Trigger: On push to main/master branches, PRs, and manual trigger.
+#
+# Regression Detection:
+#   - Compares against previous benchmark results stored in gh-pages branch
+#   - Alerts if performance degrades by more than 150% (configurable)
+#   - PRs will show a warning comment but not fail
+#   - Main branch updates the baseline for future comparisons
+
+name: "(RHIZA) BENCHMARKS"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+        with:
+          lfs: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.3.0
+        with:
+          version: "0.10.2"
+
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Run benchmarks
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
+        run: |
+          make benchmark
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v6.0.0
+        if: always()
+        with:
+          name: benchmark-results
+          path: |
+            _benchmarks/benchmarks.json
+            _benchmarks/benchmarks.svg
+            _benchmarks/benchmarks.html
+
+      # Regression detection using github-action-benchmark
+      # Stores benchmark history in gh-pages branch under /benchmarks
+      # Alerts if performance degrades by more than 150% of baseline
+      - name: Store benchmark result and check for regression
+        uses: benchmark-action/github-action-benchmark@v1
+        # run this only if _benchmarks/benchmarks.json exists
+        if: hashFiles('_benchmarks/benchmarks.json') != ''
+        with:
+          tool: 'pytest'
+          output-file-path: _benchmarks/benchmarks.json
+          # Store benchmark data in gh-pages branch
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: benchmarks
+          # Only update baseline on main branch push (not PRs)
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # Alert if performance degrades by more than 150%
+          alert-threshold: '150%'
+          # Post comment on PR if regression detected
+          comment-on-alert: ${{ github.event_name == 'pull_request' }}
+          # Fail workflow if regression detected (disabled for PRs to allow investigation)
+          fail-on-alert: ${{ github.event_name == 'push' }}
+          # GitHub token for pushing to gh-pages and commenting
+          github-token: ${{ secrets.GITHUB_TOKEN }}
