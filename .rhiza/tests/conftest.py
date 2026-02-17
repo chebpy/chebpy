@@ -64,7 +64,6 @@ def bump_version(current, bump_type):
 
 def main():
     args = sys.argv[1:]
-    # Expected invocations from release.sh start with 'version'
     if not args:
         sys.exit(1)
 
@@ -185,11 +184,8 @@ def git_repo(root, tmp_path, monkeypatch):
     # Ensure our bin comes first on PATH so 'uv' resolves to mock
     monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ.get('PATH', '')}")
 
-    # Copy scripts and core Rhiza Makefiles
-    script_dir = local_dir / ".rhiza" / "scripts"
-    script_dir.mkdir(parents=True)
-
-    shutil.copy(root / ".rhiza" / "scripts" / "release.sh", script_dir / "release.sh")
+    # Copy core Rhiza Makefiles
+    (local_dir / ".rhiza").mkdir(parents=True, exist_ok=True)
     shutil.copy(root / ".rhiza" / "rhiza.mk", local_dir / ".rhiza" / "rhiza.mk")
     shutil.copy(root / "Makefile", local_dir / "Makefile")
 
@@ -203,8 +199,6 @@ def git_repo(root, tmp_path, monkeypatch):
     book_dst = local_dir / "book"
     if book_src.is_dir():
         shutil.copytree(book_src, book_dst, dirs_exist_ok=True)
-
-    (script_dir / "release.sh").chmod(0o755)
 
     # Commit and push initial state
     subprocess.run([GIT, "config", "user.email", "test@example.com"], check=True)  # nosec B603

@@ -81,6 +81,42 @@ pre-install::
 - **Root `Makefile`**: Project-specific customizations (variables, hooks, custom targets)
 - **`local.mk`**: Developer-local shortcuts (not committed)
 
+### Makefile Files in `.rhiza/make.d/`
+
+| File | Purpose |
+|------|---------|
+| `agentic.mk` | AI agent integrations (copilot, claude) |
+| `book.mk` | Documentation book generation |
+| `bootstrap.mk` | Installation and environment setup |
+| `custom-env.mk` | Example environment customizations |
+| `custom-task.mk` | Example custom tasks |
+| `docker.mk` | Docker build and run targets |
+| `docs.mk` | Documentation generation (pdoc) |
+| `github.mk` | GitHub CLI integrations |
+| `lfs.mk` | Git LFS management |
+| `marimo.mk` | Marimo notebook support |
+| `presentation.mk` | Presentation building (Marp) |
+| `quality.mk` | Code quality and formatting |
+| `releasing.mk` | Release and versioning |
+| `test.mk` | Testing infrastructure |
+
+Files prefixed with `custom-` are **examples** showing how to customize Rhiza. Don't edit them directly; instead, add your customizations to the root `Makefile`.
+
+### Naming Conventions
+
+**Targets**: Lowercase with hyphens, verb-noun format
+- ✅ `install-uv`, `docker-build`, `view-prs`
+- ❌ `installUv`, `docker_build`
+
+**Variables**: SCREAMING_SNAKE_CASE
+- ✅ `INSTALL_DIR`, `UV_BIN`, `PYTHON_VERSION`
+- ❌ `installDir`, `uvBin`
+
+**Section Headers**: Title Case with `##@`
+- `##@ Bootstrap`, `##@ GitHub Helpers`
+
+See [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md#naming-conventions-and-organization-patterns) for comprehensive naming guidelines.
+
 ### Available Hooks
 Add these to your root `Makefile` using double-colon syntax (`::`):
 - `pre-install` / `post-install`: Runs around `make install`.

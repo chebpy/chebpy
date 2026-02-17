@@ -229,6 +229,14 @@ Notebooks stored in `book/marimo/` with inline dependency management.
 
 ## 🚀 Release Workflow
 
+### One-Step Publish (Recommended)
+
+```bash
+make publish
+# → Bumps version + creates tag + pushes
+# → Triggers release workflow
+```
+
 ### Two-Step Process
 
 ```bash
@@ -243,6 +251,14 @@ make release
 # → Creates git tag
 # → Pushes tag to GitHub
 # → Triggers release workflow
+```
+
+### Check Status
+
+```bash
+make release-status
+# → Shows workflow run history
+# → Shows latest release details
 ```
 
 ### Release Automation

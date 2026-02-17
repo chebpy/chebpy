@@ -69,10 +69,10 @@ extend-select = [
     "D107",  # pydocstyle - Require docstrings for __init__
     "B",     # flake8-bugbear - Find likely bugs and design problems
     "C4",    # flake8-comprehensions - Better list/set/dict comprehensions
-    #"SIM",   # flake8-simplify - Simplify code
+    "SIM",   # flake8-simplify - Simplify code
     "PT",    # flake8-pytest-style - Check pytest best practices
     "RUF",   # Ruff-specific rules
-    #"S",     # flake8-bandit - Find security issues
+    "S",     # flake8-bandit - Find security issues
     #"ERA",   # eradicate - Find commented out code
     #"T10",   # flake8-debugger - Check for debugger imports and calls
     "TRY",   # flake8-try-except-raise - Try/except/raise checks
@@ -101,25 +101,30 @@ line-ending = "auto"
 
 # File-specific rule exceptions
 [lint.per-file-ignores]
-"tests/**/*.py" = [
+# Test files - allow assert statements and subprocess calls for testing
+"**/tests/**/*.py" = [
     "S101",     # Allow assert statements in tests
     "S603",     # Allow subprocess calls without shell=False check
+    "S607",     # Allow starting processes with partial paths in tests
     "PLW1510",  # Allow subprocess without explicit check parameter
-    "ERA001",   # Allow commented out code
-    "PLR2004",  # Allow magic values
-    "RUF002",   # Allow ambiguous unicode
-    "RUF012",   # Allow mutable class attributes
 ]
-# this will also work book/marimo or test/resources/marimo ...
+"tests/**/*.py" = [
+    "ERA001",   # Allow commented out code in project tests
+    "PLR2004",  # Allow magic values in project tests
+    "RUF002",   # Allow ambiguous unicode in project tests
+    "RUF012",   # Allow mutable class attributes in project tests
+]
+# Marimo notebooks - allow flexible coding patterns for interactive exploration
 "**/marimo/**/*.py" = [
-    "N803",    # Allow non-lowercase variable names
-    "S101",    # Allow assert statements
-    "PLC0415", # Allow imports not at top-level
-    "B018",    # Allow useless expressions
-    "RUF001",  # Allow ambiguous unicode
-    "RUF002",  # Allow ambiguous unicode
+    "N803",    # Allow non-lowercase variable names in notebooks
+    "S101",    # Allow assert statements in notebooks
+    "PLC0415", # Allow imports not at top-level in notebooks
+    "B018",    # Allow useless expressions in notebooks
+    "RUF001",  # Allow ambiguous unicode in notebooks
+    "RUF002",  # Allow ambiguous unicode in notebooks
 ]
+# Internal utility scripts - specific exceptions for internal tooling
 ".rhiza/utils/*.py" = [
-    "PLW2901",  # Allow loop variable overwriting
-    "TRY003",   # Allow long exception messages
+    "PLW2901",  # Allow loop variable overwriting in utility scripts
+    "TRY003",   # Allow long exception messages in utility scripts
 ]
