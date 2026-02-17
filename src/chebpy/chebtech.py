@@ -91,7 +91,8 @@ class Chebtech(Smoothfun, ABC):
         This constructor creates a Chebtech representation of the function using
         a fixed number of degrees of freedom specified by n.
         """
-        assert n is not None
+        if n is None:
+            raise ValueError("n must be specified for fixed-length initialization")  # noqa: TRY003
         points = cls._chebpts(int(n))
         values = fun(points)
         coeffs = vals2coeffs2(values)

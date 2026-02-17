@@ -88,7 +88,7 @@ class ChebPreferences(DefaultPreferences):
         Returns:
             ChebPreferences: The preferences object (self._instance).
         """
-        self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults().keys()})
+        self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults()})
         return self._instance  # type: ignore[return-value]
 
     def __exit__(

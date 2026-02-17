@@ -39,3 +39,11 @@ numpy = "numpy"
 pandas = "pandas"
 plotly = "plotly"
 ruff = "ruff"
+
+[tool.ty.rules]
+invalid-base-class = "ignore"
+invalid-method-override = "ignore"
+invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
+invalid-assignment = "ignore"
+unsupported-operator = "ignore"

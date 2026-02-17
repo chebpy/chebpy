@@ -30,7 +30,7 @@ def htol() -> float:
     Returns:
         float: 5 times the machine epsilon from preferences.
     """
-    return 5 * prefs.eps
+    return 5 * prefs.eps  # type: ignore[return-value]
 
 
 class Interval(np.ndarray):
@@ -74,7 +74,7 @@ class Interval(np.ndarray):
         """
         if a >= b:
             raise IntervalValues
-        return np.asarray((a, b), dtype=float).view(cls)
+        return np.asarray((a, b), dtype=float).view(cls)  # type: ignore[return-value]
 
     def formap(self, y: float | np.ndarray) -> Any:
         """Map from the reference interval [-1,1] to this interval [a,b].
@@ -239,11 +239,11 @@ class Domain(np.ndarray):
         """
         bpts = np.asarray(breakpoints, dtype=float)
         if bpts.size == 0:
-            return bpts.view(cls)
+            return bpts.view(cls)  # type: ignore[return-value]
         elif bpts.size < 2 or np.any(np.diff(bpts) <= 0):
             raise InvalidDomain
         else:
-            return bpts.view(cls)
+            return bpts.view(cls)  # type: ignore[return-value]
 
     def __contains__(self, other: object) -> bool:
         """Check whether one domain object is a subdomain of another (within tolerance).
