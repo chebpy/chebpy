@@ -36,9 +36,3 @@ make install
 
 # Install Marimo tool for notebook editing
 "$UV_BIN" tool install marimo 
-
-# Initialize pre-commit hooks if configured
-if [ -f .pre-commit-config.yaml ]; then
-  # uvx runs tools without requiring them in the project deps
-  "$UVX_BIN" pre-commit install
-fi

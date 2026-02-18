@@ -89,8 +89,8 @@ def test__eq__(interval_fixtures):
     assert Interval() == Interval()
     assert i1 == i2
     assert i2 == i1
-    assert not (i3 == i1)
-    assert not (i2 == i3)
+    assert i3 != i1
+    assert i2 != i3
 
 
 def test__ne__(interval_fixtures):
@@ -105,9 +105,9 @@ def test__ne__(interval_fixtures):
         interval_fixtures: Fixture providing test interval objects.
     """
     i1, i2, i3 = interval_fixtures["i1"], interval_fixtures["i2"], interval_fixtures["i3"]
-    assert not (Interval() != Interval())
-    assert not (i1 != i2)
-    assert not (i2 != i1)
+    assert Interval() == Interval()
+    assert i1 == i2
+    assert i2 == i1
     assert i3 != i1
     assert i2 != i3
 
@@ -397,7 +397,7 @@ def test_domain_ne():
     d1 = Domain([-2, 0, 1, 3, 5])
     d2 = Domain([-2, 0, 1, 3, 5])
     d3 = Domain([-1, 1])
-    assert not (d1 != d2)
+    assert d1 == d2
     assert d1 != d3
 
 

@@ -67,6 +67,27 @@ UV automatically uses these environment variables (set by the bootstrap process)
 - **Virtual Environment Activation**: Most `make` commands automatically handle virtual environment activation. Manual activation is rarely needed.
 - **Python Version**: The repository specifies Python 3.13 in `.python-version`. UV installs this automatically.
 - **All Commands Through Make**: Always use `make` targets rather than running tools directly to ensure consistency.
+- **When a `make` target exists, use it**: Do not replace `make test`, `make fmt`, `make deptry`, etc. with direct tool commands.
+- **For Python commands without a `make` target, use `uv run`**: Run Python and Python tooling via `uv run <command>`.
+- **Never call the interpreter directly from `.venv`**: Do **not** use `.venv/bin/python`, `.venv/bin/pytest`, etc.
+
+### Command Execution Policy (Strict)
+
+Use these rules in order:
+
+1. If there is an appropriate `make` target, use the `make` target.
+2. If no `make` target exists and you must run Python code/tooling, use `uv run ...`.
+3. Do not invoke binaries from `.venv/bin` directly.
+
+Examples:
+
+- ✅ `make test`
+- ✅ `make fmt`
+- ✅ `uv run pytest`
+- ✅ `uv run python -m pytest tests/property/test_makefile_properties.py`
+- ✅ `uv run python scripts/some_script.py`
+- ❌ `.venv/bin/python -m pytest`
+- ❌ `.venv/bin/pytest`
 
 ### Customizing Setup with Hooks
 

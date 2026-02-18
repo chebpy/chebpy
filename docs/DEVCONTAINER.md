@@ -32,6 +32,8 @@ The `.devcontainer` setup provides:
 - 🚀 **Port Forwarding** - Port 8080 for development servers
 - 🔐 **SSH Agent Forwarding** - Full Git functionality with your host SSH keys
 
+For a complete list and detailed explanation of all VS Code extensions configured in the Dev Container, see [VSCODE_EXTENSIONS.md](VSCODE_EXTENSIONS.md).
+
 ## Usage
 
 ### In VS Code

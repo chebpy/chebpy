@@ -15,11 +15,13 @@ A concise reference for common Rhiza operations.
 
 | Command | Description |
 |---------|-------------|
+| `make publish` | Bump version, create tag and push in one step |
 | `make bump` | Bump version (prompts for major/minor/patch) |
 | `make bump BUMP=patch` | Bump patch version directly |
 | `make bump BUMP=minor` | Bump minor version directly |
 | `make bump BUMP=major` | Bump major version directly |
 | `make release` | Create and push release tag |
+| `make release-status` | Show release workflow status and latest release |
 
 ## Code Quality
 
@@ -60,7 +62,6 @@ uv run pytest -v -s
 │   ├── 00-19*.mk     # Configuration
 │   ├── 20-79*.mk     # Task definitions
 │   └── 80-99*.mk     # Hook implementations
-├── scripts/          # Shell scripts (release.sh)
 ├── utils/            # Python utilities
 └── template.yml      # Sync configuration
 ```

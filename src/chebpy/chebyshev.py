@@ -96,7 +96,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         else:
             return self
 
-    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:  # type: ignore[override]
+    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:
         """Evaluate the polynomial at points x.
 
         Args:
@@ -191,7 +191,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         a, b = self.domain
         ch = ChebyshevPolynomial(self.coef, domain=self.domain)  # window = [-1, 1] by default
         integral = ch.integ()
-        return float(integral(b) - integral(a))  # type: ignore[arg-type]
+        return float(integral(b) - integral(a))
 
     def plot(self, ax: Axes | None = None, n: int | None = None, **kwds: Any) -> Axes:
         """Plot the Chebyshev polynomial over its domain.
@@ -421,7 +421,7 @@ def from_constant(
     if isinstance(c, int):
         c = float(c)
 
-    return ChebyshevPolynomial([c], domain, window, symbol)  # type: ignore[list-item]
+    return ChebyshevPolynomial([c], domain, window, symbol)
 
 
 def from_function(

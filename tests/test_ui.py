@@ -110,7 +110,7 @@ def test_pwc_defaults() -> None:
 def test_evaluate() -> None:
     """Test that pickled/unpickled chebfun objects evaluate correctly."""
     f0 = chebfun(np.sin, [-2, 0, 1])
-    f1 = pickle.loads(pickle.dumps(f0))
+    f1 = pickle.loads(pickle.dumps(f0))  # noqa: S301
 
     x = -1
     assert f0(x) == f1(x)

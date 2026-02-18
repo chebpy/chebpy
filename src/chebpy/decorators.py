@@ -37,14 +37,14 @@ def cache(f: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(self: Any) -> Any:
         try:
             # f has been executed previously
-            out = self._cache[f.__name__]
+            out = self._cache[f.__name__]  # type: ignore[attr-defined]
         except AttributeError:
             # f has not been executed previously and self._cache does not exist
             self._cache = {}
-            out = self._cache[f.__name__] = f(self)
+            out = self._cache[f.__name__] = f(self)  # type: ignore[attr-defined]
         except KeyError:  # pragma: no cover
             # f has not been executed previously, but self._cache exists
-            out = self._cache[f.__name__] = f(self)
+            out = self._cache[f.__name__] = f(self)  # type: ignore[attr-defined]
         return out
 
     return wrapper
@@ -147,9 +147,8 @@ def float_argument(f: Callable[..., Any]) -> Callable[..., Any]:
         x = args[0]
         xx = np.array([x]) if np.isscalar(x) else np.array(x)
         # discern between the array(0.1) and array([0.1]) cases
-        if xx.size == 1:
-            if xx.ndim == 0:
-                xx = np.array([xx])
+        if xx.size == 1 and xx.ndim == 0:
+            xx = np.array([xx])
         args_list = list(args)
         args_list[0] = xx
         out = f(self, *args_list, **kwargs)

@@ -492,7 +492,7 @@ class Chebfun:
             return f
         if np.isscalar(f):
             chbfn1 = self
-            chbfn2 = f * np.ones(self.funs.size)  # type: ignore[operator]
+            chbfn2 = f * np.ones(self.funs.size)
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
@@ -769,9 +769,8 @@ class Chebfun:
             rts = fun.roots()
             # ignore first root if equal to the last root of previous fun
             # TODO: there could be multiple roots at breakpoints
-            if prvrts.size > 0 and rts.size > 0:
-                if merge and abs(prvrts[-1] - rts[0]) <= htol:
-                    rts = rts[1:]
+            if prvrts.size > 0 and rts.size > 0 and merge and abs(prvrts[-1] - rts[0]) <= htol:
+                rts = rts[1:]
             allrts.append(rts)
             prvrts = rts
         return np.concatenate(list(allrts))
@@ -994,7 +993,7 @@ class Chebfun:
         try:
             # Try to use union if supports match
             newdom = self.domain.union(other.domain)
-        except SupportMismatch:  # type: ignore[misc]
+        except SupportMismatch:
             # If supports don't match, find the intersection
             a_min, a_max = self.support
             b_min, b_max = other.support
@@ -1029,10 +1028,7 @@ class Chebfun:
         funs = np.array([])
         for interval, use_self in zip(switch.intervals, keys, strict=False):
             subdom = newdom.restrict(interval)
-            if use_self:
-                subfun = self.restrict(subdom)
-            else:
-                subfun = other.restrict(subdom)
+            subfun = self.restrict(subdom) if use_self else other.restrict(subdom)
             funs = np.append(funs, subfun.funs)
         return self.__class__(funs)
 
@@ -1108,7 +1104,7 @@ def add_ufunc(op: Callable[..., Any]) -> None:
         """
         return self.__class__([op(fun) for fun in self])
 
-    name = op.__name__
+    name = op.__name__  # type: ignore[attr-defined]
     method.__name__ = name
     method.__doc__ = method.__doc__
     setattr(Chebfun, name, method)
