@@ -159,7 +159,7 @@ class Interval(np.ndarray):
         Returns:
             bool: True if other is contained within this interval, False otherwise.
         """
-        other_interval: Interval = other  # type: ignore[assignment]
+        other_interval: Interval = other
         (a, b), (x, y) = self, other_interval
         return bool((a <= x) & (y <= b))
 
@@ -254,7 +254,7 @@ class Domain(np.ndarray):
         Returns:
             bool: True if other is contained within this domain (within tolerance), False otherwise.
         """
-        other_domain: Domain = other  # type: ignore[assignment]
+        other_domain: Domain = other
         a, b = self.support
         x, y = other_domain.support
         bounds = np.array([1 - htol(), 1 + htol()])
