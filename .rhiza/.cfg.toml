@@ -30,8 +30,3 @@ values = [
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
-
-# [[tool.bumpversion.files]]
-# filename = ".rhiza/template-bundles.yml"
-# search = 'version: "{current_version}"'
-# replace = 'version: "{new_version}"'
