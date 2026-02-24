@@ -20,6 +20,8 @@ def test_sbom_generation_json(git_repo, logger):
             "cyclonedx-bom>=7.0.0",
             "cyclonedx-py",
             "environment",
+            "--pyproject",
+            "pyproject.toml",
             "--of",
             "JSON",
             "-o",
@@ -53,6 +55,13 @@ def test_sbom_generation_json(git_repo, logger):
     assert sbom_data["bomFormat"] == "CycloneDX", "SBOM has incorrect bomFormat"
     assert "components" in sbom_data, "SBOM missing components field"
 
+    # Verify primary component (metadata.component) is present for NTIA compliance
+    assert "metadata" in sbom_data, "SBOM missing metadata field"
+    assert "component" in sbom_data["metadata"], "SBOM missing primary component (metadata.component)"
+    primary = sbom_data["metadata"]["component"]
+    assert primary.get("name"), "Primary component missing name"
+    assert primary.get("version"), "Primary component missing version"
+
 
 def test_sbom_generation_xml(git_repo, logger):
     """Test that SBOM generation works in XML format."""
@@ -64,6 +73,8 @@ def test_sbom_generation_xml(git_repo, logger):
             "cyclonedx-bom>=7.0.0",
             "cyclonedx-py",
             "environment",
+            "--pyproject",
+            "pyproject.toml",
             "--of",
             "XML",
             "-o",
@@ -136,6 +147,8 @@ def test_sbom_command_syntax(git_repo, logger):
             "cyclonedx-bom>=7.0.0",
             "cyclonedx-py",
             "environment",
+            "--pyproject",
+            "pyproject.toml",
             "--of",
             "JSON",
             "-o",

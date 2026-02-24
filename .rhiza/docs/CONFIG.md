@@ -1,6 +1,6 @@
 # Rhiza Configuration
 
-This directory contains platform-agnostic scripts and utilities for the repository that can be used by GitHub Actions, GitLab CI, or other CI/CD systems.
+This directory contains platform-agnostic utilities for the repository that can be used by GitHub Actions, GitLab CI, or other CI/CD systems.
 
 ## Important Documentation
 
@@ -14,8 +14,6 @@ This directory contains platform-agnostic scripts and utilities for the reposito
 
 ## Structure
 
-- **scripts/** - Shell scripts for common tasks (book generation, release, etc.)
-- **scripts/customisations/** - Repository-specific customisation hooks
 - **utils/** - Python utilities for version management
 
 GitHub-specific composite actions are located in `.github/rhiza/actions/`.

@@ -148,12 +148,6 @@ class TestMakefile:
         out = strip_ansi(proc.stdout)
         assert "Value of UV_NO_MODIFY_PATH:\n1" in out
 
-    def test_script_folder_is_github_scripts(self, logger):
-        """`SCRIPTS_FOLDER` should point to `.rhiza/scripts`."""
-        proc = run_make(logger, ["print-SCRIPTS_FOLDER"], dry_run=False)
-        out = strip_ansi(proc.stdout)
-        assert "Value of SCRIPTS_FOLDER:\n.rhiza/scripts" in out
-
     def test_that_target_coverage_is_configurable(self, logger):
         """Test target should respond to COVERAGE_FAIL_UNDER variable."""
         # Default case: ensure the flag is present
@@ -163,6 +157,19 @@ class TestMakefile:
         # Override case: ensure the flag takes the specific value
         proc_override = run_make(logger, ["test", "COVERAGE_FAIL_UNDER=42"])
         assert "--cov-fail-under=42" in proc_override.stdout
+
+    def test_coverage_badge_target_dry_run(self, logger, tmp_path):
+        """Coverage-badge target should invoke genbadge via uvx in dry-run output."""
+        # Create a mock coverage JSON file so the target proceeds past the guard
+        tests_dir = tmp_path / "_tests"
+        tests_dir.mkdir(exist_ok=True)
+        (tests_dir / "coverage.json").write_text("{}")
+
+        proc = run_make(logger, ["coverage-badge"])
+        out = proc.stdout
+        assert "genbadge coverage" in out
+        assert "_tests/coverage.json" in out
+        assert "assets/coverage-badge.svg" in out
 
 
 class TestMakefileRootFixture:
@@ -205,6 +212,13 @@ class TestMakefileRootFixture:
         proc = run_make(logger, ["sync"], dry_run=False)
         # out = strip_ansi(proc.stdout)
         # assert "[INFO] Skipping sync in rhiza repository" in out
+        assert proc.returncode == 0
+
+    def test_sync_experimental_target_skips_in_rhiza_repo(self, logger):
+        """Sync-experimental target should skip execution in rhiza repository."""
+        setup_rhiza_git_repo()
+
+        proc = run_make(logger, ["sync-experimental"], dry_run=False)
         assert proc.returncode == 0
 
 

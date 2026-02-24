@@ -80,10 +80,23 @@ def test_book_folder(git_repo, book_makefile):
         targets = phony_line.split(":")[1].strip().split()
         all_targets.update(targets)
 
-    expected_targets = {"book", "marimushka", "mkdocs-build"}
+    expected_targets = {"book", "marimushka", "mkdocs-build", "test", "benchmark", "stress", "hypothesis-test", "docs"}
     assert expected_targets.issubset(all_targets), (
         f"Expected phony targets to include {expected_targets}, got {all_targets}"
     )
+
+
+def test_book_noop_targets_defined(book_makefile):
+    """Test that book.mk defines no-op fallback targets for build resilience.
+
+    These no-op double-colon rules ensure 'make book' succeeds even when
+    test.mk is not available or tests are not installed.
+    """
+    content = book_makefile.read_text()
+    for target in ["test", "benchmark", "stress", "hypothesis-test", "docs"]:
+        assert f"{target}::" in content, (
+            f"book.mk should define a no-op '::' fallback for '{target}' to ensure build resilience"
+        )
 
 
 def test_book_without_logo_file(git_repo, book_makefile):

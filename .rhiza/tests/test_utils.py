@@ -5,11 +5,18 @@ relative imports and __init__.py requirements in test directories.
 
 This file and its associated utilities flow down via a SYNC action from the
 jebel-quant/rhiza repository (https://github.com/jebel-quant/rhiza).
+
+Security Notes:
+- S101 (assert usage): Asserts are used in test utilities to validate test setup conditions
+- S603 (subprocess without shell=True): All subprocess calls use command lists with known
+  executables (git, make), not user input, preventing shell injection
+- S607 (subprocess with partial path): Git and make are resolved from PATH via shutil.which()
+  with fallbacks, which is safe in controlled test environments
 """
 
 import re
 import shutil
-import subprocess  # nosec B404
+import subprocess  # nosec B404 - subprocess module needed for git/make operations in test utilities
 
 # Get absolute paths for executables to avoid S607 warnings
 GIT = shutil.which("git") or "/usr/bin/git"

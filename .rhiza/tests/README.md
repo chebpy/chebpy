@@ -34,6 +34,30 @@ Template sync, workflows, versioning, and content validation tests. These tests 
 - `test_readme_validation.py` — README code block execution and validation
 - `test_docstrings.py` — Doctest validation across source modules
 
+#### Skipping README code blocks with `+RHIZA_SKIP`
+
+By default, every `python` and `bash` code block in `README.md` is executed or
+syntax-checked by `test_readme_validation.py`. To mark a block as intentionally
+non-runnable (e.g. illustrative snippets or environment-specific commands), add
+`+RHIZA_SKIP` to the opening fence line:
+
+~~~markdown
+```python +RHIZA_SKIP
+# This block will NOT be executed or syntax-checked
+from my_env import some_function
+some_function()
+```
+
+```bash +RHIZA_SKIP
+# This bash block will NOT be syntax-checked
+run-something --only-on-ci
+```
+~~~
+
+Markdown renderers (including GitHub) ignore everything after the first word on
+a fence line, so the block still renders as a normal highlighted code block.
+Blocks without `+RHIZA_SKIP` continue to be validated as before.
+
 ### `utils/`
 Tests for utility code and test infrastructure. These tests validate the testing framework itself and utility scripts.
 
@@ -43,6 +67,14 @@ Tests for utility code and test infrastructure. These tests validate the testing
 Dependency validation tests. These tests ensure that project dependencies are correctly specified and healthy.
 
 - `test_dependency_health.py` — Validates pyproject.toml and requirements files
+
+### `stress/`
+Stress tests that verify Rhiza's stability under heavy load. These tests execute Rhiza-specific operations under concurrent load and repeated execution to detect race conditions, resource leaks, and performance degradation.
+
+- `test_makefile_stress.py` — Makefile operations under concurrent/repeated load
+- `test_git_stress.py` — Git operations under concurrent load
+
+See [stress/README.md](stress/README.md) for detailed documentation.
 
 ## Running Tests
 
@@ -61,6 +93,19 @@ uv run pytest .rhiza/tests/integration/
 uv run pytest .rhiza/tests/sync/
 uv run pytest .rhiza/tests/utils/
 uv run pytest .rhiza/tests/deps/
+uv run pytest .rhiza/tests/stress/
+```
+
+### Run stress tests with custom parameters
+```bash
+# Run all stress tests (default: 100 iterations, 10 workers)
+uv run pytest .rhiza/tests/stress/ -v
+
+# Run with fewer iterations (faster)
+uv run pytest .rhiza/tests/stress/ -v --iterations=10
+
+# Skip stress tests when running full test suite
+uv run pytest .rhiza/tests/ -v -m "not stress"
 ```
 
 ### Run a specific test file

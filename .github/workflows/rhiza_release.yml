@@ -136,11 +136,16 @@ jobs:
           TAG_VERSION=${TAG_VERSION#v}
           PROJECT_VERSION=$(uv version --short)
 
-          if [[ "$PROJECT_VERSION" != "$TAG_VERSION" ]]; then
-            echo "::error::Version mismatch: pyproject.toml has '$PROJECT_VERSION' but tag is '$TAG_VERSION'"
+          # Normalize tag version to PEP 440 format for comparison.
+          # Tags use semver format (e.g., 0.11.1-beta.1) while uv version --short
+          # returns PEP 440 normalized format (e.g., 0.11.1b1).
+          NORMALIZED_TAG=$(uv run --with packaging --no-project python3 -c "from packaging.version import Version; print(Version('$TAG_VERSION'))")
+
+          if [[ "$PROJECT_VERSION" != "$NORMALIZED_TAG" ]]; then
+            echo "::error::Version mismatch: pyproject.toml has '$PROJECT_VERSION' but tag is '$NORMALIZED_TAG' (from tag '$TAG_VERSION')"
             exit 1
           fi
-          echo "Version verified: $PROJECT_VERSION matches tag"
+          echo "Version verified: $PROJECT_VERSION matches tag (normalized: $NORMALIZED_TAG)"
 
       - name: Detect buildable Python package
         id: buildable
@@ -174,8 +179,8 @@ jobs:
         run: |
           printf "[INFO] Generating SBOM in CycloneDX format...\n"
           # Note: uvx caches the tool environment, so the second call is fast
-          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --of JSON -o sbom.cdx.json
-          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --of XML -o sbom.cdx.xml
+          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --pyproject pyproject.toml --of JSON -o sbom.cdx.json
+          uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py environment --pyproject pyproject.toml --of XML -o sbom.cdx.xml
           printf "[INFO] SBOM generation complete\n"
           printf "Generated files:\n"
           ls -lh sbom.cdx.*

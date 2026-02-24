@@ -135,3 +135,46 @@ class TestSummariseSync:
         # The format should be: uvx "rhiza>=VERSION" summarise .
         assert 'uvx "rhiza>=' in out
         assert "summarise" in out
+
+
+class TestSyncExperimental:
+    """Tests for the sync-experimental Makefile target."""
+
+    def test_sync_experimental_target_exists(self, logger):
+        """The sync-experimental target should be available in help."""
+        proc = run_make(logger, ["help"])
+        out = proc.stdout
+        assert "sync-experimental" in out
+
+    def test_sync_experimental_dry_run(self, logger):
+        """Sync-experimental target should invoke rhiza sync in dry-run output."""
+        proc = run_make(logger, ["sync-experimental"])
+        out = proc.stdout
+        assert "uvx" in out
+        assert "rhiza" in out
+        assert "sync" in out
+
+    def test_sync_experimental_uses_beta_version(self, logger):
+        """Sync-experimental target should pin to rhiza>=0.11.1b1."""
+        proc = run_make(logger, ["sync-experimental"])
+        out = proc.stdout
+        assert 'uvx "rhiza>=0.11.1b1" sync' in out
+
+    def test_sync_experimental_skips_in_rhiza_repo(self, logger):
+        """Sync-experimental target should skip execution in rhiza repository."""
+        proc = run_make(logger, ["sync-experimental"], dry_run=True)
+        assert proc.returncode == 0
+        assert "Skipping sync-experimental in rhiza repository" in proc.stdout
+
+    def test_sync_experimental_command_format(self, logger):
+        """Test that the sync-experimental uvx command format is correct."""
+        proc = run_make(logger, ["sync-experimental"])
+        out = proc.stdout
+        # The format should be: uvx "rhiza>=0.11.1b1" sync .
+        assert 'uvx "rhiza>=0.11.1b1" sync .' in out
+
+    def test_sync_experimental_shows_beta_warning(self, logger):
+        """Sync-experimental target should display a beta warning."""
+        proc = run_make(logger, ["sync-experimental"], dry_run=True)
+        out = proc.stdout
+        assert "sync-experimental uses a beta version of rhiza-cli" in out

@@ -74,7 +74,7 @@ mkdocs-build:: install-uv ## build MkDocs documentation site
 	@if [ -f "$(MKDOCS_CONFIG)" ]; then \
 	  rm -rf "$(MKDOCS_OUTPUT)"; \
 	  MKDOCS_OUTPUT_ABS="$$(pwd)/$(MKDOCS_OUTPUT)"; \
-	  ${UVX_BIN} --with mkdocs-material --with "pymdown-extensions>=10.0" mkdocs build \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "mkdocs<2.0" mkdocs build \
 	    -f "$(MKDOCS_CONFIG)" \
 	    -d "$$MKDOCS_OUTPUT_ABS"; \
 	else \
@@ -85,7 +85,7 @@ mkdocs-build:: install-uv ## build MkDocs documentation site
 # Useful for local development and previewing changes.
 mkdocs-serve: install-uv ## serve MkDocs site with live reload
 	@if [ -f "$(MKDOCS_CONFIG)" ]; then \
-	  ${UVX_BIN} --with mkdocs-material --with "pymdown-extensions>=10.0" mkdocs serve \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "mkdocs<2.0" mkdocs serve \
 	    -f "$(MKDOCS_CONFIG)"; \
 	else \
 	  printf "${RED}[ERROR] $(MKDOCS_CONFIG) not found${RESET}\n"; \

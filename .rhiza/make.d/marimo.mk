@@ -61,7 +61,7 @@ marimushka:: install-uv ## export Marimo notebooks to HTML
 	    OUTPUT_DIR="$$CURRENT_DIR/${MARIMUSHKA_OUTPUT}"; \
 	    cd "${MARIMO_FOLDER}" && \
 	    UVX_DIR=$$(dirname "$$(command -v uvx || echo "${INSTALL_DIR}/uvx")") && \
-	    "${UVX_BIN}" "marimushka>=0.1.9" export --notebooks "." --output "$$OUTPUT_DIR" --bin-path "$$UVX_DIR" && \
+	    "${UVX_BIN}" "marimushka>=0.3.3" export --notebooks "." --output "$$OUTPUT_DIR" --bin-path "$$UVX_DIR" && \
 	    cd "$$CURRENT_DIR"; \
 	  fi; \
 	fi
