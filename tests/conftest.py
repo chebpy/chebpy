@@ -14,6 +14,10 @@ Specifically, it:
 Note:
     The 'Agg' backend is used because it doesn't require a graphical display,
     making it suitable for headless CI environments.
+
+Security:
+    Test files intentionally use assert statements (S101) for fixture validation.
+    These are safe in the test context and are not reachable in production code.
 """
 
 import dataclasses

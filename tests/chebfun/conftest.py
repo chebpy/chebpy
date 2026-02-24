@@ -7,6 +7,10 @@ helper functions for testing various operations.
 Note:
     The emptyfun fixture has been moved to the main conftest.py file
     to provide a generic implementation that works across all test modules.
+
+Security:
+    Test files intentionally use assert statements (S101) for fixture validation.
+    These are safe in the test context and not reachable in production code.
 """
 
 import pytest
