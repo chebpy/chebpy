@@ -14,7 +14,6 @@ flowchart TB
     subgraph Core[".rhiza/ Core"]
         rhizamk[rhiza.mk<br/>Core Logic]
         maked[make.d/*.mk<br/>Extensions]
-        scripts[scripts/<br/>Shell Scripts]
         reqs[requirements/<br/>Dependencies]
         template[template-bundles.yml<br/>Bundle Config]
     end
@@ -36,7 +35,6 @@ flowchart TB
     make --> rhizamk
     local -.-> rhizamk
     rhizamk --> maked
-    rhizamk --> scripts
     maked --> reqs
     maked --> pyproject
     ci --> make
@@ -166,7 +164,6 @@ flowchart TD
 
     rhiza --> rhizamk[rhiza.mk]
     rhiza --> maked[make.d/]
-    rhiza --> scripts[scripts/]
     rhiza --> reqs[requirements/]
     rhiza --> rtests[tests/]
     rhiza --> rdocs[docs/]
@@ -239,7 +236,6 @@ flowchart TB
             docs_dir[docs/<br/>7 MD files]
             templates_dir[templates/<br/>minibook]
             assets_dir[assets/<br/>Logo]
-            scripts_dir[scripts/<br/>Utilities]
         end
     end
     

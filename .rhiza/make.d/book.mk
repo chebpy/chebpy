@@ -4,7 +4,16 @@
 # and compiling a companion book (minibook).
 
 # Declare phony targets (they don't produce files)
-.PHONY: marimushka mkdocs-build book
+.PHONY: marimushka mkdocs-build book test benchmark stress hypothesis-test docs
+
+# Define default no-op targets for test-related book dependencies.
+# These are used when test.mk is not available or tests are not installed,
+# ensuring 'make book' succeeds even without a test environment.
+test:: ; @:
+benchmark:: ; @:
+stress:: ; @:
+hypothesis-test:: ; @:
+docs:: ; @:
 
 # Define a default no-op marimushka target that will be used
 # when book/marimo/marimo.mk doesn't exist or doesn't define marimushka
@@ -40,6 +49,9 @@ BOOK_SECTIONS := \
   "API|_pdoc/index.html|pdoc/index.html|_pdoc|pdoc" \
   "Coverage|_tests/html-coverage/index.html|tests/html-coverage/index.html|_tests/html-coverage|tests/html-coverage" \
   "Test Report|_tests/html-report/report.html|tests/html-report/report.html|_tests/html-report|tests/html-report" \
+  "Benchmarks|_tests/benchmarks/report.html|tests/benchmarks/report.html|_tests/benchmarks|tests/benchmarks" \
+  "Stress Tests|_tests/stress/report.html|tests/stress/report.html|_tests/stress|tests/stress" \
+  "Hypothesis Tests|_tests/hypothesis/report.html|tests/hypothesis/report.html|_tests/hypothesis|tests/hypothesis" \
   "Notebooks|_marimushka/index.html|marimushka/index.html|_marimushka|marimushka" \
   "Official Documentation|_mkdocs/index.html|docs/index.html|_mkdocs|docs"
 
@@ -49,26 +61,9 @@ BOOK_SECTIONS := \
 # 1. Aggregates API docs, coverage, test reports, notebooks, and MkDocs site into _book.
 # 2. Generates links.json to define the book structure.
 # 3. Uses 'minibook' to compile the final HTML site.
-book:: test docs marimushka mkdocs-build ## compile the companion book
+book:: test benchmark stress hypothesis-test docs marimushka mkdocs-build ## compile the companion book
 	@printf "${BLUE}[INFO] Building combined documentation...${RESET}\n"
 	@rm -rf _book && mkdir -p _book
-
-	@if [ -f "_tests/coverage.json" ]; then \
-	  printf "${BLUE}[INFO] Generating coverage badge JSON...${RESET}\n"; \
-	  mkdir -p _book/tests; \
-	  ${UV_BIN} run python -c "\
-import json; \
-data = json.load(open('_tests/coverage.json')); \
-pct = int(data['totals']['percent_covered']); \
-color = 'brightgreen' if pct >= 90 else 'green' if pct >= 80 else 'yellow' if pct >= 70 else 'orange' if pct >= 60 else 'red'; \
-badge = {'schemaVersion': 1, 'label': 'coverage', 'message': f'{pct}%', 'color': color}; \
-json.dump(badge, open('_book/tests/coverage-badge.json', 'w'))"; \
-	  printf "${BLUE}[INFO] Coverage badge JSON:${RESET}\n"; \
-	  cat _book/tests/coverage-badge.json; \
-	  printf "\n"; \
-	else \
-	  printf "${YELLOW}[WARN] No coverage.json found, skipping badge generation${RESET}\n"; \
-	fi
 
 	@printf "{\n" > _book/links.json
 	@first=1; \
@@ -91,6 +86,22 @@ json.dump(badge, open('_book/tests/coverage-badge.json', 'w'))"; \
 	    printf "${YELLOW}[WARN] Missing $$name, skipping${RESET}\n"; \
 	  fi; \
 	done; \
+	if [ -n "$$GITHUB_REPOSITORY" ]; then \
+	  CF_REPO="$$GITHUB_REPOSITORY"; \
+	else \
+	  CF_REPO=$$(git remote get-url origin 2>/dev/null | sed 's|.*github\.com[:/]||' | sed 's|\.git$$||'); \
+	fi; \
+	if [ -n "$$CF_REPO" ]; then \
+	  CF_URL="https://www.codefactor.io/repository/github/$$CF_REPO"; \
+	  HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$$CF_URL" 2>/dev/null || echo "000"); \
+	  if [ "$$HTTP_CODE" = "200" ]; then \
+	    if [ $$first -eq 0 ]; then printf ",\n" >> _book/links.json; fi; \
+	    printf "  \"CodeFactor\": \"$$CF_URL\"" >> _book/links.json; \
+	    printf "${BLUE}[INFO] Adding CodeFactor...${RESET}\n"; \
+	  else \
+	    printf "${YELLOW}[WARN] CodeFactor page not accessible (HTTP $$HTTP_CODE), skipping${RESET}\n"; \
+	  fi; \
+	fi; \
 	printf "\n}\n" >> _book/links.json
 
 	@printf "${BLUE}[INFO] Generated links.json:${RESET}\n"

@@ -151,6 +151,30 @@ For DevContainers and Codespaces, the `.devcontainer/` configuration and `bootst
 4.  **Format**: Run `make fmt` before committing.
 5.  **Verify**: Run `make deptry` to check dependencies.
 
+## GitHub Agentic Workflows (gh-aw)
+
+This repository uses GitHub Agentic Workflows for AI-driven automation.
+Agentic workflow files are Markdown files in `.github/workflows/` with
+`.lock.yml` compiled counterparts.
+
+**Key Commands:**
+- `make gh-aw-compile` or `gh aw compile` — Compile workflow `.md` files to `.lock.yml`
+- `make gh-aw-run WORKFLOW=<name>` or `gh aw run <name>` — Run a specific workflow locally
+- `make gh-aw-status` — Check status of all agentic workflows
+- `make gh-aw-setup` — Configure secrets and engine for first-time setup
+
+**Important Rules:**
+- **Never edit `.lock.yml` files directly** — Always edit the `.md` source and recompile
+- Workflows must be compiled before they can run in GitHub Actions
+- After editing any `.md` workflow, always run `make gh-aw-compile` and commit both files
+
+**Available Starter Workflows:**
+- `daily-repo-status.md` — Daily repository health reports
+- `ci-doctor.md` — Automatic CI failure diagnosis
+- `issue-triage.md` — Automatic issue classification and labeling
+
+For more details, see `docs/GH_AW.md`.
+
 ## Key Files
 
 - `Makefile`: Main entry point for tasks.

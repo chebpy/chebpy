@@ -2,6 +2,12 @@
 
 Provides environment setup for template sync, workflow versioning,
 and content validation tests.
+
+Security Notes:
+- S101 (assert usage): Asserts are used in pytest tests to validate conditions
+- S603/S607 (subprocess usage): Any subprocess calls are for testing sync targets
+  in isolated environments with controlled inputs
+- Test code operates in a controlled environment with trusted inputs
 """
 
 from __future__ import annotations
@@ -65,7 +71,7 @@ def setup_sync_env(logger, root, tmp_path: Path):
         shutil.copy(root / ".rhiza" / ".rhiza-version", tmp_path / ".rhiza" / ".rhiza-version")
 
     # Create a minimal, deterministic .rhiza/.env for tests
-    env_content = "SCRIPTS_FOLDER=.rhiza/scripts\nCUSTOM_SCRIPTS_FOLDER=.rhiza/customisations/scripts\n"
+    env_content = "CUSTOM_SCRIPTS_FOLDER=.rhiza/customisations/scripts\n"
     (tmp_path / ".rhiza" / ".env").write_text(env_content)
 
     logger.debug("Copied Makefile from %s to %s", root / "Makefile", tmp_path / "Makefile")

@@ -1,5 +1,5 @@
 [tool.bumpversion]
-parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(?:-(?P<release>[a-z]+)\\.(?P<pre_n>\\d+))?(?:\\+build\\.(?P<build_n>\\d+))?"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(?:[-]?(?P<release>[a-z]+)[\\.]?(?P<pre_n>\\d+))?(?:\\+build\\.(?P<build_n>\\d+))?"
 serialize = ["{major}.{minor}.{patch}-{release}.{pre_n}+build.{build_n}", "{major}.{minor}.{patch}+build.{build_n}", "{major}.{minor}.{patch}-{release}.{pre_n}", "{major}.{minor}.{patch}"]
 search = "{current_version}"
 replace = "{new_version}"
@@ -21,7 +21,9 @@ optional_value = "prod"
 values = [
     "dev",
     "alpha",
+    "a",  # PEP 440 short form for alpha
     "beta",
+    "b",  # PEP 440 short form for beta
     "rc",
     "prod"
 ]
@@ -30,8 +32,3 @@ values = [
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
-
-# [[tool.bumpversion.files]]
-# filename = ".rhiza/template-bundles.yml"
-# search = 'version: "{current_version}"'
-# replace = 'version: "{new_version}"'

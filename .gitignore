@@ -16,6 +16,7 @@ _marimushka
 _mkdocs
 _benchmarks
 _jupyter
+_site
 
 # temp file used by Junie
 .output.txt
@@ -79,6 +80,9 @@ coverage.json
 .benchmarks/
 .pytest_cache/
 cover/
+
+# Security scanning baselines (regenerate as needed)
+.bandit-baseline.json
 
 # Translations
 *.mo

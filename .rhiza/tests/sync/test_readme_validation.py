@@ -13,16 +13,26 @@ import sys
 
 import pytest
 
-# Regex for Python code blocks
-CODE_BLOCK = re.compile(r"```python\n(.*?)```", re.DOTALL)
+# Regex for Python code blocks — captures optional flags (e.g. "+RHIZA_SKIP") and the code body.
+CODE_BLOCK = re.compile(r"```python([^\n]*)\n(.*?)```", re.DOTALL)
 
 RESULT = re.compile(r"```result\n(.*?)```", re.DOTALL)
 
-# Regex for Bash code blocks
-BASH_BLOCK = re.compile(r"```bash\n(.*?)```", re.DOTALL)
+# Regex for Bash code blocks — captures optional flags and the code body.
+BASH_BLOCK = re.compile(r"```bash([^\n]*)\n(.*?)```", re.DOTALL)
 
 # Bash executable used for syntax checking; subprocess.run below is trusted (noqa: S603).
 BASH = "bash"
+
+# Flag that marks a code block as intentionally excluded from readme tests.
+# Usage: add the flag after the language identifier on the opening fence line,
+# e.g. ```python +RHIZA_SKIP  or  ```bash +RHIZA_SKIP
+SKIP_FLAG = "+RHIZA_SKIP"
+
+
+def _should_skip(flags: str) -> bool:
+    """Return True if the fence flags string contains the +RHIZA_SKIP marker."""
+    return SKIP_FLAG in flags
 
 
 def test_readme_runs(logger, root):
@@ -30,9 +40,22 @@ def test_readme_runs(logger, root):
     readme = root / "README.md"
     logger.info("Reading README from %s", readme)
     readme_text = readme.read_text(encoding="utf-8")
-    code_blocks = CODE_BLOCK.findall(readme_text)
+    all_code_blocks = CODE_BLOCK.findall(readme_text)
     result_blocks = RESULT.findall(readme_text)
-    logger.info("Found %d code block(s) and %d result block(s) in README", len(code_blocks), len(result_blocks))
+
+    code_blocks = []
+    for i, (flags, code) in enumerate(all_code_blocks):
+        if _should_skip(flags):
+            logger.info("Skipping Python code block %d (%s flag)", i, SKIP_FLAG)
+        else:
+            code_blocks.append(code)
+
+    logger.info(
+        "Found %d code block(s) (%d skipped) and %d result block(s) in README",
+        len(all_code_blocks),
+        len(all_code_blocks) - len(code_blocks),
+        len(result_blocks),
+    )
 
     code = "".join(code_blocks)  # merged code
     expected = "".join(result_blocks)  # merged results
@@ -71,12 +94,14 @@ class TestReadmeTestEdgeCases:
         assert isinstance(content, str)
 
     def test_readme_code_is_syntactically_valid(self, root):
-        """Python code blocks in README should be syntactically valid."""
+        """Python code blocks in README should be syntactically valid (skipped blocks are excluded)."""
         readme = root / "README.md"
         content = readme.read_text(encoding="utf-8")
-        code_blocks = re.findall(r"\`\`\`python\n(.*?)\`\`\`", content, re.DOTALL)
+        all_code_blocks = CODE_BLOCK.findall(content)
 
-        for i, code in enumerate(code_blocks):
+        for i, (flags, code) in enumerate(all_code_blocks):
+            if _should_skip(flags):
+                continue
             try:
                 compile(code, f"<readme_block_{i}>", "exec")
             except SyntaxError as e:
@@ -94,7 +119,11 @@ class TestReadmeBashFragments:
 
         logger.info("Found %d bash code block(s) in README", len(bash_blocks))
 
-        for i, code in enumerate(bash_blocks):
+        for i, (flags, code) in enumerate(bash_blocks):
+            if _should_skip(flags):
+                logger.info("Skipping bash block %d (%s flag)", i, SKIP_FLAG)
+                continue
+
             # Skip directory tree representations and other non-executable blocks
             if any(marker in code for marker in ["├──", "└──", "│"]):
                 logger.info("Skipping bash block %d (directory tree representation)", i)
@@ -120,3 +149,49 @@ class TestReadmeBashFragments:
 
             if result.returncode != 0:
                 pytest.fail(f"Bash block {i} has syntax errors:\nCode:\n{code}\nError:\n{result.stderr}")
+
+
+class TestSkipFlag:
+    """Tests for the +RHIZA_SKIP flag that allows individual README code blocks to be excluded."""
+
+    def test_should_skip_returns_true_for_skip_flag(self):
+        """+RHIZA_SKIP in flags string should cause _should_skip to return True."""
+        assert _should_skip(" +RHIZA_SKIP") is True
+        assert _should_skip("+RHIZA_SKIP") is True
+        assert _should_skip(" +RHIZA_SKIP other-flag") is True
+
+    def test_should_skip_returns_false_without_flag(self):
+        """Absence of +RHIZA_SKIP should cause _should_skip to return False."""
+        assert _should_skip("") is False
+        assert _should_skip(" ") is False
+        assert _should_skip("other-flag") is False
+
+    def test_python_block_with_skip_flag_is_excluded(self, tmp_path):
+        """A ```python +RHIZA_SKIP block should not appear in the list of blocks to execute."""
+        readme = tmp_path / "README.md"
+        readme.write_text(
+            '```python +RHIZA_SKIP\nraise RuntimeError("should not run")\n```\n'
+            "```python\nprint('hello')\n```\n"
+            "```result\nhello\n```\n",
+            encoding="utf-8",
+        )
+        content = readme.read_text(encoding="utf-8")
+        all_blocks = CODE_BLOCK.findall(content)
+        assert len(all_blocks) == 2
+        executed = [code for flags, code in all_blocks if not _should_skip(flags)]
+        assert len(executed) == 1
+        assert "raise RuntimeError" not in executed[0]
+
+    def test_bash_block_with_skip_flag_is_excluded(self, tmp_path):
+        """A ```bash +RHIZA_SKIP block should not be syntax-checked."""
+        readme = tmp_path / "README.md"
+        readme.write_text(
+            "```bash +RHIZA_SKIP\nnot-valid-bash @@@@\n```\n```bash\necho hello\n```\n",
+            encoding="utf-8",
+        )
+        content = readme.read_text(encoding="utf-8")
+        all_blocks = BASH_BLOCK.findall(content)
+        assert len(all_blocks) == 2
+        checked = [code for flags, code in all_blocks if not _should_skip(flags)]
+        assert len(checked) == 1
+        assert "not-valid-bash" not in checked[0]

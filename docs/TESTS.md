@@ -9,6 +9,35 @@ Rhiza now includes two additional types of testing:
 1. **Property-Based Testing** (using Hypothesis) - Tests that verify properties hold across a wide range of generated inputs
 2. **Load/Stress Testing** (using pytest-benchmark) - Tests that measure performance and verify stability under load
 
+## README Code Block Testing
+
+The test file `.rhiza/tests/sync/test_readme_validation.py` automatically executes every `python`
+code block in `README.md` and checks that its output matches the adjacent ` ```result ` block. It
+also syntax-checks every `bash` block using `bash -n`.
+
+### Skipping individual blocks with `+RHIZA_SKIP`
+
+To exclude a specific code block from being executed or syntax-checked, append `+RHIZA_SKIP` to
+the opening fence line:
+
+~~~markdown
+```python +RHIZA_SKIP
+# This block will NOT be executed or syntax-checked by the readme tests.
+# Use it for illustrative examples, environment-specific code, or incomplete snippets.
+from my_env import some_function
+some_function()
+```
+
+```bash +RHIZA_SKIP
+# This bash block will NOT be syntax-checked.
+run-something --only-on-ci
+```
+~~~
+
+Markdown renderers (including GitHub) ignore everything after the first word on a fence line, so
+the block still renders as a normal syntax-highlighted code block. All blocks that do **not** carry
+`+RHIZA_SKIP` continue to be validated as before.
+
 ## Property-Based Testing
 
 Property-based tests use the [Hypothesis](https://hypothesis.readthedocs.io/) library to automatically generate test cases that verify certain properties always hold true.
