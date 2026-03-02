@@ -113,7 +113,7 @@ Always use `uv` for Python operations:
 ```bash
 uv run python script.py    # Run Python script
 uv run pytest              # Run tests
-uvx hatch build            # Run external tool
+uv build                   # Build distribution packages
 ```
 
 ## Version Format

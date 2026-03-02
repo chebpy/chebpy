@@ -123,9 +123,9 @@ class TestSummariseSync:
         proc = run_make(logger, ["sync"])
         out = proc.stdout
 
-        # The format should be: uvx "rhiza>=VERSION" materialize --force .
+        # The format should be: uvx "rhiza>=VERSION" sync .
         assert 'uvx "rhiza>=' in out
-        assert "materialize --force" in out
+        assert "sync ." in out
 
     def test_workflow_summarise_command_format(self, logger):
         """Test that the summarise command format matches workflow expectations."""

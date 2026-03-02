@@ -10,7 +10,7 @@ repos:
         args: ['--unsafe']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.2'
+    rev: 'v0.15.4'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -25,7 +25,7 @@ repos:
         args: ["--disable", "MD013"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.36.2
+    rev: 0.37.0
     hooks:
       - id: check-renovate
         args: [ "--verbose" ]
@@ -44,13 +44,13 @@ repos:
       - id: validate-pyproject
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.9.3
+    rev: 1.9.4
     hooks:
       - id: bandit
         args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.4
+    rev: 0.10.6
     hooks:
       - id: uv-lock
 
