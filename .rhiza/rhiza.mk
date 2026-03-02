@@ -98,7 +98,7 @@ sync: pre-sync ## sync with template repository as defined in .rhiza/template.ym
 		printf "${BLUE}[INFO] Skipping sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" materialize --force .; \
+		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" sync .; \
 	fi
 	@$(MAKE) post-sync
 

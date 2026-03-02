@@ -43,7 +43,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7.3.0
         with:
-          version: "0.10.4"
+          version: "0.10.7"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -64,7 +64,17 @@ jobs:
         run: |
           make book
 
-      # Step 5: Package all artifacts for GitHub Pages deployment
+      # Step 5a: Upload the book as a downloadable workflow artifact
+      # This allows anyone to download the built documentation directly from
+      # GitHub Actions without needing to run a full local build.
+      - name: Upload book as workflow artifact
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: book
+          path: _book/
+          retention-days: 30
+
+      # Step 5b: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
       - name: Upload static files as artifact
         uses: actions/upload-pages-artifact@v4.0.0  # Official GitHub Pages artifact upload action

@@ -51,8 +51,8 @@ jobs:
 
           RHIZA_VERSION="${{ steps.rhiza-version.outputs.version }}"
 
-          echo "Running rhiza materialize with version >=${RHIZA_VERSION}"
-          uvx "rhiza>=${RHIZA_VERSION}" materialize --force .
+          echo "Running rhiza sync with version >=${RHIZA_VERSION}"
+          uvx "rhiza>=${RHIZA_VERSION}" sync .
 
           if git diff --quiet; then
             echo "No changes detected after template sync"

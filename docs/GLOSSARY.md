@@ -8,7 +8,7 @@ A comprehensive glossary of terms used in the Rhiza template system.
 The GitHub repository (`jebel-quant/rhiza`) that contains the curated set of configuration files, Makefile modules, CI/CD workflows, and other tooling files that downstream projects sync from. This is the *content* — the files you receive. See also: [rhiza-cli](#rhiza-cli).
 
 ### rhiza-cli
-A standalone Python package (published on PyPI as `rhiza-cli`) that provides the `rhiza` command-line interface. It is the *engine* that reads `.rhiza/template.yml` and performs operations such as `init`, `materialize`, `bump`, and `release`. Invoked via `uvx rhiza ...` without requiring a permanent installation. Versioned independently from the template repository. See also: [rhiza (template repository)](#rhiza-template-repository).
+A standalone Python package (published on PyPI as `rhiza-cli`) that provides the `rhiza` command-line interface. It is the *engine* that reads `.rhiza/template.yml` and performs operations such as `init`, `sync`, `bump`, and `release`. Invoked via `uvx rhiza ...` without requiring a permanent installation. Versioned independently from the template repository. See also: [rhiza (template repository)](#rhiza-template-repository).
 
 ### Living Templates
 A template approach where configuration files remain synchronized with an upstream source over time, as opposed to traditional "one-shot" template generators (like cookiecutter or copier) that generate files once and then disconnect from the source.
@@ -104,7 +104,7 @@ A fast Python package installer and resolver from Astral. Rhiza uses `uv` for al
 A fast Python linter and formatter from Astral. Replaces flake8, isort, black, and many other tools. Configured in `ruff.toml`.
 
 ### Hatch
-A Python build backend used to create distribution packages (wheels and sdists). Invoked via `uvx hatch build`.
+A Python build backend used to create distribution packages (wheels and sdists). Invoked via `uv build`.
 
 ### Deptry
 A tool that checks for unused and missing dependencies in Python projects. Integrated in CI via `make deptry`.
