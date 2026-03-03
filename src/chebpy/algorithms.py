@@ -468,6 +468,234 @@ def coeffs2vals2(coeffs: np.ndarray) -> np.ndarray:
     return vals
 
 
+def cheb2leg(c: np.ndarray) -> np.ndarray:
+    """Convert Chebyshev coefficients to Legendre coefficients.
+
+    Converts the vector ``c`` of Chebyshev coefficients to a vector of Legendre
+    coefficients such that::
+
+        c[0]*T_0 + c[1]*T_1 + ... = l[0]*P_0 + l[1]*P_1 + ...
+
+    Uses a stable O(n²) three-term recurrence derived from the Chebyshev
+    recurrence ``T_n = 2x T_{n-1} - T_{n-2}``.
+
+    Args:
+        c (array-like): Chebyshev coefficients.
+
+    Returns:
+        numpy.ndarray: Legendre coefficients of the same polynomial.
+    """
+    c = np.asarray(c, dtype=float)
+    n = c.size
+    if n <= 1:
+        return c.copy()
+
+    # Build Legendre coefficients via the recurrence:
+    # M[j, col] = coeff of P_j in T_col
+    # Recurrence: M[j,col] = 2j/(2j-1)*M[j-1,col-1]
+    #                        + 2(j+1)/(2j+3)*M[j+1,col-1]
+    #                        - M[j,col-2]
+    # Initial columns: M[:,0] = [1,0,...], M[:,1] = [0,1,0,...]
+    l = np.zeros(n)
+
+    prev_prev = np.zeros(n)
+    prev_prev[0] = 1.0  # T_0 = P_0
+    l += c[0] * prev_prev
+
+    prev = np.zeros(n)
+    prev[1] = 1.0  # T_1 = P_1
+    l += c[1] * prev
+
+    j = np.arange(n)
+    for col in range(2, n):
+        curr = np.zeros(n)
+        # 2j/(2j-1) * prev[j-1]  (for j >= 1)
+        curr[1:] += 2.0 * j[1:] / (2.0 * j[1:] - 1.0) * prev[:-1]
+        # 2(j+1)/(2j+3) * prev[j+1]  (for j+1 <= n-1)
+        curr[:-1] += 2.0 * (j[:-1] + 1.0) / (2.0 * j[:-1] + 3.0) * prev[1:]
+        curr -= prev_prev
+        l += c[col] * curr
+        prev_prev = prev
+        prev = curr
+
+    return l
+
+
+def leg2cheb(c: np.ndarray) -> np.ndarray:
+    """Convert Legendre coefficients to Chebyshev coefficients.
+
+    Converts the vector ``c`` of Legendre coefficients to a vector of Chebyshev
+    coefficients such that::
+
+        c[0]*P_0 + c[1]*P_1 + ... = l[0]*T_0 + l[1]*T_1 + ...
+
+    Uses a stable O(n²) three-term recurrence derived from the Legendre
+    recurrence ``(n+1) P_{n+1} = (2n+1) x P_n - n P_{n-1}``.
+
+    Args:
+        c (array-like): Legendre coefficients.
+
+    Returns:
+        numpy.ndarray: Chebyshev coefficients of the same polynomial.
+    """
+    c = np.asarray(c, dtype=float)
+    n = c.size
+    if n == 0:
+        return np.zeros(0)
+    if n == 1:
+        return np.array([c[0]])
+
+    # Build Chebyshev coefficients via the Legendre recurrence.
+    # The Chebyshev representation of P_j is computed column by column.
+    # Multiplication by x in Chebyshev basis:
+    #   (x*f)[0] = f[1]/2
+    #   (x*f)[1] = f[0] + f[2]/2
+    #   (x*f)[k] = (f[k-1] + f[k+1])/2  for k >= 2
+    result = np.zeros(n)
+
+    prev_prev = np.zeros(n)
+    prev_prev[0] = 1.0  # P_0 = T_0
+    result += c[0] * prev_prev
+
+    prev = np.zeros(n)
+    prev[1] = 1.0  # P_1 = T_1
+    result += c[1] * prev
+
+    for j in range(2, n):
+        # x * prev in Chebyshev basis
+        xprev = np.zeros(n)
+        xprev[1] += prev[0]        # from x*T_0 = T_1
+        xprev[:n - 1] += prev[1:] / 2.0   # T_{k-1} from x*T_k for k>=1
+        xprev[2:] += prev[1:n - 1] / 2.0  # T_{k+1} from x*T_k for k>=1
+
+        curr = ((2 * j - 1) * xprev - (j - 1) * prev_prev) / j
+        result += c[j] * curr
+        prev_prev = prev
+        prev = curr
+
+    return result
+
+
+def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Convolve two Legendre series using the Hale-Townsend algorithm.
+
+    Computes the convolution of two functions expressed as Legendre series on
+    [-1, 1].  The result is a piecewise polynomial on [-2, 2], split into a
+    left piece on [-2, 0] and a right piece on [0, 2].  The Legendre
+    coefficients of each piece (with respect to the linear map of the piece
+    to [-1, 1]) are returned.
+
+    The algorithm is based on:
+        N. Hale and A. Townsend, "An algorithm for the convolution of Legendre
+        series", SIAM J. Sci. Comput., 36(3), A1207-A1220, 2014.
+
+    Args:
+        a (array-like): Legendre coefficients of the first function on [-1, 1].
+        b (array-like): Legendre coefficients of the second function on [-1, 1].
+
+    Returns:
+        tuple: (gamma_left, gamma_right) where each element is a 1-D array of
+        Legendre coefficients for the left [-2, 0] and right [0, 2] pieces
+        respectively.
+    """
+    a = np.asarray(a, dtype=float).ravel()
+    b = np.asarray(b, dtype=float).ravel()
+
+    # Ensure a has the higher (or equal) degree
+    if len(b) > len(a):
+        a, b = b, a
+
+    na, nb = len(a), len(b)
+    MN = na + nb
+
+    # Pad a to length MN
+    alpha = np.zeros(MN)
+    alpha[:na] = a
+
+    # Build the tridiagonal S matrix (MN x MN):
+    #   S[0, 0]   = 1,   S[k, k]   = 0  for k >= 1
+    #   S[k, k-1] = 1/(2k+1)  for k >= 1
+    #   S[k, k+1] = -1/(2k+1) for k >= 0
+    k = np.arange(MN)
+    main = np.zeros(MN)
+    main[0] = 1.0
+    sub = 1.0 / (2.0 * k[1:] + 1.0)    # length MN-1
+    supra = -1.0 / (2.0 * k[:-1] + 1.0)  # length MN-1
+
+    def _S_apply(v: np.ndarray) -> np.ndarray:
+        """Apply the S matrix to vector v."""
+        res = main * v
+        res[1:] += sub * v[:-1]
+        res[:-1] += supra * v[1:]
+        return res
+
+    def _rec(alpha_arg: np.ndarray, beta: np.ndarray, sgn: float,
+             s00: float) -> np.ndarray:
+        """Compute Legendre coefficients of the convolution on one piece.
+
+        Uses the recurrence from Theorem 4.1 of Hale & Townsend (2014).
+        """
+        N = len(beta)
+        # Save / restore main[0] for S
+        save_main0 = main[0]
+        main[0] = s00
+
+        # scl[k] = (-1)^k / (2k-1) for k=1,...,N (1-indexed)
+        scl = np.ones(N) / (2.0 * np.arange(1, N + 1) - 1.0)
+        scl[1::2] = -scl[1::2]
+
+        # First column
+        vNew = _S_apply(alpha_arg)
+        v = vNew.copy()
+        gamma = beta[0] * vNew.copy()
+        beta_scl = scl * beta
+        beta_scl[0] = 0.0
+        gamma[0] += float(vNew[:N].dot(beta_scl))
+
+        if N > 1:
+            # Second column
+            vNew = _S_apply(v) + sgn * v
+            vOld = v.copy()
+            v = vNew.copy()
+            vNew[0] = 0.0
+            gamma += beta[1] * vNew
+            beta_scl = -beta_scl * (2.0 - 0.5) / (2.0 - 1.5)
+            beta_scl[1] = 0.0
+            gamma[1] += float(vNew[:N].dot(beta_scl))
+
+            # Remaining columns
+            for nn in range(3, N + 1):
+                vNew = (2 * nn - 3) * _S_apply(v) + vOld
+                vNew[:nn - 1] = 0.0
+                gamma += vNew * beta[nn - 1]
+                beta_scl = -beta_scl * (nn - 0.5) / (nn - 1.5)
+                beta_scl[nn - 1] = 0.0
+                gamma[nn - 1] += float(vNew[:N].dot(beta_scl))
+                vOld = v.copy()
+                v = vNew.copy()
+
+        # Restore
+        main[0] = save_main0
+
+        # Trim trailing near-zeros
+        ag = np.abs(gamma)
+        mg = np.max(ag) if ag.size > 0 else 0.0
+        if mg > 0:
+            loc = np.where(ag > np.finfo(float).eps * mg)[0]
+            if loc.size > 0:
+                gamma = gamma[:loc[-1] + 1]
+            else:
+                gamma = gamma[:1]
+        else:
+            gamma = gamma[:1]
+        return gamma
+
+    gamma_left = _rec(alpha.copy(), b, -1.0, 1.0)
+    gamma_right = _rec(-alpha.copy(), b, 1.0, -1.0)
+
+    return gamma_left, gamma_right
+
+
 def newtonroots(fun: Any, rts: np.ndarray, tol: float | None = None, maxiter: int | None = None) -> np.ndarray:
     """Refine root approximations using Newton's method.
 
