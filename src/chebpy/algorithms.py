@@ -612,15 +612,16 @@ def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
     alpha = np.zeros(mn)
     alpha[:na] = a
 
-    # Build the tridiagonal S matrix (mn x mn):
-    #   S[0, 0]   = 1,   S[k, k]   = 0  for k >= 1
-    #   S[k, k-1] = 1/(2k+1)  for k >= 1
-    #   S[k, k+1] = -1/(2k+1) for k >= 0
+    # Build the tridiagonal S matrix (mn x mn), the Legendre cumulative-integral
+    # operator (S f)(x) = ∫_{-1}^{x} f(t) dt.  Entries (using column index n):
+    #   S[0, 0]   = 1
+    #   S[n+1, n] = 1/(2n+1)  for n >= 0   (sub-diagonal)
+    #   S[n-1, n] = -1/(2n+1) for n >= 1   (super-diagonal)
     k = np.arange(mn)
     main = np.zeros(mn)
     main[0] = 1.0
-    sub = 1.0 / (2.0 * k[1:] + 1.0)  # length mn-1
-    supra = -1.0 / (2.0 * k[:-1] + 1.0)  # length mn-1
+    sub = 1.0 / (2.0 * k[:-1] + 1.0)  # [1, 1/3, 1/5, ...], length mn-1
+    supra = -1.0 / (2.0 * k[1:] + 1.0)  # [-1/3, -1/5, -1/7, ...], length mn-1
 
     def _s_apply(v: np.ndarray) -> np.ndarray:
         """Apply the S matrix to vector v."""
