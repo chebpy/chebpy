@@ -496,15 +496,15 @@ def cheb2leg(c: np.ndarray) -> np.ndarray:
     #                        + 2(j+1)/(2j+3)*M[j+1,col-1]
     #                        - M[j,col-2]
     # Initial columns: M[:,0] = [1,0,...], M[:,1] = [0,1,0,...]
-    l = np.zeros(n)
+    leg_coeffs = np.zeros(n)
 
     prev_prev = np.zeros(n)
     prev_prev[0] = 1.0  # T_0 = P_0
-    l += c[0] * prev_prev
+    leg_coeffs += c[0] * prev_prev
 
     prev = np.zeros(n)
     prev[1] = 1.0  # T_1 = P_1
-    l += c[1] * prev
+    leg_coeffs += c[1] * prev
 
     j = np.arange(n)
     for col in range(2, n):
@@ -514,11 +514,11 @@ def cheb2leg(c: np.ndarray) -> np.ndarray:
         # 2(j+1)/(2j+3) * prev[j+1]  (for j+1 <= n-1)
         curr[:-1] += 2.0 * (j[:-1] + 1.0) / (2.0 * j[:-1] + 3.0) * prev[1:]
         curr -= prev_prev
-        l += c[col] * curr
+        leg_coeffs += c[col] * curr
         prev_prev = prev
         prev = curr
 
-    return l
+    return leg_coeffs
 
 
 def leg2cheb(c: np.ndarray) -> np.ndarray:
@@ -564,9 +564,9 @@ def leg2cheb(c: np.ndarray) -> np.ndarray:
     for j in range(2, n):
         # x * prev in Chebyshev basis
         xprev = np.zeros(n)
-        xprev[1] += prev[0]        # from x*T_0 = T_1
-        xprev[:n - 1] += prev[1:] / 2.0   # T_{k-1} from x*T_k for k>=1
-        xprev[2:] += prev[1:n - 1] / 2.0  # T_{k+1} from x*T_k for k>=1
+        xprev[1] += prev[0]  # from x*T_0 = T_1
+        xprev[: n - 1] += prev[1:] / 2.0  # T_{k-1} from x*T_k for k>=1
+        xprev[2:] += prev[1 : n - 1] / 2.0  # T_{k+1} from x*T_k for k>=1
 
         curr = ((2 * j - 1) * xprev - (j - 1) * prev_prev) / j
         result += c[j] * curr
@@ -606,73 +606,72 @@ def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
         a, b = b, a
 
     na, nb = len(a), len(b)
-    MN = na + nb
+    mn = na + nb
 
-    # Pad a to length MN
-    alpha = np.zeros(MN)
+    # Pad a to length mn
+    alpha = np.zeros(mn)
     alpha[:na] = a
 
-    # Build the tridiagonal S matrix (MN x MN):
+    # Build the tridiagonal S matrix (mn x mn):
     #   S[0, 0]   = 1,   S[k, k]   = 0  for k >= 1
     #   S[k, k-1] = 1/(2k+1)  for k >= 1
     #   S[k, k+1] = -1/(2k+1) for k >= 0
-    k = np.arange(MN)
-    main = np.zeros(MN)
+    k = np.arange(mn)
+    main = np.zeros(mn)
     main[0] = 1.0
-    sub = 1.0 / (2.0 * k[1:] + 1.0)    # length MN-1
-    supra = -1.0 / (2.0 * k[:-1] + 1.0)  # length MN-1
+    sub = 1.0 / (2.0 * k[1:] + 1.0)  # length mn-1
+    supra = -1.0 / (2.0 * k[:-1] + 1.0)  # length mn-1
 
-    def _S_apply(v: np.ndarray) -> np.ndarray:
+    def _s_apply(v: np.ndarray) -> np.ndarray:
         """Apply the S matrix to vector v."""
         res = main * v
         res[1:] += sub * v[:-1]
         res[:-1] += supra * v[1:]
         return res
 
-    def _rec(alpha_arg: np.ndarray, beta: np.ndarray, sgn: float,
-             s00: float) -> np.ndarray:
+    def _rec(alpha_arg: np.ndarray, beta: np.ndarray, sgn: float, s00: float) -> np.ndarray:
         """Compute Legendre coefficients of the convolution on one piece.
 
         Uses the recurrence from Theorem 4.1 of Hale & Townsend (2014).
         """
-        N = len(beta)
+        n_beta = len(beta)
         # Save / restore main[0] for S
         save_main0 = main[0]
         main[0] = s00
 
-        # scl[k] = (-1)^k / (2k-1) for k=1,...,N (1-indexed)
-        scl = np.ones(N) / (2.0 * np.arange(1, N + 1) - 1.0)
+        # scl[k] = (-1)^k / (2k-1) for k=1,...,n_beta (1-indexed)
+        scl = np.ones(n_beta) / (2.0 * np.arange(1, n_beta + 1) - 1.0)
         scl[1::2] = -scl[1::2]
 
         # First column
-        vNew = _S_apply(alpha_arg)
-        v = vNew.copy()
-        gamma = beta[0] * vNew.copy()
+        v_new = _s_apply(alpha_arg)
+        v = v_new.copy()
+        gamma = beta[0] * v_new.copy()
         beta_scl = scl * beta
         beta_scl[0] = 0.0
-        gamma[0] += float(vNew[:N].dot(beta_scl))
+        gamma[0] += float(v_new[:n_beta].dot(beta_scl))
 
-        if N > 1:
+        if n_beta > 1:
             # Second column
-            vNew = _S_apply(v) + sgn * v
-            vOld = v.copy()
-            v = vNew.copy()
-            vNew[0] = 0.0
-            gamma += beta[1] * vNew
+            v_new = _s_apply(v) + sgn * v
+            v_old = v.copy()
+            v = v_new.copy()
+            v_new[0] = 0.0
+            gamma += beta[1] * v_new
             beta_scl = -beta_scl * (2.0 - 0.5) / (2.0 - 1.5)
             beta_scl[1] = 0.0
-            gamma[1] += float(vNew[:N].dot(beta_scl))
+            gamma[1] += float(v_new[:n_beta].dot(beta_scl))
 
             # Remaining columns
-            for nn in range(3, N + 1):
-                vNew = (2 * nn - 3) * _S_apply(v) + vOld
-                vNew[:nn - 1] = 0.0
-                gamma += vNew * beta[nn - 1]
+            for nn in range(3, n_beta + 1):
+                v_new = (2 * nn - 3) * _s_apply(v) + v_old
+                v_new[: nn - 1] = 0.0
+                gamma += v_new * beta[nn - 1]
                 beta_scl = -beta_scl * (nn - 0.5) / (nn - 1.5)
                 beta_scl[nn - 1] = 0.0
-                gamma[nn - 1] += float(vNew[:N].dot(beta_scl))
-                vOld = v.copy()
-                v = vNew.copy()
+                gamma[nn - 1] += float(v_new[:n_beta].dot(beta_scl))
+                v_old = v.copy()
+                v = v_new.copy()
 
         # Restore
         main[0] = save_main0
@@ -682,10 +681,7 @@ def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
         mg = np.max(ag) if ag.size > 0 else 0.0
         if mg > 0:
             loc = np.where(ag > np.finfo(float).eps * mg)[0]
-            if loc.size > 0:
-                gamma = gamma[:loc[-1] + 1]
-            else:
-                gamma = gamma[:1]
+            gamma = gamma[: loc[-1] + 1] if loc.size > 0 else gamma[:1]
         else:
             gamma = gamma[:1]
         return gamma
