@@ -19,12 +19,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
+from .algorithms import _conv_legendre, cheb2leg, leg2cheb
 from .bndfun import Bndfun
+from .chebtech import Chebtech
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, SupportMismatch
 from .plotting import plotfun
 from .settings import _preferences as prefs
-from .utilities import Domain, check_funs, compute_breakdata, generate_funs
+from .utilities import Domain, Interval, check_funs, compute_breakdata, generate_funs
 
 
 class Chebfun:
@@ -858,6 +860,84 @@ class Chebfun:
             dfuns = np.array([fun.diff() for fun in result])
             result = self.__class__(dfuns)
         return result
+
+    def conv(self, g: Chebfun) -> Chebfun:
+        """Compute the convolution of this Chebfun with g.
+
+        Computes h(x) = (f ★ g)(x) = ∫ f(t) g(x-t) dt, where both f (``self``)
+        and g are supported on the same interval [a, b].  The result is a
+        piecewise Chebfun on [2a, 2b] with a breakpoint at (a+b).
+
+        The algorithm is based on:
+            N. Hale and A. Townsend, "An algorithm for the convolution of
+            Legendre series", SIAM J. Sci. Comput., 36(3), A1207-A1220, 2014.
+
+        Args:
+            g (Chebfun): A single-piece Chebfun defined on the same interval
+                as ``self``.
+
+        Returns:
+            Chebfun: A two-piece Chebfun on [2a, 2b] representing (f ★ g).
+
+        Raises:
+            NotImplementedError: If either Chebfun has more than one piece.
+            SupportMismatch: If the two Chebfuns are not defined on the same
+                interval.
+
+        Examples:
+            >>> import numpy as np
+            >>> from chebpy import chebfun
+            >>> f = chebfun(lambda x: np.ones_like(x), [-1, 1])
+            >>> h = f.conv(f)
+            >>> bool(abs(h(0.0) - 2.0) < 1e-10)
+            True
+            >>> bool(abs(h(-1.0) - 1.0) < 1e-10)
+            True
+            >>> bool(abs(h(1.0) - 1.0) < 1e-10)
+            True
+        """
+        if self.isempty or g.isempty:
+            return self.__class__.initempty()
+
+        if self.funs.size != 1 or g.funs.size != 1:
+            raise NotImplementedError("conv only supports single-piece Chebfuns")
+
+        f_fun = self.funs[0]
+        g_fun = g.funs[0]
+
+        a = float(f_fun.support[0])
+        b = float(f_fun.support[1])
+        same_start = np.isclose(a, float(g_fun.support[0]))
+        same_end = np.isclose(b, float(g_fun.support[1]))
+        if not (same_start and same_end):
+            raise SupportMismatch
+
+        h = (b - a) / 2.0  # half-width; change-of-variables scaling factor
+
+        # Convert Chebyshev coefficients (on [-1,1] reference domain) to Legendre
+        leg_f = cheb2leg(f_fun.coeffs)
+        leg_g = cheb2leg(g_fun.coeffs)
+
+        # Compute the piecewise Legendre expansion of the convolution
+        gamma_left, gamma_right = _conv_legendre(leg_f, leg_g)
+
+        # Scale by h (Jacobian of the affine map from [a,b] to [-1,1])
+        gamma_left = h * gamma_left
+        gamma_right = h * gamma_right
+
+        # Convert Legendre back to Chebyshev
+        cheb_left = leg2cheb(gamma_left)
+        cheb_right = leg2cheb(gamma_right)
+
+        # Build the two result pieces on [2a, a+b] and [a+b, 2b]
+        mid = a + b
+        left_interval = Interval(2.0 * a, mid)
+        right_interval = Interval(mid, 2.0 * b)
+
+        left_fun = Bndfun(Chebtech(cheb_left), left_interval)
+        right_fun = Bndfun(Chebtech(cheb_right), right_interval)
+
+        return self.__class__([left_fun, right_fun])
 
     def sum(self) -> Any:
         """Compute the definite integral of the Chebfun over its domain.
