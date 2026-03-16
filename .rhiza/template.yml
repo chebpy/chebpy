@@ -1,5 +1,5 @@
 repository: "jebel-quant/rhiza"
-ref: "v0.8.5"
+ref: "v0.8.12"
 
 templates:
   - devcontainer
@@ -8,4 +8,9 @@ templates:
   - book
   - marimo
   - tests
-  - presentation
+
+exclude:
+  - book/marimo/notebooks/rhiza.py
+  - tests/benchmark
+  - .github/workflows/rhiza_benchmarks.yml
+  
