@@ -33,7 +33,6 @@ RESET := \033[0m
 	readme \
 	summarise-sync \
 	sync \
-	sync-experimental \
 	validate \
 	version-matrix
 
@@ -98,17 +97,7 @@ sync: pre-sync ## sync with template repository as defined in .rhiza/template.ym
 		printf "${BLUE}[INFO] Skipping sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" sync .; \
-	fi
-	@$(MAKE) post-sync
-
-sync-experimental: pre-sync ## sync with template repository using cruft-based merge (experimental, requires rhiza-cli >= 0.11.1-beta.1)
-	@printf "${YELLOW}[WARN] sync-experimental uses a beta version of rhiza-cli (>= 0.11.1-beta.1) and is not yet stable${RESET}\n"
-	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
-		printf "${BLUE}[INFO] Skipping sync-experimental in rhiza repository (no template.yml by design)${RESET}\n"; \
-	else \
-		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=0.11.1b1" sync .; \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" sync .; \
 	fi
 	@$(MAKE) post-sync
 
@@ -117,7 +106,7 @@ summarise-sync: install-uv ## summarise differences created by sync with templat
 		printf "${BLUE}[INFO] Skipping summarise-sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" summarise .; \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" summarise .; \
 	fi
 
 rhiza-test: install ## run rhiza's own tests (if any)
@@ -132,7 +121,7 @@ validate: pre-validate rhiza-test ## validate project structure against template
 		printf "${BLUE}[INFO] Skipping validate in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" validate .; \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" validate .; \
 	fi
 	@$(MAKE) post-validate
 

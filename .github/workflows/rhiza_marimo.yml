@@ -81,9 +81,9 @@ jobs:
 
       # Install uv/uvx
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v7.5.0
         with:
-          version: "0.10.7"
+          version: "0.10.9"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -92,10 +92,17 @@ jobs:
 
       # Execute the notebook with the appropriate runner based on its content
       - name: Run notebook
+        id: artefact-folder
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
-          uvx uv run "${{ matrix.notebook }}"
+          notebook="${{ matrix.notebook }}"
+          notebook_stem="$(basename "$notebook" .py)"
+          artefact_folder="results/${notebook_stem}"
+          mkdir -p "${artefact_folder}"
+          echo "name=${notebook_stem}" >> "$GITHUB_OUTPUT"
+          export NOTEBOOK_OUTPUT_FOLDER="${artefact_folder}"
+          uvx uv run "$notebook"
           # uvx → creates a fresh ephemeral environment
           # uv run → runs the notebook as a script in that ephemeral env
           # No project packages are pre-installed
@@ -106,3 +113,11 @@ jobs:
           # Catches missing uv install or pip steps early
           # Ensures CI/other users can run the notebook without manual setup
         shell: bash
+
+      - name: Upload notebook artefacts
+        if: always()
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: notebook-artefacts-${{ steps.artefact-folder.outputs.name }}
+          path: results/${{ steps.artefact-folder.outputs.name }}/
+          if-no-files-found: ignore
