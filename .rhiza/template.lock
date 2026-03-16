@@ -13,15 +13,9 @@ templates:
 - tests
 - presentation
 files:
-- .editorconfig
-- .gitignore
-- .pre-commit-config.yaml
-- .python-version
-- Makefile
-- pytest.ini
-- ruff.toml
 - .devcontainer/bootstrap.sh
 - .devcontainer/devcontainer.json
+- .editorconfig
 - .github/actions/configure-git-auth/README.md
 - .github/actions/configure-git-auth/action.yml
 - .github/agents/analyser.md
@@ -46,6 +40,9 @@ files:
 - .github/workflows/rhiza_security.yml
 - .github/workflows/rhiza_sync.yml
 - .github/workflows/rhiza_validate.yml
+- .gitignore
+- .pre-commit-config.yaml
+- .python-version
 - .rhiza/.cfg.toml
 - .rhiza/.env
 - .rhiza/.gitignore
@@ -111,6 +108,7 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
+- Makefile
 - book/marimo/notebooks/rhiza.py
 - docs/ARCHITECTURE.md
 - docs/BOOK.md
@@ -123,7 +121,9 @@ files:
 - docs/QUICK_REFERENCE.md
 - docs/SECURITY.md
 - docs/TESTS.md
+- pytest.ini
+- ruff.toml
 - tests/benchmarks/conftest.py
 - tests/benchmarks/test_benchmarks.py
-synced_at: '2026-03-09T06:06:49Z'
+synced_at: '2026-03-16T02:40:41Z'
 strategy: merge
