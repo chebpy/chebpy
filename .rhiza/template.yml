@@ -3,14 +3,9 @@ ref: "v0.8.12"
 
 templates:
   - devcontainer
-  - core
   - github
-  - book
   - marimo
   - tests
 
 exclude:
-  - book/marimo/notebooks/rhiza.py
-  - tests/benchmark
-  - .github/workflows/rhiza_benchmarks.yml
-  
+  - book/marimo/notebooks/rhiza.py  
