@@ -14,7 +14,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.20.4",
+    "marimo==0.21.0",
     "ruff>=0.14.14",
     "pandas",
     "plotly",
