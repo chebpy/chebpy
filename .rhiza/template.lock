@@ -1,27 +1,19 @@
-sha: 0404d2f35361abd2c6bdaef059d49c69211681fe
+sha: 3c7662d23fb345846b4cf5c66ea96b80bf6e823f
 repo: jebel-quant/rhiza
 host: github
-ref: v0.8.5
+ref: v0.8.12
 include: []
-exclude: []
+exclude:
+- book/marimo/notebooks/rhiza.py
 templates:
 - devcontainer
-- core
 - github
-- book
 - marimo
 - tests
-- presentation
 files:
-- .editorconfig
-- .gitignore
-- .pre-commit-config.yaml
-- .python-version
-- Makefile
-- pytest.ini
-- ruff.toml
 - .devcontainer/bootstrap.sh
 - .devcontainer/devcontainer.json
+- .editorconfig
 - .github/actions/configure-git-auth/README.md
 - .github/actions/configure-git-auth/action.yml
 - .github/agents/analyser.md
@@ -35,7 +27,6 @@ files:
 - .github/workflows/copilot-setup-steps.yml
 - .github/workflows/renovate_rhiza_sync.yml
 - .github/workflows/rhiza_benchmarks.yml
-- .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
 - .github/workflows/rhiza_codeql.yml
 - .github/workflows/rhiza_deptry.yml
@@ -46,6 +37,9 @@ files:
 - .github/workflows/rhiza_security.yml
 - .github/workflows/rhiza_sync.yml
 - .github/workflows/rhiza_validate.yml
+- .gitignore
+- .pre-commit-config.yaml
+- .python-version
 - .rhiza/.cfg.toml
 - .rhiza/.env
 - .rhiza/.gitignore
@@ -60,7 +54,6 @@ files:
 - .rhiza/docs/WORKFLOWS.md
 - .rhiza/make.d/README.md
 - .rhiza/make.d/agentic.mk
-- .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
@@ -68,7 +61,6 @@ files:
 - .rhiza/make.d/gh-aw.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
-- .rhiza/make.d/presentation.mk
 - .rhiza/make.d/quality.mk
 - .rhiza/make.d/releasing.mk
 - .rhiza/make.d/test.mk
@@ -78,7 +70,6 @@ files:
 - .rhiza/requirements/tests.txt
 - .rhiza/requirements/tools.txt
 - .rhiza/rhiza.mk
-- .rhiza/templates/minibook/custom.html.jinja2
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
 - .rhiza/tests/api/test_gh_aw_targets.py
@@ -111,19 +102,19 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
-- book/marimo/notebooks/rhiza.py
+- Makefile
 - docs/ARCHITECTURE.md
-- docs/BOOK.md
 - docs/CUSTOMIZATION.md
 - docs/DEMO.md
 - docs/DEVCONTAINER.md
 - docs/GLOSSARY.md
 - docs/MARIMO.md
-- docs/PRESENTATION.md
 - docs/QUICK_REFERENCE.md
 - docs/SECURITY.md
 - docs/TESTS.md
+- pytest.ini
+- ruff.toml
 - tests/benchmarks/conftest.py
 - tests/benchmarks/test_benchmarks.py
-synced_at: '2026-03-09T06:06:49Z'
+synced_at: '2026-03-17T08:56:55Z'
 strategy: merge
