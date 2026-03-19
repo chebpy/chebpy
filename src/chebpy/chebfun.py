@@ -1038,6 +1038,95 @@ class Chebfun:
     abs = absolute
 
     @self_empty()
+    def sign(self) -> Chebfun:
+        """Sign function of a Chebfun.
+
+        Computes the piecewise sign of a Chebfun by finding its roots
+        and splitting the domain at those points, then creating constant
+        pieces with the appropriate sign values.
+
+        Returns:
+            Chebfun: A new Chebfun representing sign(f(x)).
+        """
+        newdom = self.domain.merge(self.roots())
+        funs = []
+        for fun in self._break(newdom):
+            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            s = float(np.sign(float(self(mid))))
+            funs.append(Bndfun.initconst(s, fun.interval))
+        result = self.__class__(funs)
+        for bp in result.breakpoints:
+            result.breakdata[bp] = float(np.sign(float(self(bp))))
+        return result
+
+    @self_empty()
+    def ceil(self) -> Chebfun:
+        """Ceiling function of a Chebfun.
+
+        Computes the piecewise ceiling of a Chebfun by finding where
+        the function crosses integer values and splitting the domain
+        at those points, then creating constant pieces with the
+        appropriate ceiling values.
+
+        Returns:
+            Chebfun: A new Chebfun representing ceil(f(x)).
+        """
+        crossings = self._integer_crossings()
+        newdom = self.domain.merge(crossings)
+        funs = []
+        for fun in self._break(newdom):
+            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            c = float(np.ceil(float(self(mid))))
+            funs.append(Bndfun.initconst(c, fun.interval))
+        result = self.__class__(funs)
+        for bp in result.breakpoints:
+            result.breakdata[bp] = float(np.ceil(float(self(bp))))
+        return result
+
+    @self_empty()
+    def floor(self) -> Chebfun:
+        """Floor function of a Chebfun.
+
+        Computes the piecewise floor of a Chebfun by finding where
+        the function crosses integer values and splitting the domain
+        at those points, then creating constant pieces with the
+        appropriate floor values.
+
+        Returns:
+            Chebfun: A new Chebfun representing floor(f(x)).
+        """
+        crossings = self._integer_crossings()
+        newdom = self.domain.merge(crossings)
+        funs = []
+        for fun in self._break(newdom):
+            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            c = float(np.floor(float(self(mid))))
+            funs.append(Bndfun.initconst(c, fun.interval))
+        result = self.__class__(funs)
+        for bp in result.breakpoints:
+            result.breakdata[bp] = float(np.floor(float(self(bp))))
+        return result
+
+    def _integer_crossings(self) -> np.ndarray:
+        """Find where this Chebfun crosses integer values.
+
+        This helper method identifies all points in the domain where the
+        Chebfun value equals an integer, by finding roots of (self - n)
+        for each integer n in the range of the function.
+
+        Returns:
+            numpy.ndarray: Array of x-values where the function crosses integers.
+        """
+        all_values = np.concatenate([fun.values() for fun in self])
+        lo = int(np.floor(np.min(all_values)))
+        hi = int(np.ceil(np.max(all_values)))
+        crossings = []
+        for n in range(lo, hi + 1):
+            shifted = self - n
+            crossings.extend(shifted.roots().tolist())
+        return np.array(crossings)
+
+    @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other: Any) -> Any:
         """Pointwise maximum of self and another chebfun."""
