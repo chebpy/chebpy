@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from chebpy.algorithms import bary, clenshaw, coeffmult
+from chebpy.algorithms import adaptive, bary, clenshaw, coeffmult, standard_chop
 from chebpy.chebtech import Chebtech
 
 from .utilities import cos, eps, exp, scaled_tol
@@ -283,3 +283,117 @@ def test_coeffmult(coeffmult_fixtures: dict[str, Any]) -> None:
     hc = coeffmult(fc, gc)
     hx = Chebtech.initfun(h, hn).coeffs
     assert np.max(np.abs(hc - hx)) <= 2e1 * eps
+
+
+# ---------------------------------------------------------------------------
+# standard_chop: verify against MATLAB reference test vectors
+# (from standardChop.m header comments)
+# ---------------------------------------------------------------------------
+
+
+class TestStandardChop:
+    """Tests for standard_chop matching the MATLAB reference implementation."""
+
+    @staticmethod
+    def _matlab_vectors():
+        """Return the test vectors from the MATLAB standardChop.m header."""
+        coeffs = 10.0 ** (-(np.arange(1, 51, dtype=float)))
+        random = np.cos(np.arange(1, 51, dtype=float) ** 2)
+        return coeffs, random
+
+    def test_clean_decay(self):
+        """standardChop(coeffs) should return 18."""
+        coeffs, _ = self._matlab_vectors()
+        assert standard_chop(coeffs) == 18
+
+    def test_noise_at_eps(self):
+        """standardChop(coeffs + 1e-16*random) should return 15."""
+        coeffs, random = self._matlab_vectors()
+        assert standard_chop(coeffs + 1e-16 * random) == 15
+
+    def test_noise_at_1e_13(self):
+        """standardChop(coeffs + 1e-13*random) should return 13."""
+        coeffs, random = self._matlab_vectors()
+        assert standard_chop(coeffs + 1e-13 * random) == 13
+
+    def test_noise_at_1e_10_default_tol(self):
+        """standardChop(coeffs + 1e-10*random) should return 50 (not happy)."""
+        coeffs, random = self._matlab_vectors()
+        assert standard_chop(coeffs + 1e-10 * random) == 50
+
+    def test_noise_at_1e_10_with_tol(self):
+        """standardChop(coeffs + 1e-10*random, 1e-10) should return 10."""
+        coeffs, random = self._matlab_vectors()
+        assert standard_chop(coeffs + 1e-10 * random, tol=1e-10) == 10
+
+    def test_short_input_unchanged(self):
+        """Vectors shorter than 17 should be returned with cutoff == n."""
+        for length in [1, 5, 10, 16]:
+            c = np.ones(length)
+            assert standard_chop(c) == length
+
+    def test_all_zeros(self):
+        """All-zero coefficients should chop to 1."""
+        assert standard_chop(np.zeros(50)) == 1
+
+    def test_cutoff_at_least_one(self):
+        """Cutoff should never be less than 1."""
+        # Rapidly decaying coeffs with long plateau at machine eps
+        coeffs = np.concatenate([np.array([1.0]), np.full(49, 1e-20)])
+        cutoff = standard_chop(coeffs)
+        assert cutoff >= 1
+
+
+# ---------------------------------------------------------------------------
+# adaptive: verify vscale guard for near-zero functions
+# ---------------------------------------------------------------------------
+
+
+class TestAdaptiveVscale:
+    """Tests for the vscale guard in the adaptive constructor."""
+
+    def test_exact_zero_function(self):
+        """The zero function should produce a single zero coefficient."""
+        coeffs = adaptive(Chebtech, lambda x: 0 * x)
+        assert coeffs.size == 1
+        assert coeffs[0] == 0.0
+
+    def test_near_zero_function(self):
+        """A function at floating-point noise level should be treated as zero."""
+        # np.maximum(0, ...) on values well below zero still produces ~eps noise
+        coeffs = adaptive(Chebtech, lambda x: np.maximum(0.0, x - 100.0))
+        assert coeffs.size == 1
+        assert coeffs[0] == 0.0
+
+    def test_nonzero_function_unaffected(self):
+        """Normal functions should not be short-circuited by the vscale guard."""
+        coeffs = adaptive(Chebtech, np.sin)
+        # sin(x) on [-1,1] needs more than 1 coefficient
+        assert coeffs.size > 1
+        # Evaluate at a test point to check accuracy
+        from chebpy.algorithms import clenshaw
+
+        x = np.array([0.5])
+        assert abs(clenshaw(x, coeffs) - np.sin(0.5)) < 1e-12
+
+    def test_small_but_nonzero_function(self):
+        """A function with tiny but non-negligible values should still resolve."""
+        # 1e-8 * sin(x) has vscale ~ 1e-8, well above eps
+        coeffs = adaptive(Chebtech, lambda x: 1e-8 * np.sin(x))
+        assert coeffs.size > 1
+
+    def test_hat_function_with_breakpoints(self):
+        """Hat functions with breakpoints should converge without warnings."""
+        import warnings
+
+        from chebpy import chebfun
+
+        bkpts = [round(-1 + k * 0.2, 10) for k in range(11)]
+        for j in range(11):
+            xj = round(-1 + j * 0.2, 10)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                chebfun(
+                    lambda t, _xj=xj: np.maximum(0, 1 - 5 * np.abs(t - _xj)),
+                    bkpts,
+                )
