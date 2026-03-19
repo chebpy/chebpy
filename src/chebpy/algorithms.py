@@ -301,14 +301,19 @@ def adaptive(cls: Any, fun: Callable[..., Any], hscale: float = 1, maxpow2: int 
     """
     minpow2 = 4  # 17 points
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
+    tol = prefs.eps * max(hscale, 1)
     coeffs: np.ndarray = np.array([])
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
-        eps = prefs.eps
-        tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
+        # If function values are at or below tolerance the function is
+        # indistinguishable from zero (cf. classicCheck.m vscale==0 guard).
+        vscale = np.max(np.abs(values))
+        if vscale <= tol:
+            coeffs = np.array([0.0])
+            break
         chplen = standard_chop(coeffs, tol=tol)
         if chplen < coeffs.size:
             coeffs = coeffs[:chplen]
