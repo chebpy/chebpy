@@ -54,6 +54,8 @@ def test_sign_splitting():
     g = f.sign()
     xx = np.linspace(-1, 1, 1000)
     assert np.max(np.abs(g(xx) - np.sign(xx))) < eps
+    # Verify sign is 0 at the root
+    assert g(0.0) == 0.0
 
 
 def test_sign_no_root():

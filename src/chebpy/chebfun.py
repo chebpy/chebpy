@@ -1048,15 +1048,21 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing sign(f(x)).
         """
-        newdom = self.domain.merge(self.roots())
+        roots = self.roots()
+        newdom = self.domain.merge(roots)
         funs = []
         for fun in self._break(newdom):
-            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
             s = float(np.sign(float(self(mid))))
             funs.append(Bndfun.initconst(s, fun.interval))
         result = self.__class__(funs)
+        # Set breakdata: at roots sign is 0, elsewhere use sign of function
+        htol = max(1e2 * self.hscale * prefs.eps, prefs.eps)
         for bp in result.breakpoints:
-            result.breakdata[bp] = float(np.sign(float(self(bp))))
+            if roots.size > 0 and np.any(np.abs(bp - roots) <= htol):
+                result.breakdata[bp] = 0.0
+            else:
+                result.breakdata[bp] = float(np.sign(float(self(bp))))
         return result
 
     @self_empty()
@@ -1075,7 +1081,7 @@ class Chebfun:
         newdom = self.domain.merge(crossings)
         funs = []
         for fun in self._break(newdom):
-            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
             c = float(np.ceil(float(self(mid))))
             funs.append(Bndfun.initconst(c, fun.interval))
         result = self.__class__(funs)
@@ -1099,7 +1105,7 @@ class Chebfun:
         newdom = self.domain.merge(crossings)
         funs = []
         for fun in self._break(newdom):
-            mid = 0.5 * (fun.support[0] + fun.support[-1])
+            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
             c = float(np.floor(float(self(mid))))
             funs.append(Bndfun.initconst(c, fun.interval))
         result = self.__class__(funs)
