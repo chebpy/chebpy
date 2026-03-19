@@ -35,7 +35,7 @@ class TestAdditionalCoverage:
         f = chebfun(lambda t: np.abs(t), domain=x)
 
         # Compute the cumulative sum
-        F = f.cumsum()  # noqa: N806
+        F = f.cumsum()
 
         # Check that F is continuous by evaluating at breakpoints
         for i in range(1, len(x) - 1):
@@ -98,9 +98,9 @@ class TestAdditionalCoverage:
 
     def test_absolute_method(self):
         """Test the absolute value method (__abs__) for Chebfun."""
-        # Create a Chebfun that has negative values
-        # Use a smooth function to avoid non-convergence warning for |x| near 0
-        f = chebfun(lambda x: x**2 - 0.5, domain=[-1, 1])
+        # Use a function that is negative everywhere on its domain so that
+        # |f| is smooth and the adaptive constructor converges without warnings.
+        f = chebfun(lambda x: -(x**2) - 1, domain=[-1, 1])
 
         # Test __abs__
         abs_f = abs(f)
@@ -108,11 +108,22 @@ class TestAdditionalCoverage:
         # Check that it's a Chebfun
         assert isinstance(abs_f, Chebfun)
 
-        # Check that it gives the correct values at sample points away from zeros
+        # Check correctness at sample points
         xx = np.array([-1, -0.5, 0, 0.5, 1])
-        expected = np.abs(xx**2 - 0.5)
+        expected = np.abs(-(xx**2) - 1)
         actual = abs_f(xx)
         assert np.max(np.abs(actual - expected)) < 1e-6
+
+        # Also test a function with interior roots: |x^2 - 0.5| has kinks at
+        # x = ±1/√2 which may trigger a non-convergence warning from the
+        # adaptive constructor as it resolves the sharp corner.
+        g = chebfun(lambda x: x**2 - 0.5, domain=[-1, 1])
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            abs_g = abs(g)
+        assert np.max(np.abs(abs_g(xx) - np.abs(xx**2 - 0.5))) < 1e-6
 
     def test_imag_complex_chebfun(self):
         """Test the imag() method on a complex Chebfun."""

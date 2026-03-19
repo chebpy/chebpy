@@ -240,42 +240,41 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
     b = np.flipud(np.abs(coeffs))
     m = np.flipud(np.maximum.accumulate(b))
     if m[0] == 0.0:
-        # TODO: check this
-        cutoff = 1  # cutoff = 0
+        cutoff = 1
         return cutoff
     envelope = m / m[0]
 
-    # Step 2: Scan envelope for a value plateauPoint, the first point, if any,
-    # that is followed by a plateau
-    for j in np.arange(1, n):
+    # Step 2: Scan envelope for a value plateauPoint, the first point J-1,
+    # if any, that is followed by a plateau.  Uses 1-based j to match the
+    # MATLAB reference implementation; envelope is indexed with [j-1].
+    for j in range(2, n + 1):
         j2 = round(1.25 * j + 5)
-        if j2 > n - 1:
+        if j2 > n:
             # there is no plateau: exit
             return cutoff
-        e1 = envelope[j]
-        e2 = envelope[int(j2)]
+        e1 = envelope[j - 1]
+        e2 = envelope[int(j2) - 1]
         r = 3 * (1 - np.log(e1) / np.log(tol))
         plateau = (e1 == 0.0) | (e2 / e1 > r)
         if plateau:
             # a plateau has been found: go to Step 3
-            plateau_point = j
+            plateau_point = j - 1
             break
 
     # Step 3: Fix cutoff at a point where envelope, plus a linear function
     # included to bias the result towards the left end, is minimal.
-    if envelope[int(plateau_point)] == 0.0:
-        cutoff = int(plateau_point)
+    if envelope[plateau_point - 1] == 0.0:
+        cutoff = plateau_point
     else:
-        j3 = sum(envelope >= tol ** (7.0 / 6.0))
+        j3 = int(np.sum(envelope >= tol ** (7.0 / 6.0)))
         if j3 < j2:
             j2 = j3 + 1
-            envelope[j2] = tol ** (7.0 / 6.0)
+            envelope[int(j2) - 1] = tol ** (7.0 / 6.0)
         cc = np.log10(envelope[: int(j2)])
         cc = cc + np.linspace(0, (-1.0 / 3.0) * np.log10(tol), int(j2))
         d = np.argmin(cc)
-        # TODO: check this
-        cutoff = int(d)  # + 2
-    return min((cutoff, n - 1))
+        cutoff = max(int(d), 1)
+    return cutoff
 
 
 def adaptive(cls: Any, fun: Callable[..., Any], hscale: float = 1, maxpow2: int | None = None) -> np.ndarray:
@@ -302,14 +301,19 @@ def adaptive(cls: Any, fun: Callable[..., Any], hscale: float = 1, maxpow2: int 
     """
     minpow2 = 4  # 17 points
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
+    tol = prefs.eps * max(hscale, 1)
     coeffs: np.ndarray = np.array([])
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
         points = cls._chebpts(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
-        eps = prefs.eps
-        tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
+        # If function values are at or below tolerance the function is
+        # indistinguishable from zero (cf. classicCheck.m vscale==0 guard).
+        vscale = np.max(np.abs(values))
+        if vscale <= tol:
+            coeffs = np.array([0.0])
+            break
         chplen = standard_chop(coeffs, tol=tol)
         if chplen < coeffs.size:
             coeffs = coeffs[:chplen]
