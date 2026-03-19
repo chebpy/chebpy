@@ -35,7 +35,7 @@ class TestAdditionalCoverage:
         f = chebfun(lambda t: np.abs(t), domain=x)
 
         # Compute the cumulative sum
-        F = f.cumsum()  # noqa: N806
+        F = f.cumsum()
 
         # Check that F is continuous by evaluating at breakpoints
         for i in range(1, len(x) - 1):
