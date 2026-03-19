@@ -1,10 +1,10 @@
 """Marimo notebook demonstrating complex-valued Chebfun functionality in ChebPy."""
 
 # /// script
-# dependencies = ["marimo==0.18.4", "chebfun", "seaborn"]
+# dependencies = ["marimo==0.18.4", "chebpy", "seaborn"]
 # requires-python = ">=3.13"
 #
-# [tool.uv.sources.chebfun]
+# [tool.uv.sources.chebpy]
 # path = "../../.."
 # editable = true
 # ///

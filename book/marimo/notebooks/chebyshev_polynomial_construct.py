@@ -6,10 +6,10 @@ Chebyshev polynomials.
 """
 
 # /// script
-# dependencies = ["marimo==0.18.4", "chebfun"]
+# dependencies = ["marimo==0.18.4", "chebpy"]
 # requires-python = ">=3.13"
 #
-# [tool.uv.sources.chebfun]
+# [tool.uv.sources.chebpy]
 # path = "../../.."
 # editable = true
 # ///
