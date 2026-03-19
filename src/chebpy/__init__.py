@@ -24,4 +24,4 @@ from .api import chebfun, pwc
 from .settings import ChebPreferences as UserPreferences
 
 __all__ = ["UserPreferences", "chebfun", "pwc"]
-__version__ = importlib.metadata.version("chebpy")
+__version__ = importlib.metadata.version("chebfun")
