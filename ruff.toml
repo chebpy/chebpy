@@ -103,6 +103,11 @@ line-ending = "auto"
 [lint.per-file-ignores]
 # Test files - allow assert statements and subprocess calls for testing
 "**/tests/**/*.py" = [
+    "D101",     # Allow missing class docstrings in tests
+    "D102",     # Allow missing method docstrings in tests
+    "D105",     # Allow missing magic method docstrings in tests
+    "N803",     # Allow uppercase argument names (math notation)
+    "N806",     # Allow uppercase variable names (math notation)
     "S101",     # Allow assert statements in tests
     "S603",     # Allow subprocess calls without shell=False check
     "S607",     # Allow starting processes with partial paths in tests
@@ -111,18 +116,29 @@ line-ending = "auto"
 "tests/**/*.py" = [
     "ERA001",   # Allow commented out code in project tests
     "PLR2004",  # Allow magic values in project tests
+    "PT011",    # Allow broad pytest.raises in project tests
     "RUF002",   # Allow ambiguous unicode in project tests
     "RUF012",   # Allow mutable class attributes in project tests
+    "TRY003",   # Allow long exception messages in project tests
 ]
 # Marimo notebooks - allow flexible coding patterns for interactive exploration
 "**/marimo/**/*.py" = [
     "D100",    # No module docstring - marimo requires `import marimo` as the first statement
-    "N803",    # Allow non-lowercase variable names in notebooks
+    "E741",    # Allow ambiguous variable names (e.g. O for orth) in notebooks
+    "N803",    # Allow non-lowercase argument names in notebooks
+    "N806",    # Allow uppercase variable names (math notation) in notebooks
+    "N814",    # Allow CamelCase imported as constant in notebooks
     "S101",    # Allow assert statements in notebooks
     "PLC0415", # Allow imports not at top-level in notebooks
     "B018",    # Allow useless expressions in notebooks
     "RUF001",  # Allow ambiguous unicode in notebooks
     "RUF002",  # Allow ambiguous unicode in notebooks
+    "RUF003",  # Allow ambiguous unicode in comments in notebooks
+]
+# Quasimatrix module - uses standard mathematical notation (Q, R, S, U, V, etc.)
+"src/chebpy/quasimatrix.py" = [
+    "N802",    # Allow uppercase function/property names (T for transpose)
+    "N806",    # Allow uppercase variable names (math notation)
 ]
 # Internal utility scripts - specific exceptions for internal tooling
 ".rhiza/utils/*.py" = [
