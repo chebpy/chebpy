@@ -1,8 +1,10 @@
-"""Unit-tests for chebpy user interface functions.
+"""Tests for the api module.
 
-This module contains tests for the user-facing functions in the chebpy package,
-including chebfun() and pwc() constructors. It verifies that these functions
-handle various input types correctly and produce expected results.
+This module tests the user-facing factory functions in chebpy.api:
+- chebfun() constructor with various input types
+- pwc() piecewise constant constructor
+- Serialization (pickle) round-trip
+- Version information
 """
 
 import pickle
@@ -10,6 +12,7 @@ import pickle
 import numpy as np
 import pytest
 
+import chebpy
 from chebpy import chebfun, pwc
 from chebpy.settings import DefaultPreferences
 
@@ -114,3 +117,8 @@ def test_evaluate() -> None:
 
     x = -1
     assert f0(x) == f1(x)
+
+
+def test_version() -> None:
+    """Test that the version of the chebpy library is defined."""
+    assert chebpy.__version__ is not None

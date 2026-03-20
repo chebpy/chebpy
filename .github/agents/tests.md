@@ -32,29 +32,53 @@ If tests reveal that source code needs modification:
 ## Test Structure Principles
 
 ### One-to-One Module Correspondence
-Tests MUST have a one-to-one correspondence with source modules:
+Tests MUST have a one-to-one correspondence with source modules. Each source
+file maps to exactly one flat test file in `tests/`:
 
 ```
-src/chebpy/chebfun.py         → tests/chebfun/test_*.py
-src/chebpy/bndfun.py          → tests/bndfun/test_*.py
-src/chebpy/chebtech.py        → tests/chebtech/test_*.py
+src/chebpy/chebfun.py         → tests/test_chebfun.py
+src/chebpy/bndfun.py          → tests/test_bndfun.py
+src/chebpy/chebtech.py        → tests/test_chebtech.py
 src/chebpy/chebyshev.py       → tests/test_chebyshev.py
 src/chebpy/algorithms.py      → tests/test_algorithms.py
+src/chebpy/api.py             → tests/test_api.py
+src/chebpy/decorators.py      → tests/test_decorators.py
 src/chebpy/plotting.py        → tests/test_plotting.py
 src/chebpy/quasimatrix.py     → tests/test_quasimatrix.py
 src/chebpy/utilities.py       → tests/test_utilities.py
+src/chebpy/settings.py        → tests/test_settings.py
 src/chebpy/exceptions.py      → tests/test_exceptions.py
+src/chebpy/fun.py             → tests/test_fun.py
+src/chebpy/onefun.py          → tests/test_onefun.py
+src/chebpy/smoothfun.py       → tests/test_smoothfun.py
+src/chebpy/classicfun.py      → tests/test_classicfun.py
 ```
+
+Convolution tests live inside `tests/test_algorithms.py` (covering
+Hale–Townsend convolution algorithms alongside the other algorithm tests).
+
+Abstract base classes (`fun.py`, `onefun.py`, `smoothfun.py`, `classicfun.py`)
+have minimal stub test files verifying they cannot be instantiated directly,
+and are tested thoroughly through their concrete subclasses.
 
 **Important:** When adding a new module to `src/chebpy/`, you MUST create a corresponding test file:
 - New module: `src/chebpy/new_module.py`
-- New test file: `tests/test_new_module.py` (or appropriate subdirectory)
+- New test file: `tests/test_new_module.py`
 
 This maintains the one-to-one structure and ensures all code has dedicated test coverage.
 
 ### Shared Test Fixtures
 - **`tests/conftest.py`** - Shared test fixtures and utilities for all tests
 - **`tests/utilities.py`** - Helper functions for test data generation and validation
+
+### Generic (Reusable) Test Suites
+
+The `tests/generic/` directory contains reusable test functions that run
+across multiple concrete implementations (Bndfun, Chebfun, Chebtech).
+Each flat test file selectively imports the specific generic functions it needs
+via `from tests.generic.<module> import <function>`.
+The `conftest.py` fixtures (`emptyfun`, `constfun`, `complexfun`) auto-detect
+the correct type based on the requesting test module name.
 
 ### Test Organization Within Files
 
@@ -262,7 +286,7 @@ def test_multiple_cases(input_value, expected):
 
 ## Module-Specific Guidelines
 
-### tests/chebfun/
+### tests/test_chebfun.py
 Tests for the Chebfun class and variants:
 - Construction from functions and values
 - Arithmetic operations (add, subtract, multiply, divide)
@@ -272,8 +296,9 @@ Tests for the Chebfun class and variants:
 - Plotting and visualization
 - Complex-valued functions
 - Domain breaking and piecewise definitions
+- Private methods and additional coverage
 
-### tests/bndfun/
+### tests/test_bndfun.py
 Tests for boundary-value functions:
 - Construction and initialization
 - Algebra and calculus operations
@@ -281,8 +306,9 @@ Tests for boundary-value functions:
 - Plotting
 - Complex functions
 - Roots and extrema
+- Universal functions (ufuncs)
 
-### tests/chebtech/
+### tests/test_chebtech.py
 Tests for low-level Chebyshev technology:
 - Chebyshev point generation
 - Point selection algorithms
@@ -290,42 +316,75 @@ Tests for low-level Chebyshev technology:
 - Barycentric interpolation
 - Recursive construction
 
-### test_chebyshev.py
-Tests for the high-level Chebyshev API:
-- Chebfun construction and factory methods
-- Chebyshev series operations
-- Domain transformations
-- Smooth and non-smooth functions
+### tests/test_chebyshev.py
+Tests for the ChebyshevPolynomial class:
+- Class properties and usage (equality, evaluation, degree, copy)
+- Arithmetic operations (add, sub, mul, scalar ops)
+- Construction via factory functions (from_coefficients, from_values, from_roots, from_constant)
+- Complex coefficient handling
+- Calculus (differentiation and integration)
+- Root-finding
+- Plotting
 
 ### test_algorithms.py
 Tests for core algorithms:
-- Chebyshev approximation
+- Barycentric interpolation and Clenshaw evaluation
+- Coefficient manipulation (coeffmult, vals/coeffs conversions)
+- Adaptive construction
 - Convergence and accuracy
-- Domain-specific algorithms
+- Chebyshev-to-Legendre coefficient conversion (cheb2leg)
+- Legendre-to-Chebyshev coefficient conversion (leg2cheb)
+- Low-level Legendre convolution (_conv_legendre)
+- User-facing `Chebfun.conv()` method
+
+### test_api.py
+Tests for user-facing factory functions:
+- `chebfun()` constructor with various input types (callable, string, float)
+- `pwc()` piecewise constant constructor
+- Domain handling and serialization round-trips
+- Version information
+
+### test_decorators.py
+Tests for decorator utilities:
+- `cache` method output caching
+- `self_empty` empty-object handling
+- `preandpostprocess` edge-case handling for bary/clenshaw
+- `float_argument` scalar/array consistency
+- `cast_arg_to_chebfun` and `cast_other` type conversion
 
 ### test_plotting.py
-Tests for plotting functionality:
-- Matplotlib integration
-- Visualization of Chebfuns
-- Axis labeling and formatting
+Tests for plotting module functions:
+- `plotfun` real and complex function plots
+- `plotfuncoeffs` semilogy coefficient plots
+- Axes creation and parameter handling
 
 ### test_quasimatrix.py
 Tests for quasimatrix operations:
 - Construction and manipulation
-- Matrix operations
-- Integration and differentiation
+- Matrix operations (QR, SVD)
+- Integration, differentiation, and least-squares (polyfit)
 
 ### test_utilities.py
 Tests for utility functions:
-- Helper functions
-- Domain utilities
-- Conversion functions
+- `Interval` and `Domain` classes
+- `infnorm`, `check_funs`, `compute_breakdata`
+- Domain composition and arithmetic
+
+### test_settings.py
+Tests for configuration:
+- `UserPreferences` access and reset
+- Context manager for temporary settings
 
 ### test_exceptions.py
 Tests for exception classes:
 - Custom exception types
 - Exception inheritance
 - Error message validation
+
+### test_fun.py, test_onefun.py, test_smoothfun.py, test_classicfun.py
+Minimal tests for abstract base classes:
+- Verify that each ABC cannot be instantiated directly
+- Concrete behavior tested indirectly through subclass test files
 
 ## Continuous Improvement
 
@@ -364,7 +423,7 @@ When reviewing test PRs, check for:
 4. Update tests if behavior intentionally changed
 
 ### Coverage Not 100%
-1. Run with missing lines: `pytest --cov=src/loman --cov-report=term-missing`
+1. Run with missing lines: `pytest --cov=src/chebpy --cov-report=term-missing`
 2. Identify uncovered lines in report
 3. Write tests specifically for those lines
 4. Consider if code is dead code that should be removed
