@@ -6,6 +6,7 @@ templates:
   - github
   - marimo
   - tests
+  - book
 
 exclude:
   - book/marimo/notebooks/rhiza.py  
