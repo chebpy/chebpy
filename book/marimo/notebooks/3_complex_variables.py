@@ -40,7 +40,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from chebpy import chebfun
 

@@ -89,7 +89,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import matplotlib.pyplot as plt
     import numpy as np
@@ -97,7 +97,7 @@ def _():
     return np, plt
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     # optional plot settings
     import matplotlib as mpl

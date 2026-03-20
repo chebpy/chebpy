@@ -27,7 +27,7 @@ with app.setup:
     mpl.rc("figure", figsize=(9, 5), dpi=100)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from chebpy import chebfun
 
