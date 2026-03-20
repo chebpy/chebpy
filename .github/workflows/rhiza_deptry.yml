@@ -26,11 +26,14 @@ jobs:
   deptry:
     name: Check dependencies with deptry
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/astral-sh/uv:0.9.30-bookworm
 
     steps:
       - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.11"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -41,5 +44,5 @@ jobs:
         run: make deptry
         # NOTE: make deptry is good style because it encapsulates the folders to check
         # (e.g. src and book/marimo) and keeps CI in sync with local development.
-        # Since we use a 'uv' container, the Makefile is optimised to use the
+        # Since we have uv/uvx installed, the Makefile is optimised to use the
         # pre-installed 'uv' and 'uvx' from the system PATH.
