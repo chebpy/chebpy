@@ -98,7 +98,7 @@ def _(Chebfun):
     return (triangle,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(triangle):
     triangle.plot(linewidth=3)
     mark_breakpoints(triangle)
@@ -142,7 +142,7 @@ def _(Chebfun):
     return f_cos, f_sin, h_sincos
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(f_cos, f_sin, h_sincos):
     _fig, (_ax1, _ax2) = plt.subplots(1, 2, figsize=(16, 5))
 
@@ -175,7 +175,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(f_cos, f_sin, h_sincos):
     h_cossin = f_cos.conv(f_sin)
     xs = np.linspace(-1.8, 1.8, 200)
@@ -202,7 +202,7 @@ def _(Chebfun):
     return f_exp, h_exp
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(f_exp, h_exp):
     _fig, (_ax1, _ax2) = plt.subplots(1, 2, figsize=(16, 5))
 
@@ -233,7 +233,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Chebfun, f_cos, f_sin):
     a_coeff, b_coeff = 2.0, -3.0
     h_rhs = Chebfun.initfun_adaptive(np.exp)
@@ -333,7 +333,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(h_exp):
     _a, _b = float(h_exp.domain[0]), float(h_exp.domain[-1])
     print(f"(exp★exp)({_a}) = {float(h_exp(_a)):.2e}")
@@ -359,7 +359,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Chebfun):
     pdf_uniform = Chebfun.initconst(1.0, [0, 1])
     pdf_sum_uniform = pdf_uniform.conv(pdf_uniform)
@@ -399,7 +399,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Chebfun):
     pdf_beta22 = Chebfun.initfun_adaptive(lambda x: 6.0 * x * (1.0 - x), [0, 1])
     pdf_sum_beta = pdf_beta22.conv(pdf_beta22)
