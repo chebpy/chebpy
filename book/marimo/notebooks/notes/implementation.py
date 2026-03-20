@@ -11,7 +11,7 @@
 
 import marimo
 
-__generated_with = "0.14.16"
+__generated_with = "0.21.0"
 app = marimo.App()
 
 with app.setup:
@@ -24,16 +24,14 @@ with app.setup:
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     # Implementation Notes
 
     The internals of ChebPy have been designed to resemble the design structure of MATLAB Chebfun.
     The Chebfun v5 class diagram thus provides a useful map for understanding how the various pieces
     of ChebPy fit together (diagram courtesy of the Chebfun team, available
     [here](https://github.com/chebfun/chebfun/wiki/Class-diagram)):
-    """
-    )
+    """)
     return
 
 
@@ -47,8 +45,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     At this stage, only a relatively small subset of MATLAB Chebfun has been implemented in ChebPy.
     In the class diagram above, this consists of all the classes traced by the path going up from
     from `Chebtech` (green box in the bottom right), to `Chebfun` (blue box near the top-left).
@@ -75,17 +72,16 @@ def _():
     - `UserPrefs` ([core/settings.py](https://github.com/chebpy/chebpy/blob/master/chebpy/core/settings.py))
 
     The general rule is that each ChebPy class lives in its own python file.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""One can explore the organisation of the library in practice as follows.
-        We describe the three core components with reference to the colours in the above class diagram."""
-    )
+    mo.md(r"""
+    One can explore the organisation of the library in practice as follows.
+        We describe the three core components with reference to the colours in the above class diagram.
+    """)
     return
 
 
@@ -112,13 +108,11 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Chebfun (blue)
 
     We'll start by creating an identity chebfun on an arbitrary non-unit interval:
-    """
-    )
+    """)
     return
 
 
@@ -133,7 +127,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""This variable is an object of class `Chebfun`:""")
+    mo.md(r"""
+    This variable is an object of class `Chebfun`:
+    """)
     return
 
 
@@ -145,15 +141,13 @@ def _(x):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Fun (yellow)
 
     Conceptually, `Chebfun` objects are defined as a collection (numpy array) of Fun objects. One can access these
     via the `.funs` attribute, and in this example, since our function is globally smooth, our chebfun is composed
     of single Fun:
-    """
-    )
+    """)
     return
 
 
@@ -165,15 +159,13 @@ def _(x):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     Fun is an abstract class, so we don't actually see Fun objects per-se, but rather objects further down
     the inheritance tree. Specifically, we see objects of type `BndFun`, denoting a function defined on a bounded
     interval.
 
     Here's a piecewise smooth function created by inducing a discontinuity via use of the maximum operator.
-    """
-    )
+    """)
     return
 
 
@@ -186,7 +178,9 @@ def _(np, x):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Here the representation consists of two `Fun` objects:""")
+    mo.md(r"""
+    Here the representation consists of two `Fun` objects:
+    """)
     return
 
 
@@ -198,10 +192,10 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""The core `Chebfun` class constructor accepts iterable collections of `Fun` objects,
-        and the above chebfun can be recreated as follows:"""
-    )
+    mo.md(r"""
+    The core `Chebfun` class constructor accepts iterable collections of `Fun` objects,
+        and the above chebfun can be recreated as follows:
+    """)
     return
 
 
@@ -215,16 +209,14 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     The Fun objects defining a chebfun must provide a non-overlapping and complete partition of the global
     approximation interval. ChebPy-specific exceptions will be raised if the user/developer does not properly
     account for this.
 
     To see this, let's break the second Fun into two sub-pieces (using `fun.restrict`) and attempt various
     reconstruction permutations.
-    """
-    )
+    """)
     return
 
 
@@ -252,7 +244,9 @@ def _(f, plt):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""So, the following works:""")
+    mo.md(r"""
+    So, the following works:
+    """)
     return
 
 
@@ -264,8 +258,7 @@ def _(Chebfun, fun0, fun1, fun2):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     However, the following will raise an exception:
 
     ```
@@ -279,15 +272,13 @@ def _():
     >> Chebfun([fun0, f.funs[1], fun1])
     IntervalOverlap: The supplied Interval objects overlap
     ```
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Onefun (green)
 
     A Fun object is defined by the composition of `Onefun` object and an Interval object. A `Onefun` object in ChebPy,
@@ -296,8 +287,7 @@ def _():
     Interval object.
 
     To illustrate, let's take the first component `Fun` from earlier (which was specifically a `Bndfun`):
-    """
-    )
+    """)
     return
 
 
@@ -309,7 +299,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""The Onefun and Interval object components are accessed as follows:""")
+    mo.md(r"""
+    The Onefun and Interval object components are accessed as follows:
+    """)
     return
 
 
@@ -321,12 +313,12 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""`Onefun` is an abstract class, so what we actually see instantiated is an object of type `Chebtech`.
+    mo.md(r"""
+    `Onefun` is an abstract class, so what we actually see instantiated is an object of type `Chebtech`.
         To see that the `Onefun` object is what is claims to be (a representation defined on the unit-interval),
         we can plot it (users will rarely do this in practice, but this can nevertheless be a useful feature
-        for developers):"""
-    )
+        for developers):
+    """)
     return
 
 
@@ -339,11 +331,11 @@ def _(f, plt):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""So while the `Onefun` attribute determines approximation behaviour, the interval attribute manages
+    mo.md(r"""
+    So while the `Onefun` attribute determines approximation behaviour, the interval attribute manages
         the mapping to and from the approximation interval to [-1,1]. So for instance, one can evaluate the interval
-        object at some set of points in [-1,1] and obtain these values mapped to [a,b]:"""
-    )
+        object at some set of points in [-1,1] and obtain these values mapped to [a,b]:
+    """)
     return
 
 
@@ -355,14 +347,12 @@ def _(f, np):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## User preferences (`UserPrefs`)
 
     The user may want to specify different tolerances, for example if speed is important or the function under
     consideration is particularly difficult. It is also possible to change default behaviour like plotting.
-    """
-    )
+    """)
     return
 
 

@@ -16,7 +16,7 @@ Chebyshev polynomials.
 
 import marimo
 
-__generated_with = "0.14.16"
+__generated_with = "0.21.0"
 app = marimo.App()
 
 with app.setup:
@@ -25,28 +25,24 @@ with app.setup:
     import chebpy.chebyshev as cheb
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     # Basic API Examples
 
     This notebook demonstrates core properties and methods of `ChebyshevPolynomial`
     using a simple constant polynomial.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     Create a constant Chebyshev polynomial with value 5.
 
     `from_constant` creates a degree-0 polynomial representing a constant function.
-    """
-    )
+    """)
     return
 
 
@@ -59,7 +55,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Check whether the polynomial is constant.""")
+    mo.md(r"""
+    Check whether the polynomial is constant.
+    """)
     return
 
 
@@ -71,7 +69,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Check whether the polynomial has complex coefficients.""")
+    mo.md(r"""
+    Check whether the polynomial has complex coefficients.
+    """)
     return
 
 
@@ -83,7 +83,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Check whether the polynomial is empty (has no coefficients).""")
+    mo.md(r"""
+    Check whether the polynomial is empty (has no coefficients).
+    """)
     return
 
 
@@ -95,7 +97,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the size (number of coefficients).""")
+    mo.md(r"""
+    Get the size (number of coefficients).
+    """)
     return
 
 
@@ -107,7 +111,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the symbol used for the independent variable (typically `x`).""")
+    mo.md(r"""
+    Get the symbol used for the independent variable (typically `x`).
+    """)
     return
 
 
@@ -119,7 +125,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get function values at Chebyshev points.""")
+    mo.md(r"""
+    Get function values at Chebyshev points.
+    """)
     return
 
 
@@ -131,7 +139,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the vertical scale (maximum absolute function value).""")
+    mo.md(r"""
+    Get the vertical scale (maximum absolute function value).
+    """)
     return
 
 
@@ -143,7 +153,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Compute the indefinite integral (antiderivative).""")
+    mo.md(r"""
+    Compute the indefinite integral (antiderivative).
+    """)
     return
 
 
@@ -155,7 +167,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Compute the definite integral over the domain.""")
+    mo.md(r"""
+    Compute the definite integral over the domain.
+    """)
     return
 
 
@@ -167,7 +181,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the polynomial degree.""")
+    mo.md(r"""
+    Get the polynomial degree.
+    """)
     return
 
 
@@ -179,7 +195,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Compute the derivative.""")
+    mo.md(r"""
+    Compute the derivative.
+    """)
     return
 
 
@@ -191,7 +209,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the polynomial domain.""")
+    mo.md(r"""
+    Get the polynomial domain.
+    """)
     return
 
 
@@ -203,7 +223,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Plot the polynomial over its domain.""")
+    mo.md(r"""
+    Plot the polynomial over its domain.
+    """)
     return
 
 
@@ -215,7 +237,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Find the roots of the polynomial.""")
+    mo.md(r"""
+    Find the roots of the polynomial.
+    """)
     return
 
 
@@ -227,7 +251,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Prolong to a higher-degree representation without changing the function.""")
+    mo.md(r"""
+    Prolong to a higher-degree representation without changing the function.
+    """)
     return
 
 
@@ -239,7 +265,9 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get the name of the basis used by this polynomial.""")
+    mo.md(r"""
+    Get the name of the basis used by this polynomial.
+    """)
     return
 
 
@@ -251,24 +279,15 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Get a specific basis polynomial; here, degree 1 gives $T_1(x)=x$.""")
+    mo.md(r"""
+    Get a specific basis polynomial; here, degree 1 gives $T_1(x)=x$.
+    """)
     return
 
 
 @app.cell
 def _(f):
     f.basis(deg=1)
-    return
-
-
-@app.cell(hide_code=True)
-def _():
-    mo.md(r"""Space reserved for additional experimentation.""")
-    return
-
-
-@app.cell
-def _():
     return
 
 
