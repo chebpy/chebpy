@@ -39,7 +39,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    file = path / "chebfun-v5-class-diag.png"
+    file = path.parent / "chebfun-v5-class-diag.png"
     assert file.exists()
     mo.image(file.read_bytes())
     return

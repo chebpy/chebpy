@@ -95,7 +95,7 @@ def _():
     mo.md(
         r"""
     By default ChebPy computations are accurate to machine precision, or approximately fifteen digits
-    in double-precision arithmetic (see also the `UserPrefs` interface [here](./implementation.ipynb)).
+    in double-precision arithmetic (see also the `UserPrefs` interface [here](./notes/implementation.ipynb)).
 
     We can verify this for the computed roots of `f` by typing:
     """
