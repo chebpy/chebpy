@@ -285,6 +285,23 @@ class TestMisc:
         with pytest.raises(TypeError):
             A.T @ "invalid"
 
+    def test_bare_slice_indexing(self, A):
+        """A[0:2] without tuple returns a Quasimatrix subset."""
+        sub = A[0:2]
+        assert isinstance(sub, Quasimatrix)
+        assert sub.shape == (np.inf, 2)
+
+    def test_getitem_type_error(self, A):
+        """Indexing with an unsupported key type raises TypeError."""
+        with pytest.raises(TypeError):
+            A["bad_key"]
+
+    def test_qr_rank_deficient(self, x):
+        """QR on a rank-deficient quasimatrix raises LinAlgError."""
+        B = Quasimatrix([x, 2 * x])  # linearly dependent columns
+        with pytest.raises(np.linalg.LinAlgError, match="Rank-deficient"):
+            B.qr()
+
     def test_support_mismatch(self, x):
         y = chebfun("x", [0, 2])
         with pytest.raises(ValueError, match="support"):
@@ -310,6 +327,13 @@ class TestConstruction:
         """First column is a bare scalar (uses default domain)."""
         A = Quasimatrix([3.0])
         np.testing.assert_allclose(float(A[0](0.0)), 3.0, atol=1e-14)
+
+    def test_scalar_after_chebfun(self):
+        """Scalar column after a Chebfun column inherits the domain."""
+        x = chebfun("x")
+        A = Quasimatrix([x, 5.0])
+        assert A.shape == (np.inf, 2)
+        np.testing.assert_allclose(float(A[1](0.3)), 5.0, atol=1e-14)
 
     def test_non_default_domain(self):
         """Quasimatrix on a non-default domain [0, 2]."""
@@ -394,6 +418,14 @@ class TestEmptyEdgeCases:
 
     def test_transposed_empty_repr(self):
         assert "empty" in repr(Quasimatrix([]).T)
+
+    def test_str(self, A):
+        """str() delegates to __repr__."""
+        assert str(A) == repr(A)
+
+    def test_transposed_shape(self, A):
+        """Transposed quasimatrix reports correct shape."""
+        assert A.T.shape == (6, np.inf)
 
 
 class TestPolyfitExtended:

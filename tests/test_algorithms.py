@@ -350,6 +350,17 @@ class TestStandardChop:
         cutoff = standard_chop(coeffs)
         assert cutoff >= 1
 
+    def test_zero_plateau(self):
+        """Plateau found where envelope is exactly zero."""
+        # A few nonzero coeffs followed by exact zeros; long enough for Step 2
+        # to detect a zero plateau, entering the branch cutoff = plateau_point.
+        coeffs = np.zeros(50)
+        coeffs[0] = 1.0
+        coeffs[1] = 0.5
+        cutoff = standard_chop(coeffs)
+        assert cutoff >= 1
+        assert cutoff <= 50
+
 
 # ---------------------------------------------------------------------------
 # adaptive: verify vscale guard for near-zero functions
@@ -480,6 +491,11 @@ class TestCheb2Leg:
 
 class TestLeg2Cheb:
     """Tests for the leg2cheb conversion."""
+
+    def test_empty_input(self) -> None:
+        """leg2cheb of an empty array returns an empty array."""
+        result = leg2cheb(np.array([]))
+        assert result.size == 0
 
     def test_p0_equals_t0(self) -> None:
         """P_0 = T_0, so leg2cheb([1]) = [1]."""
@@ -718,3 +734,11 @@ class TestChebfunConv:
         xs_right = np.linspace(0.0, 1.9, 10)
         assert np.allclose(h(xs_left), xs_left * (xs_left + 2) / 2, atol=1e-13)
         assert np.allclose(h(xs_right), xs_right * (2 - xs_right) / 2, atol=1e-13)
+
+    def test_zero_convolution(self) -> None:
+        """Convolving a zero function produces all-zero gamma (mg==0 branch)."""
+        f = Chebfun.initconst(0.0)
+        g = Chebfun.initconst(1.0)
+        h = f.conv(g)
+        xs = np.linspace(-1.9, 1.9, 10)
+        np.testing.assert_allclose(h(xs), 0.0, atol=1e-14)

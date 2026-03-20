@@ -81,6 +81,11 @@ class TestConstruction:
         with pytest.raises(ValueError, match=r"\[1"):
             Chebtech.initconst(np.array([1, 2, 3]))
 
+    def test_initfun_fixedlen_n_none(self):
+        """initfun_fixedlen raises ValueError when n is None."""
+        with pytest.raises(ValueError, match="n must be specified"):
+            Chebtech.initfun_fixedlen(np.sin, n=None)
+
     def test_imag_complex_chebtech(self):
         f = Chebtech.initfun_adaptive(lambda x: np.exp(1j * np.pi * x))
         assert f.iscomplex

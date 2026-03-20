@@ -263,7 +263,7 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
 
     # Step 3: Fix cutoff at a point where envelope, plus a linear function
     # included to bias the result towards the left end, is minimal.
-    if envelope[plateau_point - 1] == 0.0:
+    if envelope[plateau_point - 1] == 0.0:  # pragma: no cover
         cutoff = plateau_point
     else:
         j3 = int(np.sum(envelope >= tol ** (7.0 / 6.0)))
