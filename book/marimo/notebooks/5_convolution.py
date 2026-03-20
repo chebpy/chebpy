@@ -234,23 +234,25 @@ def _():
     The `conv` method works on any interval $[a, b]$, not just $[-1, 1]$.
     The result lives on $[2a, 2b]$.
 
-    For example, $f = g = 1$ on $[0, 1]$ produces a triangle on $[0, 2]$:
+    For a different case, let $f(x)=x$ and $g(x)=1$ on $[-4, 1]$.
+    Then $f \star g$ is supported on $[-8, 2]$ and has a smooth, piecewise-quadratic shape:
     """)
     return
 
 
 @app.cell
 def _(Chebfun):
-    ones_01 = Chebfun.initconst(1.0, [0, 1])
-    tri_01 = ones_01.conv(ones_01)
-    tri_01
-    return (tri_01,)
+    ramp_interval = Chebfun.initfun_adaptive(lambda x: x, [-4, 1])
+    ones_interval = Chebfun.initconst(1.0, [-4, 1])
+    ramp_conv = ramp_interval.conv(ones_interval)
+    ramp_conv
+    return (ramp_conv,)
 
 
 @app.cell
-def _(tri_01):
-    tri_01.plot(linewidth=3)
-    plt.title("1 ★ 1 on [0, 1] → triangle on [0, 2]")
+def _(ramp_conv):
+    ramp_conv.plot(linewidth=3)
+    plt.title("x ★ 1 on [-4, 1] → piecewise quadratic on [-8, 2]")
     plt.xlabel("x")
     plt.show()
     return
