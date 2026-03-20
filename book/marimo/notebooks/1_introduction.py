@@ -11,7 +11,7 @@
 
 import marimo
 
-__generated_with = "0.14.16"
+__generated_with = "0.21.0"
 app = marimo.App()
 
 with app.setup:
@@ -27,7 +27,7 @@ with app.setup:
     mpl.rc("figure", figsize=(9, 5), dpi=100)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from chebpy import chebfun
 
@@ -36,10 +36,10 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""The function ``chebfun`` behaves in essentially the same way as its MATLAB counterpart.
-        A good way to begin is to type:"""
-    )
+    mo.md(r"""
+    The function ``chebfun`` behaves in essentially the same way as its MATLAB counterpart.
+        A good way to begin is to type:
+    """)
     return
 
 
@@ -52,8 +52,7 @@ def _(chebfun):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     What's happened here is we've instantiated a numerical representation of the identity function
     on the interval `[0,10]` and assigned this to a computer variable `x`. This particular representation
     has length 2, meaning that it is a degree one polynomial defined via two degrees of freedom
@@ -61,8 +60,7 @@ def _():
 
     An intuitive set of composition-like operations can now be performed. For instance here is
     the specification of a function `f` that oscillates with two modes:
-    """
-    )
+    """)
     return
 
 
@@ -75,11 +73,11 @@ def _(x):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""The zeros of f can be computed via `roots`, which behind the scenes is implemented
+    mo.md(r"""
+    The zeros of f can be computed via `roots`, which behind the scenes is implemented
         via a recursive subdivision algorithm in which a number of Colleague Matrix eigenvalue
-        sub-problems are solved:"""
-    )
+        sub-problems are solved:
+    """)
     return
 
 
@@ -92,14 +90,12 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     By default ChebPy computations are accurate to machine precision, or approximately fifteen digits
-    in double-precision arithmetic (see also the `UserPrefs` interface [here](./implementation.ipynb)).
+    in double-precision arithmetic (see also the `UserPrefs` interface [here](./notes/implementation.ipynb)).
 
     We can verify this for the computed roots of `f` by typing:
-    """
-    )
+    """)
     return
 
 
@@ -111,7 +107,9 @@ def _(f, r):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""The function and its roots can be plotted together as follows:""")
+    mo.md(r"""
+    The function and its roots can be plotted together as follows:
+    """)
     return
 
 
@@ -125,10 +123,10 @@ def _(f, r):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""Calculus operations are natively possible with Chebfun objects.
-        For example here is the derivative and indefinite integral of `f`:"""
-    )
+    mo.md(r"""
+    Calculus operations are natively possible with Chebfun objects.
+        For example here is the derivative and indefinite integral of `f`:
+    """)
     return
 
 
@@ -145,14 +143,12 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     One can verify analytically that the exact value of the definite integral here is `1.2 - cos(10) - 0.2cos(50)`.
 
     This matches our numerical integral (via Clenshaw-Curtis quadrature), which is computable in ChebPy
     via the `sum` command.
-    """
-    )
+    """)
     return
 
 
@@ -167,8 +163,7 @@ def _(f):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Discontinuities
 
     Chebfun is capable of handling certain classes of mathematical nonsmoothness. For example, here we compute
@@ -176,8 +171,7 @@ def _():
     individual pieces (in Chebfun & ChebPy terminology this is a collection of 'Funs'). The breakpoints
     between the pieces (Funs) have been determined by ChebPy in the background by solving the corresponding
     root-finding problem.
-    """
-    )
+    """)
     return
 
 
@@ -191,7 +185,9 @@ def _(f, x):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Here's a plot of both `f` and `g`, and their maximum, `h`:""")
+    mo.md(r"""
+    Here's a plot of both `f` and `g`, and their maximum, `h`:
+    """)
     return
 
 
@@ -209,11 +205,11 @@ def _(f, g, h):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""The function `h` is a further Chebfun representation (Chebfun operations such as this are closures)
+    mo.md(r"""
+    The function `h` is a further Chebfun representation (Chebfun operations such as this are closures)
         and thus the same set of operations can be applied as normal. Here for instance is the exponential
-        of `h` and its integral:"""
-    )
+        of `h` and its integral:
+    """)
     return
 
 
@@ -227,8 +223,7 @@ def _(h):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Probability distributions
 
     Here's a further example, this time related to statistics. We consider the following Chebfun representation
@@ -236,8 +231,7 @@ def _():
     representation. On this occasion we utlilise a slightly different (but still perfectly valid) approach to
     construction whereby we supply the function handle (in this case, a Python lambda, but more generally any
     object in possession of a `__call__` attribute) together with the interval of definition.
-    """
-    )
+    """)
     return
 
 
@@ -264,10 +258,10 @@ def _(chebfun):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""The integral of any probability density function should be unity,
-        and this is the case for our numerical approximation:"""
-    )
+    mo.md(r"""
+    The integral of any probability density function should be unity,
+        and this is the case for our numerical approximation:
+    """)
     return
 
 
@@ -279,13 +273,11 @@ def _(pdf):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     Suppose we wish to generate quantiles of the distribution. This can be achieved as follows.
     First we form the cumulative distribution function, computed as the indefinite integral
     (`cumsum`) of the density:
-    """
-    )
+    """)
     return
 
 
@@ -300,10 +292,10 @@ def _(pdf):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""Then it is simply a case of utilising the `roots` command to determine the standardised score
-        (sometimes known as 'z-score') corresponding to the quantile of interest. For example:"""
-    )
+    mo.md(r"""
+    Then it is simply a case of utilising the `roots` command to determine the standardised score
+        (sometimes known as 'z-score') corresponding to the quantile of interest. For example:
+    """)
     return
 
 
@@ -319,10 +311,10 @@ def _(cdf):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""Other distributional properties are also computable. Here's how we can compute the first four
-        normalised and centralised moments (Mean, Variance, Skew, Kurtosis):"""
-    )
+    mo.md(r"""
+    Other distributional properties are also computable. Here's how we can compute the first four
+        normalised and centralised moments (Mean, Variance, Skew, Kurtosis):
+    """)
     return
 
 

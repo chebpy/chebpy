@@ -11,7 +11,7 @@
 
 import marimo
 
-__generated_with = "0.14.16"
+__generated_with = "0.21.0"
 app = marimo.App()
 
 with app.setup:
@@ -29,18 +29,16 @@ with app.setup:
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     # Complex Chebfuns
 
     As of `v0.4.0` ChebPy supports complex variable representations.
     This makes it extremely convenient to perform certain computations in the complex plane.
-    """
-    )
+    """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from chebpy import chebfun
 
@@ -49,13 +47,11 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     For example here is how we can plot a series of "Bernstein ellipses" - important objects
     in the convergence theory of Chebyshev series approximations for analytic functions.
     They are computed as transformations of the scaled complex unit circle under the Joukowsky map:
-    """
-    )
+    """)
     return
 
 
@@ -84,13 +80,11 @@ def _(chebfun):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""
+    mo.md(r"""
     Per the first line of the above code segment, each of these ellipses is a complex-valued function
     of the real variable `x` defined on `[-1, 1]`. It is trivial to extract the real and imaginary components
     and plot these on the `x` domain, which we do for the last (largest) ellipse in the sequence as follows:
-    """
-    )
+    """)
     return
 
 
@@ -106,11 +100,11 @@ def _(ellipse):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(
-        r"""Here is an example of using ChebPy to perform a contour integral calculation
+    mo.md(r"""
+    Here is an example of using ChebPy to perform a contour integral calculation
         (replicating Trefethen & Hale's
-        [example](https://www.chebfun.org/examples/complex/KeyholeContour.html)):"""
-    )
+        [example](https://www.chebfun.org/examples/complex/KeyholeContour.html)):
+    """)
     return
 
 
@@ -151,7 +145,9 @@ def _(chebfun):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""We then perform the numerical integration as follows, obtaining a typically high-accuracy result.""")
+    mo.md(r"""
+    We then perform the numerical integration as follows, obtaining a typically high-accuracy result.
+    """)
     return
 
 
