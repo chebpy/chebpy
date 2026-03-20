@@ -19,6 +19,7 @@
 [![CI](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
 [![PRE-COMMIT](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml)
 [![DEPTRY](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml)
+
 [![MARIMO](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml)
 [![DEVCONTAINER](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml)
 
