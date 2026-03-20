@@ -864,25 +864,28 @@ class Chebfun:
     def conv(self, g: Chebfun) -> Chebfun:
         """Compute the convolution of this Chebfun with g.
 
-        Computes h(x) = (f ★ g)(x) = ∫ f(t) g(x-t) dt, where both f (``self``)
-        and g are supported on the same interval [a, b].  The result is a
-        piecewise Chebfun on [2a, 2b] with a breakpoint at (a+b).
+        Computes h(x) = (f ★ g)(x) = ∫ f(t) g(x-t) dt, where domain(f) is
+        [a, b] and domain(g) is [c, d].  The result is a piecewise Chebfun on
+        [a + c, b + d] whose breakpoints are the pairwise sums of the
+        breakpoints of f and g.
+
+        Both f and g may be piecewise (contain an arbitrary number of funs).
+
+        When both inputs are single-piece with equal-width domains, the fast
+        Hale-Townsend Legendre convolution algorithm is used.  Otherwise, each
+        output sub-interval is constructed adaptively using Gauss-Legendre
+        quadrature.
 
         The algorithm is based on:
             N. Hale and A. Townsend, "An algorithm for the convolution of
             Legendre series", SIAM J. Sci. Comput., 36(3), A1207-A1220, 2014.
 
         Args:
-            g (Chebfun): A single-piece Chebfun defined on the same interval
-                as ``self``.
+            g (Chebfun): A Chebfun (single-piece or piecewise).
 
         Returns:
-            Chebfun: A two-piece Chebfun on [2a, 2b] representing (f ★ g).
-
-        Raises:
-            NotImplementedError: If either Chebfun has more than one piece.
-            SupportMismatch: If the two Chebfuns are not defined on the same
-                interval.
+            Chebfun: A piecewise Chebfun on [a + c, b + d] representing
+                (f ★ g).
 
         Examples:
             >>> import numpy as np
@@ -899,45 +902,120 @@ class Chebfun:
         if self.isempty or g.isempty:
             return self.__class__.initempty()
 
-        if self.funs.size != 1 or g.funs.size != 1:
-            raise NotImplementedError("conv only supports single-piece Chebfuns")
+        # Fast path: both single-piece with equal-width domains
+        if self.funs.size == 1 and g.funs.size == 1:
+            f_fun, g_fun = self.funs[0], g.funs[0]
+            f_w = float(f_fun.support[1]) - float(f_fun.support[0])
+            g_w = float(g_fun.support[1]) - float(g_fun.support[0])
+            if np.isclose(f_w, g_w):
+                return self._conv_equal_width_pair(f_fun, g_fun)
 
-        f_fun = self.funs[0]
-        g_fun = g.funs[0]
+        # General piecewise convolution
+        return self._conv_piecewise(g)
 
+    def _conv_equal_width_pair(self, f_fun: Any, g_fun: Any) -> Chebfun:
+        """Convolve two single Bndfuns of equal width using the fast algorithm.
+
+        Uses the Hale-Townsend Legendre convolution.  The two funs may be on
+        different intervals as long as they have the same width.
+        """
         a = float(f_fun.support[0])
         b = float(f_fun.support[1])
-        same_start = np.isclose(a, float(g_fun.support[0]))
-        same_end = np.isclose(b, float(g_fun.support[1]))
-        if not (same_start and same_end):
-            raise SupportMismatch
+        c = float(g_fun.support[0])
+        d = float(g_fun.support[1])
 
-        h = (b - a) / 2.0  # half-width; change-of-variables scaling factor
+        h = (b - a) / 2.0  # half-width (same for both funs)
 
-        # Convert Chebyshev coefficients (on [-1,1] reference domain) to Legendre
         leg_f = cheb2leg(f_fun.coeffs)
         leg_g = cheb2leg(g_fun.coeffs)
 
-        # Compute the piecewise Legendre expansion of the convolution
         gamma_left, gamma_right = _conv_legendre(leg_f, leg_g)
 
-        # Scale by h (Jacobian of the affine map from [a,b] to [-1,1])
         gamma_left = h * gamma_left
         gamma_right = h * gamma_right
 
-        # Convert Legendre back to Chebyshev
         cheb_left = leg2cheb(gamma_left)
         cheb_right = leg2cheb(gamma_right)
 
-        # Build the two result pieces on [2a, a+b] and [a+b, 2b]
-        mid = a + b
-        left_interval = Interval(2.0 * a, mid)
-        right_interval = Interval(mid, 2.0 * b)
+        mid = (a + b + c + d) / 2.0
+        left_interval = Interval(a + c, mid)
+        right_interval = Interval(mid, b + d)
 
         left_fun = Bndfun(Chebtech(cheb_left), left_interval)
         right_fun = Bndfun(Chebtech(cheb_right), right_interval)
 
         return self.__class__([left_fun, right_fun])
+
+    def _conv_piecewise(self, g: Chebfun) -> Chebfun:
+        """General piecewise convolution via Gauss-Legendre quadrature.
+
+        The breakpoints of the result are the sorted, unique pairwise sums of
+        the breakpoints of self and g.  On each sub-interval the convolution
+        integral is smooth, so we construct it adaptively.
+        """
+        f_breaks = self.breakpoints
+        g_breaks = g.breakpoints
+        f_a, f_b = float(f_breaks[0]), float(f_breaks[-1])
+        g_c, g_d = float(g_breaks[0]), float(g_breaks[-1])
+
+        # Output breakpoints: all pairwise sums, uniquified and coalesced
+        out_breaks = np.unique(np.add.outer(f_breaks, g_breaks).ravel())
+        hscl = max(abs(out_breaks[0]), abs(out_breaks[-1]), 1.0)
+        tol = 10.0 * np.finfo(float).eps * hscl
+        mask = np.concatenate(([True], np.diff(out_breaks) > tol))
+        out_breaks = out_breaks[mask]
+
+        # Quadrature order: sufficient for exact integration of polynomial
+        # integrand on each smooth sub-interval
+        max_deg = max(fun.size for fun in self.funs) + max(fun.size for fun in g.funs)
+        n_quad = max(int(np.ceil((max_deg + 1) / 2)), 16)
+        quad_nodes, quad_weights = np.polynomial.legendre.leggauss(n_quad)
+
+        # Pre-convert breakpoints to plain float lists for the inner loop
+        f_bps = [float(bp) for bp in f_breaks]
+        g_bps = [float(bp) for bp in g_breaks]
+
+        def conv_eval(x: np.ndarray) -> np.ndarray:
+            """Evaluate (self ★ g)(x) via Gauss-Legendre quadrature."""
+            x = np.atleast_1d(np.asarray(x, dtype=float))
+            result = np.zeros(x.shape)
+            for idx in range(x.size):
+                xi = x[idx]
+                t_lo = max(f_a, xi - g_d)
+                t_hi = min(f_b, xi - g_c)
+                if t_hi <= t_lo:
+                    continue
+                # Break integration at breakpoints of f and shifted breakpoints
+                # of g so the integrand is polynomial on each sub-interval.
+                inner = [t_lo, t_hi]
+                for bp in f_bps:
+                    if t_lo < bp < t_hi:
+                        inner.append(bp)
+                for bp in g_bps:
+                    shifted = xi - bp
+                    if t_lo < shifted < t_hi:
+                        inner.append(shifted)
+                inner = sorted(set(inner))
+
+                total = 0.0
+                for j in range(len(inner) - 1):
+                    a_int, b_int = inner[j], inner[j + 1]
+                    hw = (b_int - a_int) / 2.0
+                    mid = (a_int + b_int) / 2.0
+                    nodes = hw * quad_nodes + mid
+                    wts = hw * quad_weights
+                    total += np.dot(wts, self(nodes) * g(xi - nodes))
+                result[idx] = total
+            return result
+
+        # Build a Bndfun on each output sub-interval
+        funs_list = []
+        for i in range(len(out_breaks) - 1):
+            interval = Interval(out_breaks[i], out_breaks[i + 1])
+            fun = Bndfun.initfun_adaptive(conv_eval, interval)
+            funs_list.append(fun)
+
+        return self.__class__(funs_list)
 
     def sum(self) -> Any:
         """Compute the definite integral of the Chebfun over its domain.

@@ -11,10 +11,10 @@
 
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.21.0"
 app = marimo.App()
 
-with app.setup:
+with app.setup(hide_code=True):
     import marimo as mo
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -27,6 +27,18 @@ with app.setup:
     mpl.rc("figure", figsize=(9, 5), dpi=100)
 
 
+@app.function(hide_code=True)
+def mark_breakpoints(chebfun, ax=None, **kwargs):
+    """Mark breakpoints of a Chebfun on the given axes."""
+    ax = ax or plt.gca()
+    opts = {"color": "k", "marker": "o", "markersize": 6, "zorder": 5, "linestyle": "none"}
+    opts.update(kwargs)
+    bps = chebfun.breakpoints
+    vals = chebfun(bps)
+    ax.plot(bps, vals, **opts)
+    return ax
+
+
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
@@ -34,16 +46,19 @@ def _():
 
     ChebPy supports the **convolution** of two Chebfuns via the `.conv` method.
 
-    Given two functions $f$ and $g$ defined on $[a, b]$, their convolution is:
+    Given two functions $f$ on $[a, b]$ and $g$ on $[c, d]$, their convolution is:
 
     $$
-    (f \star g)(x) = \int_a^b f(t)\, g(x - t)\, dt
+    (f \star g)(x) = \int f(t)\, g(x - t)\, dt
     $$
 
-    The result is a piecewise Chebfun on $[2a, 2b]$ with a breakpoint at $a + b$.
+    The result is a piecewise Chebfun on $[a+c,\; b+d]$ whose breakpoints are the
+    pairwise sums of the breakpoints of $f$ and $g$.  Both inputs may be
+    **piecewise** (an arbitrary number of smooth pieces).
 
-    The implementation uses the Hale–Townsend algorithm, which converts to Legendre
-    coefficients, performs the convolution analytically, and converts back to Chebyshev.
+    For single-piece inputs of equal width, the fast Hale–Townsend algorithm is used.
+    For general piecewise inputs, each output sub-interval is constructed via
+    Gauss–Legendre quadrature.
 
     > N. Hale and A. Townsend, "An algorithm for the convolution of Legendre series",
     > *SIAM J. Sci. Comput.*, 36(3), A1207–A1220, 2014.
@@ -86,6 +101,7 @@ def _(Chebfun):
 @app.cell
 def _(triangle):
     triangle.plot(linewidth=3)
+    mark_breakpoints(triangle)
     plt.title("Triangle function: 1 ★ 1")
     plt.xlabel("x")
     plt.ylabel("(1 ★ 1)(x)")
@@ -133,11 +149,14 @@ def _(f_cos, f_sin, h_sincos):
     _ax1.set_title("Input functions")
     f_sin.plot(ax=_ax1, linewidth=3)
     f_cos.plot(ax=_ax1, linewidth=3)
+    mark_breakpoints(f_sin, _ax1, color="C0")
+    mark_breakpoints(f_cos, _ax1, color="C1")
     _ax1.legend(["sin", "cos"])
     _ax1.set_xlabel("x")
 
     _ax2.set_title("sin ★ cos")
     h_sincos.plot(ax=_ax2, linewidth=3, color="C2")
+    mark_breakpoints(h_sincos, _ax2)
     _ax2.set_xlabel("x")
 
     plt.tight_layout()
@@ -189,10 +208,12 @@ def _(f_exp, h_exp):
 
     _ax1.set_title("exp(x) on [-1, 1]")
     f_exp.plot(ax=_ax1, linewidth=3)
+    mark_breakpoints(f_exp, _ax1)
     _ax1.set_xlabel("x")
 
     _ax2.set_title("exp ★ exp")
     h_exp.plot(ax=_ax2, linewidth=3, color="C3")
+    mark_breakpoints(h_exp, _ax2)
     _ax2.set_xlabel("x")
 
     plt.tight_layout()
@@ -229,32 +250,74 @@ def _(Chebfun, f_cos, f_sin):
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
-    ## Example 6: Convolution on a general interval
+    ## Example 6: B-spline construction by repeated convolution
 
-    The `conv` method works on any interval $[a, b]$, not just $[-1, 1]$.
-    The result lives on $[2a, 2b]$.
+    The `conv` method handles **piecewise Chebfuns** with an arbitrary number
+    of smooth pieces.  A beautiful illustration is the construction of
+    **cardinal B-splines** via repeated convolution of the box function
+    $B_0 = \mathbf{1}_{[-1/2,\,1/2]}$:
 
-    For a different case, let $f(x)=x$ and $g(x)=1$ on $[-4, 1]$.
-    Then $f \star g$ is supported on $[-8, 2]$ and has a smooth, piecewise-quadratic shape:
+    $$
+    B_0 = \mathbf{1}_{[-\tfrac12,\tfrac12]}, \qquad
+    B_n = B_0 \star B_{n-1}, \quad n = 1, 2, 3, \ldots
+    $$
+
+    Each convolution increases smoothness by one order — $B_0$ is $C^{-1}$
+    (discontinuous), $B_1$ is $C^0$ (the hat/tent function), $B_2$ is $C^1$
+    (quadratic B-spline), and $B_3$ is $C^2$ (cubic B-spline).  The support
+    grows by 1 at each step.
+
+    *Cf.* the MATLAB Chebfun example
+    [BSplineConv](https://www.chebfun.org/examples/approx/BSplineConv.html).
     """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Chebfun):
-    ramp_interval = Chebfun.initfun_adaptive(lambda x: x, [-4, 1])
-    ones_interval = Chebfun.initconst(1.0, [-4, 1])
-    ramp_conv = ramp_interval.conv(ones_interval)
-    ramp_conv
-    return (ramp_conv,)
+    B0 = Chebfun.initconst(1.0, [-0.5, 0.5])
+    B1 = B0.conv(B0)
+    B2 = B0.conv(B1)
+    B3 = B0.conv(B2)
 
+    _splines = [B0, B1, B2, B3]
+    _titles = [
+        "$B_0$: box  (1 piece)",
+        "$B_1$: hat / linear  (2 pieces)",
+        "$B_2$: quadratic  (3 pieces)",
+        "$B_3$: cubic  (4 pieces)",
+    ]
+    _colors = ["C0", "C1", "C2", "C3"]
 
-@app.cell
-def _(ramp_conv):
-    ramp_conv.plot(linewidth=3)
-    plt.title("x ★ 1 on [-4, 1] → piecewise quadratic on [-8, 2]")
-    plt.xlabel("x")
+    _fig, _axes = plt.subplots(2, 2, figsize=(14, 10))
+    for _ax, _b, _t, _c in zip(_axes.flat, _splines, _titles, _colors, strict=False):
+        _b.plot(ax=_ax, linewidth=3, color=_c)
+        mark_breakpoints(_b, _ax, color=_c)
+        _ax.set_title(_t)
+        _ax.set_xlabel("x")
+        _ax.set_xlim(-2.5, 2.5)
+        _ax.set_ylim(-0.05, 1.1)
+
+    plt.tight_layout()
     plt.show()
+    return B0, B1, B2, B3
+
+
+@app.cell(hide_code=True)
+def _(B0, B1, B2, B3):
+    mo.md(rf"""
+    | Spline | Pieces | Support | Continuity | Peak at 0 |
+    |--------|--------|---------|------------|-----------|
+    | $B_0$  | {B0.funs.size} | $[-1/2,\; 1/2]$ | $C^{{-1}}$ | {float(B0(0.0)):.4f} |
+    | $B_1$  | {B1.funs.size} | $[-1,\; 1]$ | $C^0$ | {float(B1(0.0)):.4f} |
+    | $B_2$  | {B2.funs.size} | $[-3/2,\; 3/2]$ | $C^1$ | {float(B2(0.0)):.4f} |
+    | $B_3$  | {B3.funs.size} | $[-2, 2]$ | $C^2$ | {float(B3(0.0)):.4f} |
+
+    Each B-spline integrates to $1$ and the peak value decreases as the
+    support widens.  The breakpoints (marked with dots) are at the integers and
+    half-integers — exactly the pairwise sums of the input breakpoints, as
+    expected from the convolution theorem.
+    """)
     return
 
 
@@ -276,11 +339,6 @@ def _(h_exp):
     print(f"(exp★exp)({_a}) = {float(h_exp(_a)):.2e}")
     print(f"(exp★exp)({_b}) = {float(h_exp(_b)):.2e}")
     return
-
-
-# ---------------------------------------------------------------------------
-# Example 8: Probability — sum of independent random variables
-# ---------------------------------------------------------------------------
 
 
 @app.cell(hide_code=True)
@@ -307,6 +365,7 @@ def _(Chebfun):
     pdf_sum_uniform = pdf_uniform.conv(pdf_uniform)
 
     pdf_sum_uniform.plot(linewidth=3)
+    mark_breakpoints(pdf_sum_uniform)
     plt.title("PDF of $Z = X + Y$,  $X, Y \\sim \\mathrm{Uniform}(0,1)$")
     plt.xlabel("z")
     plt.ylabel("$f_Z(z)$")
@@ -349,11 +408,13 @@ def _(Chebfun):
 
     _ax1.set_title("$f_X(x) = 6x(1-x)$  (Beta(2,2) PDF)")
     pdf_beta22.plot(ax=_ax1, linewidth=3)
+    mark_breakpoints(pdf_beta22, _ax1)
     _ax1.set_xlabel("x")
     _ax1.set_ylabel("$f_X(x)$")
 
     _ax2.set_title("PDF of $Z = X + Y$")
     pdf_sum_beta.plot(ax=_ax2, linewidth=3, color="C1")
+    mark_breakpoints(pdf_sum_beta, _ax2)
     _ax2.set_xlabel("z")
     _ax2.set_ylabel("$f_Z(z)$")
 

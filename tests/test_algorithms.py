@@ -24,7 +24,6 @@ from chebpy.algorithms import (
 )
 from chebpy.chebfun import Chebfun
 from chebpy.chebtech import Chebtech
-from chebpy.exceptions import SupportMismatch
 
 from .utilities import cos, eps, exp, scaled_tol
 
@@ -701,21 +700,23 @@ class TestChebfunConv:
         assert f.conv(empty).isempty
         assert empty.conv(f).isempty
 
-    def test_raises_for_multipiece(self) -> None:
-        """Conv raises NotImplementedError for multi-piece Chebfuns."""
+    def test_multipiece_now_supported(self) -> None:
+        """Conv handles multi-piece Chebfuns without raising."""
         f_multi = Chebfun.initfun_adaptive(np.sin, [-1, 0, 1])
         f_single = Chebfun.initfun_adaptive(np.sin)
-        with pytest.raises(NotImplementedError):
-            f_multi.conv(f_single)
-        with pytest.raises(NotImplementedError):
-            f_single.conv(f_multi)
+        # Should not raise — just verify it produces a Chebfun
+        h = f_multi.conv(f_single)
+        assert not h.isempty
 
-    def test_raises_for_support_mismatch(self) -> None:
-        """Conv raises SupportMismatch when intervals differ."""
-        f = Chebfun.initfun_adaptive(np.sin)
+    def test_different_domains(self) -> None:
+        """Conv now supports inputs on different domains."""
+        f = Chebfun.initfun_adaptive(np.sin, [-1, 1])
         g = Chebfun.initfun_adaptive(np.cos, [-2, 2])
-        with pytest.raises(SupportMismatch):
-            f.conv(g)
+        h = f.conv(g)
+        assert not h.isempty
+        # Output domain should be [-1+(-2), 1+2] = [-3, 3]
+        assert np.isclose(float(h.domain[0]), -3.0)
+        assert np.isclose(float(h.domain[-1]), 3.0)
 
     def test_boundary_is_zero(self) -> None:
         """Convolution vanishes at the ends of the result domain."""
@@ -742,3 +743,120 @@ class TestChebfunConv:
         h = f.conv(g)
         xs = np.linspace(-1.9, 1.9, 10)
         np.testing.assert_allclose(h(xs), 0.0, atol=1e-14)
+
+
+# ---------------------------------------------------------------------------
+# General numerical convolution helper for piecewise tests
+# ---------------------------------------------------------------------------
+
+
+def _numerical_conv_general(f: Chebfun, g: Chebfun, x: float, n: int = 200_000) -> float:
+    """Numerically compute (f ★ g)(x) via the trapezoidal rule.
+
+    Works for arbitrary domains: domain(f) = [a, b], domain(g) = [c, d].
+    """
+    a, b = float(f.domain[0]), float(f.domain[-1])
+    c, d = float(g.domain[0]), float(g.domain[-1])
+    lo = max(a, x - d)
+    hi = min(b, x - c)
+    if lo >= hi:
+        return 0.0
+    t = np.linspace(lo, hi, n + 1)
+    return float(np.trapezoid(f(t) * g(x - t), t))
+
+
+# ---------------------------------------------------------------------------
+# Piecewise Chebfun.conv tests
+# ---------------------------------------------------------------------------
+
+
+class TestChebfunConvPiecewise:
+    """Tests for convolution of piecewise Chebfuns."""
+
+    def test_two_piece_self_conv(self) -> None:
+        """Convolve a 2-piece chebfun with itself via quadrature comparison."""
+        f = Chebfun.initfun_adaptive(lambda x: np.abs(x), [-1, 0, 1])
+        h = f.conv(f)
+        for x in np.linspace(-1.8, 1.8, 9):
+            expected = _numerical_conv_general(f, f, x)
+            assert abs(float(h(x)) - expected) < 1e-6, f"Mismatch at x={x}: chebpy={float(h(x))}, numerical={expected}"
+
+    def test_piecewise_domain(self) -> None:
+        """Output breakpoints are the pairwise sums of input breakpoints."""
+        f = Chebfun.initfun_adaptive(lambda x: np.ones_like(x), [-1, 0, 1])
+        g = Chebfun.initconst(1.0, [-1, 1])
+        h = f.conv(g)
+        # f breaks: -1, 0, 1; g breaks: -1, 1
+        # pairwise sums: -2, 0, -1, 1, 0, 2 → sorted unique: -2, -1, 0, 1, 2
+        expected_breaks = np.array([-2.0, -1.0, 0.0, 1.0, 2.0])
+        assert np.allclose(h.breakpoints, expected_breaks, atol=1e-12)
+
+    def test_piecewise_constant_triangle(self) -> None:
+        """Convolving a 2-piece constant with a single constant is a triangle."""
+        f = Chebfun.initconst(1.0, [-1, 0, 1])
+        g = Chebfun.initconst(1.0, [-1, 1])
+        h = f.conv(g)
+        xs = np.array([-1.5, -1.0, 0.0, 1.0, 1.5])
+        expected = np.maximum(0.0, 2.0 - np.abs(xs))
+        assert np.allclose(h(xs), expected, atol=1e-10)
+
+    def test_multipiece_commutativity(self) -> None:
+        """(f ★ g)(x) == (g ★ f)(x) for piecewise inputs."""
+        f = Chebfun.initfun_adaptive(lambda x: np.abs(x), [-1, 0, 1])
+        g = Chebfun.initfun_adaptive(np.cos, [-1, 1])
+        h_fg = f.conv(g)
+        h_gf = g.conv(f)
+        xs = np.linspace(-1.8, 1.8, 15)
+        assert np.allclose(h_fg(xs), h_gf(xs), atol=1e-6)
+
+    def test_piecewise_both_multi(self) -> None:
+        """Convolve two 2-piece chebfuns and verify against numerical quadrature."""
+        f = Chebfun.initfun_adaptive(lambda x: np.abs(x), [-1, 0, 1])
+        g = Chebfun.initfun_adaptive(lambda x: np.where(x < 0, 1 + x, 1 - x), [-1, 0, 1])
+        h = f.conv(g)
+        for x in np.linspace(-1.8, 1.8, 7):
+            expected = _numerical_conv_general(f, g, x)
+            assert abs(float(h(x)) - expected) < 1e-5
+
+    def test_different_domain_constant(self) -> None:
+        """Convolve constants on different domains: f=1 on [0,1], g=1 on [-1,0]."""
+        f = Chebfun.initconst(1.0, [0, 1])
+        g = Chebfun.initconst(1.0, [-1, 0])
+        h = f.conv(g)
+        # Output domain: [0+(-1), 1+0] = [-1, 1], breakpoint at 0
+        assert np.isclose(float(h.domain[0]), -1.0)
+        assert np.isclose(float(h.domain[-1]), 1.0)
+        # Triangle on [-1, 1]: peak at 0 with value 1
+        assert abs(float(h(0.0)) - 1.0) < 1e-10
+
+    def test_different_width_domains(self) -> None:
+        """Convolve funs on domains of different widths."""
+        f = Chebfun.initconst(1.0, [0, 1])
+        g = Chebfun.initconst(1.0, [0, 2])
+        h = f.conv(g)
+        # Output on [0, 3]; breakpoints at 0, 1, 2, 3
+        assert np.isclose(float(h.domain[0]), 0.0)
+        assert np.isclose(float(h.domain[-1]), 3.0)
+        # h(x) should be a trapezoid: ramp up on [0,1], flat=1 on [1,2], ramp down on [2,3]
+        assert abs(float(h(0.5)) - 0.5) < 1e-10
+        assert abs(float(h(1.5)) - 1.0) < 1e-10
+        assert abs(float(h(2.5)) - 0.5) < 1e-10
+
+    def test_piecewise_boundary_zero(self) -> None:
+        """Convolution of piecewise chebfuns vanishes at the domain ends."""
+        f = Chebfun.initfun_adaptive(lambda x: np.abs(x), [-1, 0, 1])
+        g = Chebfun.initfun_adaptive(np.sin, [-1, 1])
+        h = f.conv(g)
+        a, b = float(h.domain[0]), float(h.domain[-1])
+        assert abs(float(h(a))) < 1e-8
+        assert abs(float(h(b))) < 1e-8
+
+    def test_three_piece_conv(self) -> None:
+        """Convolve a 3-piece chebfun with a single piece."""
+        f = Chebfun.initfun_adaptive(lambda x: np.ones_like(x), [-1, -0.5, 0.5, 1])
+        g = Chebfun.initconst(1.0, [-1, 1])
+        h = f.conv(g)
+        # Should give the triangle function (same as 1-piece constant case)
+        xs = np.array([0.0, 0.5, 1.0, -0.5, -1.0])
+        expected = np.maximum(0.0, 2.0 - np.abs(xs))
+        assert np.allclose(h(xs), expected, atol=1e-10)
