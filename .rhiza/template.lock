@@ -10,6 +10,7 @@ templates:
 - github
 - marimo
 - tests
+- book
 files:
 - .devcontainer/bootstrap.sh
 - .devcontainer/devcontainer.json
@@ -27,6 +28,7 @@ files:
 - .github/workflows/copilot-setup-steps.yml
 - .github/workflows/renovate_rhiza_sync.yml
 - .github/workflows/rhiza_benchmarks.yml
+- .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
 - .github/workflows/rhiza_codeql.yml
 - .github/workflows/rhiza_deptry.yml
@@ -54,6 +56,7 @@ files:
 - .rhiza/docs/WORKFLOWS.md
 - .rhiza/make.d/README.md
 - .rhiza/make.d/agentic.mk
+- .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
@@ -70,6 +73,7 @@ files:
 - .rhiza/requirements/tests.txt
 - .rhiza/requirements/tools.txt
 - .rhiza/rhiza.mk
+- .rhiza/templates/minibook/custom.html.jinja2
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
 - .rhiza/tests/api/test_gh_aw_targets.py
@@ -104,6 +108,7 @@ files:
 - .rhiza/tests/utils/test_git_repo_fixture.py
 - Makefile
 - docs/ARCHITECTURE.md
+- docs/BOOK.md
 - docs/CUSTOMIZATION.md
 - docs/DEMO.md
 - docs/DEVCONTAINER.md
@@ -116,5 +121,5 @@ files:
 - ruff.toml
 - tests/benchmarks/conftest.py
 - tests/benchmarks/test_benchmarks.py
-synced_at: '2026-03-17T08:56:55Z'
+synced_at: '2026-03-20T07:49:27Z'
 strategy: merge
