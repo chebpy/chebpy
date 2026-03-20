@@ -10,4 +10,3 @@ templates:
 
 exclude:
   - book/marimo/notebooks/rhiza.py  
-  - docs/BOOK.md

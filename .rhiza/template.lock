@@ -5,6 +5,7 @@ ref: v0.8.12
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
+- docs/BOOK.md
 templates:
 - devcontainer
 - github
@@ -108,7 +109,6 @@ files:
 - .rhiza/tests/utils/test_git_repo_fixture.py
 - Makefile
 - docs/ARCHITECTURE.md
-- docs/BOOK.md
 - docs/CUSTOMIZATION.md
 - docs/DEMO.md
 - docs/DEVCONTAINER.md
@@ -121,5 +121,5 @@ files:
 - ruff.toml
 - tests/benchmarks/conftest.py
 - tests/benchmarks/test_benchmarks.py
-synced_at: '2026-03-20T07:48:10Z'
+synced_at: '2026-03-20T07:48:49Z'
 strategy: merge
