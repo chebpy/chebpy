@@ -55,10 +55,10 @@ def test_sum(calculus_fixtures):
     f2 = calculus_fixtures["f2"]
 
     # For sin(4x - 1.4), the integral over [-1, 1] is approximately 0.3729
-    assert abs(f1.sum() - 0.372895407327895) < 1e-4
+    assert abs(f1.sum() - 0.372895407327895) < 1e-14
 
     # For exp(x), the integral over [-1, 1] is approximately e - 1/e
-    assert abs(f2.sum() - (np.exp(1) - np.exp(-1))) < 1e-10
+    assert abs(f2.sum() - (np.exp(1) - np.exp(-1))) < 1e-14
 
 
 def test_diff(calculus_fixtures):
@@ -76,11 +76,11 @@ def test_diff(calculus_fixtures):
     # Derivative of x^2 is 2x
     df3 = f3.diff()
     xx = np.linspace(-1, 1, 100)
-    assert np.max(np.abs(df3(xx) - 2 * xx)) < 1e-10
+    assert np.max(np.abs(df3(xx) - 2 * xx)) < 1e-14
 
     # Derivative of x^3 is 3x^2
     df4 = f4.diff()
-    assert np.max(np.abs(df4(xx) - 3 * xx**2)) < 1e-10
+    assert np.max(np.abs(df4(xx) - 3 * xx**2)) < 1e-14
 
 
 def test_cumsum(calculus_fixtures):
@@ -116,10 +116,10 @@ def test_dot(calculus_fixtures):
     f4 = calculus_fixtures["f4"]
 
     # Inner product of x^2 and x^3 over [-1, 1] is 0 (odd function)
-    assert abs(f3.dot(f4)) < 1e-10
+    assert abs(f3.dot(f4)) < 1e-14
 
     # Inner product of x^2 and x^2 over [-1, 1] is 2/5
-    assert abs(f3.dot(f3) - 2 / 5) < 1e-10
+    assert abs(f3.dot(f3) - 2 / 5) < 1e-14
 
 
 def test_dot_commute(calculus_fixtures):
@@ -134,7 +134,7 @@ def test_dot_commute(calculus_fixtures):
     f1 = calculus_fixtures["f1"]
     f2 = calculus_fixtures["f2"]
 
-    assert abs(f1.dot(f2) - f2.dot(f1)) < 1e-10
+    assert abs(f1.dot(f2) - f2.dot(f1)) < 1e-14
 
 
 def test_dot_empty(emptyfun, calculus_fixtures):
@@ -168,19 +168,19 @@ def test_diff_order(calculus_fixtures):
     # Second derivative of x^2 is 2 (constant)
     d2f3 = f3.diff(2)
     xx = np.linspace(-1, 1, 100)
-    assert np.max(np.abs(d2f3(xx) - 2)) < 1e-10
+    assert np.max(np.abs(d2f3(xx) - 2)) < 1e-14
 
     # Second derivative of x^3 is 6x
     d2f4 = f4.diff(2)
-    assert np.max(np.abs(d2f4(xx) - 6 * xx)) < 1e-10
+    assert np.max(np.abs(d2f4(xx) - 6 * xx)) < 1e-14
 
     # Third derivative of x^3 is 6 (constant)
     d3f4 = f4.diff(3)
-    assert np.max(np.abs(d3f4(xx) - 6)) < 1e-10
+    assert np.max(np.abs(d3f4(xx) - 6)) < 1e-14
 
     # Fourth derivative of x^3 should be zero
     d4f4 = f4.diff(4)
-    assert np.max(np.abs(d4f4(xx))) < 1e-10
+    assert np.max(np.abs(d4f4(xx))) < 1e-14
 
 
 def test_diff_successive(calculus_fixtures):
@@ -201,7 +201,7 @@ def test_diff_successive(calculus_fixtures):
 
     # Compare results
     xx = np.linspace(-1, 1, 100)
-    assert np.max(np.abs(d2f4_successive(xx) - d2f4_direct(xx))) < 1e-10
+    assert np.max(np.abs(d2f4_successive(xx) - d2f4_direct(xx))) < 1e-14
 
 
 def test_norm(calculus_fixtures):
@@ -220,12 +220,12 @@ def test_norm(calculus_fixtures):
     # Norm of exp(x) over [-1, 1]
     # integral(exp(2x)) = [exp(2x)/2] from -1 to 1 = (e^2 - e^{-2})/2
     expected_norm_f2 = np.sqrt((np.exp(2) - np.exp(-2)) / 2)
-    assert abs(f2.norm() - expected_norm_f2) < 1e-10
+    assert abs(f2.norm() - expected_norm_f2) < 1e-14
 
     # Norm of x^2 over [-1, 1]
     # integral(x^4) = 2/5 for [-1, 1]
     expected_norm_f3 = np.sqrt(2 / 5)
-    assert abs(f3.norm() - expected_norm_f3) < 1e-10
+    assert abs(f3.norm() - expected_norm_f3) < 1e-14
 
     # Norm should always be non-negative
     assert f1.norm() >= 0
@@ -255,8 +255,8 @@ def test_norm_relation_to_dot(calculus_fixtures):
     f3 = calculus_fixtures["f3"]
 
     # ||f||^2 should equal f.dot(f)
-    assert abs(f2.norm() ** 2 - f2.dot(f2)) < 1e-10
-    assert abs(f3.norm() ** 2 - f3.dot(f3)) < 1e-10
+    assert abs(f2.norm() ** 2 - f2.dot(f2)) < 1e-14
+    assert abs(f3.norm() ** 2 - f3.dot(f3)) < 1e-14
 
 
 class TestChebfunCalculusEdgeCases:
@@ -280,7 +280,7 @@ class TestChebfunCalculusEdgeCases:
         # Fourth derivative of x^4 is 24
         f4 = f.diff(4)
         xx = np.linspace(-1, 1, 20)
-        assert np.allclose(f4(xx), 24, atol=1e-10)
+        assert np.allclose(f4(xx), 24, atol=1e-14)
 
     def test_multipiece_cumsum_with_many_pieces(self):
         """Test cumsum with more than 2 pieces."""
@@ -308,28 +308,28 @@ class TestChebfunCalculusEdgeCases:
         f = chebfun(lambda x: x, [-1, 1])
         # L1 norm = integral(|x|) from -1 to 1 = 2 * integral(x) from 0 to 1 = 1
         norm_l1 = f.norm(p=1)
-        assert np.isclose(norm_l1, 1.0, atol=1e-10)
+        assert np.isclose(norm_l1, 1.0, atol=1e-14)
 
     def test_norm_l2(self):
         """Test L2 norm (default)."""
         f = chebfun(lambda x: x, [-1, 1])
         # L2 norm = sqrt(integral(x^2)) from -1 to 1 = sqrt(2/3)
         norm_l2 = f.norm()
-        assert np.isclose(norm_l2, np.sqrt(2 / 3), atol=1e-10)
+        assert np.isclose(norm_l2, np.sqrt(2 / 3), atol=1e-14)
 
     def test_norm_linf(self):
         """Test L-infinity norm."""
         f = chebfun(lambda x: x**2, [-1, 1])
         # L-inf norm = max|x^2| on [-1, 1] = 1
         norm_linf = f.norm(np.inf)
-        assert np.isclose(norm_linf, 1.0, atol=1e-10)
+        assert np.isclose(norm_linf, 1.0, atol=1e-14)
 
     def test_norm_l3(self):
         """Test L3 norm."""
         f = chebfun(lambda x: x * 0 + 1, [-1, 1])  # Constant function workaround
         # L3 norm of constant 1 = (integral(1) from -1 to 1)^(1/3) = 2^(1/3)
         norm_l3 = f.norm(p=3)
-        assert np.isclose(norm_l3, 2 ** (1 / 3), atol=1e-10)
+        assert np.isclose(norm_l3, 2 ** (1 / 3), atol=1e-14)
 
     def test_norm_invalid_p(self):
         """Test norm with invalid p value."""
@@ -345,11 +345,11 @@ class TestChebfunCalculusEdgeCases:
         f = chebfun(lambda x: x, [-1, 0, 1])
         norm = f.norm()  # L2 by default
         # L2 norm of x on [-1,1] = sqrt(2/3)
-        assert np.isclose(norm, np.sqrt(2 / 3), atol=1e-10)
+        assert np.isclose(norm, np.sqrt(2 / 3), atol=1e-14)
 
     def test_norm_linf_with_multiple_extrema(self):
         """Test L-infinity norm with multiple local maxima."""
         f = chebfun(lambda x: np.sin(3 * x), [-np.pi, np.pi])
         norm_inf = f.norm(np.inf)
         # Should be 1 (max of |sin|)
-        assert np.isclose(norm_inf, 1.0, atol=1e-10)
+        assert np.isclose(norm_inf, 1.0, atol=1e-14)
