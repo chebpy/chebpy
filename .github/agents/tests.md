@@ -80,6 +80,22 @@ via `from tests.generic.<module> import <function>`.
 The `conftest.py` fixtures (`emptyfun`, `constfun`, `complexfun`) auto-detect
 the correct type based on the requesting test module name.
 
+**Name-collision rule (`# noqa: F811`):** When a flat test file imports a
+generic test function (e.g. `test_roots` from `tests.generic.complex`) *and*
+defines a class method with the same name, ruff raises F811 (redefinition of
+unused name). Suppress this on the **method definition** with
+`# noqa: F811` — the import is still collected by pytest at module level while
+the class method runs in its own scope:
+
+```python
+from tests.generic.complex import test_roots  # noqa: F401
+
+class TestRoots:
+    @pytest.mark.parametrize(("f", "roots"), rootstestfuns)
+    def test_roots(self, f, roots):  # noqa: F811
+        ...
+```
+
 ### Test Organization Within Files
 
 Each test file should be organized with:
