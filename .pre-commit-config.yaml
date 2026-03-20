@@ -50,7 +50,7 @@ repos:
         args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.9
+    rev: 0.10.11
     hooks:
       - id: uv-lock
 
