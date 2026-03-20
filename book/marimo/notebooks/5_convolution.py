@@ -434,5 +434,123 @@ def _(pdf_sum_beta):
     return
 
 
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    ## Example 9: The convolution theorem and the sinc function
+
+    The **convolution theorem** states that convolution in the time domain
+    corresponds to multiplication in the frequency domain:
+
+    $$
+    \widehat{f \star g}(\omega) = \hat{f}(\omega)\,\hat{g}(\omega)
+    $$
+
+    where $\hat{f}(\omega) = \int f(t)\, e^{-2\pi i \omega t}\,dt$ is the
+    Fourier transform.
+
+    A classic illustration uses the **box function**
+    $B_0 = \mathbf{1}_{[-1/2,\,1/2]}$, whose Fourier transform is the
+    **sinc function**:
+
+    $$
+    \widehat{B_0}(\omega) = \operatorname{sinc}(\omega)
+        = \frac{\sin(\pi\omega)}{\pi\omega}
+    $$
+
+    Since $B_0 \star B_0 = B_1$ (the triangle / hat function), the
+    convolution theorem tells us:
+
+    $$
+    \widehat{B_1}(\omega) = \operatorname{sinc}^2(\omega)
+    $$
+
+    Let's verify this numerically with ChebPy.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(Chebfun):
+    # Time domain: box and triangle (from B-spline construction)
+    box = Chebfun.initconst(1.0, [-0.5, 0.5])
+    tri_conv = box.conv(box)
+
+    # Frequency domain: sinc and sinc² as Chebfuns of ω
+    _wmax = 6.0
+    ft_box = Chebfun.initfun_adaptive(lambda w: np.sinc(w), [-_wmax, _wmax])
+    ft_tri = Chebfun.initfun_adaptive(lambda w: np.sinc(w) ** 2, [-_wmax, _wmax])
+
+    _fig, _axes = plt.subplots(2, 2, figsize=(16, 10))
+
+    # Top-left: time domain — box
+    _axes[0, 0].set_title("$B_0(t)$ — box function")
+    box.plot(ax=_axes[0, 0], linewidth=3, color="C0")
+    mark_breakpoints(box, _axes[0, 0], color="C0")
+    _axes[0, 0].set_xlabel("$t$")
+    _axes[0, 0].set_xlim(-1.5, 1.5)
+    _axes[0, 0].set_ylim(-0.1, 1.2)
+
+    # Top-right: frequency domain — sinc
+    _axes[0, 1].set_title(r"$\widehat{B_0}(\omega) = \mathrm{sinc}(\omega)$")
+    ft_box.plot(ax=_axes[0, 1], linewidth=3, color="C0")
+    mark_breakpoints(ft_box, _axes[0, 1], color="C0")
+    _axes[0, 1].set_xlabel(r"$\omega$")
+
+    # Bottom-left: time domain — triangle (B0 ★ B0)
+    _axes[1, 0].set_title("$B_1(t) = B_0 \\star B_0$ — triangle")
+    tri_conv.plot(ax=_axes[1, 0], linewidth=3, color="C1")
+    mark_breakpoints(tri_conv, _axes[1, 0], color="C1")
+    _axes[1, 0].set_xlabel("$t$")
+    _axes[1, 0].set_xlim(-1.5, 1.5)
+    _axes[1, 0].set_ylim(-0.1, 1.2)
+
+    # Bottom-right: frequency domain — sinc²
+    _axes[1, 1].set_title(r"$\widehat{B_1}(\omega) = \mathrm{sinc}^2(\omega)$")
+    ft_tri.plot(ax=_axes[1, 1], linewidth=3, color="C1")
+    mark_breakpoints(ft_tri, _axes[1, 1], color="C1")
+    _axes[1, 1].set_xlabel(r"$\omega$")
+
+    plt.tight_layout()
+    plt.show()
+    return box, ft_box, tri_conv
+
+
+@app.cell(hide_code=True)
+def _(Chebfun, box, ft_box, tri_conv):
+    # Numerically verify the convolution theorem:
+    # Compute FT of box and triangle via chebpy integration, compare with sinc / sinc²
+    _ws = np.linspace(0.5, 5.5, 50)
+    _ft_box_num = np.array(
+        [
+            float((box * Chebfun.initfun_adaptive(lambda t, w=w: np.cos(2 * np.pi * w * t), [-0.5, 0.5])).sum())
+            for w in _ws
+        ]
+    )
+    _ft_tri_num = np.array(
+        [
+            float((tri_conv * Chebfun.initfun_adaptive(lambda t, w=w: np.cos(2 * np.pi * w * t), [-1.0, 1.0])).sum())
+            for w in _ws
+        ]
+    )
+
+    _err_box = np.max(np.abs(_ft_box_num - ft_box(_ws)))
+    _err_tri = np.max(np.abs(_ft_tri_num - np.sinc(_ws) ** 2))
+    _err_thm = np.max(np.abs(_ft_tri_num - _ft_box_num**2))
+
+    mo.md(rf"""
+    **Numerical verification** (computed via ChebPy integration):
+
+    | Check | $\|\|\cdot\|\|_\infty$ error |
+    |-------|------------------------------|
+    | $\widehat{{B_0}}(\omega)$ vs $\mathrm{{sinc}}(\omega)$ | {_err_box:.2e} |
+    | $\widehat{{B_1}}(\omega)$ vs $\mathrm{{sinc}}^2(\omega)$ | {_err_tri:.2e} |
+    | $\widehat{{B_0 \star B_0}}$ vs $\widehat{{B_0}}^2$ (convolution theorem) | {_err_thm:.2e} |
+
+    All errors are at machine precision, confirming the convolution theorem.
+    """)
+    return
+
+
 if __name__ == "__main__":
     app.run()
