@@ -17,7 +17,8 @@ Reference:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -38,7 +39,7 @@ class _GPROptions:
     sigma_given: bool = False
     length_scale: float = 0.0
     noise: float = 0.0
-    domain: np.ndarray | None = None
+    domain: np.ndarray = field(default_factory=lambda: np.array([-1.0, 1.0]))
     trig: bool = False
     n_samples: int = 0
 
@@ -130,7 +131,7 @@ def _select_length_scale(x: np.ndarray, y: np.ndarray, opts: _GPROptions) -> flo
     return _golden_section_max(lambda ls: float(_log_marginal_likelihood(ls, x, y, opts)), lo, hi)
 
 
-def _golden_section_max(f: callable, a: float, b: float, tol: float = 1e-6) -> float:
+def _golden_section_max(f: Callable[[float], float], a: float, b: float, tol: float = 1e-6) -> float:
     """Golden-section search for the scalar argmax of *f* on [a, b]."""
     gr = (np.sqrt(5.0) + 1.0) / 2.0
     c = b - (b - a) / gr
