@@ -151,6 +151,164 @@ def _golden_section_max(f: Callable[[float], float], a: float, b: float, tol: fl
 # ---------------------------------------------------------------------------
 
 
+def _parse_inputs(
+    x: ArrayLike,
+    y: ArrayLike,
+    *,
+    sigma: float | None,
+    noise: float,
+    trig: bool,
+    n_samples: int,
+) -> tuple[np.ndarray, np.ndarray, _GPROptions, float]:
+    """Validate inputs and build the initial options container.
+
+    Returns ``(x_arr, y_arr, opts, scaling_factor)``.
+    """
+    x_arr = np.asarray(x, dtype=float).ravel()
+    y_arr = np.asarray(y, dtype=float).ravel()
+    if x_arr.shape != y_arr.shape:
+        msg = "x and y must have the same length."
+        raise ValueError(msg)
+
+    opts = _GPROptions(trig=trig, noise=noise, n_samples=n_samples)
+
+    scaling_factor = 1.0
+    if sigma is not None:
+        opts.sigma = sigma
+        opts.sigma_given = True
+    else:
+        if len(y_arr) > 0:
+            scaling_factor = float(np.max(np.abs(y_arr)))
+        opts.sigma_given = False
+        opts.sigma = scaling_factor
+
+    return x_arr, y_arr, opts, scaling_factor
+
+
+def _infer_domain(
+    x_arr: np.ndarray,
+    opts: _GPROptions,
+    domain: tuple[float, float] | list[float] | np.ndarray | None,
+) -> None:
+    """Set ``opts.domain`` from *domain* or from the observation locations."""
+    if domain is not None:
+        opts.domain = np.asarray(domain, dtype=float)
+    elif len(x_arr) == 0:
+        opts.domain = np.array([-1.0, 1.0])
+    elif len(x_arr) == 1:
+        opts.domain = np.array([x_arr[0] - 1, x_arr[0] + 1])
+    elif opts.trig:
+        span = float(np.max(x_arr) - np.min(x_arr))
+        opts.domain = np.array([float(np.min(x_arr)), float(np.max(x_arr)) + 0.1 * span])
+    else:
+        opts.domain = np.array([float(np.min(x_arr)), float(np.max(x_arr))])
+
+
+def _infer_length_scale(
+    x_arr: np.ndarray,
+    y_arr: np.ndarray,
+    opts: _GPROptions,
+    scaling_factor: float,
+    length_scale: float | None,
+) -> None:
+    """Set ``opts.length_scale`` — user-supplied or auto-selected."""
+    if length_scale is not None:
+        opts.length_scale = length_scale
+        return
+
+    if len(x_arr) == 0:
+        opts.length_scale = 1.0
+        return
+
+    y_n = y_arr / scaling_factor if scaling_factor != 0 else y_arr
+
+    if not opts.sigma_given:
+        tmp = _GPROptions(
+            sigma=1.0,
+            sigma_given=True,
+            noise=opts.noise / scaling_factor if scaling_factor != 0 else opts.noise,
+            domain=opts.domain,
+            trig=opts.trig,
+        )
+        y_opt = y_n
+    else:
+        tmp = _GPROptions(
+            sigma=opts.sigma,
+            sigma_given=True,
+            noise=opts.noise,
+            domain=opts.domain,
+            trig=opts.trig,
+        )
+        y_opt = y_arr
+
+    opts.length_scale = _select_length_scale(x_arr, y_opt, tmp)
+
+
+def _posterior_chebfuns(
+    x_arr: np.ndarray,
+    y_arr: np.ndarray,
+    opts: _GPROptions,
+    scaling_factor: float,
+    n_samples: int,
+) -> tuple[Chebfun, Chebfun] | tuple[Chebfun, Chebfun, Quasimatrix]:
+    """Compute posterior mean, variance, and optional samples as Chebfuns."""
+    n = len(x_arr)
+    cov_mat = _kernel_matrix(x_arr, x_arr, opts)
+    if opts.noise == 0:
+        cov_mat += 1e-15 * scaling_factor**2 * n * np.eye(n)
+    else:
+        cov_mat += opts.noise**2 * np.eye(n)
+
+    chol_l = np.linalg.cholesky(cov_mat)
+    alpha = np.linalg.solve(chol_l.T, np.linalg.solve(chol_l, y_arr))
+
+    # Shared Chebyshev grid
+    sample_size = min(20 * n, 2000)
+    t = chebpts2(sample_size)
+    x_sample = 0.5 * (opts.domain[1] - opts.domain[0]) * t + 0.5 * (opts.domain[0] + opts.domain[1])
+
+    in_x = np.isin(x_sample, x_arr)
+
+    k_star = _kernel_matrix(x_sample, x_arr, opts)
+    if opts.noise:
+        k_star += opts.noise**2 * (np.abs(x_sample[:, None] - x_arr[None, :]) == 0)
+
+    # Posterior mean
+    mean_vals = k_star @ alpha
+    f_mean = Chebfun.initfun_fixedlen(lambda _z: mean_vals, sample_size, opts.domain)
+
+    # Posterior variance
+    k_ss = _kernel_matrix(x_sample, x_sample, opts)
+    if opts.noise:
+        k_ss += opts.noise**2 * np.diag(in_x.astype(float))
+
+    v = np.linalg.solve(chol_l, k_star.T)
+    var_diag = np.diag(k_ss) - np.sum(v**2, axis=0)
+    var_diag = np.maximum(var_diag, 0.0)
+    f_var = Chebfun.initfun_fixedlen(lambda _z: var_diag, sample_size, opts.domain)
+
+    if n_samples <= 0:
+        return f_mean, f_var
+
+    # Posterior samples
+    cov_post = k_ss - v.T @ v
+    cov_post = 0.5 * (cov_post + cov_post.T)
+    cov_post += 1e-12 * scaling_factor**2 * n * np.eye(sample_size)
+    chol_s = np.linalg.cholesky(cov_post)
+
+    draws = mean_vals[:, None] + chol_s @ np.random.randn(sample_size, n_samples)
+    cols: list[Chebfun] = []
+    for j in range(n_samples):
+        cols.append(
+            Chebfun.initfun_fixedlen(
+                lambda _z, _j=j: draws[:, _j],
+                sample_size,
+                opts.domain,
+            )
+        )
+    return f_mean, f_var, Quasimatrix(cols)
+
+
 def gpr(
     x: ArrayLike,
     y: ArrayLike,
@@ -212,77 +370,18 @@ def gpr(
         C. E. Rasmussen & C. K. I. Williams, "Gaussian Processes for Machine
         Learning", MIT Press, 2006.
     """
-    x_arr = np.asarray(x, dtype=float).ravel()
-    y_arr = np.asarray(y, dtype=float).ravel()
-    if x_arr.shape != y_arr.shape:
-        msg = "x and y must have the same length."
-        raise ValueError(msg)
+    x_arr, y_arr, opts, scaling_factor = _parse_inputs(
+        x,
+        y,
+        sigma=sigma,
+        noise=noise,
+        trig=trig,
+        n_samples=n_samples,
+    )
+    _infer_domain(x_arr, opts, domain)
+    _infer_length_scale(x_arr, y_arr, opts, scaling_factor, length_scale)
 
-    # ---- build options ----------------------------------------------------
-    opts = _GPROptions()
-    opts.trig = trig
-    opts.noise = noise
-    opts.n_samples = n_samples
-
-    # Signal variance
-    scaling_factor = 1.0
-    if sigma is not None:
-        opts.sigma = sigma
-        opts.sigma_given = True
-    else:
-        if len(y_arr) > 0:
-            scaling_factor = float(np.max(np.abs(y_arr)))
-        opts.sigma_given = False
-
-    # Normalise y so that the internal kernel has sigma=1 when not user-given
-    y_n = y_arr / scaling_factor if scaling_factor != 0 else y_arr
-
-    if not opts.sigma_given:
-        opts.sigma = scaling_factor
-
-    # Domain
-    if domain is not None:
-        opts.domain = np.asarray(domain, dtype=float)
-    elif len(x_arr) == 0:
-        opts.domain = np.array([-1.0, 1.0])
-    elif len(x_arr) == 1:
-        opts.domain = np.array([x_arr[0] - 1, x_arr[0] + 1])
-    elif trig:
-        span = float(np.max(x_arr) - np.min(x_arr))
-        opts.domain = np.array([float(np.min(x_arr)), float(np.max(x_arr)) + 0.1 * span])
-    else:
-        opts.domain = np.array([float(np.min(x_arr)), float(np.max(x_arr))])
-
-    # Length scale
-    if length_scale is not None:
-        opts.length_scale = length_scale
-    elif len(x_arr) > 0:
-        if not opts.sigma_given:
-            # internal optimisation uses normalised sigma=1
-            tmp = _GPROptions(
-                sigma=1.0,
-                sigma_given=True,
-                noise=opts.noise / scaling_factor if scaling_factor != 0 else opts.noise,
-                domain=opts.domain,
-                trig=opts.trig,
-            )
-        else:
-            tmp = _GPROptions(
-                sigma=opts.sigma,
-                sigma_given=True,
-                noise=opts.noise,
-                domain=opts.domain,
-                trig=opts.trig,
-            )
-        opts.length_scale = _select_length_scale(
-            x_arr,
-            y_n if not opts.sigma_given else y_arr,
-            tmp,
-        )
-    else:
-        opts.length_scale = 1.0  # unused, but avoid zero
-
-    # ---- no data: prior ---------------------------------------------------
+    # No data → return prior
     if len(x_arr) == 0:
         f_mean = Chebfun.initconst(0.0, opts.domain)
         f_var = Chebfun.initconst(opts.sigma**2, opts.domain)
@@ -290,66 +389,7 @@ def gpr(
             return f_mean, f_var, _prior_samples(opts, scaling_factor, n_samples)
         return f_mean, f_var
 
-    # ---- kernel matrix at training points ---------------------------------
-    n = len(x_arr)
-    cov_mat = _kernel_matrix(x_arr, x_arr, opts)
-    if opts.noise == 0:
-        cov_mat += 1e-15 * scaling_factor**2 * n * np.eye(n)
-    else:
-        cov_mat += opts.noise**2 * np.eye(n)
-
-    chol_l = np.linalg.cholesky(cov_mat)
-    alpha = np.linalg.solve(chol_l.T, np.linalg.solve(chol_l, y_arr))
-
-    # ---- shared Chebyshev grid for mean / variance / samples --------------
-    sample_size = min(20 * n, 2000)
-    # Map chebpts from [-1,1] to the domain
-    t = chebpts2(sample_size)
-    x_sample = 0.5 * (opts.domain[1] - opts.domain[0]) * t + 0.5 * (opts.domain[0] + opts.domain[1])
-
-    in_x = np.isin(x_sample, x_arr)
-
-    k_star = _kernel_matrix(x_sample, x_arr, opts)
-    if opts.noise:
-        k_star += opts.noise**2 * (np.abs(x_sample[:, None] - x_arr[None, :]) == 0)
-
-    # ---- posterior mean (fixed-length Chebfun from grid values) -----------
-    mean_vals = k_star @ alpha
-    f_mean = Chebfun.initfun_fixedlen(lambda _z: mean_vals, sample_size, opts.domain)
-
-    # ---- posterior variance -----------------------------------------------
-    k_ss = _kernel_matrix(x_sample, x_sample, opts)
-    if opts.noise:
-        k_ss += opts.noise**2 * np.diag(in_x.astype(float))
-
-    v = np.linalg.solve(chol_l, k_star.T)
-    var_diag = np.diag(k_ss) - np.sum(v**2, axis=0)
-    var_diag = np.maximum(var_diag, 0.0)
-
-    f_var = Chebfun.initfun_fixedlen(lambda _z: var_diag, sample_size, opts.domain)
-
-    # ---- posterior samples ------------------------------------------------
-    if n_samples > 0:
-        cov_post = k_ss - v.T @ v
-        cov_post = 0.5 * (cov_post + cov_post.T)  # symmetrise
-        cov_post += 1e-12 * scaling_factor**2 * n * np.eye(sample_size)
-        chol_s = np.linalg.cholesky(cov_post)
-
-        draws = mean_vals[:, None] + chol_s @ np.random.randn(sample_size, n_samples)
-
-        cols: list[Chebfun] = []
-        for j in range(n_samples):
-            cols.append(
-                Chebfun.initfun_fixedlen(
-                    lambda _z, _j=j: draws[:, _j],
-                    sample_size,
-                    opts.domain,
-                )
-            )
-        samples = Quasimatrix(cols)
-        return f_mean, f_var, samples
-
-    return f_mean, f_var
+    return _posterior_chebfuns(x_arr, y_arr, opts, scaling_factor, n_samples)
 
 
 def _prior_samples(
