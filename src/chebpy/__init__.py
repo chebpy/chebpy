@@ -20,9 +20,9 @@ Main components and modules:
 
 import importlib.metadata
 
-from .api import chebfun, pwc
+from .api import chebfun, chebpts, pwc
 from .quasimatrix import Quasimatrix, polyfit
 from .settings import ChebPreferences as UserPreferences
 
-__all__ = ["Quasimatrix", "UserPreferences", "chebfun", "polyfit", "pwc"]
+__all__ = ["Quasimatrix", "UserPreferences", "chebfun", "chebpts", "polyfit", "pwc"]
 __version__ = importlib.metadata.version("chebfun")

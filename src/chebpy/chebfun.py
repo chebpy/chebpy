@@ -444,18 +444,16 @@ class Chebfun:
     __radd__ = __add__
 
     def __str__(self) -> str:
-        """Return a concise string representation of the Chebfun.
+        """Return a human-readable string representation of the Chebfun.
 
-        This method returns a brief string representation of the Chebfun,
-        showing its orientation, number of pieces, total size, and domain.
+        This method returns the same detailed representation as ``__repr__``,
+        so that ``print(f)`` shows the full summary table.  This is consistent
+        with the behaviour of numpy and pandas objects.
 
         Returns:
-            str: A concise string representation of the Chebfun.
+            str: A detailed string representation of the Chebfun.
         """
-        rowcol = "row" if self.transposed else "col"
-        domain_str = f"domain {self.support}" if not self.isempty else "empty"
-        out = f"<Chebfun-{rowcol},{self.funs.size},{sum([f.size for f in self])}, {domain_str}>\n"
-        return out
+        return repr(self)
 
     def __sub__(self, f: Any) -> Any:
         """Subtract another object from this Chebfun.
