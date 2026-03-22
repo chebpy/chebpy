@@ -7,6 +7,7 @@
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE.rst)
 [![Python versions](https://img.shields.io/badge/Python-3.11%20•%203.12%20•%203.13%20•%203.14-blue?logo=python)](https://www.python.org/)
 [![PyPI - Version](https://img.shields.io/pypi/v/chebfun.svg)](https://pypi.org/project/chebfun/)
+[![Coverage](https://raw.githubusercontent.com/chebpy/chebpy/gh-pages/coverage-badge.svg)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
 
 ![Github](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=white)
@@ -19,7 +20,6 @@
 [![CI](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
 [![PRE-COMMIT](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml)
 [![DEPTRY](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml)
-[![Coverage](https://raw.githubusercontent.com/chebpy/chebpy/gh-pages/coverage-badge.svg)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
 
 [![MARIMO](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml)
 [![DEVCONTAINER](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml)
