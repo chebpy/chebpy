@@ -31,6 +31,7 @@ The repository uses several automated workflows (located in `.github/workflows/`
 - **Release** (`rhiza_release.yml`) - Package publishing
 - **Deptry** (`rhiza_deptry.yml`) - Dependency checks
 - **Marimo** (`rhiza_marimo.yml`) - Interactive notebooks
+- **Typecheck** (`rhiza_typecheck.yml`) - Static type analysis with ty
 
 ## Template Synchronization
 

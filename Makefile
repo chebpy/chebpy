@@ -12,7 +12,27 @@ include .rhiza/rhiza.mk
 # Optional: developer-local extensions (not committed)
 -include local.mk
 
+# Wire typecheck into make validate
+post-validate::
+	@$(MAKE) typecheck
+
 ## Custom targets
+
+##@ Quality
+
+.PHONY: semgrep
+semgrep: install ## run Semgrep static analysis (numpy rules)
+	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
+	@if [ -d ${SOURCE_FOLDER} ]; then \
+		${UVX_BIN} semgrep --config .semgrep.yml ${SOURCE_FOLDER}; \
+	else \
+		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
+	fi
+
+.PHONY: license
+license: install ## run license compliance scan (fail on GPL, LGPL, AGPL)
+	@printf "${BLUE}[INFO] Running license compliance scan...${RESET}\n"
+	@${UV_BIN} run --with pip-licenses pip-licenses --fail-on="GPL;LGPL;AGPL"
 
 .PHONY: adr
 adr: install-gh-aw ## Create a new Architecture Decision Record (ADR) using AI assistance

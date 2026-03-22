@@ -10,7 +10,7 @@ repos:
         args: ['--unsafe']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.6'
+    rev: 'v0.15.7'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -50,7 +50,7 @@ repos:
         args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.11
+    rev: 0.10.12
     hooks:
       - id: uv-lock
 

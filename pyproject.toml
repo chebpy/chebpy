@@ -5,6 +5,8 @@ description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
 readme = "README.md"
 requires-python = ">=3.11"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
 dependencies = [
     "matplotlib>=3.10.0",

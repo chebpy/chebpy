@@ -1,0 +1,25 @@
+name: "(RHIZA) PIP-AUDIT (WEEKLY)"
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC (GitHub Actions: 0=Sunday, 1=Monday)
+  workflow_dispatch:
+
+jobs:
+  pip-audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.12"
+
+      - name: Run pip-audit
+        run: uvx pip-audit
