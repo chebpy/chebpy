@@ -1,7 +1,7 @@
-sha: 8c5a021cab1748614821306bdc3bdd8d399a1e4c
+sha: bbe56565ed221032435bff43b00598e3efa046ef
 repo: jebel-quant/rhiza
 host: github
-ref: v0.8.14
+ref: v0.8.16
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
@@ -15,6 +15,9 @@ files:
 - .devcontainer/bootstrap.sh
 - .devcontainer/devcontainer.json
 - .editorconfig
+- .github/DISCUSSION_TEMPLATE/q-and-a.yml
+- .github/ISSUE_TEMPLATE/bug_report.yml
+- .github/ISSUE_TEMPLATE/feature_request.yml
 - .github/actions/configure-git-auth/README.md
 - .github/actions/configure-git-auth/action.yml
 - .github/agents/analyser.md
@@ -30,13 +33,18 @@ files:
 - .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
 - .github/workflows/rhiza_codeql.yml
+- .github/workflows/rhiza_dep_compat_test.yml
 - .github/workflows/rhiza_deptry.yml
 - .github/workflows/rhiza_devcontainer.yml
+- .github/workflows/rhiza_license.yml
 - .github/workflows/rhiza_marimo.yml
+- .github/workflows/rhiza_pip_audit.yml
 - .github/workflows/rhiza_pre-commit.yml
 - .github/workflows/rhiza_release.yml
 - .github/workflows/rhiza_security.yml
+- .github/workflows/rhiza_semgrep.yml
 - .github/workflows/rhiza_sync.yml
+- .github/workflows/rhiza_typecheck.yml
 - .github/workflows/rhiza_validate.yml
 - .gitignore
 - .pre-commit-config.yaml
@@ -84,7 +92,6 @@ files:
 - .rhiza/tests/integration/test_book_targets.py
 - .rhiza/tests/integration/test_lfs.py
 - .rhiza/tests/integration/test_marimushka.py
-- .rhiza/tests/integration/test_notebook_execution.py
 - .rhiza/tests/integration/test_sbom.py
 - .rhiza/tests/integration/test_test_mk.py
 - .rhiza/tests/integration/test_virtual_env_unexport.py
@@ -105,6 +112,7 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
+- .semgrep.yml
 - Makefile
 - docs/ARCHITECTURE.md
 - docs/BOOK.md
@@ -118,5 +126,5 @@ files:
 - docs/TESTS.md
 - pytest.ini
 - ruff.toml
-synced_at: '2026-03-20T20:21:27Z'
+synced_at: '2026-03-22T05:24:11Z'
 strategy: merge
