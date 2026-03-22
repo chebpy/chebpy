@@ -125,11 +125,6 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT || github.token }}
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
-        with:
-          version: "0.10.11"
-
       - name: Download coverage report
         id: download-coverage
         continue-on-error: true
@@ -141,7 +136,37 @@ jobs:
       - name: Generate coverage badge
         if: steps.download-coverage.outcome == 'success'
         run: |
-          uvx "genbadge[coverage]" coverage -i _tests/coverage.xml -o /tmp/coverage-badge.svg
+          python3 - << 'EOF'
+          import xml.etree.ElementTree as ET
+          import urllib.request
+
+          tree = ET.parse("_tests/coverage.xml")
+          root = tree.getroot()
+          lines_covered = int(root.get("lines-covered", 0))
+          lines_valid = int(root.get("lines-valid", 1))
+          branches_covered = int(root.get("branches-covered", 0))
+          branches_valid = int(root.get("branches-valid", 0))
+
+          if branches_valid > 0:
+              pct = round((lines_covered + branches_covered) / (lines_valid + branches_valid) * 100)
+          else:
+              pct = round(lines_covered / lines_valid * 100)
+
+          if pct >= 90:
+              color = "brightgreen"
+          elif pct >= 75:
+              color = "green"
+          elif pct >= 60:
+              color = "yellowgreen"
+          elif pct >= 40:
+              color = "orange"
+          else:
+              color = "red"
+
+          url = f"https://img.shields.io/badge/coverage-{pct}%25-{color}"
+          urllib.request.urlretrieve(url, "/tmp/coverage-badge.svg")
+          print(f"Coverage badge: {pct}% ({color})")
+          EOF
 
       - name: Push badge to gh-pages
         if: steps.download-coverage.outcome == 'success'
