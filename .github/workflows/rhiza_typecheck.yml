@@ -1,0 +1,50 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Type Checking
+#
+# Purpose: Run static type analysis using ty to enforce type safety.
+#          ty (https://github.com/astral-sh/ty) is a fast Python type checker
+#          from the Astral team (same team as ruff/uv).
+#
+#          Type-checker settings live in [tool.ty.environment] in pyproject.toml.
+#          Locally, `make typecheck` runs the same check; it is also wired into
+#          `make validate` via the `post-validate::` hook in the repo Makefile.
+#
+# Trigger: On push and pull requests to main/master branches.
+
+name: "(RHIZA) TYPECHECK"
+
+permissions:
+    contents: read
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  typecheck:
+    name: Type checking
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.12"
+
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Run ty type checker (make typecheck)
+        # Runs `uv run ty check src/` as defined in .rhiza/make.d/test.mk.
+        # ty is configured via [tool.ty.environment] in pyproject.toml.
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
+        run: make typecheck

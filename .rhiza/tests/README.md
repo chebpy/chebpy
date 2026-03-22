@@ -25,7 +25,6 @@ Tests requiring sandboxed git repositories or subprocess execution. These tests 
 - `test_release.py` — Release script functionality
 - `test_book_targets.py` — Documentation book build targets
 - `test_marimushka.py` — Marimushka target execution
-- `test_notebook_execution.py` — Marimo notebook execution validation
 
 ### `sync/`
 Template sync, workflows, versioning, and content validation tests. These tests ensure that template synchronization and content validation work correctly.
