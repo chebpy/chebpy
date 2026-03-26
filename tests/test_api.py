@@ -122,3 +122,35 @@ def test_evaluate() -> None:
 def test_version() -> None:
     """Test that the version of the chebpy library is defined."""
     assert chebpy.__version__ is not None
+
+
+# -------------------------------------------------------------------
+# chebpts
+# -------------------------------------------------------------------
+
+
+def test_chebpts_default_domain() -> None:
+    """Test chebpts on the default domain [-1, 1]."""
+    from chebpy import chebpts
+
+    pts, wts = chebpts(4)
+    np.testing.assert_allclose(pts, [-1, -0.5, 0.5, 1], atol=1e-14)
+    np.testing.assert_allclose(wts, [-0.5, 1, -1, 0.5], atol=1e-14)
+
+
+def test_chebpts_custom_domain() -> None:
+    """Test chebpts on a custom domain [0, 3]."""
+    from chebpy import chebpts
+
+    pts, wts = chebpts(4, [0, 3])
+    np.testing.assert_allclose(pts, [0, 0.75, 2.25, 3], atol=1e-14)
+    np.testing.assert_allclose(wts, [-0.5, 1, -1, 0.5], atol=1e-14)
+
+
+def test_chebpts_single_point() -> None:
+    """Test chebpts with a single point."""
+    from chebpy import chebpts
+
+    pts, wts = chebpts(1)
+    np.testing.assert_allclose(pts, [0.0], atol=1e-14)
+    np.testing.assert_allclose(wts, [1.0], atol=1e-14)

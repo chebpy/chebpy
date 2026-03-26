@@ -9,10 +9,11 @@ from typing import Any
 
 import numpy as np
 
+from .algorithms import barywts2, chebpts2
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .settings import _preferences as prefs
-from .utilities import Domain
+from .utilities import Domain, Interval
 
 
 def chebfun(
@@ -111,3 +112,36 @@ def pwc(domain: list[float] | None = None, values: list[float] | None = None) ->
     for interval, value in zip(intervals, values, strict=False):
         funs.append(Bndfun.initconst(value, interval))
     return Chebfun(funs)
+
+
+def chebpts(
+    n: int,
+    domain: list[float] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return *n* Chebyshev points and barycentric weights on *domain*.
+
+    This provides the same functionality as MATLAB's ``chebpts(n, [a, b])``.
+    The points are Chebyshev points of the second kind (i.e. the extrema of
+    the Chebyshev polynomial T_{n-1} plus the endpoints).
+
+    Args:
+        n: Number of Chebyshev points.
+        domain: Two-element list ``[a, b]`` specifying the interval.
+            Defaults to ``[-1, 1]``.
+
+    Returns:
+        A ``(points, weights)`` tuple where *points* is an array of *n*
+        Chebyshev points on the given domain and *weights* is the
+        corresponding array of barycentric interpolation weights.
+
+    Examples:
+        >>> pts, wts = chebpts(4)
+        >>> pts, wts = chebpts(4, [0, 3])
+    """
+    if domain is None:
+        domain = [-1, 1]
+    pts = chebpts2(n)
+    wts = barywts2(n)
+    interval = Interval(*domain)
+    pts = interval(pts)
+    return pts, wts
