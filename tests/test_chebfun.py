@@ -471,8 +471,9 @@ class TestClassUsage:
         self.f2 = Chebfun.initfun_adaptive(lambda x: x**2, [-1, 0, 1, 2])
 
     def test__str__(self):
+        assert str(self.f1) == repr(self.f1)
         assert "Chebfun" in str(self.f1)
-        assert "domain" in str(self.f1)
+        assert "interval" in str(self.f1)
 
     def test__repr__(self):
         assert "Chebfun" in repr(self.f1)
