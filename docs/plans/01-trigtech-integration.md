@@ -12,18 +12,21 @@ Add Fourier-based (trigonometric) function approximation to chebpy via a new `tr
 |------|--------|
 | **New module** | `src/chebpy/trigtech.py` (~40 KB in PR #231) |
 | **New tests** | `tests/trigtech/` directory (mirrors existing `tests/chebtech/` structure) |
-| **Modified modules** | `src/chebpy/onefun.py` — factory dispatch to select `Trigtech` for periodic functions |
-| | `src/chebpy/classicfun.py` — support Trigtech-backed funs |
+| **New user API** | `src/chebpy/api.py` — add `trigfun(...)` as the explicit entry point for periodic functions |
+| **Modified modules** | `src/chebpy/classicfun.py` — support Trigtech-backed funs |
 | | `src/chebpy/chebfun.py` — periodic chebfun construction & display |
-| | `src/chebpy/__init__.py` — export `Trigtech` |
+| | `src/chebpy/__init__.py` — export `Trigtech` and `trigfun` |
 
 ## API Surface (chebpy-style)
 
-The `Trigtech` class should follow the existing `Chebtech` contract defined in `onefun.py`. Key methods and properties:
+The `Trigtech` class should follow the existing `Chebtech` contract defined in `onefun.py`. The public user-facing entry point is `trigfun(f, domain)`, mirroring `chebfun(f, domain)` but always using `Trigtech` as the underlying tech — no automatic detection.
+
+Key methods and properties:
 
 | Method / Property | Description | MATLAB equivalent |
 |---|---|---|
-| `Trigtech.initfun(f, n)` | Construct from callable or coefficients | `trigtech(op)` |
+| `trigfun(f, domain)` | **User-facing constructor** for periodic functions (explicit, no auto-detection) | `chebfun(f, 'trig')` |
+| `Trigtech.initfun(f, n)` | Low-level constructor from callable or coefficients | `trigtech(op)` |
 | `Trigtech.coeffs` | Fourier coefficient array | `f.coeffs` |
 | `Trigtech.values` | Function values at equispaced points | `f.values` |
 | `Trigtech.isperiodic` | Always returns `True` | `f.isPeriodicTech` |
@@ -44,17 +47,17 @@ The `Trigtech` class should follow the existing `Chebtech` contract defined in `
 ## Integration Steps
 
 1. Add `src/chebpy/trigtech.py` implementing the `Trigtech(Smoothfun)` class.
-2. Update `Onefun` factory in `onefun.py` to dispatch to `Trigtech` when the function is flagged as periodic.
-3. Update `Classicfun` / `Bndfun` to propagate the periodic flag through construction.
-4. Update `Chebfun` to support periodic construction (`chebfun(f, 'trig')`-style in MATLAB; in chebpy, via a `kind='trigtech'` or `periodic=True` kwarg).
+2. Add `trigfun(f, domain)` to `src/chebpy/api.py` as the explicit user-facing constructor for periodic functions; wire it through `Classicfun` / `Bndfun` using `Trigtech` as the tech (no heuristic detection in `Onefun.initfun`).
+3. Update `Classicfun` / `Bndfun` to accept and propagate a `tech=Trigtech` argument through construction.
+4. Update `Chebfun` display to indicate when a piece is backed by `Trigtech`.
 5. Add `tests/trigtech/` with construction, arithmetic, calculus, and edge-case tests mirroring `tests/chebtech/`.
-6. Export `Trigtech` from `__init__.py`.
+6. Export `Trigtech` and `trigfun` from `__init__.py`.
 
 ## Dependencies
 
 - None. This PR is self-contained and can land before any chebop work.
 
-## Open Questions
+## Design Decisions
 
-- Should periodic detection be automatic (via `Onefun.initfun` heuristic) or purely explicit?
-- Coefficient storage convention: match MATLAB's or use NumPy-native ordering?
+- **Periodic detection is explicit.** There is no heuristic in `Onefun.initfun`. Users call `trigfun(f, domain)` to get a `Trigtech`-backed fun. This keeps the API unambiguous and mirrors the MATLAB `chebfun(f, 'trig')` pattern while being idiomatic for chebpy.
+- **Coefficient ordering follows NumPy-native (FFT) order.** Coefficients are stored in the order returned by `numpy.fft.fft` / `numpy.fft.rfft`. A `._coeffs_to_plotorder()` helper re-orders them to human-readable (DC-centred) order for `plotcoeffs()` and other display methods.
