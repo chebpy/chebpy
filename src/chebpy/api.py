@@ -181,10 +181,10 @@ def trigfun(
         >>> import numpy as np
         >>> from chebpy import trigfun
         >>> f = trigfun(lambda x: np.cos(np.pi * x), [-1, 1])
-        >>> f(0.0)
+        >>> float(f(0.0))
         1.0
         >>> g = trigfun(lambda x: np.sin(2 * np.pi * x))
-        >>> abs(g.sum()) < 1e-12
+        >>> bool(abs(g.sum()) < 1e-12)
         True
     """
     with prefs:
