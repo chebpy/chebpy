@@ -55,7 +55,7 @@ def _():
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
-    # Variance Swap Replication with Calls and Puts
+    # Variance Swap Replication
 
     A **variance swap** pays the difference between realised variance
     and a fixed strike $K_{\text{var}}$.  A celebrated result of Carr
@@ -92,7 +92,7 @@ def _():
     mo.md(r"""
     ## 1. Black–Scholes option prices as Chebfuns
 
-    We begin by constructing the Black\u2013Scholes call and put prices as
+    We begin by constructing the Black-Scholes call and put prices as
     Chebfun objects — smooth functions of the strike $K$ on a truncated
     domain $[K_{\min}, K_{\max}]$.
 
@@ -237,12 +237,10 @@ def _():
     $$
 
     In practice we discretise the strike axis.  Each option payoff is a
-    **piecewise-linear ramp** in $S_T$, and a butterfly spread at
-    adjacent strikes produces a **triangular hat function** — exactly the
-    same basis used in the quasimatrix notebook.
-
-    We now build a quasimatrix of OTM option payoffs and replicate the
-    log contract.
+    **piecewise-linear ramp** in $S_T$. Note that a linear change of
+    basis produces the **triangular hat function** from the quasimatrix
+    notebook. To option traders this basis has the interpretation of a
+    portfolio of butterflies.
     """)
     return
 
@@ -288,6 +286,10 @@ def _(F, S_hi, S_lo, fwd_payoff, log_payoff, residual):
 def _():
     mo.md(r"""
     ### Building the option payoff quasimatrix
+
+    We will work with the classic put and call basis directly. To do this
+    we assemble a quasimatrix of OTM option payoffs and replicate the
+    log contract.
 
     We pick $n$ equally spaced strikes spanning $[S_{\min}, S_{\max}]$.
     For each strike $K_i$:
@@ -340,12 +342,19 @@ def _():
 
     The Carr–Madan formula tells us to weight each option by
     $\Delta K / K_i^2$.  Multiplying the quasimatrix by this weight
-    vector gives an approximation to the residual log payoff.
+    vector gives an approximation to the residual log payoff.  At 16
+    strikes the Carr–Madan replication is somewhat close but a long
+    way from perfect.  The problem is domain truncation error —
+    reflecting the fact that we cannot use strikes all the way down
+    to zero and all the way up to infinity in practice — which
+    distorts the ability of the $1/K^2$ weights to replicate
+    accurately.
 
-    Instead of the theoretical $1/K^2$ weights, we can let ChebPy find
-    the **optimal** weights that minimise
+    Instead of the theoretical Carr–Madan weights, we can let ChebPy
+    find the **optimal** weights that minimise
     $\| Q\,\mathbf{w} - g \|_2$, exactly as in the hat-function
-    least-squares fit from the quasimatrix notebook.
+    least-squares fit from the quasimatrix notebook.  This does much
+    better under realistic strike-range truncation.
     """)
     return
 
