@@ -111,7 +111,7 @@ make coverage
 ## Quick Start
 
 <div align="center">
-  <img src="book/marimo/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
+  <img src="book/marimo/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
 
