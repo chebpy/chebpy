@@ -72,9 +72,7 @@ def _():
     The key identity underlying this formula is a **payoff decomposition**:
 
     $$
-    -\log\!\frac{S_T}{F} = -\frac{S_T - F}{F}
-      + \int_0^{F} \frac{(K - S_T)^+}{K^2}\,dK
-      + \int_F^{\infty} \frac{(S_T - K)^+}{K^2}\,dK
+    -\log\!\frac{S_T}{F} = -\frac{S_T - F}{F} + \int_0^{F} \frac{(K - S_T)^+}{K^2}\,dK + \int_F^{\infty} \frac{(S_T - K)^+}{K^2}\,dK
     $$
 
     This notebook uses ChebPy **Chebfuns** and **quasimatrices** to
@@ -94,7 +92,7 @@ def _():
     mo.md(r"""
     ## 1. Black–Scholes option prices as Chebfuns
 
-    We begin by constructing the Black–Scholes call and put prices as
+    We begin by constructing the Black\u2013Scholes call and put prices as
     Chebfun objects — smooth functions of the strike $K$ on a truncated
     domain $[K_{\min}, K_{\max}]$.
 
@@ -171,10 +169,7 @@ def _():
     The fair variance strike is
 
     $$
-    K_{\text{var}} = \frac{2}{T}\!\left[
-      \int_{K_{\min}}^{F} \frac{P(K)}{K^2}\,dK
-      + \int_F^{K_{\max}} \frac{C(K)}{K^2}\,dK
-    \right]
+    K_{\text{var}} = \frac{2}{T}\!\left[\int_{K_{\min}}^{F} \frac{P(K)}{K^2}\,dK + \int_F^{K_{\max}} \frac{C(K)}{K^2}\,dK\right]
     $$
 
     Since $C(K)$ and $P(K)$ are Chebfuns, dividing by the identity
@@ -238,9 +233,7 @@ def _():
     into a forward piece plus option payoffs integrated over strikes:
 
     $$
-    -\log\!\frac{S_T}{F} = -\frac{S_T - F}{F}
-      + \int_0^{F} \frac{(K - S_T)^+}{K^2}\,dK
-      + \int_F^{\infty} \frac{(S_T - K)^+}{K^2}\,dK
+    -\log\!\frac{S_T}{F} = -\frac{S_T - F}{F} + \int_0^{F} \frac{(K - S_T)^+}{K^2}\,dK + \int_F^{\infty} \frac{(S_T - K)^+}{K^2}\,dK
     $$
 
     In practice we discretise the strike axis.  Each option payoff is a
@@ -311,7 +304,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(F, Quasimatrix, S_hi, S_lo, chebfun):
-    n_strikes = 5
+    n_strikes = 21
     strikes = np.linspace(50.0, 200.0, n_strikes)
     all_bkpts = sorted({S_lo, *list(strikes), S_hi})
 
