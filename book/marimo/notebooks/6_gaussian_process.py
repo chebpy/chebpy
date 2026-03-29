@@ -41,6 +41,9 @@ def _():
 
     > C. E. Rasmussen & C. K. I. Williams, *Gaussian Processes for Machine
     > Learning*, MIT Press, 2006.
+
+    > S. Filip, A. Javeed, and L. N. Trefethen, Smooth random functions,
+    > random ODEs, and Gaussian processes, *SIAM Review*, 61 (2019), 185–205.
     """)
     return
 
