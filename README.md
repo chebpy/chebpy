@@ -111,7 +111,7 @@ make coverage
 ## Quick Start
 
 <div align="center">
-  <img src="book/marimo/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
+  <img src="book/marimo/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
 
@@ -151,10 +151,60 @@ integral = f.sum()        # Definite integral
 # Root finding
 g = chebfun(lambda x: x**3 - 2*x - 5, [-3, 3])
 roots = g.roots()         # All roots in the domain
+```
 
-# Function composition
-# h = f + g                 # Addition
-# product = f * g           # Multiplication
+### Convolution
+
+Convolve two functions to produce a new Chebfun on the summed domain:
+
+```python
+from chebpy import chebfun
+import numpy as np
+
+f = chebfun(lambda x: np.exp(-x**2), [-1, 1])
+g = chebfun(lambda x: np.where(np.abs(x) < 0.5, 1.0, 0.0), [-1, 1])
+
+h = f.conv(g)        # h(x) = ∫ f(t) g(x−t) dt, a Chebfun on [−2, 2]
+h.plot()
+```
+
+### Quasimatrices
+
+Stack functions as columns of an ∞×n matrix and use continuous
+linear algebra — QR, SVD, least-squares:
+
+```python
+from chebpy import Quasimatrix, chebfun
+
+x = chebfun("x")
+A = Quasimatrix([1, x, x**2, x**3, x**4, x**5])
+
+Q, R = A.qr()             # QR factorisation → Legendre polynomials
+U, S, V = A.svd()         # Singular value decomposition
+
+f = chebfun(lambda t: np.exp(t) * np.sin(6 * t), [-1, 1])
+c = A.solve(f)            # Least-squares polynomial fit
+f_approx = A @ c          # Reconstruct as a Chebfun
+```
+
+### Gaussian Process Regression
+
+Fit a GP to scattered data and get the posterior mean and variance
+back as Chebfuns — ready for differentiation, integration, and root-finding:
+
+```python
+from chebpy import gpr
+import numpy as np
+
+rng = np.random.default_rng(1)
+x_obs = np.sort(-2 + 4 * rng.random(10))
+y_obs = np.sin(np.exp(x_obs))
+
+f_mean, f_var = gpr(x_obs, y_obs, domain=[-2, 2])
+
+f_mean.plot()                     # Posterior mean (a Chebfun)
+extrema = f_mean.diff().roots()   # Local extrema via calculus
+integral = f_mean.sum()           # Definite integral
 ```
 
 ```result
