@@ -198,12 +198,12 @@ def _(C, F, K_hi, K_lo, P, T, chebfun, sigma):
     print(f"K_var (ChebPy): {float(K_var):.10f}")
     print(f"σ² (exact)    : {exact:.10f}")
     print(f"Relative error: {abs(float(K_var) - exact) / exact:.2e}")
-    return K_var, call_integrand, put_integrand
+    return call_integrand, put_integrand
 
 
 @app.cell(hide_code=True)
 def _(F, K_hi, K_lo, call_integrand, put_integrand):
-    _fig, _ax = plt.subplots()
+    _fig, _ax = plt.subplots(figsize=(10, 4))
 
     _kp = np.linspace(K_lo + 1, F, 300)
     _kc = np.linspace(F, K_hi, 300)
@@ -304,7 +304,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(F, Quasimatrix, S_hi, S_lo, chebfun):
-    n_strikes = 21
+    n_strikes = 16
     strikes = np.linspace(50.0, 200.0, n_strikes)
     all_bkpts = sorted({S_lo, *list(strikes), S_hi})
 
@@ -322,9 +322,9 @@ def _(F, Quasimatrix, S_hi, S_lo, chebfun):
 
 @app.cell(hide_code=True)
 def _(F, Q_pay):
-    _fig, _ax = plt.subplots()
+    _fig, _ax = plt.subplots(figsize=(10, 3))
     Q_pay.plot(ax=_ax)
-    _ax.axvline(F, color="k", linestyle="--", linewidth=1, label="$F$")
+    _ax.axvline(F, color="k", linestyle="--", linewidth=1, label="$F$  (forward)")
     _ax.set_xlabel("$S_T$")
     _ax.set_title("OTM option payoffs — columns of the quasimatrix")
     _ax.legend()
@@ -336,50 +336,11 @@ def _(F, Q_pay):
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
-    ### Weighting by $\Delta K / K^2$
+    ### Least-squares weights via `Quasimatrix.solve()`
 
     The Carr–Madan formula tells us to weight each option by
     $\Delta K / K_i^2$.  Multiplying the quasimatrix by this weight
     vector gives an approximation to the residual log payoff.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(F, Q_pay, S_hi, S_lo, n_strikes, residual, strikes):
-    _dK = strikes[1] - strikes[0]
-    w_cm = _dK / strikes**2
-    rep_cm = Q_pay @ w_cm
-
-    _fig, _ax = plt.subplots()
-    _ss = np.linspace(S_lo, S_hi, 500)
-    _ax.plot(_ss, residual(_ss), linewidth=2, label="Exact residual")
-    _ax.plot(
-        _ss,
-        rep_cm(_ss),
-        "--",
-        linewidth=2,
-        color="C3",
-        label=f"$\\Delta K / K^2$ weights ({n_strikes} strikes)",
-    )
-    _ax.axvline(F, color="k", linestyle=":", linewidth=0.8)
-    _ax.legend()
-    _ax.set_xlabel("$S_T$")
-    _ax.set_title("Discrete replication of the log payoff residual")
-    _ax.grid(True)
-
-    _err = (residual - rep_cm).norm(2)
-    print(f"L² replication error ({n_strikes} strikes, 1/K² weights): {float(_err):.6f}")
-
-    plt.tight_layout()
-    plt.show()
-    return rep_cm, w_cm
-
-
-@app.cell(hide_code=True)
-def _():
-    mo.md(r"""
-    ### Least-squares weights via `Quasimatrix.solve()`
 
     Instead of the theoretical $1/K^2$ weights, we can let ChebPy find
     the **optimal** weights that minimise
@@ -390,123 +351,67 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(F, Q_pay, S_hi, S_lo, rep_cm, residual, strikes, w_cm):
+def _(F, Q_pay, S_hi, S_lo, n_strikes, residual, strikes):
+    _dK = strikes[1] - strikes[0]
+    w_cm = _dK / strikes**2
+    rep_cm = Q_pay @ w_cm
+
     w_ls = Q_pay.solve(residual)
     rep_ls = Q_pay @ w_ls
 
-    _fig, (_ax1, _ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    _err_cm = float((residual - rep_cm).norm(2))
+    _err_ls = float((residual - rep_ls).norm(2))
 
     _ss = np.linspace(S_lo, S_hi, 500)
-    _ax1.plot(_ss, residual(_ss), linewidth=2, label="Exact residual")
+
+    _fig, (_ax1, _ax2) = plt.subplots(
+        2,
+        1,
+        figsize=(10, 9),
+        height_ratios=(2, 1),
+    )
+
+    # Top: replication comparison (three lines)
+    _ax1.plot(_ss, residual(_ss), linewidth=2, label="Approximation Target")
     _ax1.plot(
         _ss,
-        rep_ls(_ss),
+        rep_cm(_ss),
         "--",
-        linewidth=2,
-        color="C1",
-        label="Least-squares fit",
+        linewidth=3,
+        color="C3",
+        label=rf"Carr–Madan ($\propto 1/K^2$) [$L^2$ err = {_err_cm:.3f}]",
+    )
+    _ax1.plot(
+        _ss, rep_ls(_ss), "--", linewidth=3, color="C2", label=f"Chebfun least-squares  [$L^2$ err = {_err_ls:.3f}]"
     )
     _ax1.axvline(F, color="k", linestyle=":", linewidth=0.8)
     _ax1.legend()
     _ax1.set_xlabel("$S_T$")
-    _ax1.set_title("Least-squares replication")
+    _ax1.set_title(f"Discrete replication ({n_strikes} strikes)")
     _ax1.grid(True)
 
-    _ax2.plot(strikes, w_cm, "o-", color="C3", label="$\\Delta K / K^2$")
-    _ax2.plot(strikes, w_ls, "s--", color="C1", label="Least-squares")
-    _ax2.legend()
+    # Bottom: grouped bar chart of weights
+    _bar_w = 0.3 * _dK
+    _ax2.bar(
+        strikes - _bar_w / 2,
+        w_cm,
+        width=_bar_w,
+        color="C3",
+        alpha=0.7,
+        edgecolor="C3",
+        label=r"Carr–Madan ($\propto 1/K^2$)",
+    )
+    _ax2.bar(
+        strikes + _bar_w / 2, w_ls, width=_bar_w, color="C2", alpha=0.7, edgecolor="C2", label="Chebfun least-squares"
+    )
     _ax2.set_xlabel("Strike $K$")
     _ax2.set_ylabel("Weight")
-    _ax2.set_title("Portfolio weights comparison")
-    _ax2.grid(True)
-
-    _err_ls = float((residual - rep_ls).norm(2))
-    _err_cm = float((residual - rep_cm).norm(2))
-    print(f"L² error (1/K² weights):  {_err_cm:.6f}")
-    print(f"L² error (least-squares): {_err_ls:.6f}")
+    _ax2.set_title("Portfolio weights")
+    _ax2.legend()
+    _ax2.grid(True, axis="y")
 
     plt.tight_layout()
     plt.show()
-    return
-
-
-@app.cell(hide_code=True)
-def _():
-    mo.md(r"""
-    ## 4. Convergence with the number of strikes
-
-    As we increase the number of strikes in the discrete portfolio,
-    the replication error shrinks.  ChebPy's $L^2$ norm makes the
-    convergence easy to track.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(F, Quasimatrix, S_hi, S_lo, chebfun, residual):
-    n_vals = [5, 11, 21, 41, 81]
-    errs_cm = []
-    errs_ls = []
-
-    for _n in n_vals:
-        _strikes = np.linspace(50.0, 200.0, _n)
-        _bkpts = sorted({S_lo, *list(_strikes), S_hi})
-        _dK = _strikes[1] - _strikes[0]
-
-        _cols = []
-        for _Ki in _strikes:
-            if _Ki <= F:
-                _cols.append(chebfun(lambda s, _K=_Ki: np.maximum(_K - s, 0.0), _bkpts))
-            else:
-                _cols.append(chebfun(lambda s, _K=_Ki: np.maximum(s - _K, 0.0), _bkpts))
-
-        _Q = Quasimatrix(_cols)
-        _w_cm = _dK / _strikes**2
-        errs_cm.append(float((residual - _Q @ _w_cm).norm(2)))
-
-        _w_ls = _Q.solve(residual)
-        errs_ls.append(float((residual - _Q @ _w_ls).norm(2)))
-
-    _fig, _ax = plt.subplots()
-    _ax.loglog(n_vals, errs_cm, "o-", linewidth=2, label="$\\Delta K / K^2$ weights")
-    _ax.loglog(n_vals, errs_ls, "s--", linewidth=2, label="Least-squares weights")
-    _ax.set_xlabel("Number of strikes")
-    _ax.set_ylabel("$L^2$ replication error")
-    _ax.set_title("Convergence of discrete variance swap replication")
-    _ax.legend()
-    _ax.grid(True, which="both", alpha=0.5)
-
-    plt.tight_layout()
-    plt.show()
-    return errs_cm, errs_ls, n_vals
-
-
-@app.cell(hide_code=True)
-def _(K_var, errs_cm, errs_ls, n_vals, sigma):
-    _rows = "\n    ".join(f"| {n} | {e1:.6f} | {e2:.6f} |" for n, e1, e2 in zip(n_vals, errs_cm, errs_ls, strict=False))
-    mo.md(rf"""
-    ## Summary
-
-    The Carr–Madan integral, evaluated exactly via ChebPy, recovers the
-    Black–Scholes fair variance to high accuracy:
-
-    | Method | Value |
-    |---|---|
-    | $K_{{\text{{var}}}}$ (ChebPy integral) | {float(K_var):.10f} |
-    | $\sigma^2$ (exact) | {sigma**2:.10f} |
-
-    The discrete payoff replication converges as more strikes are added:
-
-    | Strikes | $L^2$ error ($1/K^2$) | $L^2$ error (least-sq) |
-    |---|---|---|
-    {_rows}
-
-    The least-squares weights, found via `Quasimatrix.solve()`,
-    consistently outperform the theoretical $1/K^2$ weights on the
-    truncated domain — the same continuous least-squares machinery
-    that fitted hat functions to $e^x\sin 6x$ in the quasimatrix
-    notebook.
-    """)
     return
 
 
