@@ -122,7 +122,7 @@ line-ending = "auto"
     "TRY003",   # Allow long exception messages in project tests
 ]
 # Marimo notebooks - allow flexible coding patterns for interactive exploration
-"**/marimo/**/*.py" = [
+"**/notebooks/*.py" = [
     "D100",    # No module docstring - marimo requires `import marimo` as the first statement
     "E501",    # Allow long lines for LaTeX formulas in markdown cells
     "E741",    # Allow ambiguous variable names (e.g. O for orth) in notebooks

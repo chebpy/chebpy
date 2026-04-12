@@ -33,14 +33,14 @@ From the repository root:
 make marimo
 ```
 
-This will start the Marimo server and open all notebooks in the `book/marimo` directory.
+This will start the Marimo server and open all notebooks in the `docs/notebooks` directory.
 
 ### Running a Specific Notebook
 
 To run a single notebook:
 
 ```bash
-marimo edit book/marimo/rhiza.py
+marimo edit docs/notebooks/rhiza.py
 ```
 
 ### Using uv (Recommended)
@@ -48,7 +48,7 @@ marimo edit book/marimo/rhiza.py
 The notebooks include inline dependency metadata, making them self-contained:
 
 ```bash
-uv run book/marimo/rhiza.py
+uv run docs/notebooks/rhiza.py
 ```
 
 This will automatically install the required dependencies and run the notebook.
@@ -100,7 +100,7 @@ To create a new Marimo notebook:
 
 1. Create a new `.py` file in this directory:
    ```bash
-   marimo edit book/marimo/my_notebook.py
+   marimo edit docs/notebooks/my_notebook.py
    ```
 
 2. Add inline metadata at the top:
@@ -118,7 +118,7 @@ To create a new Marimo notebook:
 
 4. Test it runs in a clean environment:
    ```bash
-   uv run book/marimo/my_notebook.py
+   uv run docs/notebooks/my_notebook.py
    ```
 
 5. Commit and push - the CI will validate it automatically

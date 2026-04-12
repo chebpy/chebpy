@@ -1,7 +1,7 @@
 ## Makefile for jebel-quant/rhiza
 # (https://github.com/jebel-quant/rhiza)
 #
-# Purpose: Developer tasks using uv/uvx (install, test, docs, marimushka, book).
+# Purpose: Developer tasks using uv/uvx (install, test, book).
 # Lines with `##` after a target are parsed into help text,
 # and lines starting with `##@` create section headers in the help output.
 #
