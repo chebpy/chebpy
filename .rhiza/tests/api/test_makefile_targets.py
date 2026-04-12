@@ -189,6 +189,27 @@ class TestMakefile:
         assert "nonexistent_src" in out
         assert "skipping coverage-badge" in out
 
+    def test_suppression_audit_target_dry_run(self, logger):
+        """Suppression-audit target should invoke the Python audit script via uv run in dry-run output."""
+        proc = run_make(logger, ["suppression-audit"])
+        out = proc.stdout
+        assert "uv run python" in out
+        assert "suppression_audit.py" in out
+
+    def test_license_target_dry_run(self, logger):
+        """License target should invoke pip-licenses via uv run --with in dry-run output."""
+        proc = run_make(logger, ["license"])
+        out = proc.stdout
+        assert "uv run --with pip-licenses pip-licenses" in out
+        assert "--fail-on=" in out
+        assert "GPL" in out
+
+    def test_license_fail_on_is_configurable(self, logger):
+        """License target should use the LICENSE_FAIL_ON variable for the fail-on list."""
+        proc = run_make(logger, ["license", "LICENSE_FAIL_ON=MIT;Apache"])
+        out = proc.stdout
+        assert '--fail-on="MIT;Apache"' in out
+
 
 class TestMakefileRootFixture:
     """Tests for root fixture usage in Makefile tests."""

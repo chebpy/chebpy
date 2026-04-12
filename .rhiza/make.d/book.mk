@@ -1,130 +1,64 @@
-## book.mk - Book-building targets
-# This file is included by the main Makefile.
-# It provides targets for exporting Marimo notebooks to HTML (marimushka)
-# and compiling a companion book (minibook).
+## book.mk - Book-building targets (MkDocs-based)
 
-# Declare phony targets (they don't produce files)
-.PHONY: marimushka mkdocs-build book test benchmark stress hypothesis-test docs
+.PHONY: mkdocs-build book test benchmark stress hypothesis-test _book-reports _book-notebooks
 
-# Define default no-op targets for test-related book dependencies.
-# These are used when test.mk is not available or tests are not installed,
-# ensuring 'make book' succeeds even without a test environment.
+# No-op stubs — overridden by test.mk / bench.mk when present
 test:: ; @:
 benchmark:: ; @:
 stress:: ; @:
 hypothesis-test:: ; @:
-docs:: ; @:
 
-# Define a default no-op marimushka target that will be used
-# when book/marimo/marimo.mk doesn't exist or doesn't define marimushka
-marimushka:: install-uv
-	@if [ ! -d "book/marimo" ]; then \
-	  printf "${BLUE}[INFO] No Marimo directory found, creating placeholder${RESET}\n"; \
-	  mkdir -p "${MARIMUSHKA_OUTPUT}"; \
-	  printf '%s\n' '<html><head><title>Marimo Notebooks</title></head>' \
-	    '<body><h1>Marimo Notebooks</h1><p>No notebooks found.</p></body></html>' \
-	    > "${MARIMUSHKA_OUTPUT}/index.html"; \
-	fi
-
-# Define a default no-op mkdocs-build target that will be used
-# when .rhiza/make.d/docs.mk doesn't exist or doesn't define mkdocs-build
+# No-op stub — overridden by docs.mk when present
 mkdocs-build:: install-uv
-	@if [ ! -f "docs/mkdocs.yml" ]; then \
+	@if [ ! -f "mkdocs.yml" ]; then \
 	  printf "${BLUE}[INFO] No mkdocs.yml found, skipping MkDocs${RESET}\n"; \
 	fi
 
-# Default output directory for Marimushka (HTML exports of notebooks)
-MARIMUSHKA_OUTPUT ?= _marimushka
-
-# Default output directory for MkDocs
-MKDOCS_OUTPUT ?= _mkdocs
-
-# ----------------------------
-# Book sections (declarative)
-# ----------------------------
-# format:
-#   name | source index | book-relative index | source dir | book dir
-
-BOOK_SECTIONS := \
-  "API|_pdoc/index.html|pdoc/index.html|_pdoc|pdoc" \
-  "Coverage|_tests/html-coverage/index.html|tests/html-coverage/index.html|_tests/html-coverage|tests/html-coverage" \
-  "Test Report|_tests/html-report/report.html|tests/html-report/report.html|_tests/html-report|tests/html-report" \
-  "Benchmarks|_tests/benchmarks/report.html|tests/benchmarks/report.html|_tests/benchmarks|tests/benchmarks" \
-  "Stress Tests|_tests/stress/report.html|tests/stress/report.html|_tests/stress|tests/stress" \
-  "Hypothesis Tests|_tests/hypothesis/report.html|tests/hypothesis/report.html|_tests/hypothesis|tests/hypothesis" \
-  "Notebooks|_marimushka/index.html|marimushka/index.html|_marimushka|marimushka" \
-  "Official Documentation|_mkdocs/index.html|docs/index.html|_mkdocs|docs"
+BOOK_OUTPUT ?= _book
 
 ##@ Book
 
-# The 'book' target assembles the final documentation book.
-# 1. Aggregates API docs, coverage, test reports, notebooks, and MkDocs site into _book.
-# 2. Generates links.json to define the book structure.
-# 3. Uses 'minibook' to compile the final HTML site.
-book:: test benchmark stress hypothesis-test docs marimushka mkdocs-build ## compile the companion book
-	@printf "${BLUE}[INFO] Building combined documentation...${RESET}\n"
-	@rm -rf _book && mkdir -p _book
-
-	@printf "{\n" > _book/links.json
-	@first=1; \
-	for entry in $(BOOK_SECTIONS); do \
-	  name=$${entry%%|*}; \
-	  rest=$${entry#*|}; \
-	  src_index=$${rest%%|*}; rest=$${rest#*|}; \
-	  book_index=$${rest%%|*}; rest=$${rest#*|}; \
-	  src_dir=$${rest%%|*}; book_dir=$${rest#*|}; \
-	  if [ -f "$$src_index" ]; then \
-	    printf "${BLUE}[INFO] Adding $$name...${RESET}\n"; \
-	    mkdir -p "_book/$$book_dir"; \
-	    cp -r "$$src_dir/"* "_book/$$book_dir"; \
-	    if [ $$first -eq 0 ]; then \
-	      printf ",\n" >> _book/links.json; \
-	    fi; \
-	    printf "  \"%s\": \"./%s\"" "$$name" "$$book_index" >> _book/links.json; \
-	    first=0; \
+_book-reports: test benchmark stress hypothesis-test
+	@mkdir -p docs/reports
+	@for src_dir in \
+	  "_tests/html-coverage:reports/coverage" \
+	  "_tests/html-report:reports/test-report" \
+	  "_tests/benchmarks:reports/benchmarks" \
+	  "_tests/stress:reports/stress" \
+	  "_tests/hypothesis:reports/hypothesis"; do \
+	  src=$${src_dir%%:*}; dest=docs/$${src_dir#*:}; \
+	  if [ -d "$$src" ] && [ -n "$$(ls -A "$$src" 2>/dev/null)" ]; then \
+	    printf "${BLUE}[INFO] Copying $$src -> $$dest${RESET}\n"; \
+	    mkdir -p "$$dest"; cp -r "$$src/." "$$dest/"; \
 	  else \
-	    printf "${YELLOW}[WARN] Missing $$name, skipping${RESET}\n"; \
+	    printf "${YELLOW}[WARN] $$src not found, skipping${RESET}\n"; \
 	  fi; \
-	done; \
-	if [ -n "$$GITHUB_REPOSITORY" ]; then \
-	  CF_REPO="$$GITHUB_REPOSITORY"; \
-	else \
-	  CF_REPO=$$(git remote get-url origin 2>/dev/null | sed 's|.*github\.com[:/]||' | sed 's|\.git$$||'); \
-	fi; \
-	if [ -n "$$CF_REPO" ]; then \
-	  CF_URL="https://www.codefactor.io/repository/github/$$CF_REPO"; \
-	  HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$$CF_URL" 2>/dev/null || echo "000"); \
-	  if [ "$$HTTP_CODE" = "200" ]; then \
-	    if [ $$first -eq 0 ]; then printf ",\n" >> _book/links.json; fi; \
-	    printf "  \"CodeFactor\": \"$$CF_URL\"" >> _book/links.json; \
-	    printf "${BLUE}[INFO] Adding CodeFactor...${RESET}\n"; \
-	  else \
-	    printf "${YELLOW}[WARN] CodeFactor page not accessible (HTTP $$HTTP_CODE), skipping${RESET}\n"; \
-	  fi; \
-	fi; \
-	printf "\n}\n" >> _book/links.json
+	done
+	@printf "# Reports\n\n" > docs/reports.md
+	@[ -f "docs/reports/test-report/report.html" ] && echo "- [Test Report](reports/test-report/report.html)"       >> docs/reports.md || true
+	@[ -f "docs/reports/hypothesis/report.html" ]  && echo "- [Hypothesis Report](reports/hypothesis/report.html)" >> docs/reports.md || true
+	@[ -f "docs/reports/benchmarks/report.html" ]  && echo "- [Benchmarks](reports/benchmarks/report.html)"        >> docs/reports.md || true
+	@[ -f "docs/reports/stress/report.html" ]      && echo "- [Stress Report](reports/stress/report.html)"          >> docs/reports.md || true
+	@[ -f "docs/reports/coverage/index.html" ]     && echo "- [Coverage Report](reports/coverage/index.html)"      >> docs/reports.md || true
 
-	@printf "${BLUE}[INFO] Generated links.json:${RESET}\n"
-	@cat _book/links.json
+_book-notebooks:
+	@if [ -d "$(MARIMO_FOLDER)" ]; then \
+	  for nb in $(MARIMO_FOLDER)/*.py; do \
+	    name=$$(basename "$$nb" .py); \
+	    printf "${BLUE}[INFO] Exporting $$nb${RESET}\n"; \
+	    abs_output="$$(pwd)/docs/notebooks/$$name.html"; \
+	    mkdir -p docs/notebooks; \
+	    (cd "$$(dirname "$$nb")" && ${UV_BIN} run marimo export html --sandbox "$$(basename "$$nb")" -o "$$abs_output"); \
+	  done; \
+	  printf "# Marimo Notebooks\n\n" > docs/notebooks.md; \
+	  for html in docs/notebooks/*.html; do \
+	    name=$$(basename "$$html" .html); \
+	    echo "- [$$name]($$name.html)" >> docs/notebooks.md; \
+	  done; \
+	fi
 
-	@TEMPLATE_ARG=""; \
-	if [ -f "$(BOOK_TEMPLATE)" ]; then \
-	  TEMPLATE_ARG="--template $(BOOK_TEMPLATE)"; \
-	  printf "${BLUE}[INFO] Using book template $(BOOK_TEMPLATE)${RESET}\n"; \
-	fi; \
-	if [ -n "$(LOGO_FILE)" ]; then \
-	  if [ -f "$(LOGO_FILE)" ]; then \
-	    cp "$(LOGO_FILE)" "_book/logo$$(echo $(LOGO_FILE) | sed 's/.*\./\./')"; \
-	    printf "${BLUE}[INFO] Copying logo: $(LOGO_FILE)${RESET}\n"; \
-	  else \
-	    printf "${YELLOW}[WARN] Logo file $(LOGO_FILE) not found, skipping${RESET}\n"; \
-	  fi; \
-	fi; \
-	"$(UVX_BIN)" minibook \
-	  --title "$(BOOK_TITLE)" \
-	  --subtitle "$(BOOK_SUBTITLE)" \
-	  $$TEMPLATE_ARG \
-	  --links "$$(python3 -c 'import json;print(json.dumps(json.load(open("_book/links.json"))))')" \
-	  --output "_book"
-
-	@touch "_book/.nojekyll"
+book:: _book-reports _book-notebooks ## compile the companion book via MkDocs
+	@$(MAKE) mkdocs-build MKDOCS_OUTPUT=$(BOOK_OUTPUT)
+	@touch "$(BOOK_OUTPUT)/.nojekyll"
+	@printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
+	@tree $(BOOK_OUTPUT)

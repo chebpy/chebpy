@@ -133,7 +133,7 @@ For DevContainers and Codespaces, the `.devcontainer/` configuration and `bootst
 - `assets/`: Static assets
 - `book/`: Documentation source
 - `docker/`: Docker configuration
-- `presentation/`: Presentation slides
+- `docs/presentations/`: Presentation slides
 - `.rhiza/`: Rhiza-specific scripts and configurations
 
 ## Coding Standards
