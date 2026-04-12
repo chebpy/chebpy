@@ -59,6 +59,7 @@ _book-notebooks:
 
 book:: _book-reports _book-notebooks ## compile the companion book via MkDocs
 	@$(MAKE) mkdocs-build MKDOCS_OUTPUT=$(BOOK_OUTPUT)
+	@mkdir -p "$(BOOK_OUTPUT)"
 	@touch "$(BOOK_OUTPUT)/.nojekyll"
 	@printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
 	@tree $(BOOK_OUTPUT)
