@@ -111,7 +111,7 @@ make coverage
 ## Quick Start
 
 <div align="center">
-  <img src="book/marimo/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
+  <img src="docs/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
 
@@ -214,7 +214,7 @@ integral = f_mean.sum()           # Definite integral
 
 ## Documentation
 
-- 📚 **[Interactive Notebooks](book/marimo/)**: Explore ChebPy features with hands-on examples
+- 📚 **[Interactive Notebooks](docs/notebooks/)**: Explore ChebPy features with hands-on examples
 - 🎯 **[API Reference](src/chebpy/)**: Complete function and class documentation
 - 🧪 **[Test Suite](tests/)**: Comprehensive examples of usage patterns
 - 🚀 **[Codespaces](https://codespaces.new/chebpy/chebpy)**: Try ChebPy in your browser

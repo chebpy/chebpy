@@ -10,7 +10,7 @@ Chebyshev polynomials.
 # requires-python = ">=3.13"
 #
 # [tool.uv.sources.chebfun]
-# path = "../../.."
+# path = "../.."
 # editable = true
 # ///
 
