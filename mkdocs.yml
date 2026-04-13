@@ -1,0 +1,78 @@
+site_name: ChebPy
+site_description: A Python implementation of Chebfun — numerical computing with Chebyshev series approximations.
+site_url: https://chebpy.github.io/chebpy
+repo_url: https://github.com/chebpy/chebpy
+repo_name: chebpy/chebpy
+
+docs_dir: docs
+site_dir: _mkdocs
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+extra:
+  version:
+    provider: mike
+
+use_directory_urls: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            heading_level: 2
+            members_order: source
+            show_signature_annotations: true
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path:
+        - "."
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting Started: user/quickstart.md
+  - Marimo Notebooks: notebooks.md
+  - Reports: reports.md
+  - API Reference: api.md
+  - User Guide:
+      - Introduction: user/intro.md
+      - Installation: user/install.md
+      - Features:
+          - Function Approximation: user/features/approximation.md
+          - Calculus: user/features/calculus.md
+          - Root-Finding: user/features/rootfinding.md
+          - Arithmetic: user/features/arithmetic.md
+          - Plotting: user/features/plotting.md
+          - Convolution: user/features/convolution.md
+          - Quasimatrices: user/features/quasimatrix.md
+          - Gaussian Process Regression: user/features/gpr.md
+  - Developer:
+      - Contributing: CONTRIBUTING.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
