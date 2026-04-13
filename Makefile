@@ -5,6 +5,7 @@ DOCFORMAT=google
 DEFAULT_AI_MODEL=claude-sonnet-4.5
 LOGO_FILE=.rhiza/assets/rhiza-logo.svg
 GH_AW_ENGINE ?= copilot  # Default AI engine for gh-aw workflows (copilot, claude, or codex)
+MKDOCS_EXTRA_PACKAGES = --with "mkdocstrings[python]>=0.29"
 
 # Always include the Rhiza API (template-managed)
 include .rhiza/rhiza.mk
