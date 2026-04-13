@@ -17,8 +17,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/chebpy/chebpy/badge)](https://www.codefactor.io/repository/github/chebpy/chebpy)
 
 [![CI](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_ci.yml)
-[![PRE-COMMIT](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_pre-commit.yml)
-[![DEPTRY](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_deptry.yml)
 
 [![MARIMO](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml)
 [![DEVCONTAINER](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml)
@@ -214,7 +212,8 @@ integral = f_mean.sum()           # Definite integral
 
 ## Documentation
 
-- 📚 **[Interactive Notebooks](docs/notebooks/)**: Explore ChebPy features with hands-on examples
+- � **[Documentation Site](https://chebpy.github.io/chebpy)**: Full documentation, user guide, and API reference
+- �📚 **[Interactive Notebooks](docs/notebooks/)**: Explore ChebPy features with hands-on examples
 - 🎯 **[API Reference](src/chebpy/)**: Complete function and class documentation
 - 🧪 **[Test Suite](tests/)**: Comprehensive examples of usage patterns
 - 🚀 **[Codespaces](https://codespaces.new/chebpy/chebpy)**: Try ChebPy in your browser
