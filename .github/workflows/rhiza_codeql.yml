@@ -22,7 +22,7 @@
 # - Set to 'false' to disable entirely
 # - Leave unset for automatic behavior (recommended)
 #
-# For more information, see docs/CUSTOMIZATION.md
+# For more information, see docs/guides/CUSTOMIZATION.md
 #
 name: "(RHIZA) CODEQL"
 

@@ -89,12 +89,10 @@ class TestSecurityConfiguration:
         """
         repo_root = pathlib.Path(__file__).parent.parent.parent.parent
         root_security = repo_root / "SECURITY.md"
-        github_security = repo_root / ".github" / "SECURITY.md"
-        docs_security = repo_root / "docs" / "SECURITY.md"
 
-        assert root_security.exists() or github_security.exists() or docs_security.exists(), (
-            "No SECURITY.md found. Create SECURITY.md in the repository root, "
-            ".github/, or docs/ to publish a responsible disclosure policy."
+        assert root_security.exists(), (
+            "No SECURITY.md found. Create SECURITY.md in the repository root "
+            "to publish a responsible disclosure policy."
         )
 
     def test_secret_scanning_config_exists(self) -> None:
