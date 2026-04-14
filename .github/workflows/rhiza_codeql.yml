@@ -22,7 +22,7 @@
 # - Set to 'false' to disable entirely
 # - Leave unset for automatic behavior (recommended)
 #
-# For more information, see docs/guides/CUSTOMIZATION.md
+# For more information, see this workflow's configuration and your repository docs.
 #
 name: "(RHIZA) CODEQL"
 
