@@ -1,6 +1,6 @@
 ## book.mk - Book-building targets (MkDocs-based)
 
-.PHONY: mkdocs-build book test benchmark stress hypothesis-test _book-reports _book-notebooks
+.PHONY: book mkdocs-build test benchmark stress hypothesis-test _book-reports _book-notebooks mkdocs-serve mkdocs
 
 # No-op stubs — overridden by test.mk / bench.mk when present
 test:: ; @:
@@ -8,13 +8,15 @@ benchmark:: ; @:
 stress:: ; @:
 hypothesis-test:: ; @:
 
-# No-op stub — overridden by docs.mk when present
-mkdocs-build:: install-uv
-	@if [ ! -f "mkdocs.yml" ]; then \
-	  printf "${BLUE}[INFO] No mkdocs.yml found, skipping MkDocs${RESET}\n"; \
-	fi
-
 BOOK_OUTPUT ?= _book
+
+# Additional uvx --with packages to inject into mkdocs build and serve.
+# Projects can extend the package list without editing this template, e.g.:
+#   MKDOCS_EXTRA_PACKAGES = --with "mkdocs-graphviz"
+MKDOCS_EXTRA_PACKAGES ?=
+
+# Detect mkdocs config: prefer root-level, fall back to docs/mkdocs-base.yml
+_MKDOCS_CFG := $(if $(wildcard mkdocs.yml),mkdocs.yml,$(if $(wildcard docs/mkdocs-base.yml),docs/mkdocs-base.yml,))
 
 ##@ Book
 
@@ -58,8 +60,40 @@ _book-notebooks:
 	fi
 
 book:: _book-reports _book-notebooks ## compile the companion book via MkDocs
-	@$(MAKE) mkdocs-build MKDOCS_OUTPUT=$(BOOK_OUTPUT)
+	@if [ -n "$(_MKDOCS_CFG)" ]; then \
+	  rm -rf "$(BOOK_OUTPUT)"; \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "mkdocs<2.0" $(MKDOCS_EXTRA_PACKAGES) mkdocs build \
+	    -f "$(_MKDOCS_CFG)" \
+	    -d "$$(pwd)/$(BOOK_OUTPUT)"; \
+	else \
+	  printf "${YELLOW}[WARN] No mkdocs config found, skipping MkDocs build${RESET}\n"; \
+	fi
 	@mkdir -p "$(BOOK_OUTPUT)"
 	@touch "$(BOOK_OUTPUT)/.nojekyll"
 	@printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
 	@tree $(BOOK_OUTPUT)
+
+mkdocs-build: install-uv ## build MkDocs documentation site
+	@if [ -n "$(_MKDOCS_CFG)" ]; then \
+	  rm -rf "$(BOOK_OUTPUT)"; \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "mkdocs<2.0" $(MKDOCS_EXTRA_PACKAGES) mkdocs build \
+	    -f "$(_MKDOCS_CFG)" \
+	    -d "$$(pwd)/$(BOOK_OUTPUT)"; \
+	else \
+	  printf "${RED}[ERROR] No mkdocs config found${RESET}\n"; \
+	  exit 1; \
+	fi
+	@mkdir -p "$(BOOK_OUTPUT)"
+	@touch "$(BOOK_OUTPUT)/.nojekyll"
+	@printf "${GREEN}[SUCCESS] Docs built at $(BOOK_OUTPUT)/${RESET}\n"
+
+mkdocs-serve: install-uv ## serve MkDocs site with live reload
+	@if [ -n "$(_MKDOCS_CFG)" ]; then \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "mkdocs<2.0" $(MKDOCS_EXTRA_PACKAGES) mkdocs serve \
+	    -f "$(_MKDOCS_CFG)"; \
+	else \
+	  printf "${RED}[ERROR] No mkdocs config found${RESET}\n"; \
+	  exit 1; \
+	fi
+
+mkdocs: mkdocs-serve ## alias for mkdocs-serve

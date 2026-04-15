@@ -1,7 +1,7 @@
-sha: 015fa78916d1cc0c802453ccb2ccd47821553bd7
+sha: dccf929ce3bcbaf01ddf1240ac16354e0cf76bb1
 repo: jebel-quant/rhiza
 host: github
-ref: v0.9.2
+ref: v0.9.5
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
@@ -29,6 +29,7 @@ files:
 - .github/hooks/session-end.sh
 - .github/hooks/session-start.sh
 - .github/secret_scanning.yml
+- .github/semgrep.yml
 - .github/workflows/copilot-setup-steps.yml
 - .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
@@ -59,7 +60,6 @@ files:
 - .rhiza/make.d/bootstrap.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
-- .rhiza/make.d/docs.mk
 - .rhiza/make.d/gh-aw.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
@@ -72,7 +72,6 @@ files:
 - .rhiza/requirements/tests.txt
 - .rhiza/requirements/tools.txt
 - .rhiza/rhiza.mk
-- .rhiza/semgrep.yml
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
 - .rhiza/tests/api/test_gh_aw_targets.py
@@ -105,16 +104,14 @@ files:
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
 - Makefile
-- docs/ARCHITECTURE.md
-- docs/CUSTOMIZATION.md
-- docs/DEMO.md
-- docs/DEVCONTAINER.md
-- docs/GLOSSARY.md
-- docs/MARIMO.md
-- docs/QUICK_REFERENCE.md
-- docs/SECURITY.md
-- docs/TESTS.md
+- docs/adr/0000-adr-template.md
+- docs/assets/rhiza-logo.svg
+- docs/development/DEVCONTAINER.md
+- docs/development/MARIMO.md
+- docs/development/TESTS.md
+- docs/index.md
+- docs/mkdocs-base.yml
 - pytest.ini
 - ruff.toml
-synced_at: '2026-04-12T19:03:21Z'
+synced_at: '2026-04-14T04:40:14Z'
 strategy: merge
