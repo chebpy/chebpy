@@ -2,11 +2,9 @@
 
 This directory contains interactive [Marimo](https://marimo.io/) notebooks for the Rhiza project.
 
-## Available Notebooks
+## Features
 
-### 📊 rhiza.py - Marimo Feature Showcase
-
-A comprehensive demonstration of Marimo's most useful features, including:
+Marimo notebooks support a wide range of features, including:
 
 - **Interactive UI Elements**: Sliders, dropdowns, text inputs, checkboxes, and multiselect
 - **Reactive Programming**: Automatic cell updates when dependencies change
@@ -16,12 +14,6 @@ A comprehensive demonstration of Marimo's most useful features, including:
 - **Forms**: Dictionary-based forms for collecting user input
 - **Rich Text**: Markdown and LaTeX support for documentation
 - **Advanced Features**: Callouts, collapsible accordions, and more
-
-This notebook is perfect for:
-- Learning Marimo's capabilities
-- Understanding reactive programming in notebooks
-- Seeing real examples of interactive UI components
-- Getting started with Marimo in your own projects
 
 ## Running the Notebooks
 
@@ -40,7 +32,7 @@ This will start the Marimo server and open all notebooks in the `docs/notebooks`
 To run a single notebook:
 
 ```bash
-marimo edit docs/notebooks/rhiza.py
+marimo edit docs/notebooks/my_notebook.py
 ```
 
 ### Using uv (Recommended)
@@ -48,7 +40,7 @@ marimo edit docs/notebooks/rhiza.py
 The notebooks include inline dependency metadata, making them self-contained:
 
 ```bash
-uv run docs/notebooks/rhiza.py
+uv run docs/notebooks/my_notebook.py
 ```
 
 This will automatically install the required dependencies and run the notebook.
@@ -85,7 +77,7 @@ pythonpath = ["src"]
 
 ## CI/CD Integration
 
-The `.github/workflows/marimo.yml` workflow automatically:
+The `.github/workflows/rhiza_marimo.yml` workflow automatically:
 
 1. Discovers all `.py` files in this directory
 2. Runs each notebook in a fresh environment

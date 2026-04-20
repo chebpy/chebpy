@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import shutil
-import subprocess
+import subprocess  # nosec B404
 from pathlib import Path
 
 import pytest

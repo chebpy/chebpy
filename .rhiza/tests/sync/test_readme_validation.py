@@ -8,7 +8,7 @@ executes the code, and verifies the output matches the documented result.
 """
 
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
 
 import pytest

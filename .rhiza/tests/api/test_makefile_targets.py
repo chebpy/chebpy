@@ -161,18 +161,16 @@ class TestMakefile:
         assert "--cov-fail-under=42" in proc_override.stdout
 
     def test_coverage_badge_target_dry_run(self, logger, tmp_path):
-        """Coverage-badge target should invoke genbadge via uvx and push to gh-pages in dry-run output."""
-        # Create a mock coverage JSON file so the target proceeds past the guard
+        """Coverage-badge target should invoke genbadge via uvx and write badge locally."""
         tests_dir = tmp_path / "_tests"
         tests_dir.mkdir(exist_ok=True)
-        (tests_dir / "coverage.json").write_text("{}")
+        (tests_dir / "coverage.xml").write_text("")
 
         proc = run_make(logger, ["coverage-badge"])
         out = proc.stdout
-        assert "genbadge coverage" in out
-        assert "_tests/coverage.json" in out
-        assert "coverage-badge.svg" in out
-        assert "gh-pages" in out
+        assert "genbadge[coverage]" in out
+        assert "_tests/coverage.xml" in out
+        assert "_tests/coverage-badge.svg" in out
 
     def test_coverage_badge_skips_without_source_folder(self, logger, tmp_path):
         """Coverage-badge target should include a guard check for SOURCE_FOLDER in dry-run output."""

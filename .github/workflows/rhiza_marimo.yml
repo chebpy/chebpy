@@ -83,7 +83,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.0.0
         with:
-          version: "0.11.6"
+          version: "0.11.7"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -102,16 +102,7 @@ jobs:
           mkdir -p "${artefact_folder}"
           echo "name=${notebook_stem}" >> "$GITHUB_OUTPUT"
           export NOTEBOOK_OUTPUT_FOLDER="${artefact_folder}"
-          uvx uv run "$notebook"
-          # uvx → creates a fresh ephemeral environment
-          # uv run → runs the notebook as a script in that ephemeral env
-          # No project packages are pre-installed
-          # ✅ This forces the notebook to explicitly handle dependencies (e.g., uv install ., or pip install inside the script).
-          # ✅ It’s a true integration smoke test.
-          # Benefits of this pattern
-          # Confirms the notebook can bootstrap itself in a fresh environment
-          # Catches missing uv install or pip steps early
-          # Ensures CI/other users can run the notebook without manual setup
+          uv run --script "$notebook"  # builds env from the notebook's inline /// script header
         shell: bash
 
       - name: Upload notebook artefacts

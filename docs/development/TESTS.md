@@ -60,16 +60,16 @@ You can also invoke the corresponding `pytest` commands directly:
 
 ```bash
 # Run all project property-based tests (what make test covers)
-pytest tests/property/ -v
+uv run pytest tests/property/ -v
 
 # Run Rhiza's internal/template property-based tests (if you have any in .rhiza)
-pytest .rhiza/tests/property/ -v
+uv run pytest .rhiza/tests/property/ -v
 
 # Run project property-based tests with more examples (increase coverage)
-pytest tests/property/ -v --hypothesis-max-examples=1000
+uv run pytest tests/property/ -v --hypothesis-max-examples=1000
 
 # Run project property-based tests with verbose Hypothesis output
-pytest tests/property/ -v --hypothesis-verbosity=verbose
+uv run pytest tests/property/ -v --hypothesis-verbosity=verbose
 ```
 
 ### Example Tests
@@ -85,7 +85,7 @@ Load and stress tests use [pytest-benchmark](https://pytest-benchmark.readthedoc
 
 ### Location
 
-Benchmark and stress tests are located in `tests/benchmarks/`
+Benchmark and stress tests are located in `tests/benchmarks/` (if present)
 
 ### Running Benchmark Tests
 
@@ -94,25 +94,25 @@ Benchmark and stress tests are located in `tests/benchmarks/`
 make benchmark
 
 # Or with pytest directly
-pytest tests/benchmarks/ -v
+uv run pytest tests/benchmarks/ -v
 
 # Run benchmarks and generate histogram
-pytest tests/benchmarks/ --benchmark-histogram=_tests/benchmarks/histogram
+uv run pytest tests/benchmarks/ --benchmark-histogram=_tests/benchmarks/histogram
 
 # Run benchmarks and save results
-pytest tests/benchmarks/ --benchmark-json=_tests/benchmarks/results.json
+uv run pytest tests/benchmarks/ --benchmark-json=_tests/benchmarks/results.json
 
 # Skip benchmarks (for CI)
-pytest tests/benchmarks/ --benchmark-skip
+uv run pytest tests/benchmarks/ --benchmark-skip
 
 # Run only stress tests (note: these don't run with make benchmark by default)
-pytest tests/benchmarks/ -m stress -v
+uv run pytest tests/benchmarks/ -m stress -v
 
 # Skip stress tests (run only performance benchmarks)
-pytest tests/benchmarks/ -m "not stress" -v
+uv run pytest tests/benchmarks/ -m "not stress" -v
 ```
 
-**Note**: The `make benchmark` target runs with `--benchmark-only`, which means stress tests (that don't use the `benchmark` fixture) will be skipped. To run stress tests explicitly, use `pytest tests/benchmarks/ -m stress -v`.
+**Note**: The `make benchmark` target runs with `--benchmark-only`, which means stress tests (that don't use the `benchmark` fixture) will be skipped. To run stress tests explicitly, use `uv run pytest tests/benchmarks/ -m stress -v`.
 
 ### Benchmark Test Categories
 
@@ -140,7 +140,7 @@ Tests that verify stability under load (marked with `@pytest.mark.stress`):
 - `test_concurrent_print_variable_stress` - Tests concurrent Makefile invocations (deterministic)
 - `test_file_system_stress` - Tests rapid file creation/deletion (100 iterations)
 
-**Note**: Stress tests can be slow and are marked with the `stress` marker. They don't use the `benchmark` fixture, so they won't run with `make benchmark` (which uses `--benchmark-only`). Use `pytest tests/benchmarks/ -m stress -v` to run them explicitly.
+**Note**: Stress tests can be slow and are marked with the `stress` marker. They don't use the `benchmark` fixture, so they won't run with `make benchmark` (which uses `--benchmark-only`). Use `uv run pytest tests/benchmarks/ -m stress -v` to run them explicitly.
 
 ### Understanding Benchmark Results
 
@@ -163,15 +163,6 @@ test_help_target_performance     16.5255  18.0592  16.9294  0.3194  16.8354  0.4
 ```
 
 ## Integration with CI/CD
-
-### GitHub Actions Integration
-
-The benchmark tests are integrated with GitHub Actions via `.github/workflows/rhiza_benchmarks.yml`:
-
-- Runs benchmarks on every push to main and pull requests
-- Stores historical benchmark data in the `gh-pages` branch
-- Alerts on performance regressions > 150%
-- Posts warnings to PRs for performance degradation
 
 ### Running in CI
 

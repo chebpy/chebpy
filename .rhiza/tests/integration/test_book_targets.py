@@ -80,7 +80,7 @@ def test_book_folder(git_repo, book_makefile):
         targets = phony_line.split(":")[1].strip().split()
         all_targets.update(targets)
 
-    expected_targets = {"book", "mkdocs-build", "test", "benchmark", "stress", "hypothesis-test"}
+    expected_targets = {"book", "test", "benchmark", "stress", "hypothesis-test"}
     assert expected_targets.issubset(all_targets), (
         f"Expected phony targets to include {expected_targets}, got {all_targets}"
     )

@@ -1,5 +1,4 @@
 # Documentation dependencies for rhiza
 interrogate>=1.7.0
-mkdocs>=1.6.0
-mkdocs-material>=9.5.0
-mkdocstrings[python]>=0.25.0
+mike>=2.2.0
+zensical>=0.0.33

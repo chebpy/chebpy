@@ -47,14 +47,14 @@ class TestRhizaVersion:
 
         # Clear RHIZA_VERSION from environment to test the default value
         import os
-        import subprocess
+        import subprocess  # nosec B404
 
         env = os.environ.copy()
         env.pop("RHIZA_VERSION", None)
 
         cmd = ["/usr/bin/make", "-s", "print-RHIZA_VERSION"]
         logger.info("Running command: %s", " ".join(cmd))
-        proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        proc = subprocess.run(cmd, capture_output=True, text=True, env=env)  # nosec B603
         out = strip_ansi(proc.stdout)
         assert "Value of RHIZA_VERSION:\n0.10.2" in out
 
