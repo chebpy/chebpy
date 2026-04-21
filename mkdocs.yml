@@ -5,7 +5,7 @@ repo_url: https://github.com/chebpy/chebpy
 repo_name: chebpy/chebpy
 
 docs_dir: docs
-site_dir: _mkdocs
+site_dir: _book
 
 theme:
   name: material
