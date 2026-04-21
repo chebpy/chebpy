@@ -58,14 +58,17 @@ typecheck: install ## run ty type checking
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping typecheck${RESET}\n"; \
 	fi
 
+# Extra flags forwarded to pip-audit (e.g. --ignore-vuln CVE-XXXX-YYYY)
+PIP_AUDIT_ARGS ?=
+
 # The 'security' target performs security vulnerability scans.
 # 1. Runs pip-audit to check for known vulnerabilities in dependencies.
 # 2. Runs bandit to find common security issues in the source code.
 security: install ## run security scans (pip-audit and bandit)
 	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
-	@${UVX_BIN} pip-audit
+	@${UVX_BIN} pip-audit ${PIP_AUDIT_ARGS}
 	@printf "${BLUE}[INFO] Running bandit security scan...${RESET}\n"
-	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q -c pyproject.toml
+	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q --ini .bandit
 
 # The 'benchmark' target runs performance benchmarks using pytest-benchmark.
 # 1. Installs benchmarking dependencies (pytest-benchmark, pygal).
@@ -123,45 +126,18 @@ hypothesis-test:: install ## run property-based tests with Hypothesis
 	fi; \
 	exit $$exit_code
 
-# The 'coverage-badge' target generates an SVG coverage badge and pushes it to gh-pages.
-# 1. Checks if SOURCE_FOLDER exists; skips if not (no source means no coverage).
-# 2. Checks if the coverage JSON file exists.
-# 3. Runs genbadge via uvx to produce the SVG badge in /tmp.
-# 4. Checks out (or creates) the gh-pages branch and commits the badge there.
-# 5. Returns to the original branch.
-coverage-badge: test ## generate coverage badge and push to gh-pages branch
+coverage-badge: test ## generate coverage badge into _tests/coverage-badge.svg
 	@if [ ! -d "${SOURCE_FOLDER}" ]; then \
 	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping coverage-badge${RESET}\n"; \
 	  exit 0; \
 	fi; \
-	if [ ! -f _tests/coverage.json ]; then \
-	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.json, run 'make test' first.${RESET}\n"; \
+	if [ ! -f _tests/coverage.xml ]; then \
+	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.xml, run 'make test' first.${RESET}\n"; \
 	  exit 1; \
 	fi; \
 	printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
-	${UVX_BIN} genbadge coverage -i _tests/coverage.json -o /tmp/coverage-badge.svg; \
-	if [ ! -f /tmp/coverage-badge.svg ]; then \
-	  printf "${RED}[ERROR] Badge generation failed.${RESET}\n"; \
-	  exit 1; \
-	fi; \
-	ORIGINAL_BRANCH=$$(git rev-parse --abbrev-ref HEAD); \
-	printf "${BLUE}[INFO] Pushing coverage badge to gh-pages...${RESET}\n"; \
-	if git fetch origin gh-pages 2>/dev/null; then \
-	  git checkout gh-pages; \
-	else \
-	  git checkout --orphan gh-pages; \
-	  git rm -rf .; \
-	fi; \
-	cp /tmp/coverage-badge.svg coverage-badge.svg; \
-	git add coverage-badge.svg; \
-	if ! git diff --staged --quiet; then \
-	  git commit -m "chore: update coverage badge [skip ci]"; \
-	  git push origin gh-pages; \
-	else \
-	  printf "${YELLOW}[INFO] Coverage badge unchanged, skipping push${RESET}\n"; \
-	fi; \
-	git checkout "$$ORIGINAL_BRANCH"; \
-	printf "${GREEN}[SUCCESS] Coverage badge pushed to gh-pages${RESET}\n"
+	${UVX_BIN} "genbadge[coverage]" coverage -i _tests/coverage.xml -o _tests/coverage-badge.svg; \
+	printf "${GREEN}[SUCCESS] Coverage badge generated at _tests/coverage-badge.svg${RESET}\n"
 
 # The 'stress' target runs stress/load tests.
 # 1. Checks if stress tests exist in the tests/stress directory.

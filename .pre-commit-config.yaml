@@ -48,15 +48,22 @@ repos:
     rev: 1.9.4
     hooks:
       - id: bandit
-        args: ["--skip", "B101", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache", "-c", "pyproject.toml"]
+        args: ["--ini", ".bandit", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.6
+    rev: 0.11.7
     hooks:
       - id: uv-lock
 
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
+    hooks:
+      - id: interrogate
+        args: [--config=pyproject.toml]
+        files: ^src/
+
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.3.2  # Use the latest release
+    rev: v0.3.3  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names

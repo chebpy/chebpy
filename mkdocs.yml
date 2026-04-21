@@ -58,8 +58,6 @@ extra_javascript:
 nav:
   - Home: index.md
   - Getting Started: user/quickstart.md
-  - Marimo Notebooks: notebooks.md
-  - Reports: reports.md
   - API Reference: api.md
   - User Guide:
       - Introduction: user/intro.md

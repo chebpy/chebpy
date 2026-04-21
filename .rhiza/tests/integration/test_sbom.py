@@ -13,7 +13,7 @@ import subprocess  # nosec B404
 def test_sbom_generation_json(git_repo, logger):
     """Test that SBOM generation works in JSON format."""
     # Run the SBOM generation command for JSON
-    result = subprocess.run(  # nosec B603
+    result = subprocess.run(  # nosec B603 B607
         [
             "uvx",
             "--from",
@@ -66,7 +66,7 @@ def test_sbom_generation_json(git_repo, logger):
 def test_sbom_generation_xml(git_repo, logger):
     """Test that SBOM generation works in XML format."""
     # Run the SBOM generation command for XML
-    result = subprocess.run(  # nosec B603
+    result = subprocess.run(  # nosec B603 B607
         [
             "uvx",
             "--from",
@@ -117,7 +117,7 @@ def test_sbom_command_syntax(git_repo, logger):
     # Good: uvx --from 'cyclonedx-bom>=7.0.0' cyclonedx-py
 
     # Try the old (incorrect) syntax - should fail
-    result_bad = subprocess.run(  # nosec B603
+    result_bad = subprocess.run(  # nosec B603 B607
         [
             "uvx",
             "cyclonedx-bom@^7.0.0",
@@ -140,7 +140,7 @@ def test_sbom_command_syntax(git_repo, logger):
     assert result_bad.returncode != 0, "Old npm-style syntax should not work"
 
     # Try the new (correct) syntax - should succeed
-    result_good = subprocess.run(  # nosec B603
+    result_good = subprocess.run(  # nosec B603 B607
         [
             "uvx",
             "--from",

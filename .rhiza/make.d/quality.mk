@@ -5,7 +5,7 @@
 LICENSE_FAIL_ON ?= GPL;LGPL;AGPL
 
 # Declare phony targets (they don't produce files)
-.PHONY: all deptry fmt license todos suppression-audit
+.PHONY: all deptry fmt license todos suppression-audit semgrep
 
 ##@ Quality and Formatting
 all: fmt deptry test docs-coverage security license typecheck rhiza-test ## run all CI targets locally
@@ -45,6 +45,14 @@ todos: ## search and report all TODO/FIXME/HACK comments in the codebase
 suppression-audit: ## scan codebase for inline suppressions and report (grade, detail, histogram)
 	@printf "${BLUE}[INFO] Running suppression audit...${RESET}\n"
 	@${UV_BIN} run python .rhiza/utils/suppression_audit.py
+
+semgrep: install ## run Semgrep static analysis
+	@printf "${BLUE}[INFO] Running Semgrep...${RESET}\n"
+	@if [ -d ${SOURCE_FOLDER} ]; then \
+		${UVX_BIN} semgrep --config .github/semgrep.yml ${SOURCE_FOLDER}; \
+	else \
+		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
+	fi
 
 license: install ## run license compliance scan (fail on GPL, LGPL, AGPL)
 	@printf "${BLUE}[INFO] Running license compliance scan...${RESET}\n"
