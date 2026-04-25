@@ -79,4 +79,4 @@ plt.show()
 
 - [User Guide](intro.md) — deeper introduction to ChebPy concepts
 - [API Reference](../api.md) — full function and class documentation
-- [Marimo Notebooks](../notebooks.md) — interactive explorations
+- [Marimo Notebooks](../notebooks/index.md) — interactive explorations

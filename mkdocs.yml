@@ -71,6 +71,15 @@ nav:
           - Convolution: user/features/convolution.md
           - Quasimatrices: user/features/quasimatrix.md
           - Gaussian Process Regression: user/features/gpr.md
+  - Notebooks:
+      - Overview: notebooks/index.md
+      - Introduction: notebooks/1_introduction.html
+      - Examples: notebooks/2_examples.html
+      - Complex Chebfuns: notebooks/3_complex.html
+      - Quasimatrices: notebooks/4_quasimatrix.html
+      - Convolution: notebooks/5_convolution.html
+      - Gaussian Process Regression: notebooks/6_gaussian_process.html
+      - Variance Swap: notebooks/7_variance_swap.html
   - Developer:
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
