@@ -72,6 +72,7 @@ nav:
           - Quasimatrices: user/features/quasimatrix.md
           - Gaussian Process Regression: user/features/gpr.md
   - Notebooks:
+      - Overview: notebooks/index.md
       - Introduction: notebooks/1_introduction.html
       - Examples: notebooks/2_examples.html
       - Complex Chebfuns: notebooks/3_complex.html
