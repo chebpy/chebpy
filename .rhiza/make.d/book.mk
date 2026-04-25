@@ -55,5 +55,3 @@ book:: _book-reports _book-notebooks ## compile the companion book via MkDocs
 	  ${UVX_BIN} "genbadge[coverage]" coverage -i "${ROOT}/_tests/coverage.xml" -o "$(BOOK_OUTPUT)/coverage-badge.svg"; \
 	fi
 	@printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
-	@tree $(BOOK_OUTPUT)
-
