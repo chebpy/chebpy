@@ -214,6 +214,43 @@ class TestChebfunIntegration:
         assert isinstance(f.funs[2], CompactFun)
         assert f.sum() == pytest.approx(np.sqrt(np.pi), abs=1e-10)
 
+    def test_chebfun_piecewise_multiple_finite_breakpoints(self) -> None:
+        # chebfun(f, [-inf, -2, 0, 3, +inf]): two CompactFun ends, two Bndfun middles.
+        f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, -2.0, 0.0, 3.0, np.inf])
+        assert len(f.funs) == 4
+        assert isinstance(f.funs[0], CompactFun)
+        assert isinstance(f.funs[1], Bndfun)
+        assert isinstance(f.funs[2], Bndfun)
+        assert isinstance(f.funs[3], CompactFun)
+
+        # Logical breakpoints: leftmost = -inf, rightmost = +inf, interior finite.
+        bps = f.breakpoints
+        assert not np.isfinite(bps[0])
+        assert bps[1] == pytest.approx(-2.0)
+        assert bps[2] == pytest.approx(0.0)
+        assert bps[3] == pytest.approx(3.0)
+        assert not np.isfinite(bps[-1])
+
+        # Per-piece supports line up correctly.
+        assert not np.isfinite(f.funs[0].support[0])
+        assert f.funs[0].support[1] == pytest.approx(-2.0)
+        np.testing.assert_allclose(f.funs[1].support, [-2.0, 0.0])
+        np.testing.assert_allclose(f.funs[2].support, [0.0, 3.0])
+        assert f.funs[3].support[0] == pytest.approx(3.0)
+        assert not np.isfinite(f.funs[3].support[1])
+
+        # Total integral is the same Gaussian integral, regardless of breakpoint choice.
+        assert f.sum() == pytest.approx(np.sqrt(np.pi), abs=1e-10)
+
+        # Pointwise evaluation matches the underlying function across all four pieces
+        # (sample inside each), at interior breakpoints, and far outside numerical support.
+        x = np.array([-1000.0, -10.0, -2.0, -1.0, 0.0, 1.5, 3.0, 10.0, 1000.0])
+        expected = np.exp(-(x**2))
+        # Far outside numerical support → exact zero (function is below tolerance there).
+        expected[0] = 0.0
+        expected[-1] = 0.0
+        np.testing.assert_allclose(f(x), expected, atol=1e-9)
+
     def test_chebfun_evaluation_outside_storage(self) -> None:
         f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
         # Far outside numerical support but inside logical domain → 0, not NaN.
