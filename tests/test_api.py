@@ -7,7 +7,7 @@ This module tests the user-facing factory functions in chebpy.api:
 - Version information
 """
 
-import pickle
+import pickle  # nosec B403
 
 import numpy as np
 import pytest

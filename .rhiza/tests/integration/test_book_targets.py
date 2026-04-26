@@ -30,7 +30,7 @@ def test_no_book_folder(git_repo, book_makefile):
 
     # Targets are now always defined via .rhiza/make.d/
     # Use dry-run to verify they exist and can be parsed
-    for target in ["book", "docs", "marimushka"]:
+    for target in ["book"]:
         result = subprocess.run([MAKE, "-n", target], cwd=git_repo, capture_output=True, text=True)  # nosec
         # Target should exist (not "no rule to make target")
         assert "no rule to make target" not in result.stderr.lower(), (
@@ -57,7 +57,7 @@ def test_book_folder_but_no_mk(git_repo, book_makefile):
 
     # Targets are now always defined via .rhiza/make.d/
     # Use dry-run to verify they exist and can be parsed
-    for target in ["book", "docs", "marimushka"]:
+    for target in ["book"]:
         result = subprocess.run([MAKE, "-n", target], cwd=git_repo, capture_output=True, text=True)  # nosec
         # Target should exist (not "no rule to make target")
         assert "no rule to make target" not in result.stderr.lower(), (
@@ -80,7 +80,7 @@ def test_book_folder(git_repo, book_makefile):
         targets = phony_line.split(":")[1].strip().split()
         all_targets.update(targets)
 
-    expected_targets = {"book", "marimushka", "mkdocs-build", "test", "benchmark", "stress", "hypothesis-test", "docs"}
+    expected_targets = {"book", "test", "benchmark", "stress", "hypothesis-test"}
     assert expected_targets.issubset(all_targets), (
         f"Expected phony targets to include {expected_targets}, got {all_targets}"
     )
@@ -93,7 +93,7 @@ def test_book_noop_targets_defined(book_makefile):
     test.mk is not available or tests are not installed.
     """
     content = book_makefile.read_text()
-    for target in ["test", "benchmark", "stress", "hypothesis-test", "docs"]:
+    for target in ["test", "benchmark", "stress", "hypothesis-test"]:
         assert f"{target}::" in content, (
             f"book.mk should define a no-op '::' fallback for '{target}' to ensure build resilience"
         )

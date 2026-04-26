@@ -2,7 +2,7 @@
 # This file is included by the main Makefile
 
 # Declare phony targets (they don't produce files)
-.PHONY: marimo-validate marimo marimushka
+.PHONY: marimo-validate marimo
 
 ##@ Marimo Notebooks
 marimo-validate: install ## validate all Marimo notebooks can run
@@ -39,32 +39,4 @@ marimo: install ## fire up Marimo server
 	  printf " ${YELLOW}[WARN] Marimo folder '${MARIMO_FOLDER}' not found, skipping start${RESET}\n"; \
 	else \
 	  ${UV_BIN} run --no-project --with marimo --directory "${MARIMO_FOLDER}" marimo edit --no-token --headless; \
-	fi
-
-# The 'marimushka' target exports Marimo notebooks (.py files) to static HTML.
-# 1. Detects notebooks in the MARIMO_FOLDER.
-# 2. Converts them using 'marimushka export'.
-# 3. Generates a placeholder index.html if no notebooks are found.
-marimushka:: install-uv ## export Marimo notebooks to HTML
-	# Clean up previous marimushka output
-	rm -rf "${MARIMUSHKA_OUTPUT}";
-
-	@printf "${BLUE}[INFO] Exporting notebooks from ${MARIMO_FOLDER}...${RESET}\n"
-	@if [ ! -d "${MARIMO_FOLDER}" ]; then \
-	  printf "${YELLOW}[WARN] Directory '${MARIMO_FOLDER}' does not exist. Skipping marimushka.${RESET}\n"; \
-	else \
-	  mkdir -p "${MARIMUSHKA_OUTPUT}"; \
-	  if ! ls "${MARIMO_FOLDER}"/*.py >/dev/null 2>&1; then \
-	    printf "${YELLOW}[WARN] No Python files found in '${MARIMO_FOLDER}'.${RESET}\n"; \
-	    printf '%s\n' '<html><head><title>Marimo Notebooks</title></head>' \
-	      '<body><h1>Marimo Notebooks</h1><p>No notebooks found.</p></body></html>' \
-	      > "${MARIMUSHKA_OUTPUT}/index.html"; \
-	  else \
-	    CURRENT_DIR=$$(pwd); \
-	    OUTPUT_DIR="$$CURRENT_DIR/${MARIMUSHKA_OUTPUT}"; \
-	    cd "${MARIMO_FOLDER}" && \
-	    UVX_DIR=$$(dirname "$$(command -v uvx || echo "${INSTALL_DIR}/uvx")") && \
-	    "${UVX_BIN}" "marimushka>=0.3.3" export --notebooks "." --output "$$OUTPUT_DIR" --bin-path "$$UVX_DIR" && \
-	    cd "$$CURRENT_DIR"; \
-	  fi; \
 	fi

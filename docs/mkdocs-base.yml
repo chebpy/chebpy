@@ -1,0 +1,120 @@
+# docs/mkdocs-base.yml — Base MkDocs configuration for rhiza-based projects.
+#
+# USAGE (standalone)
+#   Build or serve this file directly if you have no root-level mkdocs.yml:
+#     uvx --with mkdocs-material mkdocs serve -f docs/mkdocs-base.yml
+#   The rhiza build system (make book) will pick this file up automatically
+#   as a fallback when no root-level mkdocs.yml is found.
+#
+# USAGE (with INHERIT)
+#   To extend this config from a root-level mkdocs.yml, add the following
+#   at the top of your mkdocs.yml and override only what you need:
+#
+#     INHERIT: docs/mkdocs-base.yml
+#
+#     site_name: My Project
+#     site_url: https://example.github.io/my-project/
+#     repo_url: https://github.com/example/my-project
+#     repo_name: example/my-project
+#
+#     docs_dir: docs   # always set this explicitly — base uses docs_dir: . which
+#                      # resolves relative to docs/mkdocs-base.yml, not mkdocs.yml
+#
+#     nav:             # nav is fully replaced — not merged — by the child config
+#       - Home: index.md
+#       - Guide: guide.md
+#
+#   Any key you omit in mkdocs.yml is inherited from this file.
+#   The 'nav' key is always fully replaced when defined in the child.
+
+docs_dir: docs
+site_dir: _book
+
+# ----------------------------------------------------------------------------
+# Theme
+# ----------------------------------------------------------------------------
+theme:
+  name: material
+  language: en
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.path
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+# ----------------------------------------------------------------------------
+# Markdown extensions
+# ----------------------------------------------------------------------------
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.snippets:
+      base_path: ["."]
+
+# ----------------------------------------------------------------------------
+# Plugins
+# ----------------------------------------------------------------------------
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+

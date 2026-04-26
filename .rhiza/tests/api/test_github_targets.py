@@ -6,8 +6,16 @@ and emit the expected commands without actually executing them.
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
 # Import run_make from local conftest (setup_tmp_makefile is autouse)
 from api.conftest import run_make
+
+_GITHUB_MK = Path(__file__).resolve().parents[3] / ".rhiza" / "make.d" / "github.mk"
+if not _GITHUB_MK.exists():
+    pytest.skip("github.mk not found, skipping github targets tests", allow_module_level=True)
 
 
 def test_gh_targets_exist(logger):

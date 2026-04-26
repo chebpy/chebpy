@@ -58,7 +58,6 @@ def setup_sync_env(logger, root, tmp_path: Path):
         "github.mk",
         "agentic.mk",
         "docker.mk",
-        "docs.mk",
     ]
     (tmp_path / ".rhiza" / "make.d").mkdir(parents=True, exist_ok=True)
     for mk_file in split_makefiles:
