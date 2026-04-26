@@ -198,3 +198,24 @@ BadFunLengthArgument = type(
         """,
     },
 )
+
+
+# ===============================================
+#    chebpy.compactfun.CompactFun exceptions
+# ===============================================
+
+# Exception raised when a CompactFun cannot be constructed
+CompactFunConstructionError = type(
+    "CompactFunConstructionError",
+    (ChebpyBaseError,),
+    {
+        "default_message": "Could not construct a CompactFun for the supplied function and interval",
+        "__doc__": """Exception raised when CompactFun construction fails.
+
+        Raised when the numerical support of an unbounded function cannot
+        be discovered within the configured tolerance and width budget,
+        or when the function fails preconditions (e.g. non-zero asymptotic
+        limit or non-zero constant on an unbounded interval).
+        """,
+    },
+)

@@ -239,7 +239,8 @@ class Chebfun:
 
         # evaluate a fun when x is an interior point
         for fun in self:
-            idx = fun.interval.isinterior(x)
+            sa, sb = fun.support[0], fun.support[-1]
+            idx = np.logical_and(sa < x, x < sb)
             out[idx] = fun(x[idx])
 
         # evaluate the breakpoint data for x at a breakpoint

@@ -157,6 +157,22 @@ class Classicfun(Fun, ABC):
         self.onefun = onefun
         self._interval = interval
 
+    def _rebuild(self, onefun: Any) -> "Classicfun":
+        """Construct a new instance of this class with a replacement ``onefun``.
+
+        Subclasses that carry additional metadata beyond ``onefun`` and
+        ``interval`` (e.g. :class:`CompactFun`'s logical interval) should
+        override this method so that operations defined on the parent class
+        preserve that metadata.
+
+        Args:
+            onefun: The replacement Onefun object.
+
+        Returns:
+            Classicfun: A new instance of ``type(self)``.
+        """
+        return self.__class__(onefun, self._interval)
+
     def __repr__(self) -> str:  # pragma: no cover
         """Return a string representation of the function.
 
@@ -299,7 +315,7 @@ class Classicfun(Fun, ABC):
             Classicfun: A new function representing the imaginary part of this function.
         """
         if self.iscomplex:
-            return self.__class__(self.onefun.imag(), self.interval)
+            return self._rebuild(self.onefun.imag())
         else:
             return self.initconst(0, interval=self.interval)
 
@@ -313,7 +329,7 @@ class Classicfun(Fun, ABC):
             Classicfun: A new function representing the real part of this function.
         """
         if self.iscomplex:
-            return self.__class__(self.onefun.real(), self.interval)
+            return self._rebuild(self.onefun.real())
         else:
             return self
 
@@ -385,9 +401,9 @@ class Classicfun(Fun, ABC):
         Returns:
             Classicfun: A new function representing the indefinite integral of this function.
         """
-        a, b = self.support
+        a, b = self.interval
         onefun = 0.5 * (b - a) * self.onefun.cumsum()
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     def diff(self) -> "Classicfun":
         """Compute the derivative of the function.
@@ -399,9 +415,9 @@ class Classicfun(Fun, ABC):
         Returns:
             Classicfun: A new function representing the derivative of this function.
         """
-        a, b = self.support
+        a, b = self.interval
         onefun = 2.0 / (b - a) * self.onefun.diff()
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     def sum(self) -> Any:
         """Compute the definite integral of the function over its interval of definition.
@@ -413,7 +429,7 @@ class Classicfun(Fun, ABC):
         Returns:
             float or complex: The definite integral of the function over its interval of definition.
         """
-        a, b = self.support
+        a, b = self.interval
         return 0.5 * (b - a) * self.onefun.sum()
 
     # ----------
@@ -522,7 +538,7 @@ def add_zero_arg_op(methodname: str) -> None:
             Classicfun: A new Classicfun instance with the result of the operation.
         """
         onefun = getattr(self.onefun, methodname)(*args, **kwds)
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     method.__name__ = methodname
     method.__doc__ = method.__doc__
@@ -604,7 +620,7 @@ def add_binary_op(methodname: str) -> None:
             # let the lower level classes raise any other exceptions
             g = f
         onefun = getattr(self.onefun, methodname)(g, *args, **kwds)
-        return cls(onefun, self.interval)
+        return self._rebuild(onefun)
 
     method.__name__ = methodname
     method.__doc__ = method.__doc__
