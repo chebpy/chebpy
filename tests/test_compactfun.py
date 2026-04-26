@@ -221,3 +221,46 @@ class TestChebfunIntegration:
         assert y[0] == 0.0
         assert y[2] == 0.0
         assert y[1] == pytest.approx(1.0, abs=1e-10)
+
+
+# -----------------------------
+# convolution
+# -----------------------------
+class TestConvolution:
+    """Tests for ``Chebfun.conv`` involving :class:`CompactFun` inputs."""
+
+    def test_gaussian_self_convolution(self) -> None:
+        # (exp(-x^2)) ★ (exp(-x^2)) = sqrt(pi/2) * exp(-x^2/2); total mass = pi.
+        f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        h = f.conv(f)
+        assert h.sum() == pytest.approx(np.pi, abs=1e-8)
+        assert h(0.0) == pytest.approx(np.sqrt(np.pi / 2.0), abs=1e-8)
+        assert h(2.0) == pytest.approx(np.sqrt(np.pi / 2.0) * np.exp(-2.0), abs=1e-8)
+        # Outermost pieces should be CompactFun (logical support is unbounded).
+        assert isinstance(h.funs[0], CompactFun)
+        assert isinstance(h.funs[-1], CompactFun)
+        assert not np.isfinite(h.breakpoints[0])
+        assert not np.isfinite(h.breakpoints[-1])
+
+    def test_exp_self_convolution_semi_infinite(self) -> None:
+        # exp(-x) ★ exp(-x) on [0, inf) = x * exp(-x) (Gamma(2,1)); total mass 1.
+        f = chebfun(lambda x: np.exp(-x), [0.0, np.inf])
+        h = f.conv(f)
+        assert h.sum() == pytest.approx(1.0, abs=1e-8)
+        for xi in (0.5, 1.0, 3.0):
+            assert h(xi) == pytest.approx(xi * np.exp(-xi), abs=1e-8)
+        # Right edge piece is CompactFun, left endpoint is finite (= 0.0).
+        assert isinstance(h.funs[-1], CompactFun)
+        assert h.breakpoints[0] == pytest.approx(0.0)
+        assert not np.isfinite(h.breakpoints[-1])
+
+    def test_compact_with_finite_bndfun(self) -> None:
+        # exp(-x^2) on R convolved with a bump on [-1, 1].
+        f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        g = chebfun(lambda x: 1.0 - x * x, [-1.0, 1.0])
+        h = f.conv(g)
+        # Mass of result equals product of masses.
+        assert h.sum() == pytest.approx(np.sqrt(np.pi) * (4.0 / 3.0), abs=1e-8)
+        # Result has unbounded logical support.
+        assert not np.isfinite(h.breakpoints[0])
+        assert not np.isfinite(h.breakpoints[-1])
