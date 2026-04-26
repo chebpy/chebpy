@@ -145,3 +145,48 @@ def chebpts(
     interval = Interval(*domain)
     pts = interval(pts)
     return pts, wts
+
+
+def trigfun(
+    f: Callable[..., Any] | str | float | None = None,
+    domain: np.ndarray | list[float] | None = None,
+    n: int | None = None,
+) -> "Chebfun":
+    """Create a Chebfun backed by Fourier (trigonometric) technology.
+
+    This is the explicit entry point for constructing periodic functions.
+    Unlike ``chebfun``, which always uses Chebyshev polynomial technology,
+    ``trigfun`` always uses :class:`~chebpy.trigtech.Trigtech` as the
+    underlying approximation technology.  The user is responsible for
+    ensuring that *f* is smooth and periodic on *domain*.
+
+    The API mirrors :func:`chebfun` exactly:
+
+    * ``trigfun()`` → empty Chebfun
+    * ``trigfun(lambda x: np.sin(np.pi*x), [-1, 1])`` → from callable
+    * ``trigfun('x')`` → identity (not truly periodic; provided for
+      interface compatibility)
+    * ``trigfun(3.14)`` → constant function
+
+    Args:
+        f: The function to represent.  Same semantics as :func:`chebfun`.
+        domain: Domain ``[a, b]``.  Defaults to ``prefs.domain``.
+        n: Fixed number of Fourier modes.  If None, adaptive construction
+            is used.
+
+    Returns:
+        Chebfun: A Chebfun object whose pieces are backed by Trigtech.
+
+    Examples:
+        >>> import numpy as np
+        >>> from chebpy import trigfun
+        >>> f = trigfun(lambda x: np.cos(np.pi * x), [-1, 1])
+        >>> float(f(0.0))
+        1.0
+        >>> g = trigfun(lambda x: np.sin(2 * np.pi * x))
+        >>> bool(abs(g.sum()) < 1e-12)
+        True
+    """
+    with prefs:
+        prefs.tech = "Trigtech"
+        return chebfun(f, domain, n)

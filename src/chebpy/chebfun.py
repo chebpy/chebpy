@@ -26,6 +26,7 @@ from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, SupportMismatch
 from .plotting import plotfun
 from .settings import _preferences as prefs
+from .trigtech import Trigtech
 from .utilities import Domain, Interval, check_funs, compute_breakdata, generate_funs
 
 
@@ -899,6 +900,22 @@ class Chebfun:
         """
         if self.isempty or g.isempty:
             return self.__class__.initempty()
+
+        # Trigtech inputs are not supported: the underlying algorithms assume
+        # Chebyshev coefficients and would silently produce incorrect results
+        # if applied to Fourier coefficients. See chebfun's @trigtech/conv.m
+        # for the same restriction; periodic functions need a circular
+        # convolution (circconv) instead, which has different semantics
+        # (fixed period, no domain expansion).
+        if any(isinstance(fun.onefun, Trigtech) for fun in self.funs) or any(
+            isinstance(fun.onefun, Trigtech) for fun in g.funs
+        ):
+            raise NotImplementedError(
+                "conv() is not supported for trigfun (Trigtech-backed) inputs. "
+                "Aperiodic convolution and periodic (circular) convolution are "
+                "distinct operations; a dedicated circconv() for trigfuns is "
+                "not yet implemented."
+            )
 
         # Fast path: both single-piece with equal-width domains
         if self.funs.size == 1 and g.funs.size == 1:

@@ -16,10 +16,12 @@ from .exceptions import IntervalMismatch, NotSubinterval
 from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
+from .trigtech import Trigtech
 from .utilities import Interval
 
 techdict = {
     "Chebtech": Chebtech,
+    "Trigtech": Trigtech,
 }
 
 
