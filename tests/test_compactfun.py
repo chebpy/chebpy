@@ -301,3 +301,54 @@ class TestConvolution:
         # Result has unbounded logical support.
         assert not np.isfinite(h.breakpoints[0])
         assert not np.isfinite(h.breakpoints[-1])
+
+
+# -----------------------------
+# rootfinding
+# -----------------------------
+class TestRoots:
+    """Tests for the spurious-root filtering on :class:`CompactFun`."""
+
+    def test_no_spurious_roots_for_strictly_positive_decay(self) -> None:
+        # exp(-x^2) has no real roots; raw polynomial roots in noise regions
+        # (near the storage-interval boundary) must be filtered out.
+        f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        roots = f.roots()
+        assert roots.size == 0
+
+    def test_genuine_root_kept_in_doubly_infinite(self) -> None:
+        # (x - 2) * exp(-x^2) has a single sign change at x = 2.
+        f = chebfun(lambda x: (x - 2.0) * np.exp(-(x**2)), [-np.inf, np.inf])
+        roots = f.roots()
+        assert roots.size == 1
+        assert roots[0] == pytest.approx(2.0, abs=1e-8)
+
+    def test_multiple_genuine_roots_in_semi_infinite(self) -> None:
+        # (x - 1)(x - 3) * exp(-x) has two simple roots; spurious noise roots
+        # at large x must be filtered.
+        f = chebfun(lambda x: (x - 1.0) * (x - 3.0) * np.exp(-x), [0.0, np.inf])
+        roots = f.roots()
+        assert roots.size == 2
+        np.testing.assert_allclose(roots, [1.0, 3.0], atol=1e-8)
+
+    def test_oscillation_roots_match_expected_grid(self) -> None:
+        # sin(10x) * exp(-x) on [0, inf) has roots at k*pi/10 for as many k as
+        # exp(-x) stays above noise. All retained roots must lie on this grid.
+        # Roots in the well-resolved region (exp(-x) >> noise floor) should
+        # match k*pi/10 to high precision.
+        f = chebfun(lambda x: np.sin(10.0 * x) * np.exp(-x), [0.0, np.inf])
+        roots = f.roots()
+        assert roots.size > 50  # should retain dozens of genuine roots
+        well_resolved = roots[roots < 25.0]
+        assert well_resolved.size > 70
+        ks = np.rint(well_resolved * 10.0 / np.pi)
+        np.testing.assert_allclose(well_resolved, ks * np.pi / 10.0, atol=1e-8)
+        # No retained root should be outside the storage interval.
+        a_s, b_s = f.funs[0].numerical_support
+        assert roots.min() >= a_s
+        assert roots.max() <= b_s
+
+    def test_roots_via_chebfun_filtered(self) -> None:
+        # Calling .roots() on the parent Chebfun also benefits from filtering.
+        f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        assert f.roots().size == 0

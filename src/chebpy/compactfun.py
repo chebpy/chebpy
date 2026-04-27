@@ -377,6 +377,44 @@ class CompactFun(Classicfun):
             "release will return a bounded Chebfun representation."
         )
 
+    # -------------
+    #  rootfinding
+    # -------------
+    def roots(self) -> Any:
+        """Find the roots, filtering out spurious roots in numerical-noise regions.
+
+        The underlying polynomial approximation can produce many spurious
+        roots in regions where the function has decayed to numerical noise
+        (typically near the boundary of the storage interval).  We keep a
+        candidate root ``r`` only if both:
+
+        - ``f(r - δ)`` and ``f(r + δ)`` have opposite signs (the function
+          actually crosses zero), **and**
+        - ``max(|f(r - δ)|, |f(r + δ)|)`` exceeds ``numsupp_tol * vscale``
+          (the values are above numerical noise).
+
+        Here ``delta = 1e-3 * storage_width``.  This heuristic does not preserve
+        double roots; that is a documented limitation since double roots are
+        uncommon in the decay-to-zero functions that :class:`CompactFun` is
+        designed for.
+        """
+        raw = super().roots()
+        if raw.size == 0:
+            return raw
+        a_s, b_s = float(self._interval[0]), float(self._interval[1])
+        vals = np.abs(np.atleast_1d(self.onefun.values()))
+        vscale = float(vals.max()) if vals.size else 1.0
+        threshold = prefs.numsupp_tol * max(vscale, 1.0)
+        delta = 1e-3 * (b_s - a_s)
+        left = np.clip(raw - delta, a_s, b_s)
+        right = np.clip(raw + delta, a_s, b_s)
+        f_left = np.atleast_1d(self.__call__(left))
+        f_right = np.atleast_1d(self.__call__(right))
+        sign_flip = np.sign(f_left) != np.sign(f_right)
+        above_noise = np.maximum(np.abs(f_left), np.abs(f_right)) > threshold
+        keep = sign_flip & above_noise
+        return np.sort(np.unique(raw[keep]))
+
     # -----------
     #  utilities
     # -----------
