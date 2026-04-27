@@ -11,7 +11,7 @@
 
 import marimo
 
-__generated_with = "0.21.0"
+__generated_with = "0.23.2"
 app = marimo.App()
 
 with app.setup(hide_code=True):
@@ -196,12 +196,20 @@ def _(fn_mean, fn_var, x_obs, y_noisy):
     _mu = fn_mean(_tt)
     _sd = np.sqrt(np.maximum(fn_var(_tt), 0.0))
 
-    _fig, _ax = plt.subplots()
-    _ax.fill_between(_tt, _mu - 2 * _sd, _mu + 2 * _sd, alpha=0.25, label="±2σ")
-    _ax.plot(_tt, _mu, linewidth=2, label="posterior mean")
-    _ax.plot(x_obs, y_noisy, "ok", markersize=8, label="noisy data")
-    _ax.legend()
-    _ax.set_title("GPR — noisy observations (σ_y = 0.15)")
+    _fig, (_ax1, _ax2) = plt.subplots(2, 1, figsize=(9, 6), height_ratios=[2, 1], sharex=True)
+
+    _ax1.fill_between(_tt, _mu - 2 * _sd, _mu + 2 * _sd, alpha=0.25, label="±2σ")
+    _ax1.plot(_tt, _mu, linewidth=2, label="posterior mean")
+    _ax1.plot(x_obs, y_noisy, "ok", markersize=8, label="noisy data")
+    _ax1.set_ylabel("y")
+    _ax1.legend()
+    _ax1.set_title("GPR — noisy observations (σ_y = 0.15)")
+
+    _ax2.fill_between(_tt, _sd**2, alpha=0.35, color="C1")
+    _ax2.plot(_tt, _sd**2, linewidth=1.5, color="C1")
+    _ax2.set_xlabel("x")
+    _ax2.set_ylabel("variance")
+
     plt.tight_layout()
     plt.show()
     return
@@ -301,15 +309,36 @@ def _(fp_mean, fp_var, x_per, y_per):
     _mu = fp_mean(_tt)
     _sd = np.sqrt(np.maximum(fp_var(_tt), 0.0))
 
-    _fig, _ax = plt.subplots()
-    _ax.fill_between(_tt, _mu - 2 * _sd, _mu + 2 * _sd, alpha=0.25)
-    _ax.plot(_tt, _mu, linewidth=2, label="periodic GP mean")
-    _ax.plot(x_per, y_per, "ok", markersize=8, label="data")
-    _ax.legend()
-    _ax.set_title("GPR — periodic kernel")
-    _ax.set_xlabel("x")
+    _fig, (_ax1, _ax2) = plt.subplots(2, 1, figsize=(9, 6), height_ratios=[2, 1], sharex=True)
+
+    _ax1.fill_between(_tt, _mu - 2 * _sd, _mu + 2 * _sd, alpha=0.25, label="±2σ")
+    _ax1.plot(_tt, _mu, linewidth=2, label="periodic GP mean")
+    _ax1.plot(x_per, y_per, "ok", markersize=8, label="data")
+    _ax1.set_ylabel("y")
+    _ax1.legend()
+    _ax1.set_title("GPR — periodic kernel")
+
+    _ax2.fill_between(_tt, _sd**2, alpha=0.35, color="C1")
+    _ax2.plot(_tt, _sd**2, linewidth=1.5, color="C1")
+    _ax2.set_xlabel("x")
+    _ax2.set_ylabel("variance")
+
     plt.tight_layout()
     plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    Note that, as expected, the underlying representation is based on Trigtech.
+    """)
+    return
+
+
+@app.cell
+def _(fp_mean):
+    fp_mean.funs[0].onefun
     return
 
 

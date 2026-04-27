@@ -64,6 +64,8 @@ nav:
       - Installation: user/install.md
       - Features:
           - Function Approximation: user/features/approximation.md
+          - Periodic Functions: user/features/periodic.md
+          - Infinite Intervals: user/features/infinite-intervals.md
           - Calculus: user/features/calculus.md
           - Root-Finding: user/features/rootfinding.md
           - Arithmetic: user/features/arithmetic.md
@@ -80,6 +82,8 @@ nav:
       - Convolution: notebooks/5_convolution.html
       - Gaussian Process Regression: notebooks/6_gaussian_process.html
       - Variance Swap: notebooks/7_variance_swap.html
+      - Periodic Representations: notebooks/8_periodic.html
+      - Infinite Intervals: notebooks/9_infinite_intervals.html
   - Developer:
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md

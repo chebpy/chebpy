@@ -11,3 +11,5 @@ Interactive Marimo notebooks exploring ChebPy features. Each notebook opens as a
 | [Convolution](5_convolution.html) | Convolution of Chebfuns |
 | [Gaussian Process Regression](6_gaussian_process.html) | GPR via Chebfun representations |
 | [Variance Swap](7_variance_swap.html) | A quantitative finance application |
+| [Periodic Representations](8_periodic.html) | `trigfun` for smooth periodic functions via Fourier series |
+| [Infinite Intervals](9_infinite_intervals.html) | `CompactFun` for functions on (semi-)infinite domains |

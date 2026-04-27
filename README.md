@@ -48,10 +48,15 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 > **Work with functions as easily as numbers**
 
 - 🔢 **Function Approximation**: Automatic Chebyshev polynomial approximation of smooth functions
+- 🌊 **Periodic Functions**: Fourier-based approximation via `trigfun` for smooth periodic functions
+- ♾️ **Infinite Intervals**: Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
 - 📐 **Calculus Operations**: Differentiation, integration, and root-finding with machine precision
 - 📊 **Plotting**: Beautiful function visualizations with matplotlib integration
 - 🧮 **Arithmetic**: Add, subtract, multiply, and compose functions naturally
 - 🎯 **Adaptive**: Automatically determines optimal polynomial degree for given tolerance
+- 🔁 **Convolution**: Convolve two Chebfuns to produce a new function
+- 📏 **Quasimatrices**: Continuous linear algebra via QR, SVD, and least-squares
+- 🎲 **Gaussian Process Regression**: GP posteriors returned as Chebfun objects
 - 🔗 **Interoperability**: Works seamlessly with NumPy and SciPy ecosystems
 
 ---
@@ -133,10 +138,6 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 ```
 
-```result
-
-```
-
 ### More Examples
 
 ```python
@@ -204,9 +205,47 @@ extrema = f_mean.diff().roots()   # Local extrema via calculus
 integral = f_mean.sum()           # Definite integral
 ```
 
-```result
+### Periodic Functions
 
+Use `trigfun` for smooth periodic functions — the same API as `chebfun`,
+but backed by a Fourier (Trigtech) representation that is far more compact
+for periodic targets:
+
+```python
+from chebpy import trigfun
+import numpy as np
+
+f = trigfun(lambda x: np.exp(np.sin(np.pi * x)), [-1, 1])
+len(f)            # number of Fourier modes
+f.diff()          # spectral differentiation in Fourier space
+f.sum()           # ≈ 2 · I₀(1)
 ```
+
+The `gpr` interface accepts `trig=True` for a periodic GP posterior,
+also returned as a Trigtech-backed Chebfun.
+
+### Infinite Intervals
+
+Pass `np.inf` or `-np.inf` as a domain endpoint to construct a Chebfun
+on a (semi-)infinite interval. Pieces with infinite endpoints are
+automatically built as `CompactFun` objects: a Chebyshev expansion on
+the discovered numerical-support window, reported as identically zero
+outside.
+
+```python
+from chebpy import chebfun
+import numpy as np
+
+# Doubly-infinite Gaussian — sum is √π
+h = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
+h.sum()                           # ≈ √π
+
+# Mixed: finite breakpoints with infinite endpoints
+p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
+[type(piece).__name__ for piece in p.funs]
+# ['CompactFun', 'Bndfun', 'Bndfun', 'CompactFun']
+```
+
 ---
 
 ## Documentation

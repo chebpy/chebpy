@@ -30,6 +30,10 @@ class DefaultPreferences:
     maxiter = 10
     sortroots = False
     mergeroots = True
+    # CompactFun (numerical-support) settings
+    numsupp_tol = np.finfo(float).eps
+    numsupp_max_width = 1.0e6
+    numsupp_max_probes = 30
 
     @classmethod
     def _defaults(cls) -> dict[str, Any]:

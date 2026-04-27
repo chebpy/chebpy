@@ -239,7 +239,8 @@ class Chebfun:
 
         # evaluate a fun when x is an interior point
         for fun in self:
-            idx = fun.interval.isinterior(x)
+            sa, sb = fun.support[0], fun.support[-1]
+            idx = np.logical_and(sa < x, x < sb)
             out[idx] = fun(x[idx])
 
         # evaluate the breakpoint data for x at a breakpoint
@@ -917,8 +918,15 @@ class Chebfun:
                 "not yet implemented."
             )
 
-        # Fast path: both single-piece with equal-width domains
-        if self.funs.size == 1 and g.funs.size == 1:
+        # Fast path: both single-piece with equal-width finite domains.
+        # CompactFun pieces (with possibly infinite logical support) always
+        # take the general piecewise path so the output is wrapped correctly.
+        from .compactfun import CompactFun
+
+        any_compact = any(isinstance(fun, CompactFun) for fun in self.funs) or any(
+            isinstance(fun, CompactFun) for fun in g.funs
+        )
+        if not any_compact and self.funs.size == 1 and g.funs.size == 1:
             f_fun, g_fun = self.funs[0], g.funs[0]
             f_w = float(f_fun.support[1]) - float(f_fun.support[0])
             g_w = float(g_fun.support[1]) - float(g_fun.support[0])
@@ -966,10 +974,31 @@ class Chebfun:
 
         The breakpoints of the result are the sorted, unique pairwise sums of
         the breakpoints of self and g.  On each sub-interval the convolution
-        integral is smooth, so we construct it adaptively.
+        integral is smooth, so we construct it adaptively.  When either input
+        contains :class:`CompactFun` pieces, the corresponding ``±inf``
+        breakpoints are replaced with the numerical-support bounds for the
+        purposes of integration; the outermost output pieces are then wrapped
+        as :class:`CompactFun` so the result preserves the unbounded logical
+        support.
         """
-        f_breaks = self.breakpoints
-        g_breaks = g.breakpoints
+        from .compactfun import CompactFun
+
+        def _effective_breakpoints(h: Chebfun) -> np.ndarray:
+            """Return breakpoints with ±inf replaced by numerical_support bounds."""
+            bps = np.array(h.breakpoints, dtype=float)
+            if not np.isfinite(bps[0]) and isinstance(h.funs[0], CompactFun):
+                bps[0] = float(h.funs[0].numerical_support[0])
+            if not np.isfinite(bps[-1]) and isinstance(h.funs[-1], CompactFun):
+                bps[-1] = float(h.funs[-1].numerical_support[1])
+            return bps
+
+        f_logical_breaks = np.array(self.breakpoints, dtype=float)
+        g_logical_breaks = np.array(g.breakpoints, dtype=float)
+        left_inf = (not np.isfinite(f_logical_breaks[0])) or (not np.isfinite(g_logical_breaks[0]))
+        right_inf = (not np.isfinite(f_logical_breaks[-1])) or (not np.isfinite(g_logical_breaks[-1]))
+
+        f_breaks = _effective_breakpoints(self)
+        g_breaks = _effective_breakpoints(g)
         f_a, f_b = float(f_breaks[0]), float(f_breaks[-1])
         g_c, g_d = float(g_breaks[0]), float(g_breaks[-1])
 
@@ -1023,12 +1052,26 @@ class Chebfun:
                 result[idx] = total
             return result
 
-        # Build a Bndfun on each output sub-interval
+        # Build a fun on each output sub-interval.  Outermost pieces are
+        # wrapped as CompactFun when the corresponding logical edge is ±inf;
+        # interior pieces are always finite Bndfuns.
+        n_pieces = len(out_breaks) - 1
         funs_list = []
-        for i in range(len(out_breaks) - 1):
-            interval = Interval(out_breaks[i], out_breaks[i + 1])
-            fun = Bndfun.initfun_adaptive(conv_eval, interval)
-            funs_list.append(fun)
+        for i in range(n_pieces):
+            a_storage = float(out_breaks[i])
+            b_storage = float(out_breaks[i + 1])
+            interval = Interval(a_storage, b_storage)
+            bnd = Bndfun.initfun_adaptive(conv_eval, interval)
+            is_first = i == 0
+            is_last = i == n_pieces - 1
+            wrap_left = is_first and left_inf
+            wrap_right = is_last and right_inf
+            if wrap_left or wrap_right:
+                a_logical = -np.inf if wrap_left else a_storage
+                b_logical = np.inf if wrap_right else b_storage
+                funs_list.append(CompactFun(bnd.onefun, interval, logical_interval=(a_logical, b_logical)))
+            else:
+                funs_list.append(bnd)
 
         return self.__class__(funs_list)
 
@@ -1309,6 +1352,11 @@ class Chebfun:
         This method plots the Chebfun over its domain using matplotlib.
         For complex-valued Chebfuns, it plots the real part against the imaginary part.
 
+        For Chebfuns with ``±inf`` endpoints (containing :class:`CompactFun`
+        pieces), each unbounded endpoint is replaced for plotting purposes
+        with the corresponding ``plot_support`` endpoint of the outermost
+        :class:`CompactFun` piece, so the decay-to-zero region is visible.
+
         Args:
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
                 a new axes will be created. Defaults to None.
@@ -1317,7 +1365,15 @@ class Chebfun:
         Returns:
             matplotlib.axes.Axes: The axes on which the plot was created.
         """
-        return plotfun(self, self.support, ax=ax, **kwds)
+        a, b = float(self.support[0]), float(self.support[-1])
+        if not np.isfinite(a):
+            left = self.funs[0]
+            a = float(left.plot_support[0]) if hasattr(left, "plot_support") else a
+        if not np.isfinite(b):
+            right = self.funs[-1]
+            b = float(right.plot_support[1]) if hasattr(right, "plot_support") else b
+        support = kwds.pop("support", (a, b))
+        return plotfun(self, support, ax=ax, **kwds)
 
     def plotcoeffs(self, ax: Axes | None = None, **kwds: Any) -> Axes:
         """Plot the coefficients of the Chebfun on a semilogy scale.
