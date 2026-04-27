@@ -398,3 +398,33 @@ class CompactFun(Classicfun):
         a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
         new_logical = (a_log + c, b_log + c)
         return self.__class__(self.onefun, new_storage, logical_interval=new_logical)
+
+    # ----------
+    #  plotting
+    # ----------
+    @property
+    def plot_support(self) -> tuple[float, float]:
+        """Return a finite ``[a, b]`` plotting window.
+
+        Replaces any ``±inf`` logical endpoint with the corresponding
+        numerical-support endpoint padded by 10% of the storage width
+        (minimum padding of 1.0) so the decay-to-zero region is visible.
+        """
+        a_s, b_s = float(self._interval[0]), float(self._interval[1])
+        a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
+        pad = max(0.1 * (b_s - a_s), 1.0)
+        a = a_log if np.isfinite(a_log) else a_s - pad
+        b = b_log if np.isfinite(b_log) else b_s + pad
+        return (a, b)
+
+    def plot(self, ax: Any = None, **kwds: Any) -> Any:
+        """Plot the function over a finite window derived from its numerical support.
+
+        For doubly- or singly-infinite logical intervals, the plotting window
+        defaults to the numerical-support interval padded by 10% on each
+        unbounded side. Pass an explicit ``support=(a, b)`` keyword to override.
+        """
+        from .plotting import plotfun
+
+        support = kwds.pop("support", self.plot_support)
+        return plotfun(self, support, ax=ax, **kwds)

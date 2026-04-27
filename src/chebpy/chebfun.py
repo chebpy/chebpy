@@ -1352,6 +1352,11 @@ class Chebfun:
         This method plots the Chebfun over its domain using matplotlib.
         For complex-valued Chebfuns, it plots the real part against the imaginary part.
 
+        For Chebfuns with ``±inf`` endpoints (containing :class:`CompactFun`
+        pieces), each unbounded endpoint is replaced for plotting purposes
+        with the corresponding ``plot_support`` endpoint of the outermost
+        :class:`CompactFun` piece, so the decay-to-zero region is visible.
+
         Args:
             ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
                 a new axes will be created. Defaults to None.
@@ -1360,7 +1365,15 @@ class Chebfun:
         Returns:
             matplotlib.axes.Axes: The axes on which the plot was created.
         """
-        return plotfun(self, self.support, ax=ax, **kwds)
+        a, b = float(self.support[0]), float(self.support[-1])
+        if not np.isfinite(a):
+            left = self.funs[0]
+            a = float(left.plot_support[0]) if hasattr(left, "plot_support") else a
+        if not np.isfinite(b):
+            right = self.funs[-1]
+            b = float(right.plot_support[1]) if hasattr(right, "plot_support") else b
+        support = kwds.pop("support", (a, b))
+        return plotfun(self, support, ax=ax, **kwds)
 
     def plotcoeffs(self, ax: Axes | None = None, **kwds: Any) -> Axes:
         """Plot the coefficients of the Chebfun on a semilogy scale.

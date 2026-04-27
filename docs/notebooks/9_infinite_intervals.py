@@ -15,11 +15,17 @@ __generated_with = "0.23.2"
 app = marimo.App()
 
 with app.setup:
+    import math
+
     import marimo as mo
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import numpy as np
     import seaborn as sns
+
+    from chebpy import chebfun
+    from chebpy.exceptions import CompactFunConstructionError
+    from chebpy.settings import _preferences as prefs
 
     sns.set(font_scale=1.5)
     sns.set_style("whitegrid")
@@ -54,14 +60,6 @@ def _():
     return
 
 
-@app.cell
-def _():
-    from chebpy import chebfun
-    from chebpy.exceptions import CompactFunConstructionError
-
-    return CompactFunConstructionError, chebfun
-
-
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
@@ -75,12 +73,9 @@ def _():
 
 
 @app.cell
-def _(chebfun):
+def _():
     f_decay = chebfun(lambda x: np.sin(10 * x) * np.exp(-x), [0, np.inf])
-    _a, _b = f_decay.funs[0].numerical_support
-    print(f"Numerical support: [{_a:.3f}, {_b:.3f}]")
-    print(f"Logical support:   {tuple(f_decay.funs[0].support)}")
-    print(f"Length:            {f_decay.funs[0].size}")
+    f_decay
     return (f_decay,)
 
 
@@ -100,10 +95,11 @@ def _(f_decay):
 
 @app.cell
 def _(f_total):
-    _a, _b = f_total.funs[0].numerical_support
-    _xs = np.linspace(0.0, max(_b, 6.0), 800)
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, f_total(_xs))
+    with prefs:
+        prefs.N_plot = 10001
+        f_total.plot(ax=_ax)
+    _ax.set_xlim(0.0, 8)
     _ax.set_xlabel("x")
     _ax.set_title(r"$f(x) = 0.75 + \sin(10x)/e^x$")
     _fig
@@ -122,11 +118,7 @@ def _():
 
 
 @app.cell
-def _(chebfun):
-    import math
-
-    # Use 1/Γ(x+1) = exp(-lgamma(x+1)) so the probe at large x underflows to 0
-    # cleanly rather than overflowing math.gamma.
+def _():
     _rgamma = np.frompyfunc(lambda y: math.exp(-math.lgamma(y + 1.0)), 1, 1)
     g = chebfun(lambda x: np.asarray(_rgamma(x), dtype=float), [0, np.inf])
     print(g)
@@ -136,10 +128,10 @@ def _(chebfun):
 
 @app.cell
 def _(g):
-    _a, _b = g.funs[0].numerical_support
-    _xs = np.linspace(0.0, _b, 600)
+    _b = float(g.funs[0].numerical_support[1])
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, g(_xs))
+    g.plot(ax=_ax)
+    _ax.set_xlim(0.0, _b)
     _ax.set_xlabel("x")
     _ax.set_title(r"$g(x) = 1/\Gamma(x+1)$ on $[0, \infty)$")
     _fig
@@ -158,7 +150,7 @@ def _():
 
 
 @app.cell
-def _(chebfun):
+def _():
     h = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
     print(h)
     print(f"sum(h)  = {h.sum():.15f}")
@@ -168,9 +160,9 @@ def _(chebfun):
 
 @app.cell
 def _(h):
-    _xs = np.linspace(-6.0, 6.0, 600)
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, h(_xs))
+    h.plot(ax=_ax)
+    _ax.set_xlim(-6.0, 6.0)
     _ax.set_xlabel("x")
     _ax.set_title(r"$h(x) = e^{-x^2}$ on $(-\infty, \infty)$")
     _fig
@@ -190,7 +182,7 @@ def _():
 
 
 @app.cell
-def _(chebfun):
+def _():
     pdf = chebfun(lambda x: np.exp(-(x**2) / 2.0) / np.sqrt(2.0 * np.pi), [-np.inf, np.inf])
     pdf2 = pdf.conv(pdf)
     print(f"sum(pdf)        = {pdf.sum():.15f}  (expected 1)")
@@ -203,10 +195,10 @@ def _(chebfun):
 
 @app.cell
 def _(pdf, pdf2):
-    _xs = np.linspace(-6.0, 6.0, 600)
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, pdf(_xs), label=r"$\phi(x)$ — $\mathcal{N}(0,1)$")
-    _ax.plot(_xs, pdf2(_xs), label=r"$\phi \star \phi$ — $\mathcal{N}(0,2)$")
+    pdf.plot(ax=_ax, label=r"$\phi(x)$ — $\mathcal{N}(0,1)$")
+    pdf2.plot(ax=_ax, label=r"$\phi \star \phi$ — $\mathcal{N}(0,2)$")
+    _ax.set_xlim(-6.0, 6.0)
     _ax.set_xlabel("x")
     _ax.legend()
     _fig
@@ -225,7 +217,7 @@ def _():
 
 
 @app.cell
-def _(chebfun):
+def _():
     expo = chebfun(lambda x: np.exp(-x), [0, np.inf])
     gamma2 = expo.conv(expo)
     print(f"sum(expo*expo)        = {gamma2.sum():.15f}  (expected 1)")
@@ -237,10 +229,10 @@ def _(chebfun):
 
 @app.cell
 def _(expo, gamma2):
-    _xs = np.linspace(0.0, 12.0, 400)
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, expo(_xs), label=r"$e^{-x}$")
-    _ax.plot(_xs, gamma2(_xs), label=r"$x \, e^{-x}$")
+    expo.plot(ax=_ax, label=r"$e^{-x}$")
+    gamma2.plot(ax=_ax, label=r"$x \, e^{-x}$")
+    _ax.set_xlim(0.0, 12.0)
     _ax.set_xlabel("x")
     _ax.legend()
     _fig
@@ -267,7 +259,7 @@ def _():
 
 
 @app.cell
-def _(CompactFunConstructionError, chebfun):
+def _():
     _refused = []
     for _label, _f in [
         ("Cauchy 1/(π(1+x²))", lambda x: 1.0 / (np.pi * (1.0 + x * x))),
@@ -296,7 +288,7 @@ def _():
 
 
 @app.cell
-def _(chebfun):
+def _():
     p = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, -2.0, 0.0, 3.0, np.inf])
     print(p)
     print(f"piece types: {[type(_piece).__name__ for _piece in p.funs]}")
@@ -307,11 +299,11 @@ def _(chebfun):
 
 @app.cell
 def _(p):
-    _xs = np.linspace(-6.0, 6.0, 600)
     _fig, _ax = plt.subplots()
-    _ax.plot(_xs, p(_xs))
+    p.plot(ax=_ax)
     for _bp in p.breakpoints[1:-1]:
         _ax.axvline(float(_bp), color="grey", linestyle="--", linewidth=0.8)
+    _ax.set_xlim(-6.0, 6.0)
     _ax.set_xlabel("x")
     _ax.set_title("Piecewise Gaussian on $[-\\infty, -2, 0, 3, +\\infty]$")
     _fig
