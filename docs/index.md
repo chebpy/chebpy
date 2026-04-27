@@ -13,6 +13,8 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 ## Features
 
 - **Function Approximation** — Automatic Chebyshev polynomial approximation of smooth functions
+- **Periodic Functions** — Fourier-based approximation via `trigfun` for smooth periodic functions
+- **Infinite Intervals** — Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
 - **Calculus Operations** — Differentiation, integration, and root-finding with machine precision
 - **Plotting** — Beautiful function visualisations with matplotlib integration
 - **Arithmetic** — Add, subtract, multiply, and compose functions naturally

@@ -22,11 +22,15 @@ ChebPy uses a layered class hierarchy:
 | Layer | Class | Purpose |
 |-------|-------|---------|
 | Top | `Chebfun` | Piecewise function on arbitrary intervals |
-| Middle | `Bndfun` / `Classicfun` | Function on a single bounded interval $[a, b]$ |
-| Base | `Chebtech` | Chebyshev expansion on the canonical interval $[-1, 1]$ |
+| Middle | `Classicfun` (`Bndfun` / `CompactFun`) | Function on a single (possibly infinite) interval |
+| Base | `Chebtech` / `Trigtech` | Chebyshev or Fourier expansion on the canonical interval $[-1, 1]$ |
 
-A `Chebfun` consists of one or more `Bndfun` pieces, each of which maps its
-interval to $[-1, 1]$ and delegates to a `Chebtech` for all the numerical work.
+A `Chebfun` consists of one or more `Classicfun` pieces. Each piece maps its
+interval to $[-1, 1]$ and delegates to a `Smoothfun` (`Chebtech` for the
+default polynomial representation, or `Trigtech` for periodic
+[Fourier-based approximation](features/periodic.md)). Pieces with one or
+both endpoints at $\pm\infty$ are represented as
+[`CompactFun`s](features/infinite-intervals.md).
 
 ## Core Concepts
 

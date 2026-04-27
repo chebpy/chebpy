@@ -75,6 +75,24 @@ f.plot()
 plt.show()
 ```
 
+## Beyond polynomials and bounded intervals
+
+ChebPy also handles smooth periodic functions and (semi-)infinite domains:
+
+```python
+from chebpy import chebfun, trigfun
+
+# Fourier-based approximation for smooth periodic functions
+p = trigfun(lambda x: np.cos(np.pi * x), [-1, 1])
+
+# Functions on (-∞, ∞) via numerical-support truncation
+g = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
+g.sum()    # ≈ √π
+```
+
+See [Periodic Functions](features/periodic.md) and
+[Infinite Intervals](features/infinite-intervals.md) for details.
+
 ## What's Next?
 
 - [User Guide](intro.md) — deeper introduction to ChebPy concepts
