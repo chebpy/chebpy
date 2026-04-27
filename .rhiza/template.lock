@@ -1,7 +1,7 @@
-sha: 99200fb7552dd051c5c672b476f85c277498a7ab
+sha: 3bd82a03c3c94be644aa9ce81c6d1a1838731136
 repo: jebel-quant/rhiza
 host: github
-ref: v0.10.1
+ref: v0.10.3
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
@@ -87,6 +87,8 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
+- .rhiza/utils/pip_audit_policy.py
+- .rhiza/utils/suppression_audit.py
 - Makefile
 - docs/assets/rhiza-logo.svg
 - docs/development/DEVCONTAINER.md
@@ -96,5 +98,5 @@ files:
 - docs/mkdocs-base.yml
 - pytest.ini
 - ruff.toml
-synced_at: '2026-04-20T12:09:08Z'
+synced_at: '2026-04-27T03:22:38Z'
 strategy: merge
