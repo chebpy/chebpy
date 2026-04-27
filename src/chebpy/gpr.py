@@ -26,6 +26,7 @@ from numpy.typing import ArrayLike
 from .algorithms import chebpts2
 from .chebfun import Chebfun
 from .quasimatrix import Quasimatrix
+from .settings import _preferences as prefs
 
 
 # ---------------------------------------------------------------------------
@@ -262,10 +263,18 @@ def _posterior_chebfuns(
     chol_l = np.linalg.cholesky(cov_mat)
     alpha = np.linalg.solve(chol_l.T, np.linalg.solve(chol_l, y_arr))
 
-    # Shared Chebyshev grid
+    # Sample grid: Chebyshev points for the default tech, equispaced points
+    # for the periodic (Trigtech) case.  Using the right grid here is critical
+    # because the constructed Chebfun pieces are then built via
+    # ``Chebfun.initfun_fixedlen`` whose underlying tech evaluates at exactly
+    # this grid.
     sample_size = min(20 * n, 2000)
-    t = chebpts2(sample_size)
-    x_sample = 0.5 * (opts.domain[1] - opts.domain[0]) * t + 0.5 * (opts.domain[0] + opts.domain[1])
+    if opts.trig:
+        # n equispaced points on [a, b) — matches Trigtech._trigpts mapped to domain
+        x_sample = opts.domain[0] + (opts.domain[1] - opts.domain[0]) * np.arange(sample_size) / sample_size
+    else:
+        t = chebpts2(sample_size)
+        x_sample = 0.5 * (opts.domain[1] - opts.domain[0]) * t + 0.5 * (opts.domain[0] + opts.domain[1])
 
     in_x = np.isin(x_sample, x_arr)
 
@@ -275,7 +284,6 @@ def _posterior_chebfuns(
 
     # Posterior mean
     mean_vals = k_star @ alpha
-    f_mean = Chebfun.initfun_fixedlen(lambda _z: mean_vals, sample_size, opts.domain)
 
     # Posterior variance
     k_ss = _kernel_matrix(x_sample, x_sample, opts)
@@ -285,27 +293,35 @@ def _posterior_chebfuns(
     v = np.linalg.solve(chol_l, k_star.T)
     var_diag = np.diag(k_ss) - np.sum(v**2, axis=0)
     var_diag = np.maximum(var_diag, 0.0)
-    f_var = Chebfun.initfun_fixedlen(lambda _z: var_diag, sample_size, opts.domain)
 
-    if n_samples <= 0:
-        return f_mean, f_var
+    # Build Chebfuns under the appropriate tech.  For ``trig=True`` this
+    # produces Trigtech-backed pieces so that downstream calculus is performed
+    # in Fourier space.
+    tech_name = "Trigtech" if opts.trig else prefs.tech
+    with prefs:
+        prefs.tech = tech_name
+        f_mean = Chebfun.initfun_fixedlen(lambda _z: mean_vals, sample_size, opts.domain)
+        f_var = Chebfun.initfun_fixedlen(lambda _z: var_diag, sample_size, opts.domain)
 
-    # Posterior samples
-    cov_post = k_ss - v.T @ v
-    cov_post = 0.5 * (cov_post + cov_post.T)
-    cov_post += 1e-12 * scaling_factor**2 * n * np.eye(sample_size)
-    chol_s = np.linalg.cholesky(cov_post)
+        if n_samples <= 0:
+            return f_mean, f_var
 
-    draws = mean_vals[:, None] + chol_s @ np.random.randn(sample_size, n_samples)
-    cols: list[Chebfun] = []
-    for j in range(n_samples):
-        cols.append(
-            Chebfun.initfun_fixedlen(
-                lambda _z, _j=j: draws[:, _j],
-                sample_size,
-                opts.domain,
+        # Posterior samples
+        cov_post = k_ss - v.T @ v
+        cov_post = 0.5 * (cov_post + cov_post.T)
+        cov_post += 1e-12 * scaling_factor**2 * n * np.eye(sample_size)
+        chol_s = np.linalg.cholesky(cov_post)
+
+        draws = mean_vals[:, None] + chol_s @ np.random.randn(sample_size, n_samples)
+        cols: list[Chebfun] = []
+        for j in range(n_samples):
+            cols.append(
+                Chebfun.initfun_fixedlen(
+                    lambda _z, _j=j: draws[:, _j],
+                    sample_size,
+                    opts.domain,
+                )
             )
-        )
     return f_mean, f_var, Quasimatrix(cols)
 
 
