@@ -7,7 +7,7 @@ import pytest
 
 from chebpy import CompactFun, chebfun
 from chebpy.bndfun import Bndfun
-from chebpy.exceptions import CompactFunConstructionError
+from chebpy.exceptions import CompactFunConstructionError, DivergentIntegralError
 from chebpy.utilities import Interval
 
 
@@ -62,9 +62,10 @@ class TestInitFunAdaptive:
         with pytest.raises(CompactFunConstructionError):
             CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + x * x), (-np.inf, np.inf))
 
-    def test_non_decaying_refused(self) -> None:
+    def test_oscillating_tail_refused(self) -> None:
+        # sin(x) does not converge to a constant at infinity.
         with pytest.raises(CompactFunConstructionError):
-            CompactFun.initfun_adaptive(lambda x: np.tanh(x), (-np.inf, np.inf))
+            CompactFun.initfun_adaptive(lambda x: np.sin(x), (-np.inf, np.inf))
 
 
 class TestInitConst:
@@ -75,11 +76,17 @@ class TestInitConst:
         assert f(1000.0) == 0.0
         assert f(0.0) == 0.0
 
-    def test_nonzero_constant_unbounded_refused(self) -> None:
-        with pytest.raises(CompactFunConstructionError):
-            CompactFun.initconst(1.0, (-np.inf, np.inf))
-        with pytest.raises(CompactFunConstructionError):
-            CompactFun.initconst(2.5, (0.0, np.inf))
+    def test_nonzero_constant_unbounded_promoted_to_tails(self) -> None:
+        # Non-zero constants are now representable on unbounded intervals via
+        # tail-constant metadata.
+        f = CompactFun.initconst(1.0, (-np.inf, np.inf))
+        assert f.tail_left == 1.0
+        assert f.tail_right == 1.0
+        assert f(1e6) == 1.0
+        g = CompactFun.initconst(2.5, (0.0, np.inf))
+        assert g.tail_left == 0.0  # finite endpoint
+        assert g.tail_right == 2.5
+        assert g(1e6) == 2.5
 
     def test_constant_finite_ok(self) -> None:
         f = CompactFun.initconst(3.0, (-1.0, 2.0))
@@ -150,13 +157,19 @@ class TestProperties:
 # -----------------------------
 # calculus / utilities
 # -----------------------------
-class TestCalculusRefusals:
-    """Tests for calculus methods that raise on CompactFun."""
+class TestCumsumZeroTail:
+    """Tests for :meth:`CompactFun.cumsum` on zero-tail inputs."""
 
-    def test_cumsum_not_implemented(self) -> None:
+    def test_cumsum_gaussian(self) -> None:
+        # cumsum of exp(-x^2) anchored at -inf has tail_right = sqrt(pi).
         f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
-        with pytest.raises(NotImplementedError):
-            f.cumsum()
+        F = f.cumsum()
+        assert isinstance(F, CompactFun)
+        assert F.tail_left == 0.0
+        assert F.tail_right == pytest.approx(np.sqrt(np.pi), abs=1e-10)
+        # Outside numerical support, F evaluates to its tails.
+        assert F(-1000.0) == 0.0
+        assert F(1000.0) == pytest.approx(np.sqrt(np.pi), abs=1e-10)
 
 
 class TestRestrictAndTranslate:
@@ -352,3 +365,92 @@ class TestRoots:
         # Calling .roots() on the parent Chebfun also benefits from filtering.
         f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
         assert f.roots().size == 0
+
+
+# -----------------------------
+# tail constants (plan 02b)
+# -----------------------------
+class TestTailConstants:
+    """Tests for non-zero asymptotic limits via tail metadata."""
+
+    def test_tanh_construction(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        assert f.tail_left == pytest.approx(-1.0, abs=1e-12)
+        assert f.tail_right == pytest.approx(1.0, abs=1e-12)
+        # Outside numerical support, the tail constants are returned exactly.
+        assert f(-1e10) == pytest.approx(-1.0)
+        assert f(1e10) == pytest.approx(1.0)
+        # Inside the support, evaluation matches np.tanh.
+        x = np.linspace(-3.0, 3.0, 7)
+        np.testing.assert_allclose(f(x), np.tanh(x), atol=1e-10)
+
+    def test_logistic_one_sided_tail(self) -> None:
+        # Logistic 1/(1+exp(-x)) -> 0 at -inf, 1 at +inf.
+        f = CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + np.exp(-x)), (-np.inf, np.inf))
+        assert f.tail_left == pytest.approx(0.0, abs=1e-12)
+        assert f.tail_right == pytest.approx(1.0, abs=1e-12)
+
+    def test_repr_shows_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        assert "tails=" in repr(f)
+
+    def test_endvalues_use_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        ev = f.endvalues
+        assert ev[0] == pytest.approx(-1.0)
+        assert ev[1] == pytest.approx(1.0)
+
+    def test_sum_diverges_with_nonzero_tail(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        with pytest.raises(DivergentIntegralError):
+            f.sum()
+
+    def test_cumsum_diverges_with_nonzero_tail(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        with pytest.raises(DivergentIntegralError):
+            f.cumsum()
+
+    def test_diff_zeros_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        df = f.diff()
+        assert df.tail_left == 0.0
+        assert df.tail_right == 0.0
+
+    def test_neg_flips_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        g = -f
+        assert g.tail_left == pytest.approx(1.0, abs=1e-12)
+        assert g.tail_right == pytest.approx(-1.0, abs=1e-12)
+
+    def test_scalar_add_propagates_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        g = f + 2.0
+        assert g.tail_left == pytest.approx(1.0, abs=1e-12)
+        assert g.tail_right == pytest.approx(3.0, abs=1e-12)
+        h = 2.0 + f
+        assert h.tail_left == pytest.approx(1.0, abs=1e-12)
+        assert h.tail_right == pytest.approx(3.0, abs=1e-12)
+
+    def test_scalar_sub_propagates_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        g = f - 1.0
+        assert g.tail_left == pytest.approx(-2.0, abs=1e-12)
+        assert g.tail_right == pytest.approx(0.0, abs=1e-12)
+        h = 1.0 - f
+        assert h.tail_left == pytest.approx(2.0, abs=1e-12)
+        assert h.tail_right == pytest.approx(0.0, abs=1e-12)
+
+    def test_scalar_mul_propagates_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        g = 3.0 * f
+        assert g.tail_left == pytest.approx(-3.0, abs=1e-12)
+        assert g.tail_right == pytest.approx(3.0, abs=1e-12)
+
+    def test_conv_refuses_nonzero_tails(self) -> None:
+        # Convolution against tanh would diverge \u2014 we refuse early.
+        f = chebfun(np.tanh, [-np.inf, np.inf])
+        g = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        with pytest.raises(DivergentIntegralError):
+            f.conv(g)
+        with pytest.raises(DivergentIntegralError):
+            g.conv(f)

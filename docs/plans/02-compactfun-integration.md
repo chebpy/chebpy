@@ -1,5 +1,16 @@
 # Plan: CompactFun Integration — Light-Tailed Functions on (−∞, ∞)
 
+> **Status update (plan 02b).** Two of the v1 limitations recorded below
+> have since been lifted by the follow-up plan
+> [`02b-compactfun-tail-constants.md`](02b-compactfun-tail-constants.md):
+> non-zero asymptotic constants (`tanh`, sigmoids) are now representable
+> via `(tail_left, tail_right)` metadata, and `cumsum` now closes inside
+> `CompactFun` (carrying the integral as a right-tail constant) rather
+> than returning a bounded `Chebfun`. Convolution against operands with
+> non-zero tails is still refused — but now with a clear
+> `DivergentIntegralError`. Read this document for the core design;
+> consult plan 02b for the tail-constant extension.
+
 ## Summary
 
 Add support for representing functions on `(−∞, ∞)`, `(−∞, b]`, and `[a, ∞)`

@@ -4,25 +4,28 @@ This module provides the :class:`CompactFun` class, which sits next to
 :class:`~chebpy.bndfun.Bndfun` under :class:`~chebpy.classicfun.Classicfun`.
 It represents functions whose user-facing logical interval has one or both
 endpoints at ``±inf`` but whose **numerical support** — the set of points
-where the function exceeds a configured tolerance — is finite.  Internally,
-a :class:`CompactFun` stores a standard :class:`~chebpy.onefun.Onefun`
-(Chebtech) on the discovered finite storage interval; outside that interval
-the function is reported as identically zero.
+where the function differs from its asymptotic limit by more than a
+configured tolerance — is finite.  Internally, a :class:`CompactFun` stores
+a standard :class:`~chebpy.onefun.Onefun` (Chebtech) on the discovered
+finite storage interval; outside that interval the function is reported as
+the corresponding asymptotic constant (``tail_left`` or ``tail_right``,
+default ``0``).
 
 This approach is a deliberate departure from MATLAB Chebfun's ``@unbndfun``
 (which uses a rational change of variables to map ``(-inf, inf)`` onto
-``[-1, 1]``).  See ``docs/plans/02-compactfun-integration.md`` for the design
-rationale and scope.
+``[-1, 1]``).  See ``docs/plans/02-compactfun-integration.md`` for the
+zero-tail design and ``docs/plans/02b-compactfun-tail-constants.md`` for
+the non-zero asymptote extension.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
 from .classicfun import Classicfun, techdict
-from .exceptions import CompactFunConstructionError
+from .exceptions import CompactFunConstructionError, DivergentIntegralError
 from .settings import _preferences as prefs
 from .utilities import Interval
 
@@ -39,12 +42,13 @@ def _ensure_endpoints(interval: Any) -> tuple[float, float]:
 
 def _discover_one_side(
     f: Any, anchor: float, sign: int, tol: float, max_width: float, max_probes: int
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     """Discover the numerical-support boundary on one infinite side.
 
     Probes ``f`` at ``anchor + sign * 2**k`` for ``k = 0, 1, 2, ...`` up to
-    the configured budget.  Returns the discovered finite boundary and the
-    observed vertical scale on this side.
+    the configured budget.  Detects the asymptotic limit ``L`` of ``f`` on
+    this side (which may be zero or non-zero) and returns the smallest
+    finite boundary beyond which ``|f - L| < tol * scale``.
 
     Args:
         f: Callable being approximated.
@@ -52,29 +56,30 @@ def _discover_one_side(
             interval, or ``0.0`` for the doubly-infinite case).
         sign: ``+1`` for the rightward (toward ``+inf``) side, ``-1`` for the
             leftward side.
-        tol: Relative tolerance threshold; the boundary is the smallest
-            ``r`` for which ``|f(anchor + sign * r)| < tol * vscale`` for
-            all probes farther out.
+        tol: Relative tolerance threshold for both convergence detection and
+            boundary placement.
         max_width: Maximum permitted boundary distance from ``anchor``.
         max_probes: Maximum number of geometric probes.
 
     Returns:
-        Tuple ``(boundary, vscale)`` where ``boundary`` is a finite ``float``
-        and ``vscale`` is the largest absolute probed value on this side.
+        Tuple ``(boundary, tail, vscale)`` where ``boundary`` is the finite
+        boundary, ``tail`` is the detected asymptotic constant (``0.0`` if
+        the function decays to zero), and ``vscale`` is the largest
+        absolute probed value on this side.
 
     Raises:
-        CompactFunConstructionError: If the function does not decay below
-            ``tol * vscale`` within the probing budget or ``max_width``.
+        CompactFunConstructionError: If ``f`` does not converge to a
+            constant within the probing budget or ``max_width``.
     """
     radii: list[float] = []
-    values: list[float] = []
+    values: list[float] = []  # signed values
     r = 1.0
     for _ in range(max_probes):
         if r > max_width:
             break
         x = anchor + sign * r
         try:
-            v = float(np.abs(f(x)))
+            v = float(f(x))
         except (FloatingPointError, OverflowError, ZeroDivisionError) as err:  # pragma: no cover
             raise CompactFunConstructionError(  # noqa: TRY003
                 f"Could not evaluate f at probe x = {x:g} during numerical-support discovery"
@@ -87,26 +92,46 @@ def _discover_one_side(
         radii.append(r)
         values.append(v)
         r *= 2.0
+
     if not radii:
-        return anchor + sign * 1.0, 0.0
+        return anchor + sign * 1.0, 0.0, 0.0
 
-    vscale = max(values) if values else 0.0
-    threshold = tol * max(vscale, 1.0)
+    abs_values = [abs(v) for v in values]
+    vscale = max(abs_values) if abs_values else 0.0
 
-    # Largest radius at which f is still "active" (above threshold).
+    # Need at least three probes to verify convergence to a constant.
+    last_n = 3
+    if len(values) < last_n:
+        raise CompactFunConstructionError(  # noqa: TRY003
+            f"Too few probes ({len(values)}) to determine the asymptotic "
+            f"behaviour of f near {'+' if sign > 0 else '-'}inf; "
+            f"increase numsupp_max_probes or numsupp_max_width."
+        )
+
+    # Convergence test: the last few signed probes must agree to tol*scale.
+    tail_window = values[-last_n:]
+    conv_threshold = tol * max(vscale, 1.0)
+    spread = max(tail_window) - min(tail_window)
+    if spread > conv_threshold:
+        # Function does not settle to a constant — heavy tail or oscillation.
+        raise CompactFunConstructionError(  # noqa: TRY003
+            f"Function does not converge to a constant within "
+            f"{radii[-1]:g} of anchor {anchor:g} on the "
+            f"{'+' if sign > 0 else '-'}inf side (last {last_n} probes "
+            f"spread by {spread:g} > {conv_threshold:g}); heavy-tailed or "
+            f"oscillating inputs are not supported in this release."
+        )
+    tail = float(np.mean(tail_window))
+    if abs(tail) < conv_threshold:
+        tail = 0.0
+
+    # Find the largest radius at which f is still "active" (above threshold
+    # relative to the tail).
+    threshold = tol * max(abs(tail), vscale, 1.0)
     active_r = 0.0
     for ri, vi in zip(radii, values, strict=False):
-        if vi > threshold:
+        if abs(vi - tail) > threshold:
             active_r = ri
-
-    # If the farthest probe is still active, the function does not decay
-    # within the probing budget.
-    if values[-1] > threshold:
-        raise CompactFunConstructionError(  # noqa: TRY003
-            f"Function does not decay below tolerance {tol:g} within "
-            f"{radii[-1]:g} of anchor {anchor:g}; heavy-tailed inputs are not "
-            f"supported in this release."
-        )
 
     boundary_r = max(2.0 * active_r, 1.0)
     if boundary_r > max_width:
@@ -114,11 +139,13 @@ def _discover_one_side(
             f"Discovered numerical support exceeds max_width = {max_width:g}; "
             f"heavy-tailed inputs are not supported in this release."
         )
-    return anchor + sign * boundary_r, vscale
+    return anchor + sign * boundary_r, tail, vscale
 
 
-def _discover_numsupp(f: Any, a: float, b: float, tol: float, max_width: float, max_probes: int) -> tuple[float, float]:
-    """Discover the storage interval ``[a', b']`` for ``f``.
+def _discover_numsupp(
+    f: Any, a: float, b: float, tol: float, max_width: float, max_probes: int
+) -> tuple[float, float, float, float]:
+    """Discover the storage interval and tail constants for ``f``.
 
     Args:
         f: Callable being approximated.
@@ -129,7 +156,9 @@ def _discover_numsupp(f: Any, a: float, b: float, tol: float, max_width: float, 
         max_probes: Maximum probes per unbounded side.
 
     Returns:
-        Tuple ``(a', b')`` of finite floats with ``a' < b'``.
+        Tuple ``(a', b', tail_left, tail_right)`` where ``a' < b'`` are
+        finite floats and the tails are the detected asymptotic constants
+        (``0.0`` on any side whose logical endpoint is finite).
 
     Raises:
         CompactFunConstructionError: If support cannot be discovered.
@@ -138,7 +167,7 @@ def _discover_numsupp(f: Any, a: float, b: float, tol: float, max_width: float, 
     right_inf = not np.isfinite(b)
 
     if not (left_inf or right_inf):
-        return a, b
+        return a, b, 0.0, 0.0
 
     # Anchor: the finite endpoint of a semi-infinite interval, else 0.
     if left_inf and right_inf:
@@ -149,14 +178,14 @@ def _discover_numsupp(f: Any, a: float, b: float, tol: float, max_width: float, 
         anchor = a
 
     if left_inf:
-        a_storage, _ = _discover_one_side(f, anchor, -1, tol, max_width, max_probes)
+        a_storage, tail_left, _ = _discover_one_side(f, anchor, -1, tol, max_width, max_probes)
     else:
-        a_storage = a
+        a_storage, tail_left = a, 0.0
 
     if right_inf:
-        b_storage, _ = _discover_one_side(f, anchor, +1, tol, max_width, max_probes)
+        b_storage, tail_right, _ = _discover_one_side(f, anchor, +1, tol, max_width, max_probes)
     else:
-        b_storage = b
+        b_storage, tail_right = b, 0.0
 
     if b_storage - a_storage > max_width:
         raise CompactFunConstructionError(  # noqa: TRY003
@@ -165,9 +194,10 @@ def _discover_numsupp(f: Any, a: float, b: float, tol: float, max_width: float, 
             f"in this release."
         )
     if b_storage <= a_storage:
-        # Function appears identically zero; pick a small default storage.
+        # Function appears identically constant on both sides; pick a small
+        # default storage interval.
         a_storage, b_storage = anchor - 1.0, anchor + 1.0
-    return a_storage, b_storage
+    return a_storage, b_storage, tail_left, tail_right
 
 
 class CompactFun(Classicfun):
@@ -175,10 +205,12 @@ class CompactFun(Classicfun):
 
     A :class:`CompactFun` represents a function whose user-facing logical
     interval has one or both endpoints at ``±inf`` but whose numerical
-    support — the set where the function exceeds a configured tolerance —
-    is finite.  Internally it inherits from :class:`Classicfun` and stores a
-    standard :class:`Onefun` on the discovered finite storage interval; the
-    function is reported as identically zero outside that interval.
+    support — the set where the function differs from its asymptotic limit
+    by more than a configured tolerance — is finite.  Internally it
+    inherits from :class:`Classicfun` and stores a standard
+    :class:`Onefun` on the discovered finite storage interval; outside that
+    interval the function is reported as the corresponding asymptotic
+    constant ``tail_left`` or ``tail_right`` (default ``0.0``).
 
     Two intervals are tracked:
 
@@ -187,16 +219,33 @@ class CompactFun(Classicfun):
     - ``self._logical_interval``: the user-facing interval, which may have
       ``±inf`` endpoints; returned by :attr:`support`.
 
-    For finite logical intervals the two coincide and a :class:`CompactFun`
-    behaves identically to :class:`~chebpy.bndfun.Bndfun`.
+    Two scalar tail constants are tracked:
+
+    - ``tail_left``: the value reported for ``x < a_storage`` when the
+      logical-left endpoint is ``-inf``.
+    - ``tail_right``: the value reported for ``x > b_storage`` when the
+      logical-right endpoint is ``+inf``.
+
+    For finite logical intervals the storage and logical intervals coincide
+    and the tails are ignored, so a :class:`CompactFun` behaves identically
+    to :class:`~chebpy.bndfun.Bndfun`.
 
     Attributes:
         onefun: Inherited; the standard :class:`Onefun` on ``[-1, 1]``.
         support: The logical interval (possibly with ``±inf`` endpoints).
         numerical_support: The finite storage interval.
+        tail_left: Asymptotic value at ``-inf`` (``0.0`` if logical-left is finite).
+        tail_right: Asymptotic value at ``+inf`` (``0.0`` if logical-right is finite).
     """
 
-    def __init__(self, onefun: Any, interval: Any, logical_interval: Any = None) -> None:
+    def __init__(
+        self,
+        onefun: Any,
+        interval: Any,
+        logical_interval: Any = None,
+        tail_left: float = 0.0,
+        tail_right: float = 0.0,
+    ) -> None:
         """Create a new :class:`CompactFun` instance.
 
         Args:
@@ -204,16 +253,36 @@ class CompactFun(Classicfun):
             interval: The finite storage :class:`Interval` (always finite).
             logical_interval: The user-facing interval (possibly with ``±inf``
                 endpoints).  Defaults to ``interval`` if omitted.
+            tail_left: Asymptotic value at ``-inf``.  Default ``0.0``.
+            tail_right: Asymptotic value at ``+inf``.  Default ``0.0``.
         """
         super().__init__(onefun, interval)
         if logical_interval is None:
             self._logical_interval = np.asarray(interval, dtype=float)
         else:
             self._logical_interval = np.asarray((float(logical_interval[0]), float(logical_interval[1])), dtype=float)
+        self._tail_left = float(tail_left)
+        self._tail_right = float(tail_right)
 
-    def _rebuild(self, onefun: Any) -> CompactFun:
-        """Construct a new :class:`CompactFun` preserving the logical interval."""
-        return self.__class__(onefun, self._interval, logical_interval=self._logical_interval)
+    def _rebuild(self, onefun: Any, *, tail_left: float | None = None, tail_right: float | None = None) -> CompactFun:
+        """Construct a new :class:`CompactFun` preserving logical interval and tails.
+
+        Args:
+            onefun: Replacement :class:`Onefun` for the new instance.
+            tail_left: Optional override for the new instance's left tail.
+                Defaults to ``self.tail_left``.
+            tail_right: Optional override for the new instance's right tail.
+                Defaults to ``self.tail_right``.
+        """
+        new_tl = self._tail_left if tail_left is None else float(tail_left)
+        new_tr = self._tail_right if tail_right is None else float(tail_right)
+        return self.__class__(
+            onefun,
+            self._interval,
+            logical_interval=self._logical_interval,
+            tail_left=new_tl,
+            tail_right=new_tr,
+        )
 
     # --------------------------
     #  alternative constructors
@@ -229,17 +298,15 @@ class CompactFun(Classicfun):
     def initconst(cls, c: Any, interval: Any) -> CompactFun:
         """Initialise a constant function.
 
-        Non-zero constants on unbounded intervals are not representable as
-        :class:`CompactFun` because the function does not decay to zero at
-        ``±inf``.
+        On an unbounded interval the constant ``c`` becomes the asymptotic
+        value on each unbounded side: ``tail_left = tail_right = c``.  This
+        makes ``initconst`` total — every constant is representable on every
+        interval — but note that integrating a non-zero constant over an
+        unbounded logical interval will (correctly) raise
+        :class:`~chebpy.exceptions.DivergentIntegralError`.
         """
         a, b = _ensure_endpoints(interval)
-        unbounded = (not np.isfinite(a)) or (not np.isfinite(b))
-        if unbounded and float(c) != 0.0:
-            raise CompactFunConstructionError(  # noqa: TRY003
-                "Non-zero constants are not representable as a CompactFun on an "
-                "unbounded interval (a CompactFun must decay to zero at ±inf)."
-            )
+        c_val = float(c)
         if not np.isfinite(a) and not np.isfinite(b):
             storage = Interval(-1.0, 1.0)
         elif not np.isfinite(a):
@@ -248,8 +315,10 @@ class CompactFun(Classicfun):
             storage = Interval(a, a + 1.0)
         else:
             storage = Interval(a, b)
-        onefun = techdict[prefs.tech].initconst(c, interval=storage)
-        return cls(onefun, storage, logical_interval=(a, b))
+        onefun = techdict[prefs.tech].initconst(c_val, interval=storage)
+        tail_left = c_val if not np.isfinite(a) else 0.0
+        tail_right = c_val if not np.isfinite(b) else 0.0
+        return cls(onefun, storage, logical_interval=(a, b), tail_left=tail_left, tail_right=tail_right)
 
     @classmethod
     def initidentity(cls, interval: Any) -> CompactFun:
@@ -272,16 +341,17 @@ class CompactFun(Classicfun):
     def initfun_adaptive(cls, f: Any, interval: Any) -> CompactFun:
         """Initialise from a callable using adaptive sampling.
 
-        Discovers the numerical support of ``f`` on the (possibly unbounded)
-        logical interval, then builds a standard adaptive :class:`Onefun` on
-        that finite storage interval.
+        Discovers the numerical support and asymptotic tail constants of
+        ``f`` on the (possibly unbounded) logical interval, then builds a
+        standard adaptive :class:`Onefun` on that finite storage interval.
 
         Raises:
             CompactFunConstructionError: If the numerical support cannot be
-                discovered within the configured tolerance and width budget.
+                discovered within the configured tolerance and width budget,
+                or if ``f`` does not converge to a constant at ``±inf``.
         """
         a, b = _ensure_endpoints(interval)
-        a_s, b_s = _discover_numsupp(
+        a_s, b_s, tl, tr = _discover_numsupp(
             f,
             a,
             b,
@@ -291,17 +361,17 @@ class CompactFun(Classicfun):
         )
         storage = Interval(a_s, b_s)
         onefun = techdict[prefs.tech].initfun(lambda y: f(storage(y)), interval=storage)
-        return cls(onefun, storage, logical_interval=(a, b))
+        return cls(onefun, storage, logical_interval=(a, b), tail_left=tl, tail_right=tr)
 
     @classmethod
     def initfun_fixedlen(cls, f: Any, interval: Any, n: int) -> CompactFun:
         """Initialise from a callable using a fixed number of points.
 
-        Discovers numerical support as in :meth:`initfun_adaptive`, then
-        builds a fixed-length :class:`Onefun` on the storage interval.
+        Discovers numerical support and tails as in :meth:`initfun_adaptive`,
+        then builds a fixed-length :class:`Onefun` on the storage interval.
         """
         a, b = _ensure_endpoints(interval)
-        a_s, b_s = _discover_numsupp(
+        a_s, b_s, tl, tr = _discover_numsupp(
             f,
             a,
             b,
@@ -311,18 +381,32 @@ class CompactFun(Classicfun):
         )
         storage = Interval(a_s, b_s)
         onefun = techdict[prefs.tech].initfun(lambda y: f(storage(y)), n, interval=storage)
-        return cls(onefun, storage, logical_interval=(a, b))
+        return cls(onefun, storage, logical_interval=(a, b), tail_left=tl, tail_right=tr)
 
     # -------------------
     #  evaluation
     # -------------------
     def __call__(self, x: Any, how: str = "clenshaw") -> Any:
-        """Evaluate the function at ``x``; returns ``0`` outside the storage interval."""
+        """Evaluate the function at ``x``.
+
+        Outside the storage interval, returns the corresponding tail constant
+        when the matching logical endpoint is ``±inf`` (default ``0.0``), or
+        ``0.0`` when the logical endpoint is finite.
+        """
         scalar_input = np.isscalar(x) or np.ndim(x) == 0
         x_arr = np.atleast_1d(np.asarray(x))
         is_complex = bool(getattr(self.onefun, "iscomplex", False))
         result = np.zeros(x_arr.shape, dtype=complex if is_complex else float)
         a_s, b_s = self._interval
+        a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
+        # Outside-storage values: tail constants where the logical edge is ±inf.
+        left_mask = x_arr < a_s
+        right_mask = x_arr > b_s
+        if not np.isfinite(a_log) and self._tail_left != 0.0:
+            result[left_mask] = self._tail_left
+        if not np.isfinite(b_log) and self._tail_right != 0.0:
+            result[right_mask] = self._tail_right
+        # Inside-storage values: standard onefun evaluation.
         mask = (x_arr >= a_s) & (x_arr <= b_s)
         if mask.any():
             y = self._interval.invmap(x_arr[mask])
@@ -345,37 +429,112 @@ class CompactFun(Classicfun):
         return np.asarray(self._interval)
 
     @property
+    def tail_left(self) -> float:
+        """Asymptotic value of the function as ``x → -inf``.
+
+        Always ``0.0`` when the logical-left endpoint is finite.
+        """
+        return self._tail_left
+
+    @property
+    def tail_right(self) -> float:
+        """Asymptotic value of the function as ``x → +inf``.
+
+        Always ``0.0`` when the logical-right endpoint is finite.
+        """
+        return self._tail_right
+
+    @property
     def endvalues(self) -> Any:
-        """Return values at the logical endpoints; ``0`` at any ``±inf`` endpoint."""
+        """Return values at the logical endpoints; tails at any ``±inf`` endpoint."""
         a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
-        yl = 0.0 if not np.isfinite(a_log) else self.__call__(a_log)
-        yr = 0.0 if not np.isfinite(b_log) else self.__call__(b_log)
+        yl = self._tail_left if not np.isfinite(a_log) else self.__call__(a_log)
+        yr = self._tail_right if not np.isfinite(b_log) else self.__call__(b_log)
         return np.array([yl, yr])
 
     def __repr__(self) -> str:  # pragma: no cover
-        """Return a string representation showing the logical interval and size."""
+        """Return a string representation showing the logical interval, size, and tails."""
         a_log, b_log = self._logical_interval
+        if self._tail_left != 0.0 or self._tail_right != 0.0:
+            return (
+                f"{self.__class__.__name__}([{a_log}, {b_log}], {self.size}, "
+                f"tails=({self._tail_left}, {self._tail_right}))"
+            )
         return f"{self.__class__.__name__}([{a_log}, {b_log}], {self.size})"
 
     # ----------
     #  calculus
     # ----------
-    def cumsum(self) -> Any:
-        """Indefinite integral.
+    def sum(self) -> Any:
+        """Compute the definite integral over the logical interval.
 
-        ``cumsum`` does not close in :class:`CompactFun` because the
-        antiderivative of an integrable function on ``(-inf, inf)`` does not
-        decay to zero at ``+inf`` (it tends to ``∫f``).  Future releases will
-        return a bounded :class:`Chebfun` representation; for now this is a
-        documented limitation.
+        Raises:
+            DivergentIntegralError: If the logical interval is unbounded on
+                a side where the corresponding tail is non-zero (the integral
+                of a non-decaying function over a half-line diverges).
         """
-        raise NotImplementedError(
-            "CompactFun.cumsum() is not implemented in this release: the "
-            "antiderivative of an integrable function on (-inf, inf) tends "
-            "to a non-zero constant at +inf and so cannot itself be a "
-            "CompactFun.  This is a documented v1 limitation; a future "
-            "release will return a bounded Chebfun representation."
+        a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
+        if (not np.isfinite(a_log)) and self._tail_left != 0.0:
+            raise DivergentIntegralError(  # noqa: TRY003
+                f"Integrand has non-zero left asymptote tail_left={self._tail_left}; "
+                f"integral over (-inf, ...) diverges."
+            )
+        if (not np.isfinite(b_log)) and self._tail_right != 0.0:
+            raise DivergentIntegralError(  # noqa: TRY003
+                f"Integrand has non-zero right asymptote tail_right={self._tail_right}; "
+                f"integral over (..., +inf) diverges."
+            )
+        return super().sum()
+
+    def cumsum(self) -> CompactFun:
+        """Compute the indefinite integral.
+
+        For a :class:`CompactFun` with zero asymptote on the unbounded
+        left/right side, the antiderivative is well-defined; it is itself a
+        :class:`CompactFun` whose right-tail equals ``∫f`` and whose
+        left-tail is ``0`` (anchored so ``F(-inf) = 0``).
+
+        Raises:
+            DivergentIntegralError: If the logical interval is unbounded on
+                a side where the corresponding tail is non-zero, in which
+                case the antiderivative diverges.
+        """
+        a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
+        if (not np.isfinite(a_log)) and self._tail_left != 0.0:
+            raise DivergentIntegralError(  # noqa: TRY003
+                f"Antiderivative diverges at -inf because tail_left={self._tail_left} != 0."
+            )
+        if (not np.isfinite(b_log)) and self._tail_right != 0.0:
+            raise DivergentIntegralError(  # noqa: TRY003
+                f"Antiderivative diverges at +inf because tail_right={self._tail_right} != 0."
+            )
+        # Standard cumsum on the storage interval anchors F(a_storage) = 0.
+        # When logical-left is -inf with tail_left=0, this approximates
+        # F(-inf) = 0 (since f is below tolerance below a_storage).
+        inner = super().cumsum()
+        # The right-tail of F is the total integral.
+        total = float(super().sum())
+        # The left-tail is 0 when logical-left is -inf (anchor at -inf).
+        new_tail_left = 0.0
+        new_tail_right = total
+        return self.__class__(
+            inner.onefun,
+            inner._interval,
+            logical_interval=self._logical_interval,
+            tail_left=new_tail_left,
+            tail_right=new_tail_right,
         )
+
+    def diff(self) -> CompactFun:
+        """Compute the derivative.
+
+        The derivative of a function with constant asymptotic limits has
+        zero asymptotes, so the result has ``tail_left = tail_right = 0``.
+        """
+        result = cast(CompactFun, super().diff())
+        result._tail_left = 0.0
+        result._tail_right = 0.0
+        return result
 
     # -------------
     #  rootfinding
@@ -431,11 +590,96 @@ class CompactFun(Classicfun):
         return Bndfun.initfun_adaptive(self, Interval(sub_a, sub_b))
 
     def translate(self, c: float) -> CompactFun:
-        """Translate by ``c`` along the real line, preserving both intervals."""
+        """Translate by ``c`` along the real line, preserving both intervals and tails."""
         new_storage = Interval(float(self._interval[0]) + c, float(self._interval[1]) + c)
         a_log, b_log = float(self._logical_interval[0]), float(self._logical_interval[1])
         new_logical = (a_log + c, b_log + c)
-        return self.__class__(self.onefun, new_storage, logical_interval=new_logical)
+        return self.__class__(
+            self.onefun,
+            new_storage,
+            logical_interval=new_logical,
+            tail_left=self._tail_left,
+            tail_right=self._tail_right,
+        )
+
+    # ------------
+    #  arithmetic
+    # ------------
+    def __neg__(self) -> CompactFun:
+        """Return ``-f``; negates both tail constants."""
+        result = cast(CompactFun, super().__neg__())
+        result._tail_left = -self._tail_left
+        result._tail_right = -self._tail_right
+        return result
+
+    def __add__(self, other: Any) -> Any:
+        """Pointwise addition; combines tail constants additively."""
+        result = super().__add__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = self._tail_left + other_tl
+            result._tail_right = self._tail_right + other_tr
+        return result
+
+    def __radd__(self, other: Any) -> Any:
+        """Right-hand addition for scalar + CompactFun."""
+        result = super().__radd__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = self._tail_left + other_tl
+            result._tail_right = self._tail_right + other_tr
+        return result
+
+    def __sub__(self, other: Any) -> Any:
+        """Pointwise subtraction; combines tail constants additively."""
+        result = super().__sub__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = self._tail_left - other_tl
+            result._tail_right = self._tail_right - other_tr
+        return result
+
+    def __rsub__(self, other: Any) -> Any:
+        """Right-hand subtraction for scalar - CompactFun."""
+        result = super().__rsub__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = other_tl - self._tail_left
+            result._tail_right = other_tr - self._tail_right
+        return result
+
+    def __mul__(self, other: Any) -> Any:
+        """Pointwise multiplication; combines tail constants multiplicatively."""
+        result = super().__mul__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = self._tail_left * other_tl
+            result._tail_right = self._tail_right * other_tr
+        return result
+
+    def __rmul__(self, other: Any) -> Any:
+        """Right-hand multiplication for scalar * CompactFun."""
+        result = super().__rmul__(other)
+        if isinstance(result, CompactFun):
+            other_tl, other_tr = self._other_tails(other)
+            result._tail_left = self._tail_left * other_tl
+            result._tail_right = self._tail_right * other_tr
+        return result
+
+    def _other_tails(self, other: Any) -> tuple[float, float]:
+        """Extract ``(tail_left, tail_right)`` from a binary-op operand.
+
+        For a :class:`CompactFun` operand, returns its tail attributes; for
+        a scalar, returns ``(scalar, scalar)``.
+        """
+        if isinstance(other, CompactFun):
+            return other._tail_left, other._tail_right
+        if np.isscalar(other):
+            v = float(other)
+            return v, v
+        # Anything else (e.g. a different Classicfun subclass) is treated as
+        # zero-tailed; tail propagation may be inexact in that case.
+        return 0.0, 0.0
 
     # ----------
     #  plotting

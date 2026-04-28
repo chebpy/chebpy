@@ -229,8 +229,9 @@ also returned as a Trigtech-backed Chebfun.
 Pass `np.inf` or `-np.inf` as a domain endpoint to construct a Chebfun
 on a (semi-)infinite interval. Pieces with infinite endpoints are
 automatically built as `CompactFun` objects: a Chebyshev expansion on
-the discovered numerical-support window, reported as identically zero
-outside.
+the discovered numerical-support window, with optional non-zero tail
+constants (`tail_left`, `tail_right`) recovered automatically for
+sigmoid-like inputs (`tanh`, logistic, …).
 
 ```python
 from chebpy import chebfun
@@ -239,6 +240,11 @@ import numpy as np
 # Doubly-infinite Gaussian — sum is √π
 h = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
 h.sum()                           # ≈ √π
+
+# Sigmoid-like: tail constants are detected automatically
+t = chebfun(np.tanh, [-np.inf, np.inf])
+t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
+t(1e10)                                       # 1.0
 
 # Mixed: finite breakpoints with infinite endpoints
 p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
