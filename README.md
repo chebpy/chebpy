@@ -332,8 +332,6 @@ Project tooling:
 
 <div align="center">
 
-**Made with ❤️ by the ChebPy community**
-
 ⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
 
 </div>
