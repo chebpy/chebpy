@@ -95,6 +95,6 @@ pdf2(0.0)     # ≈ 1 / sqrt(4π)
 - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
   [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
   Pafnuty Publications, 2014, ch. 9.
-- M. Richardson,
-  [*Approximating divergent functions in the Chebfun system*](https://ora.ox.ac.uk/objects/uuid:24a5d1c2-fb24-4ad7-8a16-c7c0bd0bda99),
-  DPhil thesis, University of Oxford, 2013.
+- M. Richardson and L. N. Trefethen,
+  [*A sinc function analogue of Chebfun*](https://epubs.siam.org/doi/10.1137/110825947),
+  SIAM J. Sci. Comput., 33 (2011), pp. 2519–2535.

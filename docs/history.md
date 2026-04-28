@@ -138,7 +138,7 @@ complete list at
 | [**Rodrigo Platte**](https://scholar.google.com/citations?user=sujKeUUAAAAJ&hl=en) | Postdoc 2007–2009; extension to infinite intervals; edge-detection / `splitting on` |
 | [**Toby Driscoll**](https://tobydriscoll.net/) | Led ODE/integral side from 2008; `solvebvp`, `eigs`, `expm`, `volt`, `fred`; rectangular & block spectral discretisations |
 | [**Folkmar Bornemann**](https://www.professoren.tum.de/en/bornemann-folkmar) | Lazy-evaluation idea enabling operators |
-| [**Nick Hale**](https://scholar.google.com/citations?user=z1nuzsoAAAAJ) | DPhil 2006–2009, postdoc to 2014; project director 2010–2014; led v5 rewrite; quadrature, `pde15s`, `conv`, `legpts`, `cheb2leg` |
+| [**Nick Hale**](https://scholar.google.com/scholar?q=Nick+Hale+chebfun) | DPhil 2006–2009, postdoc to 2014; project director 2010–2014; led v5 rewrite; quadrature, `pde15s`, `conv`, `legpts`, `cheb2leg` |
 | [**Mark Richardson**](https://scholar.google.com/citations?user=mxOjLP8AAAAJ&hl=en) |MSc / DPhil 2008–2013; `blowup on`, poles and singularities |
 | [**Ásgeir Birkisson**](https://scholar.google.com/citations?user=rVsf9VoAAAAJ&hl=en) | MSc / DPhil / postdoc 2008–2015; automatic differentiation; nonlinear BVPs/IVPs; `Chebgui` |
 | [**Pedro Gonnet**](https://scholar.google.com/citations?user=IqOpdUkAAAAJ&hl=en) | Postdoc 2009–2012; `ratinterp`, `padeapprox` |
@@ -150,7 +150,7 @@ complete list at
 | [**Hrothgar**](https://scholar.google.com/scholar?q=Hrothgar+chebfun) | DPhil 2013–2015; v5 website; block operators / adjoints |
 | [**Kuan Xu**](https://scholar.google.com/scholar?q=Kuan+Xu+chebfun) | Postdoc 2012–2015; rectangular differentiation matrices; v5 unbounded-interval code |
 | [**Hadrien Montanelli**](https://scholar.google.com/citations?user=Bjmkfe8AAAAJ&hl=en) | DPhil 2013–2017; `spin`, `spin2`, `spin3`, `spinsphere`, `cheb.choreo` |
-| [**Behnam Hashemi**](https://scholar.google.com/citations?user=Bw_w8gMAAAAJ) | Postdoc 2014–2017; created Chebfun3 |
+| [**Behnam Hashemi**](https://scholar.google.com/scholar?q=Behnam+Hashemi+chebfun3) | Postdoc 2014–2017; created Chebfun3 |
 | [**Jared Aurentz**](https://scholar.google.com/citations?user=HrT33IsAAAAJ&hl=en) | Postdoc 2014–2016; `standardChop`, `adjoint`; continuous Krylov methods |
 | [**Olivier Sète**](https://scholar.google.com/citations?user=zuvLfoQAAAAJ&hl=en) | Postdoc 2015–2017; co-author of `aaa` |
 | [**Yuji Nakatsukasa**](https://people.maths.ox.ac.uk/nakatsukasa/) | Visiting researcher; `aaa`, `minimax`; fast linear algebra for `spinsphere` |
@@ -158,12 +158,12 @@ complete list at
 | [**Grady Wright**](https://scholar.google.com/citations?user=-wgTqlMAAAAJ&hl=en) | 2014 visit; `'trig'` (trigfun) capability; led Spherefun |
 | [**Heather Wilber**](https://scholar.google.com/citations?user=1Nw_is4AAAAJ&hl=en) | MSc 2015–2016 (Boise State); co-author of Spherefun; led Diskfun |
 | [**Sheehan Olver**](https://www.ma.imperial.ac.uk/~solver/) | JRF Oxford 2007–2011; ultraspherical spectral methods (with Townsend) |
-| [**Vanni Noferini**](https://scholar.google.com/citations?user=BpzPbZsAAAAJ) | Postdoc Manchester; fast rootfinding for Chebfun2 |
+| [**Vanni Noferini**](https://scholar.google.com/scholar?q=Vanni+Noferini+chebfun) | Postdoc Manchester; fast rootfinding for Chebfun2 |
 | [**Marcus Webb**](https://personalpages.manchester.ac.uk/staff/marcus.webb/) | Barycentric formulas; analytic continuation; improvements to `bary` |
 | [**Joris Van Deun**](https://scholar.google.com/scholar?q=Joris+Van+Deun+CF+approximation) | `cf` for Carathéodory–Féjer approximation |
-| [**Richard Mikael Slevinsky**](https://scholar.google.com/citations?user=Q4dFwc8AAAAJ) | Postdoc 2014–2016; quadrature, ultraspherical methods, ApproxFun link |
+| [**Richard Mikael Slevinsky**](https://scholar.google.com/scholar?q=Richard+Mikael+Slevinsky) | Postdoc 2014–2016; quadrature, ultraspherical methods, ApproxFun link |
 | [**Jean-Paul Berrut**](https://scholar.google.com/scholar?q=Jean-Paul+Berrut+barycentric) | Champion of barycentric formulas — the original spark for Chebfun |
-| [**Lourenço Peixoto**](https://scholar.google.com/scholar?q=Louren%C3%A7o+Peixoto+ultrapts) | `ultrapts`, improvements to `jacpts` |
+| [**Lourenço Peixoto**](https://scholar.google.com/citations?user=1x1cmO4AAAAJ&hl=en) | `ultrapts`, improvements to `jacpts` |
 
 ## Foundational publications
 
