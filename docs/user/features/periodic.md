@@ -79,3 +79,12 @@ for a worked example.
 - [`Trigtech` API reference](../../api.md)
 - The [Function Approximation](approximation.md) page for the default
   Chebyshev-based construction.
+
+## References
+
+- G. B. Wright, M. Javed, H. Montanelli, and L. N. Trefethen,
+  [*Extension of Chebfun to periodic functions*](https://epubs.siam.org/doi/abs/10.1137/141001007),
+  SIAM J. Sci. Comput., 37 (2015), pp. C554–C573.
+- L. N. Trefethen and J. A. C. Weideman,
+  [*The exponentially convergent trapezoidal rule*](https://epubs.siam.org/doi/10.1137/130932132),
+  SIAM Review, 56 (2014), pp. 385–458.

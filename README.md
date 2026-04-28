@@ -229,8 +229,9 @@ also returned as a Trigtech-backed Chebfun.
 Pass `np.inf` or `-np.inf` as a domain endpoint to construct a Chebfun
 on a (semi-)infinite interval. Pieces with infinite endpoints are
 automatically built as `CompactFun` objects: a Chebyshev expansion on
-the discovered numerical-support window, reported as identically zero
-outside.
+the discovered numerical-support window, with optional non-zero tail
+constants (`tail_left`, `tail_right`) recovered automatically for
+sigmoid-like inputs (`tanh`, logistic, …).
 
 ```python
 from chebpy import chebfun
@@ -239,6 +240,11 @@ import numpy as np
 # Doubly-infinite Gaussian — sum is √π
 h = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
 h.sum()                           # ≈ √π
+
+# Sigmoid-like: tail constants are detected automatically
+t = chebfun(np.tanh, [-np.inf, np.inf])
+t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
+t(1e10)                                       # 1.0
 
 # Mixed: finite breakpoints with infinite endpoints
 p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
@@ -299,14 +305,36 @@ Whether you're fixing bugs, adding features, or improving documentation, your he
 
 ### Acknowledgments 🙏
 
+ChebPy stands on the shoulders of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. The mathematical design,
+algorithmic ideas, and naming conventions in this library are direct
+adaptations of their work — most notably:
+
+- The original [MATLAB Chebfun](https://www.chebfun.org/) system
+  ([github.com/chebfun/chebfun](https://github.com/chebfun/chebfun)).
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019).
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/), Pafnuty
+  Publications, 2014.
+
+We are grateful for their decades of open scholarship, which made this
+Python port possible. Any errors in translation or adaptation are ours
+alone.
+
+📜 See the [History of the Chebfun Project](https://chebpy.github.io/chebpy/history/)
+page for a fuller timeline, key contributors, and foundational
+publications.
+
+Project tooling:
+
 - [Jebel-Quant/rhiza](https://github.com/Jebel-Quant/rhiza) for standardised CI/CD templates and project tooling
 
 
 ---
 
 <div align="center">
-
-**Made with ❤️ by the ChebPy community**
 
 ⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
 

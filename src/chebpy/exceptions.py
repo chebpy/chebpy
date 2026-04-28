@@ -214,8 +214,24 @@ CompactFunConstructionError = type(
 
         Raised when the numerical support of an unbounded function cannot
         be discovered within the configured tolerance and width budget,
-        or when the function fails preconditions (e.g. non-zero asymptotic
-        limit or non-zero constant on an unbounded interval).
+        or when the function fails preconditions (e.g. non-converging
+        asymptotic limit).
+        """,
+    },
+)
+
+# Exception raised when an integral is divergent
+DivergentIntegralError = type(
+    "DivergentIntegralError",
+    (ChebpyBaseError,),
+    {
+        "default_message": "The integral does not converge",
+        "__doc__": """Exception raised when a definite or indefinite integral diverges.
+
+        Raised by :meth:`CompactFun.sum`, :meth:`CompactFun.cumsum`, or
+        :meth:`Chebfun.conv` when the function has a non-zero asymptotic
+        limit on an unbounded side, making the integral mathematically
+        ill-defined.
         """,
     },
 )

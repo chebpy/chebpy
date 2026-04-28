@@ -1,4 +1,4 @@
-# Getting Started
+# Quickstart
 
 This guide walks you through the basics of ChebPy in a few minutes.
 

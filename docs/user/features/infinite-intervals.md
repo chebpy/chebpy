@@ -89,3 +89,12 @@ pdf2(0.0)     # ≈ 1 / sqrt(4π)
 - The [Infinite Intervals notebook](../../notebooks/9_infinite_intervals.html)
   for a tour of worked examples adapted from §9.1 of the Chebfun guide.
 - The [Convolution](convolution.md) page for finite-interval convolution.
+
+## References
+
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
+  Pafnuty Publications, 2014, ch. 9.
+- M. Richardson and L. N. Trefethen,
+  [*A sinc function analogue of Chebfun*](https://epubs.siam.org/doi/10.1137/110825947),
+  SIAM J. Sci. Comput., 33 (2011), pp. 2519–2535.

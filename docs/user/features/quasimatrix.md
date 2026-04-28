@@ -49,7 +49,14 @@ f = chebfun(lambda x: np.exp(x), [-1, 1])
 p = polyfit(f, 5)   # degree-5 polynomial least-squares fit
 ```
 
-## Reference
+## References
 
-L. N. Trefethen, "Householder triangularization of a quasimatrix,"
-*IMA Journal of Numerical Analysis*, 30 (2010), 887–897.
+- L. N. Trefethen,
+  [*Householder triangularization of a quasimatrix*](https://academic.oup.com/imajna/article/30/4/887/659727),
+  IMA J. Numer. Anal., 30 (2010), pp. 887–897.
+- Z. Battles and L. N. Trefethen,
+  [*An extension of MATLAB to continuous functions and operators*](https://epubs.siam.org/doi/10.1137/S1064827503430126),
+  SIAM J. Sci. Comput., 25 (2004), pp. 1743–1770.
+- A. Townsend and L. N. Trefethen,
+  [*Continuous analogues of matrix factorizations*](https://royalsocietypublishing.org/doi/10.1098/rspa.2014.0585),
+  Proc. Roy. Soc. A, 471 (2015), 20140585.

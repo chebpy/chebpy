@@ -50,8 +50,17 @@ Once a function is represented as a Chebfun, operations such as differentiation,
 integration, and root-finding reduce to operations on the Chebyshev coefficients
 and are performed in $O(n)$ or $O(n \log n)$ time, where $n$ is the polynomial degree.
 
+## Acknowledgments
+
+ChebPy is a Python adaptation of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. We follow their mathematical
+design, algorithms, and naming conventions throughout, and gratefully
+acknowledge the decades of open scholarship that made this port possible.
+
 ## References
 
 - L. N. Trefethen, *Approximation Theory and Approximation Practice*, SIAM, 2013.
 - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.), *Chebfun Guide*, Pafnuty Publications, 2014.
-- [chebfun.org](http://www.chebfun.org/)
+- [chebfun.org](http://www.chebfun.org/) — the original MATLAB Chebfun system.
+- [github.com/chebfun/chebfun](https://github.com/chebfun/chebfun) — Chebfun source on GitHub.

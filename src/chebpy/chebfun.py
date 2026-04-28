@@ -386,7 +386,6 @@ class Chebfun:
         numpcs = self.funs.size
         plural = "" if numpcs == 1 else "s"
         header = f"Chebfun {rowcol} ({numpcs} smooth piece{plural})\n"
-        domain_info = f"domain: {self.support}\n"
         toprow = "       interval       length     endpoint values\n"
         tmplat = "[{:8.2g},{:8.2g}]   {:6}  {:8.2g} {:8.2g}\n"
         rowdta = ""
@@ -398,7 +397,7 @@ class Chebfun:
             rowdta += row
         btmrow = f"vertical scale = {self.vscale:3.2g}"
         btmxtr = "" if numpcs == 1 else f"    total length = {sum([f.size for f in self])}"
-        return header + domain_info + toprow + rowdta + btmrow + btmxtr
+        return header + toprow + rowdta + btmrow + btmxtr
 
     def __rsub__(self, f: Any) -> Any:
         """Subtract this Chebfun from another object.
@@ -922,6 +921,21 @@ class Chebfun:
         # CompactFun pieces (with possibly infinite logical support) always
         # take the general piecewise path so the output is wrapped correctly.
         from .compactfun import CompactFun
+        from .exceptions import DivergentIntegralError
+
+        # Convolution of a function with non-zero asymptotic limits diverges
+        # on an unbounded interval, so refuse early with a clear error
+        # pointing the user at the algebraic-closure escape hatch.
+        for label, h in (("self", self), ("other", g)):
+            for piece in h.funs:
+                if isinstance(piece, CompactFun) and (piece.tail_left != 0.0 or piece.tail_right != 0.0):
+                    raise DivergentIntegralError(  # noqa: TRY003
+                        f"Convolution requires both operands to decay to zero at "
+                        f"±inf; got tail_left={piece.tail_left}, "
+                        f"tail_right={piece.tail_right} for {label}. Consider "
+                        f"subtracting a matched sigmoid first so the residual "
+                        f"has zero tails, then convolving the residual."
+                    )
 
         any_compact = any(isinstance(fun, CompactFun) for fun in self.funs) or any(
             isinstance(fun, CompactFun) for fun in g.funs
