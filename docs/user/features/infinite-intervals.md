@@ -89,3 +89,12 @@ pdf2(0.0)     # ≈ 1 / sqrt(4π)
 - The [Infinite Intervals notebook](../../notebooks/9_infinite_intervals.html)
   for a tour of worked examples adapted from §9.1 of the Chebfun guide.
 - The [Convolution](convolution.md) page for finite-interval convolution.
+
+## References
+
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
+  Pafnuty Publications, 2014, ch. 9.
+- M. Richardson,
+  [*Approximating divergent functions in the Chebfun system*](https://ora.ox.ac.uk/objects/uuid:24a5d1c2-fb24-4ad7-8a16-c7c0bd0bda99),
+  DPhil thesis, University of Oxford, 2013.

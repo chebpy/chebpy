@@ -124,40 +124,46 @@ integrators (ETDRK4 of Cox & Matthews).
 ## Key contributors
 
 The list below summarises the people whose contributions shape the
-mathematical and software design that ChebPy adapts. The Chebfun team
-maintains a more complete list at
+mathematical and software design that ChebPy adapts. Each name links to
+the contributor's current academic homepage where available, falling back
+to a Google Scholar search otherwise. The Chebfun team maintains a more
+complete list at
 [chebfun.org/about/people.html](https://www.chebfun.org/about/people.html).
 
 | Person | Role / contribution |
 | --- | --- |
-| **Nick Trefethen** | Invented Chebfun (2002); project leader throughout; author of *ATAP* and co-author of *Exploring ODEs* |
-| **Zachary Battles** | DPhil 2002–2005; wrote Chebfun v1; quasimatrix `qr`, `svd`, `\`, `roots` |
-| **Ricardo Pachón** | DPhil from 2006; piecewise polynomials; `remez`, `chebpade`, `lebesgue` |
-| **Rodrigo Platte** | Postdoc 2007–2009; extension to infinite intervals; edge-detection / `splitting on` |
-| **Toby Driscoll** | Led ODE/integral side from 2008; `solvebvp`, `eigs`, `expm`, `volt`, `fred`; rectangular & block spectral discretisations |
-| **Folkmar Bornemann** | Lazy-evaluation idea enabling operators |
-| **Nick Hale** | DPhil 2006–2009, postdoc to 2014; project director 2010–2014; led v5 rewrite; quadrature, `pde15s`, `conv`, `legpts`, `cheb2leg` |
-| **Mark Richardson** | DPhil 2008–2013; `blowup on`, poles and singularities |
-| **Ásgeir Birkisson** | MSc / DPhil / postdoc 2008–2015; automatic differentiation; nonlinear BVPs/IVPs; `Chebgui` |
-| **Pedro Gonnet** | Postdoc 2009–2012; `ratinterp`, `padeapprox` |
-| **Stefan Güttel** | Postdoc 2011–2012; rational functions; `chebsnake` |
-| **Alex Townsend** | DPhil 2010–2014; created Chebfun2; co-author of Spherefun; `legpts`, `sum`, `conv`, `cheb2leg`, `nufft` |
-| **Anthony Austin** | DPhil from 2012; preferences architecture; technical leadership |
-| **Mohsin Javed** | MSc/DPhil 2011–2017; `dirac`, `trigremez`; coding-style guide |
-| **Georges Klein** | Postdoc 2012–2013; `chebfun(...,'equi')` for equispaced data |
-| **Hrothgar** | DPhil 2013–2015; v5 website; block operators / adjoints |
-| **Kuan Xu** | Postdoc 2012–2015; rectangular differentiation matrices; v5 unbounded-interval code |
-| **Hadrien Montanelli** | DPhil 2013–2017; `spin`, `spin2`, `spin3`, `spinsphere`, `cheb.choreo` |
-| **Behnam Hashemi** | Postdoc 2014–2017; created Chebfun3 |
-| **Jared Aurentz** | Postdoc 2014–2016; `standardChop`, `adjoint`; continuous Krylov methods |
-| **Olivier Sète** | Postdoc 2015–2017; co-author of `aaa` |
-| **Yuji Nakatsukasa** | Visiting researcher; `aaa`, `minimax`; fast linear algebra for `spinsphere` |
-| **Silviu Filip** | Postdoc from 2016; `minimax` rational best approximation |
-| **Grady Wright** | 2014 visit; `'trig'` (trigfun) capability; led Spherefun |
-| **Heather Wilber** | MSc 2015–2016 (Boise State); co-author of Spherefun; led Diskfun |
-| **Sheehan Olver** | JRF Oxford 2007–2011; ultraspherical spectral methods (with Townsend) |
-| **Vanni Noferini** | Postdoc Manchester; fast rootfinding for Chebfun2 |
-| **Marcus Webb**, **Joris Van Deun**, **Lourenço Peixoto**, **Richard Mikael Slevinsky**, **Jean-Paul Berrut** | Various contributions to barycentric formulas, `cf`, `ultrapts`, `jacpts`, quadrature, and Julia/ApproxFun connections |
+| [**Nick Trefethen**](https://people.maths.ox.ac.uk/trefethen/) | Invented Chebfun (2002); project leader throughout; author of *ATAP* and co-author of *Exploring ODEs* |
+| [**Zachary Battles**](https://scholar.google.com/scholar?q=Zachary+Battles+chebfun) | DPhil 2002–2005; wrote Chebfun v1; quasimatrix `qr`, `svd`, `\`, `roots` |
+| [**Ricardo Pachón**](https://scholar.google.com/citations?user=BJ7HWzkAAAAJ&hl=en) | DPhil from 2006; piecewise polynomials; `remez`, `chebpade`, `lebesgue` |
+| [**Rodrigo Platte**](https://scholar.google.com/citations?user=sujKeUUAAAAJ&hl=en) | Postdoc 2007–2009; extension to infinite intervals; edge-detection / `splitting on` |
+| [**Toby Driscoll**](https://tobydriscoll.net/) | Led ODE/integral side from 2008; `solvebvp`, `eigs`, `expm`, `volt`, `fred`; rectangular & block spectral discretisations |
+| [**Folkmar Bornemann**](https://www.professoren.tum.de/en/bornemann-folkmar) | Lazy-evaluation idea enabling operators |
+| [**Nick Hale**](https://scholar.google.com/citations?user=z1nuzsoAAAAJ) | DPhil 2006–2009, postdoc to 2014; project director 2010–2014; led v5 rewrite; quadrature, `pde15s`, `conv`, `legpts`, `cheb2leg` |
+| [**Mark Richardson**](https://scholar.google.com/citations?user=mxOjLP8AAAAJ&hl=en) |MSc / DPhil 2008–2013; `blowup on`, poles and singularities |
+| [**Ásgeir Birkisson**](https://scholar.google.com/citations?user=rVsf9VoAAAAJ&hl=en) | MSc / DPhil / postdoc 2008–2015; automatic differentiation; nonlinear BVPs/IVPs; `Chebgui` |
+| [**Pedro Gonnet**](https://scholar.google.com/citations?user=IqOpdUkAAAAJ&hl=en) | Postdoc 2009–2012; `ratinterp`, `padeapprox` |
+| [**Stefan Güttel**](https://guettel.com/) | Postdoc 2011–2012; rational functions; `chebsnake` |
+| [**Alex Townsend**](https://alextownsend.net/) | DPhil 2010–2014; created Chebfun2; co-author of Spherefun; `legpts`, `sum`, `conv`, `cheb2leg`, `nufft` |
+| [**Anthony Austin**](https://scholar.google.com/citations?user=J8pe_aYAAAAJ&hl=en) | DPhil from 2012; preferences architecture; technical leadership |
+| [**Mohsin Javed**](https://scholar.google.com/citations?user=boh_ussAAAAJ&hl=en) | MSc / DPhil 2011–2017; `dirac`, `trigremez`; coding-style guide |
+| [**Georges Klein**](https://scholar.google.com/scholar?q=Georges+Klein+barycentric+interpolation) | Postdoc 2012–2013; `chebfun(...,'equi')` for equispaced data |
+| [**Hrothgar**](https://scholar.google.com/scholar?q=Hrothgar+chebfun) | DPhil 2013–2015; v5 website; block operators / adjoints |
+| [**Kuan Xu**](https://scholar.google.com/scholar?q=Kuan+Xu+chebfun) | Postdoc 2012–2015; rectangular differentiation matrices; v5 unbounded-interval code |
+| [**Hadrien Montanelli**](https://scholar.google.com/citations?user=Bjmkfe8AAAAJ&hl=en) | DPhil 2013–2017; `spin`, `spin2`, `spin3`, `spinsphere`, `cheb.choreo` |
+| [**Behnam Hashemi**](https://scholar.google.com/citations?user=Bw_w8gMAAAAJ) | Postdoc 2014–2017; created Chebfun3 |
+| [**Jared Aurentz**](https://scholar.google.com/citations?user=HrT33IsAAAAJ&hl=en) | Postdoc 2014–2016; `standardChop`, `adjoint`; continuous Krylov methods |
+| [**Olivier Sète**](https://scholar.google.com/citations?user=zuvLfoQAAAAJ&hl=en) | Postdoc 2015–2017; co-author of `aaa` |
+| [**Yuji Nakatsukasa**](https://people.maths.ox.ac.uk/nakatsukasa/) | Visiting researcher; `aaa`, `minimax`; fast linear algebra for `spinsphere` |
+| [**Silviu Filip**](https://scholar.google.com/citations?user=IbrAWwgAAAAJ&hl=en) | Postdoc from 2016; `minimax` rational best approximation |
+| [**Grady Wright**](https://scholar.google.com/citations?user=-wgTqlMAAAAJ&hl=en) | 2014 visit; `'trig'` (trigfun) capability; led Spherefun |
+| [**Heather Wilber**](https://scholar.google.com/citations?user=1Nw_is4AAAAJ&hl=en) | MSc 2015–2016 (Boise State); co-author of Spherefun; led Diskfun |
+| [**Sheehan Olver**](https://www.ma.imperial.ac.uk/~solver/) | JRF Oxford 2007–2011; ultraspherical spectral methods (with Townsend) |
+| [**Vanni Noferini**](https://scholar.google.com/citations?user=BpzPbZsAAAAJ) | Postdoc Manchester; fast rootfinding for Chebfun2 |
+| [**Marcus Webb**](https://personalpages.manchester.ac.uk/staff/marcus.webb/) | Barycentric formulas; analytic continuation; improvements to `bary` |
+| [**Joris Van Deun**](https://scholar.google.com/scholar?q=Joris+Van+Deun+CF+approximation) | `cf` for Carathéodory–Féjer approximation |
+| [**Richard Mikael Slevinsky**](https://scholar.google.com/citations?user=Q4dFwc8AAAAJ) | Postdoc 2014–2016; quadrature, ultraspherical methods, ApproxFun link |
+| [**Jean-Paul Berrut**](https://scholar.google.com/scholar?q=Jean-Paul+Berrut+barycentric) | Champion of barycentric formulas — the original spark for Chebfun |
+| [**Lourenço Peixoto**](https://scholar.google.com/scholar?q=Louren%C3%A7o+Peixoto+ultrapts) | `ultrapts`, improvements to `jacpts` |
 
 ## Foundational publications
 

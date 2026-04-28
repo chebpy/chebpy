@@ -43,3 +43,14 @@ from chebpy import UserPreferences
 prefs = UserPreferences()
 prefs.sortroots = True
 ```
+
+## References
+
+- I. J. Good,
+  [*The colleague matrix, a Chebyshev analogue of the companion matrix*](https://academic.oup.com/qjmath/article/12/1/61/1573665),
+  Quart. J. Math. Oxford, 12 (1961), pp. 61–68.
+- J. P. Boyd,
+  [*Computing zeros on a real interval through Chebyshev expansion and polynomial rootfinding*](https://epubs.siam.org/doi/10.1137/S0036142901398325),
+  SIAM J. Numer. Anal., 40 (2002), pp. 1666–1682.
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019), ch. 18.

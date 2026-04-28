@@ -323,6 +323,10 @@ We are grateful for their decades of open scholarship, which made this
 Python port possible. Any errors in translation or adaptation are ours
 alone.
 
+📜 See the [History of the Chebfun Project](https://chebpy.github.io/chebpy/history/)
+page for a fuller timeline, key contributors, and foundational
+publications.
+
 Project tooling:
 
 - [Jebel-Quant/rhiza](https://github.com/Jebel-Quant/rhiza) for standardised CI/CD templates and project tooling
