@@ -305,6 +305,26 @@ Whether you're fixing bugs, adding features, or improving documentation, your he
 
 ### Acknowledgments 🙏
 
+ChebPy stands on the shoulders of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. The mathematical design,
+algorithmic ideas, and naming conventions in this library are direct
+adaptations of their work — most notably:
+
+- The original [MATLAB Chebfun](https://www.chebfun.org/) system
+  ([github.com/chebfun/chebfun](https://github.com/chebfun/chebfun)).
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019).
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/), Pafnuty
+  Publications, 2014.
+
+We are grateful for their decades of open scholarship, which made this
+Python port possible. Any errors in translation or adaptation are ours
+alone.
+
+Project tooling:
+
 - [Jebel-Quant/rhiza](https://github.com/Jebel-Quant/rhiza) for standardised CI/CD templates and project tooling
 
 
