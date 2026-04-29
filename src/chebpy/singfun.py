@@ -79,6 +79,11 @@ class Singfun(Classicfun):
       non-affine map without further changes.
     """
 
+    # Mixed-subclass binary ops (Singfun + Bndfun, etc.) reconstruct on the
+    # operand with the highest priority.  Singfun outranks Bndfun/CompactFun
+    # because the singularity must be preserved in the result.
+    _singularity_priority: int = 10
+
     def __init__(self, onefun: Any, interval: Any, map_: IntervalMap) -> None:
         """Create a new :class:`Singfun`.
 
@@ -102,6 +107,38 @@ class Singfun(Classicfun):
         between two same-map :class:`Singfun` instances).
         """
         return type(self)(onefun, self._interval, self._map)
+
+    def _can_share_onefun_with(self, other: Any) -> bool:
+        """Two :class:`Singfun` instances share a t-grid only when their maps match.
+
+        The ``Onefun`` coefficients of a :class:`Singfun` represent ``f(m(t))``
+        sampled at Chebyshev nodes in ``t``-space; if the maps differ, those
+        nodes encode different logical points and onefun-level arithmetic is
+        no longer correct.  In that case the parent class falls back to
+        rebuilding the result adaptively on the dominant operand's map.
+        """
+        if not super()._can_share_onefun_with(other):
+            return False
+        return self._maps_equal(self._map, other._map)
+
+    def _rebuild_from_callable(self, f: Any) -> Singfun:
+        """Adaptively rebuild a :class:`Singfun` evaluating callable ``f`` on this map."""
+        m = self._map
+        if isinstance(m, SingleSlitMap):
+            return type(self).initfun_adaptive(f, self._interval, sing=m.side, alpha=m.alpha)
+        if isinstance(m, DoubleSlitMap):
+            return type(self).initfun_adaptive(f, self._interval, sing="both", alpha=m.alpha)
+        msg = "Singfun._rebuild_from_callable: unknown map type"
+        raise NotImplementedError(msg)  # pragma: no cover
+
+    @staticmethod
+    def _maps_equal(m1: IntervalMap, m2: IntervalMap) -> bool:
+        """Structural equality check for the maps used by :class:`Singfun`."""
+        if isinstance(m1, SingleSlitMap) and isinstance(m2, SingleSlitMap):
+            return m1.side == m2.side and m1.alpha == m2.alpha and m1.support == m2.support
+        if isinstance(m1, DoubleSlitMap) and isinstance(m2, DoubleSlitMap):
+            return m1.alpha == m2.alpha and m1.support == m2.support
+        return False
 
     # ------------
     #  properties
@@ -263,26 +300,64 @@ class Singfun(Classicfun):
     # -----------
     #  utilities
     # -----------
-    def restrict(self, subinterval: Any) -> Classicfun:  # pragma: no cover - thin wrapper
+    def restrict(self, subinterval: Any) -> Classicfun:
         """Restrict to a subinterval.
 
-        Only the trivial case ``subinterval == self.interval`` is supported in
-        v1; other restrictions require a piecewise representation that mixes
-        :class:`Singfun` (near the clustered endpoint) with
-        :class:`~chebpy.bndfun.Bndfun` (in the smooth interior) and is left
-        for Phase 4.
+        Behaviour depends on the relationship between ``subinterval`` and the
+        clustered endpoint(s):
+
+        * Trivial restriction (``subinterval == self.interval``) returns
+          ``self`` unchanged.
+        * A subinterval that **shares** the clustered endpoint (e.g. for
+          ``sing="left"`` a sub-range ``[a, c]``, or for ``sing="both"``
+          ``[a, c]`` / ``[c, b]``) is rebuilt as a :class:`Singfun` with a
+          rescaled map that retains the singular endpoint.  Two-sided maps
+          are restricted to a one-sided map of the appropriate side.
+        * A purely interior subinterval (one that excludes the clustered
+          endpoint(s)) is returned as a :class:`~chebpy.bndfun.Bndfun`,
+          since the function is analytic there and the affine map suffices.
+
+        This is the closure-fallback described in plan 03 phase 4: the
+        result remains a usable :class:`~chebpy.classicfun.Classicfun` but
+        may change subclass.
         """
+        from .bndfun import Bndfun
+
         if subinterval not in self.interval:
             from .exceptions import NotSubinterval
 
             raise NotSubinterval(self.interval, subinterval)
-        if self.interval == subinterval:
+        a, b = float(self._interval[0]), float(self._interval[1])
+        sa, sb = float(subinterval[0]), float(subinterval[1])
+        if sa == a and sb == b:
             return self
-        msg = (
-            "Singfun.restrict to an interior subinterval is not implemented yet; "
-            "see plan 03 phase 4 for the piecewise fallback."
-        )
-        raise NotImplementedError(msg)
+
+        m = self._map
+        new_iv = Interval(sa, sb)
+
+        # Decide which clustered endpoints (if any) the subinterval still touches.
+        touches_left = sa == a
+        touches_right = sb == b
+
+        if isinstance(m, SingleSlitMap):
+            if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
+                return type(self).initfun_adaptive(self, new_iv, sing=m.side, alpha=m.alpha)
+            # Interior or opposite-end restriction: drop to Bndfun.
+            return Bndfun.initfun_adaptive(self, new_iv)
+
+        if isinstance(m, DoubleSlitMap):
+            if touches_left and touches_right:
+                # Subinterval == self.interval handled above; this branch is
+                # therefore unreachable in normal usage.
+                return self  # pragma: no cover
+            if touches_left:
+                return type(self).initfun_adaptive(self, new_iv, sing="left", alpha=m.alpha)
+            if touches_right:
+                return type(self).initfun_adaptive(self, new_iv, sing="right", alpha=m.alpha)
+            return Bndfun.initfun_adaptive(self, new_iv)
+
+        # Unknown map type — conservative fallback.
+        return Bndfun.initfun_adaptive(self, new_iv)  # pragma: no cover
 
     def translate(self, c: float) -> Singfun:
         """Translate the function: ``g(x) = f(x - c)``.

@@ -20,6 +20,9 @@ def chebfun(
     f: Callable[..., Any] | str | float | None = None,
     domain: np.ndarray | list[float] | None = None,
     n: int | None = None,
+    *,
+    sing: str | None = None,
+    alpha: float = 1.0,
 ) -> "Chebfun":
     """Create a Chebfun object representing a function.
 
@@ -37,6 +40,12 @@ def chebfun(
             specified in preferences.
         n: Optional number of points to use in the discretization. If None, adaptive
             construction is used.
+        sing: Optional endpoint-singularity hint, one of ``"left"``, ``"right"``,
+            or ``"both"``.  When set, the appropriate boundary pieces are built
+            as :class:`~chebpy.singfun.Singfun` instances using the
+            Adcock-Richardson exponential clustering map; interior pieces remain
+            :class:`~chebpy.bndfun.Bndfun`.  Only supported with ``n=None``.
+        alpha: Positive clustering strength for the singular pieces.  Default ``1.0``.
 
     Returns:
         Chebfun: A Chebfun object representing the function.
@@ -57,6 +66,9 @@ def chebfun(
         >>>
         >>> # Constant function
         >>> c = chebfun(3.14)
+        >>>
+        >>> # Function with an endpoint singularity
+        >>> g = chebfun(np.sqrt, domain=[0.0, 1.0], sing="left")
     """
     # Empty via chebfun()
     if f is None:
@@ -66,7 +78,7 @@ def chebfun(
 
     # Callable fct in chebfun(lambda x: f(x), ... )
     if callable(f):
-        return Chebfun.initfun(f, domain, n)
+        return Chebfun.initfun(f, domain, n, sing=sing, alpha=alpha)
 
     # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():
@@ -190,3 +202,52 @@ def trigfun(
     with prefs:
         prefs.tech = "Trigtech"
         return chebfun(f, domain, n)
+
+
+def recast(f: "Chebfun", target: str = "bndfun") -> "Chebfun":
+    """Recast a Chebfun into a different per-piece representation.
+
+    This is the opt-in escape hatch for callers that need to apply an
+    operation that does not close over :class:`~chebpy.singfun.Singfun`
+    pieces (most commonly :meth:`~chebpy.chebfun.Chebfun.conv`).  Each
+    :class:`~chebpy.singfun.Singfun` piece is rebuilt by adaptive
+    resampling on the same logical interval; ordinary
+    :class:`~chebpy.bndfun.Bndfun` (and :class:`~chebpy.compactfun.CompactFun`)
+    pieces are passed through unchanged.
+
+    Note that recasting a true endpoint singularity into a
+    :class:`~chebpy.bndfun.Bndfun` will, in general, fail to converge to
+    machine precision: the resulting fun may carry a ``did not converge``
+    warning and a much higher coefficient count.  See
+    ``docs/plans/03-singfun-mapped-integration.md`` and the user-guide
+    page on endpoint singularities for the trade-off.
+
+    Args:
+        f: The :class:`~chebpy.chebfun.Chebfun` to recast.
+        target: Currently only ``"bndfun"`` is accepted.  Reserved for
+            future expansion (e.g. recasting :class:`Bndfun` to
+            :class:`Singfun` once an automatic-detection heuristic
+            exists).
+
+    Returns:
+        Chebfun: A new :class:`~chebpy.chebfun.Chebfun` with each
+            :class:`~chebpy.singfun.Singfun` piece replaced by a
+            :class:`~chebpy.bndfun.Bndfun` of the same logical support.
+
+    Raises:
+        ValueError: If ``target`` is not a recognised representation.
+    """
+    from .singfun import Singfun
+
+    if target != "bndfun":
+        msg = f"recast target must be 'bndfun'; got {target!r}"
+        raise ValueError(msg)
+    if f.isempty:
+        return Chebfun.initempty()
+    new_funs = []
+    for piece in f.funs:
+        if isinstance(piece, Singfun):
+            new_funs.append(piece.to_bndfun())
+        else:
+            new_funs.append(piece)
+    return Chebfun(new_funs)
