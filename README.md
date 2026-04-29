@@ -50,7 +50,7 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 - 🔢 **Function Approximation**: Automatic Chebyshev polynomial approximation of smooth functions
 - 🌊 **Periodic Functions**: Fourier-based approximation via `trigfun` for smooth periodic functions
 - ♾️ **Infinite Intervals**: Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
-- 📍 **Endpoint Singularities**: Resolve $\sqrt{x}$, $\sqrt{x(1-x)}$ and similar branch-type endpoints to spectral accuracy via `chebfun(f, [a, b], sing="left"|"right"|"both")` (`Singfun`)
+- 📍 **Endpoint Singularities**: Resolve $\sqrt{x}$, $\sqrt{x(1-x)}$ and similar branch-type endpoints to spectral accuracy
 - 📐 **Calculus Operations**: Differentiation, integration, and root-finding with machine precision
 - 📊 **Plotting**: Beautiful function visualizations with matplotlib integration
 - 🧮 **Arithmetic**: Add, subtract, multiply, and compose functions naturally
