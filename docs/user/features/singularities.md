@@ -46,8 +46,9 @@ $f(m(t))$ is analytic in a Bernstein ellipse around $[-1, 1]$ and is therefore
 resolved to spectral accuracy by ordinary Chebyshev interpolation. A symmetric
 "double-slit" map is used for two-sided singularities.
 
-The recipe is from Adcock & Richardson, *A higher-order generalisation of the
-Adcock–Hale recipe for endpoint singularities*, [arXiv:1305.2643](https://arxiv.org/abs/1305.2643).
+The recipe is from Adcock & Richardson, *New exponential variable transform
+methods for functions with endpoint singularities*,
+[arXiv:1305.2643](https://arxiv.org/abs/1305.2643).
 
 ## Multi-piece domains
 
@@ -156,7 +157,7 @@ single-slit map cannot resolve it without further work.
 ## References
 
 - B. Adcock and M. Richardson,
-  [*A higher-order generalisation of the Adcock–Hale recipe for endpoint
+  [*New exponential variable transform methods for functions with endpoint
   singularities*](https://arxiv.org/abs/1305.2643), 2013.
 - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
   [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),

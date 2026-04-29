@@ -67,6 +67,7 @@ def _():
 def _():
     sqrt_left = chebfun(np.sqrt, [0.0, 1.0], sing="left")
     print(sqrt_left)
+    print()
     print(f"piece type    : {type(sqrt_left.funs[0]).__name__}")
     print(f"size          : {sqrt_left.funs[0].size} coefficients")
     print(f"sum (= 2/3)   : {float(sqrt_left.sum()):.16f}")
@@ -145,13 +146,16 @@ def _():
 
 @app.cell
 def _(bndfun_sqrt, singfun_sqrt):
-    _fig, _ax = plt.subplots()
-    _ax.semilogy(np.arange(bndfun_sqrt.size), np.abs(bndfun_sqrt.coeffs) + 1e-20, label="Bndfun (no map)")
-    _ax.semilogy(np.arange(singfun_sqrt.size), np.abs(singfun_sqrt.coeffs) + 1e-20, label="Singfun (sing='left')")
-    _ax.set_xlabel("coefficient index")
-    _ax.set_ylabel("|coefficient|")
-    _ax.set_title(r"Chebyshev coefficient decay for $\sqrt{x}$ on $[0,1]$")
-    _ax.legend()
+    _fig, (_ax1, _ax2) = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    _ax1.semilogy(np.arange(bndfun_sqrt.size), np.abs(bndfun_sqrt.coeffs) + 1e-20, color="C0")
+    _ax1.set_xlabel("coefficient index")
+    _ax1.set_ylabel("|coefficient|")
+    _ax1.set_title(f"Bndfun (no map): {bndfun_sqrt.size} coeffs")
+    _ax2.semilogy(np.arange(singfun_sqrt.size), np.abs(singfun_sqrt.coeffs) + 1e-20, color="C1")
+    _ax2.set_xlabel("coefficient index")
+    _ax2.set_title(f"Singfun (sing='left'): {singfun_sqrt.size} coeffs")
+    _fig.suptitle(r"Chebyshev coefficient decay for $\sqrt{x}$ on $[0,1]$")
+    _fig.tight_layout()
     _fig
     return
 
@@ -237,7 +241,7 @@ def _():
     mixed_smooth = Bndfun.initfun_adaptive(lambda x: x * x, Interval(0.0, 1.0))
     mixed_sum = mixed_singular + mixed_smooth
     print(f"Singfun + Bndfun is a {type(mixed_sum).__name__}")
-    _grid = np.linspace(0.001, 0.999, 21)
+    _grid = np.linspace(0.0001, 0.9999, 21)
     _err = float(np.max(np.abs(mixed_sum(_grid) - (np.sqrt(_grid) + _grid * _grid))))
     print(f"max-err vs reference: {_err:.2e}")
     return
@@ -275,7 +279,7 @@ def _():
     ## References
 
     - B. Adcock and M. Richardson,
-      [*A higher-order generalisation of the Adcock-Hale recipe for endpoint
+      [*New exponential variable transform methods for functions with endpoint
       singularities*](https://arxiv.org/abs/1305.2643), 2013.
     - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
       [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
