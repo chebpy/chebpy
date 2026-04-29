@@ -207,7 +207,7 @@ class TestArithmetic:
 #  utility methods
 # ---------------------------------------------------------------------------
 class TestUtilities:
-    """Translation, restriction, and the explicit ``to_bndfun`` opt-in."""
+    """Translation and restriction utilities."""
 
     def test_translate(self):
         """Translation shifts the support and rebuilds the map for the new endpoints."""
@@ -223,21 +223,3 @@ class TestUtilities:
         f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
         g = f.restrict(f.interval)
         assert g is f
-
-    def test_to_bndfun(self):
-        """``to_bndfun`` returns a :class:`~chebpy.bndfun.Bndfun` representation.
-
-        Note: the :class:`Bndfun` adaptive constructor will not converge to
-        machine precision for a true endpoint branch singularity; we only
-        check that the resulting object has the right type and matches in
-        the smooth interior.
-        """
-        from chebpy.bndfun import Bndfun
-
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
-        with pytest.warns(UserWarning, match="did not converge"):
-            b = f.to_bndfun()
-        assert isinstance(b, Bndfun)
-        # Match in the smooth interior, away from the singular endpoint.
-        x = np.linspace(0.5, 0.95, 11)
-        assert np.allclose(b(x), np.sqrt(x), atol=1e-3)

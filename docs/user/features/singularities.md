@@ -122,16 +122,10 @@ g = chebfun(1.0, [0.0, 1.0])
 f.conv(g)   # raises NotImplementedError
 ```
 
-The escape hatch is `chebpy.recast()`, which rebuilds each `Singfun` piece as
-an ordinary `Bndfun` by adaptive resampling. The result is not generally
-machine-precision (resolving a true endpoint singularity in an affine-mapped
-Chebyshev expansion is hard), but it closes under `conv`:
-
-```python
-from chebpy import recast
-h = recast(f, target="bndfun")    # warns "did not converge" near the singularity
-h.conv(g)                          # OK
-```
+A future release may provide an opt-in helper that recasts the singular
+pieces into a piecewise `Bndfun` representation (closing under `conv` at
+the cost of accuracy near the endpoints).  Until then, `conv` simply
+refuses.
 
 ## Restriction
 
@@ -150,8 +144,7 @@ of the appropriate side.
 
 `Singfun.diff()` is **not implemented** in the current release: the chain rule
 introduces a $1/m'(t)$ factor that blows up at the clustered endpoint, and the
-single-slit map cannot resolve it without further work. Convert to a `Bndfun`
-via `chebpy.recast()` if you need a derivative on the analytic interior.
+single-slit map cannot resolve it without further work.
 
 ## See also
 

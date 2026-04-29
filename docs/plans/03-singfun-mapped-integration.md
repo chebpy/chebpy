@@ -190,15 +190,11 @@ The `restrict` and `compose` fallbacks are not error paths — they
 return a perfectly usable `Chebfun` built by adaptive reconstruction,
 and the user almost never needs to know which map was used.
 
-The `conv` refusal is the one user-visible limitation. Document it in
-the user guide and provide a helper:
-
-```python
-chebpy.recast(f, target="bndfun")  # forces piecewise reconstruction
-```
-
-so users can opt in to standard convolution at the cost of a higher
-piece count near the endpoints.
+The `conv` refusal is the one user-visible limitation. The current
+release simply raises `NotImplementedError`; an opt-in
+`chebpy.recast(f, target="bndfun")` helper that forces piecewise
+reconstruction (closing under `conv` at the cost of accuracy near the
+endpoints) is **deferred to a follow-up PR**.
 
 ## Accuracy ceiling: ulp-limited sampling near singularities
 
@@ -274,7 +270,7 @@ machine precision even when pointwise evaluation does not. This is why
 | **New tests** | `tests/test_singfun.py` parallel of `tests/test_bndfun.py` |
 | **New tests** | `tests/test_maps.py` — round-trip `formap ∘ invmap = id`, `drvmap` correctness, parameter sweeps |
 | **New user API** | `chebfun(f, [a, b], sing="left"|"right"|"both")` returns a `Singfun`-backed `Chebfun` |
-| **New user API** | `chebpy.recast(f, target=...)` for opt-in conversion to standard representation |
+| **New user API** | `chebpy.recast(f, target=...)` for opt-in conversion to standard representation **(deferred to follow-up PR)** |
 | **Modified — utilities** | Refactor `Interval` to implement a new `IntervalMap` protocol; no behaviour change for existing callers |
 | **Modified — classicfun** | Type-relax `_interval` annotation to `IntervalMap`; verify no code path assumes affine |
 | **Modified — chebfun** | Detect singular pieces in `conv`; raise the documented error |
@@ -364,9 +360,9 @@ pick up new mixed-piece cases; user-guide examples run.
   is numerically delicate. Mitigate by deferring the `1/m'` factor to
   evaluation time, never storing differentiated coefficients with the
   factor baked in.
-- **User confusion about `conv` refusal.** The error message must
-  point clearly at `recast()` and the docs page. Add an example in the
-  user guide.
+- **User confusion about `conv` refusal.** The error message names
+  `Singfun` and links to the docs page; the deferred `recast()` helper
+  is intended to provide a future opt-in path.
 
 ## Acceptance criteria
 

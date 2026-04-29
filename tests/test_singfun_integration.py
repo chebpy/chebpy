@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import chebpy
-from chebpy import chebfun, recast
+from chebpy import chebfun
 from chebpy.bndfun import Bndfun
 from chebpy.singfun import Singfun
 
@@ -203,62 +203,24 @@ class TestRestrict:
 
 
 # ---------------------------------------------------------------------------
-#  conv refusal and recast helper
+#  conv refusal
 # ---------------------------------------------------------------------------
-class TestConvAndRecast:
-    """``Chebfun.conv`` refuses Singfun pieces; ``recast`` provides the escape."""
+class TestConvRefusesSingfun:
+    """``Chebfun.conv`` cleanly refuses Singfun pieces."""
 
     def test_conv_refuses_singfun_lhs(self):
         """``conv`` on a Singfun-backed Chebfun raises :class:`NotImplementedError`."""
         f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
         g = chebfun(lambda x: 1.0 + 0 * x, [0.0, 1.0])
-        with pytest.raises(NotImplementedError, match="recast"):
+        with pytest.raises(NotImplementedError, match="Singfun"):
             f.conv(g)
 
     def test_conv_refuses_singfun_rhs(self):
         """``conv`` refuses when the right-hand operand contains a Singfun piece."""
         f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
         g = chebfun(lambda x: 1.0 + 0 * x, [0.0, 1.0])
-        with pytest.raises(NotImplementedError, match="recast"):
+        with pytest.raises(NotImplementedError, match="Singfun"):
             g.conv(f)
-
-    def test_recast_replaces_singfun_with_bndfun(self):
-        """``recast`` converts each :class:`Singfun` piece into a :class:`Bndfun`."""
-        f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            h = recast(f, target="bndfun")
-        assert all(isinstance(p, Bndfun) and not isinstance(p, Singfun) for p in h.funs)
-        x = np.linspace(0.05, 0.95, 21)
-        assert np.allclose(h(x), np.sqrt(x), atol=1e-9)
-
-    def test_recast_passthrough_for_bndfun(self):
-        """``recast`` leaves an all-Bndfun :class:`Chebfun` unchanged in type."""
-        f = chebfun(lambda x: x * x, [0.0, 1.0])
-        h = recast(f, target="bndfun")
-        assert all(isinstance(p, Bndfun) for p in h.funs)
-
-    def test_recast_empty(self):
-        """``recast`` on an empty :class:`Chebfun` returns an empty :class:`Chebfun`."""
-        h = recast(chebfun(), target="bndfun")
-        assert h.isempty
-
-    def test_recast_invalid_target_raises(self):
-        """An unrecognised ``target`` raises :class:`ValueError`."""
-        f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
-        with pytest.raises(ValueError):
-            recast(f, target="onefun")
-
-    def test_recast_then_conv(self):
-        """``recast`` followed by ``conv`` succeeds (closure path)."""
-        f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
-        g = chebfun(lambda x: 1.0 + 0 * x, [0.0, 1.0])
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            h = recast(f, target="bndfun")
-            out = h.conv(g)
-        # The convolution is on [0, 2]; just check it returns a Chebfun.
-        assert tuple(out.support) == pytest.approx((0.0, 2.0))
 
 
 # ---------------------------------------------------------------------------
@@ -270,7 +232,3 @@ class TestExports:
     def test_singfun_exported(self):
         """:class:`Singfun` is reachable via ``chebpy.Singfun``."""
         assert chebpy.Singfun is Singfun
-
-    def test_recast_exported(self):
-        """``chebpy.recast`` is the public helper."""
-        assert chebpy.recast is recast

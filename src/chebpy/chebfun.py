@@ -1011,18 +1011,14 @@ class Chebfun:
         # Singfun inputs are not supported: the Hale-Townsend Legendre algorithm
         # and the Gauss-Legendre fallback both assume an affine map between the
         # logical and reference variables, which the Adcock-Richardson clustering
-        # map breaks.  Direct the user to ``chebpy.recast(f)`` for an opt-in
-        # piecewise reconstruction that closes under conv() at the cost of more
-        # degrees of freedom near the endpoints.
+        # map breaks.
         from .singfun import Singfun
 
         if any(isinstance(fun, Singfun) for fun in self.funs) or any(isinstance(fun, Singfun) for fun in g.funs):
             raise NotImplementedError(
                 "conv() is not supported for Chebfuns containing Singfun pieces "
                 "(functions with endpoint singularities represented by a non-affine "
-                "clustering map).  Use ``chebpy.recast(f, target='bndfun')`` first to "
-                "convert to a piecewise Bndfun representation; see the user guide "
-                "section on endpoint singularities for the accuracy trade-off."
+                "clustering map)."
             )
 
         # Fast path: both single-piece with equal-width finite domains.

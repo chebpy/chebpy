@@ -291,9 +291,7 @@ class Singfun(Classicfun):
         """
         msg = (
             "Singfun.diff is not implemented yet; differentiation introduces a "
-            "stronger endpoint singularity that the current map cannot resolve. "
-            "Convert to a Bndfun via Singfun.to_bndfun() if a piecewise "
-            "approximation away from the endpoint is acceptable."
+            "stronger endpoint singularity that the current map cannot resolve."
         )
         raise NotImplementedError(msg)
 
@@ -369,21 +367,6 @@ class Singfun(Classicfun):
         new_iv = Interval(a, b)
         new_map = self._rebuild_map_for(a, b)
         return type(self)(self.onefun, new_iv, new_map)
-
-    def to_bndfun(self) -> Classicfun:
-        """Recast as a :class:`~chebpy.bndfun.Bndfun` by adaptive resampling.
-
-        Provided as an explicit, named opt-in path for callers that need the
-        function in a representation that closes under more operations
-        (e.g. for use with the standard convolution machinery).  Note that
-        the resulting :class:`~chebpy.bndfun.Bndfun` will require a much
-        larger number of degrees of freedom (or piecewise subdivision) to
-        resolve a true endpoint singularity, and may not converge to
-        machine precision at all.
-        """
-        from .bndfun import Bndfun
-
-        return Bndfun.initfun_adaptive(self, self._interval)
 
     # -----------------
     #  internal helpers

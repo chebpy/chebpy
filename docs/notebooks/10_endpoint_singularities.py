@@ -23,7 +23,7 @@ with app.setup:
     import numpy as np
     import seaborn as sns
 
-    from chebpy import chebfun, recast
+    from chebpy import chebfun
     from chebpy.bndfun import Bndfun
     from chebpy.singfun import Singfun
     from chebpy.utilities import Interval
@@ -197,7 +197,7 @@ def _():
     noise below machine epsilon — so `sum()` reaches full precision
     even where pointwise evaluation does not.
 
-    ## Convolution: refusal and recast
+    ## Convolution refuses Singfun pieces
 
     The Hale-Townsend Legendre convolution algorithm assumes an affine
     map between logical and reference variables.  The Adcock-Richardson
@@ -215,41 +215,6 @@ def _():
         conv_lhs.conv(conv_rhs)
     except NotImplementedError as err:
         print(str(err))
-    return conv_lhs, conv_rhs
-
-
-@app.cell(hide_code=True)
-def _():
-    mo.md(r"""
-    The escape hatch is `chebpy.recast(f, target="bndfun")`, which
-    rebuilds each `Singfun` piece as an ordinary `Bndfun` by adaptive
-    resampling.  Resolving the singularity in an affine-mapped expansion
-    is fundamentally hard, so the recast typically warns "did not
-    converge" and lands at a much higher coefficient count — but the
-    result closes under `conv`:
-    """)
-    return
-
-
-@app.cell
-def _(conv_lhs, conv_rhs):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        recast_lhs = recast(conv_lhs, target="bndfun")
-        conv_result = recast_lhs.conv(conv_rhs)
-    print(f"recast piece type: {type(recast_lhs.funs[0]).__name__}")
-    print(f"recast size      : {recast_lhs.funs[0].size}")
-    print(f"convolution support: {tuple(conv_result.support)}")
-    return (conv_result,)
-
-
-@app.cell
-def _(conv_result):
-    _fig, _ax = plt.subplots()
-    conv_result.plot(ax=_ax)
-    _ax.set_xlabel("x")
-    _ax.set_title(r"$(\sqrt{\cdot} \star 1)(x)$ on $[0, 2]$ (after recast)")
-    _fig
     return
 
 
