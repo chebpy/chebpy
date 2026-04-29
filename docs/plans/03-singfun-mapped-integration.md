@@ -200,6 +200,71 @@ chebpy.recast(f, target="bndfun")  # forces piecewise reconstruction
 so users can opt in to standard convolution at the cost of a higher
 piece count near the endpoints.
 
+## Accuracy ceiling: ulp-limited sampling near singularities
+
+Once Phase 3 was working we observed an apparent accuracy plateau on
+two-sided `sqrt(x*(1-x))` and on weak singularities `(1-x)**p` with
+`p < 0.5`. This is **not** a defect of the map or the Chebtech — it is
+a fundamental floor coming from float64 spacing of `x` near the
+clustered endpoint.
+
+**Mechanism.** The adaptive constructor builds a Chebtech of the
+composition `F(t) = f(m(t))`. As `t -> +/-1`, `m(t) -> b` (or `a`)
+super-exponentially. The user's `f` is evaluated at `x = m(t)`, but
+near `x = b != 0` the floating-point spacing is `ulp(b) ~ 2^-52 * |b|`.
+Every sample of `f(x)` therefore carries an absolute error bounded
+below by
+
+$$
+|f(x_{\text{exact}}) - f(x_{\text{float}})| \approx |f'(x)| \cdot \mathrm{ulp}(x).
+$$
+
+For `f(x) = (1-x)**p` clustered near `x=1` this gives
+
+$$
+\mathrm{abs\ err} \sim p \, (1-x)^{p-1} \cdot 2^{-52},
+$$
+
+which **diverges** as `1-x -> 0` whenever `p < 1`. The Chebtech faithfully
+represents the noisy samples, so `adaptive` cannot push the tail below
+this floor and either plateaus or fails to converge at all.
+
+Empirically (alpha = 1, sing = "right" or "both", grid avoiding 1e-3 of
+the boundary):
+
+| `f(x)`           | size  | max pointwise err |
+|------------------|-------|-------------------|
+| `sqrt(x)`        | 155   | 3.3e-16 *         |
+| `sqrt(1-x)`      |  76   | 5.6e-11           |
+| `sqrt(x*(1-x))`  | 249   | 3.9e-11           |
+| `(1-x)**0.3`     | 65537 | 6.8e-10 (no conv) |
+| `(1-x)**0.1`     | 65537 | 7.6e-7  (no conv) |
+| `(1-x)**0.01`    | 65537 | 1.8e-5  (no conv) |
+
+\* `sqrt(x)` clustered at `x=0` is the lucky case: subnormals give
+effectively unbounded relative resolution, so `ulp(x)/sqrt(x)` stays
+small.
+
+**Integrals are unaffected.** The bad samples sit at `t -> +/-1` where
+`m'(t) -> 0` super-exponentially. The integrand `f(m(t)) * m'(t)`
+multiplies the noisy bits by something below `eps`, so `sum()` reaches
+machine precision even when pointwise evaluation does not. This is why
+`test_sum_two_sided` legitimately uses `atol = 1e-13` while
+`test_initfun_adaptive_resolves_two_sided_singularity` uses
+`atol = 1e-10`.
+
+**Implications for the user docs (Phase 5).**
+
+1. Document the floor: pointwise accuracy is `~ |f'(x)| * ulp(x)` at
+   the clustered samples, not `eps`.
+2. Note that the recipe is well suited to integrals, moments, roots,
+   and plots, but a user wanting machine-precision pointwise values
+   near a non-zero clustered endpoint must supply `f` already pulled
+   back to `t`-space (a future `initfun_in_tspace(f_t, ...)`
+   constructor would expose this directly).
+3. Warn explicitly that `(1-x)**p` for small `p` will fail to resolve;
+   suggest factoring out the singularity analytically when possible.
+
 ## Scope
 
 | Area | Detail |
