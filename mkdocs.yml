@@ -69,6 +69,7 @@ nav:
           - Plotting: user/features/plotting.md
           - Periodic Functions: user/features/periodic.md
           - Infinite Intervals: user/features/infinite-intervals.md
+          - Endpoint Singularities: user/features/singularities.md
           - Fast Convolution: user/features/convolution.md
           - Quasimatrix Algebra: user/features/quasimatrix.md
           - Gaussian Processes: user/features/gpr.md
@@ -79,6 +80,7 @@ nav:
       - Complex Chebfuns: notebooks/3_complex.html
       - Periodic Representations: notebooks/8_periodic.html
       - Infinite Intervals: notebooks/9_infinite_intervals.html
+      - Endpoint Singularities: notebooks/10_endpoint_singularities.html
       - Fast Convolution: notebooks/5_convolution.html
       - Quasimatrix Algebra: notebooks/4_quasimatrix.html
       - Gaussian Processes: notebooks/6_gaussian_process.html
