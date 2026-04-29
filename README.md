@@ -50,6 +50,7 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 - 🔢 **Function Approximation**: Automatic Chebyshev polynomial approximation of smooth functions
 - 🌊 **Periodic Functions**: Fourier-based approximation via `trigfun` for smooth periodic functions
 - ♾️ **Infinite Intervals**: Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
+- 📍 **Endpoint Singularities**: Resolve $\sqrt{x}$, $\sqrt{x(1-x)}$ and similar branch-type endpoints to spectral accuracy via `chebfun(f, [a, b], sing="left"|"right"|"both")` (`Singfun`)
 - 📐 **Calculus Operations**: Differentiation, integration, and root-finding with machine precision
 - 📊 **Plotting**: Beautiful function visualizations with matplotlib integration
 - 🧮 **Arithmetic**: Add, subtract, multiply, and compose functions naturally
@@ -251,6 +252,33 @@ p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
 [type(piece).__name__ for piece in p.funs]
 # ['CompactFun', 'Bndfun', 'Bndfun', 'CompactFun']
 ```
+
+### Endpoint Singularities
+
+Functions with branch-type singularities at one or both endpoints — such
+as $\sqrt{x}$ on $[0, 1]$ — cannot be resolved by ordinary Chebyshev
+interpolation. Pass `sing="left"`, `"right"`, or `"both"` to switch the
+boundary pieces to `Singfun`, which uses an exponential clustering map
+to recover spectral accuracy:
+
+```python
+from chebpy import chebfun
+import numpy as np
+
+# Plain Bndfun fails to converge for sqrt; Singfun resolves it to machine
+# precision in ~150 coefficients.
+f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
+f.sum()                       # 2/3, to machine precision
+
+# Two-sided singularity on the same domain
+g = chebfun(lambda x: np.sqrt(x * (1 - x)), [0.0, 1.0], sing="both")
+g.sum()                       # pi/8, to machine precision
+```
+
+Mixed-piece arithmetic (`Singfun + Bndfun`, etc.) is preserved, and
+`restrict` automatically falls back to `Bndfun` on subintervals that
+exclude the clustered endpoint. `conv` and `diff` on `Singfun` pieces
+are not yet supported.
 
 ---
 
