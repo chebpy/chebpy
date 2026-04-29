@@ -17,7 +17,7 @@ from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
 from .trigtech import Trigtech
-from .utilities import Interval
+from .utilities import Interval, IntervalMap
 
 techdict = {
     "Chebtech": Chebtech,
@@ -141,7 +141,7 @@ class Classicfun(Fun, ABC):
             float or array-like: The value(s) of the function at the specified point(s).
                 Returns a scalar if x is a scalar, otherwise an array of the same size as x.
         """
-        y = self.interval.invmap(x)
+        y = self.map.invmap(x)
         return self.onefun(y, how)
 
     def __init__(self, onefun: Any, interval: Any) -> None:
@@ -222,6 +222,22 @@ class Classicfun(Fun, ABC):
 
         Returns:
             Interval: The interval on which this function is defined.
+        """
+        return self._interval
+
+    @property
+    def map(self) -> IntervalMap:
+        """Return the bijective map between [-1, 1] and the function's interval.
+
+        Subclasses backed by a non-affine map (e.g. endpoint-clustering
+        transforms for endpoint singularities) override this to return a
+        different :class:`~chebpy.utilities.IntervalMap` implementer while
+        keeping ``self._interval`` as the logical support endpoints.
+
+        Returns:
+            IntervalMap: The map used to relate reference points ``y ∈ [-1, 1]``
+                to logical points ``x ∈ [a, b]``. Defaults to ``self._interval``,
+                which is the affine :class:`~chebpy.utilities.Interval` map.
         """
         return self._interval
 
@@ -386,7 +402,7 @@ class Classicfun(Fun, ABC):
                 sorted in ascending order.
         """
         uroots = self.onefun.roots()
-        return self.interval(uroots)
+        return self.map.formap(uroots)
 
     # ----------
     #  calculus

@@ -8,7 +8,7 @@ It defines the core data structures for representing and manipulating intervals 
 import itertools
 from collections import OrderedDict
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
@@ -33,12 +33,55 @@ def htol() -> float:
     return 5 * prefs.eps  # type: ignore[return-value]
 
 
+@runtime_checkable
+class IntervalMap(Protocol):
+    """Structural protocol for a bijective map between [-1, 1] and [a, b].
+
+    Any object exposing the three mapping methods below can be used as the
+    ``_interval`` of a :class:`~chebpy.classicfun.Classicfun`. The canonical
+    affine implementation is :class:`Interval`; non-affine implementations
+    (e.g. endpoint-clustering exponential transforms for representing
+    functions with branch-type endpoint singularities) are introduced by
+    follow-up plans without disturbing this contract.
+
+    Required methods:
+        formap(y): Map ``y`` from the reference interval [-1, 1] to ``x`` in [a, b].
+        invmap(x): Map ``x`` from [a, b] back to ``y`` in [-1, 1].
+        drvmap(y): Derivative dx/dy of ``formap`` evaluated at ``y``.
+
+    Notes:
+        - ``formap`` and ``invmap`` must be mutual inverses on their domains.
+        - ``drvmap(y)`` must be strictly positive on (-1, 1) so the map is
+          orientation-preserving. It may vanish at ``y = ±1`` for non-affine
+          maps with endpoint clustering.
+        - The protocol is purely structural; no runtime registration is
+          required. ``isinstance(obj, IntervalMap)`` is supported via
+          ``runtime_checkable`` for opt-in duck-type assertions only.
+    """
+
+    def formap(self, y: float | np.ndarray) -> Any:
+        """Map ``y`` from the reference interval [-1, 1] to ``x`` in [a, b]."""
+        ...
+
+    def invmap(self, x: float | np.ndarray) -> Any:
+        """Map ``x`` from [a, b] back to ``y`` in [-1, 1]."""
+        ...
+
+    def drvmap(self, y: float | np.ndarray) -> Any:
+        """Return the derivative ``dx/dy`` of :meth:`formap` at ``y``."""
+        ...
+
+
 class Interval(np.ndarray):
     """Utility class to implement Interval logic.
 
     The purpose of this class is to both enforce certain properties of domain
     components such as having exactly two monotonically increasing elements and
     also to implement the functionality of mapping to and from the unit interval.
+
+    ``Interval`` is the canonical affine implementer of the
+    :class:`IntervalMap` protocol: ``formap`` is a linear bijection between
+    [-1, 1] and [a, b] and ``drvmap`` is the constant ``(b - a) / 2``.
 
     Attributes:
         formap: Maps y in [-1,1] to x in [a,b]
