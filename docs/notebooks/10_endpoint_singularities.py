@@ -25,6 +25,7 @@ with app.setup:
 
     from chebpy import chebfun
     from chebpy.bndfun import Bndfun
+    from chebpy.maps import MapParams
     from chebpy.singfun import Singfun
     from chebpy.utilities import Interval
 
@@ -41,13 +42,62 @@ def _():
 
     This notebook tours ChebPy's `Singfun` machinery for functions with
     branch-type singularities at one or both endpoints of a bounded interval.
-    The underlying technology is the Adcock-Richardson exponential
-    variable transform (arXiv:1305.2643), which clusters Chebyshev nodes
-    super-exponentially near the singular endpoint so that the
-    transformed function is analytic and resolves to spectral accuracy.
+    The underlying technology is the Adcock-Richardson slit-strip
+    variable transform (Adcock & Richardson, *SIAM J. Numer. Anal.*
+    52(4), 1887–1912, 2014; arXiv:1305.2643), which clusters
+    Chebyshev nodes super-exponentially near the singular endpoint(s)
+    so that the transformed function is analytic and resolves to
+    spectral accuracy.
 
     Square-root and other algebraic singularities — $\sqrt{x}$,
     $(1-x)^{1/2}$, $\sqrt{x(1-x)}$ — are the canonical use cases.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    ## The map families
+
+    Both clustering maps act through a smooth bijection
+    $m : [-1, 1] \to [a, b]$ whose derivative vanishes
+    super-exponentially at the clustered endpoint(s). The `Onefun`
+    payload then sees the analytic function $f \circ m$ and resolves
+    it to spectral accuracy. Both maps are parameterised by
+    `MapParams(L, alpha)`: $\alpha > 0$ is the strip half-width and
+    $L > 0$ truncates the (otherwise semi-/bi-infinite) underlying
+    paper map.
+
+    ### One-sided (`sing="left"`, `sing="right"`)
+
+    With $s = L(t - 1)/2$ and the shift
+    $\gamma = (\alpha/\pi)\log(e^{\pi/\alpha} - 1)$ chosen so that the
+    smooth endpoint is hit exactly,
+
+    $$
+    u_\alpha(s) = \frac{\alpha}{\pi} \log(1 + e^{\pi(s + \gamma)/\alpha}), \qquad
+    m(t) = a + (b - a)\, u_\alpha(L(t - 1)/2).
+    $$
+
+    For `sing="right"` the analogous reflection
+    $m(t) = b - (b - a)\, u_\alpha(L(-t - 1)/2)$ is used.
+
+    ### Two-sided (`sing="both"`)
+
+    With $s = L\,t$,
+
+    $$
+    v_\alpha(s) = \frac{\alpha}{\pi} \left[ \log(1 + e^{\pi(s + 1/2)/\alpha}) - \log(1 + e^{\pi(s - 1/2)/\alpha}) \right], \qquad
+    m(t) = a + (b - a)\, v_\alpha(L\,t),
+    $$
+
+    so $v_\alpha(0) = 1/2$ and $v_\alpha(\pm\infty) = (1\pm 1)/2$,
+    clustering at both endpoints simultaneously.
+
+    With finite $L$ the image of $m$ falls short of the clustered
+    endpoint(s) by a small `gap`; with the default $L = 8$ this is
+    below $10^{-10}$.
     """)
     return
 
@@ -134,7 +184,7 @@ def _():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         bndfun_sqrt = Bndfun.initfun_adaptive(np.sqrt, Interval(0.0, 1.0))
-    singfun_sqrt = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+    singfun_sqrt = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
 
     _grid = np.linspace(0.001, 0.999, 401)
     _err_bnd = float(np.max(np.abs(bndfun_sqrt(_grid) - np.sqrt(_grid))))
@@ -157,6 +207,102 @@ def _(bndfun_sqrt, singfun_sqrt):
     _fig.suptitle(r"Chebyshev coefficient decay for $\sqrt{x}$ on $[0,1]$")
     _fig.tight_layout()
     _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    ## Tuning the map: `MapParams(L, alpha)`
+
+    The two parameters trade off three things — coefficient count,
+    pointwise accuracy near the clustered endpoint, and the size of
+    the unresolved `gap`. Defaults `L = 8.0`, `alpha = 1.0` are a
+    safe choice for the canonical algebraic singularities $x^p$ with
+    $p \in [1/4, 1]$ on a bounded interval; the cells below show
+    when and how to depart from them.
+
+    **`alpha` (strip half-width).** Smaller $\alpha$ clusters nodes
+    more aggressively near the singular endpoint, which helps for
+    *stronger* singularities (e.g. $(1-x)^{0.1}$) at the cost of more
+    Chebyshev coefficients. Larger $\alpha$ relaxes the clustering —
+    fewer coefficients, but weak/log singularities may stop
+    converging.
+
+    - $\alpha \approx 0.5$ — strong singularities,
+      $f \sim (x-a)^p$ with $p \lesssim 0.25$, or weak logarithms.
+    - $\alpha = 1.0$ (default) — square roots and most algebraic
+      cases; matches the paper's empirical optimum.
+    - $\alpha \approx 2.0$ — gentle singularities, e.g.
+      $(x-a)^{0.8}$, or smooth functions where you only want a hint
+      of clustering.
+
+    **`L` (truncation length).** $L$ controls how far into the
+    paper's semi-/bi-infinite strip we sample, and equivalently the
+    `gap` left at the clustered endpoint. With the default $L = 8$
+    the gap is below $10^{-10}$ — invisible at working precision.
+    Smaller $L$ widens the gap visibly; larger $L$ shrinks it
+    super-exponentially but also moves samples closer to the
+    endpoint where float64 ulp's bound pointwise accuracy.
+
+    - $L = 1$–$2$ — the paper's empirical optimum for fastest
+      coefficient decay; gap is $\sim 10^{-2}$–$10^{-1}$, fine
+      when only the integral or interior values matter.
+    - $L = 8$ (default) — gap below $10^{-10}$, indistinguishable
+      from a closed map at working precision.
+    - $L = 16$–$20$ — vanishing gap; useful when evaluating *at*
+      the clustered endpoint matters (e.g. boundary conditions),
+      assuming the float64 ulp ceiling at the clustered $x$ is not
+      your real limit.
+
+    **Rules of thumb.**
+
+    - If the adaptive constructor fails to converge, *decrease*
+      $\alpha$ first, then increase $L$.
+    - If you want fewer coefficients and only need integrals,
+      *decrease* $L$ (toward $1$–$2$); coefficient decay improves
+      noticeably.
+    - If pointwise accuracy at the clustered endpoint matters,
+      *increase* $L$ but check that ulp$(x_a)$ is not the dominant
+      error.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    The cell below sweeps `alpha` and `L` independently for
+    $f(x) = \sqrt{x}$ on $[0, 1]$, reporting the adaptive
+    coefficient count, the resulting `gap`, and the max pointwise
+    error on a uniform interior grid.
+    """)
+    return
+
+
+@app.cell
+def _():
+    print(f"{'alpha':>6}  {'L':>5}  {'size':>6}  {'gap':>10}  {'max-err':>10}")
+    print("-" * 46)
+    _grid = np.linspace(0.001, 0.999, 401)
+    for _alpha in (0.5, 1.0, 2.0):
+        for _L in (1.0, 4.0, 8.0, 16.0):
+            _s = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(L=_L, alpha=_alpha))
+            _err = float(np.max(np.abs(_s(_grid) - np.sqrt(_grid))))
+            print(f"{_alpha:>6.2f}  {_L:>5.1f}  {_s.size:>6d}  {_s.map.gap:>10.2e}  {_err:>10.2e}")
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""
+    Reading the table: holding $\alpha$ fixed, decreasing $L$
+    typically *reduces* coefficient count (faster decay, the paper's
+    main result) at the price of a visible `gap`. Holding $L$ fixed,
+    decreasing $\alpha$ pulls samples closer to the singularity —
+    sometimes the only way to get a stubborn weak-power case to
+    converge.
+    """)
     return
 
 
@@ -186,7 +332,7 @@ def _():
         ("sqrt(x(1-x))", lambda x: np.sqrt(x * (1.0 - x)), "both", 1.0),
     ]
     for _label, _fn, _side, _alpha in accuracy_cases:
-        _s = Singfun.initfun_adaptive(_fn, [0.0, 1.0], sing=_side, alpha=_alpha)
+        _s = Singfun.initfun_adaptive(_fn, [0.0, 1.0], sing=_side, params=MapParams(alpha=_alpha))
         _xx = np.linspace(0.001, 0.999, 401)
         _err = float(np.max(np.abs(_s(_xx) - _fn(_xx))))
         print(f"{_label:14s} sing={_side:5s} size={_s.size:4d}  max-err={_err:.2e}")
@@ -204,7 +350,7 @@ def _():
     ## Convolution refuses Singfun pieces
 
     The Hale-Townsend Legendre convolution algorithm assumes an affine
-    map between logical and reference variables.  The Adcock-Richardson
+    map between logical and reference variables.  The slit-strip
     clustering map breaks this assumption, so `Chebfun.conv` refuses
     `Singfun` operands:
     """)
@@ -263,7 +409,7 @@ def _():
 
 @app.cell
 def _():
-    restrict_source = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+    restrict_source = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
     restrict_left = restrict_source.restrict([0.0, 0.5])
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -279,8 +425,10 @@ def _():
     ## References
 
     - B. Adcock and M. Richardson,
-      [*New exponential variable transform methods for functions with endpoint
-      singularities*](https://arxiv.org/abs/1305.2643), 2013.
+      *New exponential variable transform methods for functions with
+      endpoint singularities*,
+      [SIAM J. Numer. Anal. 52(4), 1887–1912 (2014)](https://doi.org/10.1137/130920460);
+      [arXiv:1305.2643](https://arxiv.org/abs/1305.2643).
     - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
       [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
       Pafnuty Publications, 2014, ch. 9.

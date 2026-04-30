@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from chebpy.maps import DoubleSlitMap, SingleSlitMap
+from chebpy.maps import DoubleSlitMap, MapParams, SingleSlitMap
 from chebpy.singfun import Singfun
 
 
@@ -32,7 +32,7 @@ class TestConstruction:
 
     def test_initfun_adaptive_resolves_sqrt(self):
         """``sqrt(x)`` on ``[0, 1]`` is resolved to machine precision under ``sing='left'``."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         x = np.linspace(0.001, 0.999, 41)
         assert np.allclose(f(x), np.sqrt(x), atol=1e-14)
 
@@ -42,7 +42,7 @@ class TestConstruction:
         Note: pointwise accuracy is bounded by ``ulp(x) / sqrt(1-x)`` at the
         clustered samples near ``x=1``, giving a floor around ``1e-10``.
         """
-        g = Singfun.initfun_adaptive(lambda x: np.sqrt(1.0 - x), [0.0, 1.0], sing="right", alpha=1.0)
+        g = Singfun.initfun_adaptive(lambda x: np.sqrt(1.0 - x), [0.0, 1.0], sing="right", params=MapParams(alpha=1.0))
         x = np.linspace(0.001, 0.999, 41)
         assert np.allclose(g(x), np.sqrt(1.0 - x), atol=1e-10)
 
@@ -56,7 +56,7 @@ class TestConstruction:
             lambda x: np.sqrt(x * (1.0 - x)),
             [0.0, 1.0],
             sing="both",
-            alpha=1.0,
+            params=MapParams(alpha=1.0),
         )
         x = np.linspace(0.01, 0.99, 41)
         assert np.allclose(f(x), np.sqrt(x * (1.0 - x)), atol=1e-10)
@@ -81,22 +81,28 @@ class TestMapProperty:
 
     def test_map_is_single_slit(self):
         """``sing='left'`` produces a :class:`SingleSlitMap` with matching parameters."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.5)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.5))
         assert isinstance(f.map, SingleSlitMap)
         assert f.map.alpha == 1.5
         assert f.map.side == "left"
 
     def test_map_is_double_slit(self):
         """``sing='both'`` produces a :class:`DoubleSlitMap`."""
-        f = Singfun.initconst(0.0, [0.0, 1.0], sing="both", alpha=2.0)
+        f = Singfun.initconst(0.0, [0.0, 1.0], sing="both", params=MapParams(alpha=2.0))
         assert isinstance(f.map, DoubleSlitMap)
         assert f.map.alpha == 2.0
 
     def test_evaluation_at_endpoints(self):
-        """``__call__`` at the support endpoints returns the limiting values."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
-        # sqrt(0) = 0 (clustered endpoint -> Onefun(t=-1) ~= 0)
-        assert abs(float(f(0.0))) < 1e-14
+        """``__call__`` at the support endpoints returns the limiting values.
+
+        With the paper-faithful map the clustered endpoint is approached up to
+        a small ``gap``; evaluation at exactly ``x = a`` returns
+        ``f(a + gap)`` (here ``sqrt(gap)``), which scales with the gap.
+        """
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
+        # Clustered endpoint: returns sqrt(gap), bounded by sqrt(gap) + slack.
+        gap = f.map.gap
+        assert abs(float(f(0.0))) <= np.sqrt(gap) + 1e-12
         # sqrt(1) = 1 (smooth endpoint)
         assert abs(float(f(1.0)) - 1.0) < 1e-14
 
@@ -116,7 +122,7 @@ class TestCalculus:
 
     def test_sum_sqrt(self):
         r"""``\int_0^1 \sqrt{x}\,dx = 2/3``."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         assert float(f.sum()) == pytest.approx(2.0 / 3.0, abs=1e-14)
 
     def test_sum_two_sided(self):
@@ -130,14 +136,19 @@ class TestCalculus:
             lambda x: np.sqrt(x * (1.0 - x)),
             [0.0, 1.0],
             sing="both",
-            alpha=1.0,
+            params=MapParams(alpha=1.0),
         )
         assert float(f.sum()) == pytest.approx(np.pi / 8.0, abs=1e-13)
 
     def test_sum_constant(self):
-        """The integral of a constant over ``[a, b]`` is ``c * (b - a)``."""
+        """The integral of a constant over ``[a, b]`` is ``c * (b - a)``.
+
+        The paper-faithful map's image leaves a small ``gap`` near the
+        clustered endpoint, so the computed integral is ``c * (b - a - gap)``.
+        """
         f = Singfun.initconst(3.0, [1.0, 4.0], sing="left")
-        assert float(f.sum()) == pytest.approx(9.0, abs=1e-12)
+        gap = f.map.gap
+        assert float(f.sum()) == pytest.approx(3.0 * (3.0 - gap), abs=1e-12)
 
     def test_sum_empty_returns_zero(self):
         """The integral of an empty :class:`Singfun` is ``0``."""
@@ -146,19 +157,19 @@ class TestCalculus:
 
     def test_cumsum_endpoint_value(self):
         r"""``cumsum(sqrt)(1) = \int_0^1 \sqrt{x}\,dx = 2/3``."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         F = f.cumsum()
         assert float(F(1.0)) == pytest.approx(2.0 / 3.0, abs=1e-14)
 
     def test_cumsum_left_endpoint_is_zero(self):
         """``cumsum(f)(a) = 0`` (constant of integration chosen so ``F(a) = 0``)."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         F = f.cumsum()
         assert abs(float(F(0.0))) < 1e-14
 
     def test_cumsum_interior_values(self):
         r"""``cumsum(\sqrt{\cdot})(x) = (2/3) x^{3/2}`` on the interior."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         F = f.cumsum()
         x = np.linspace(0.05, 0.95, 19)
         expected = (2.0 / 3.0) * x**1.5
@@ -179,8 +190,8 @@ class TestArithmetic:
 
     def test_add_same_map(self):
         """Adding two :class:`Singfun` instances with the same map gives a :class:`Singfun`."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
-        g = Singfun.initfun_adaptive(lambda x: 2.0 * np.sqrt(x), [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
+        g = Singfun.initfun_adaptive(lambda x: 2.0 * np.sqrt(x), [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         h = f + g
         assert isinstance(h, Singfun)
         x = np.linspace(0.01, 0.99, 21)
@@ -188,7 +199,7 @@ class TestArithmetic:
 
     def test_scalar_multiply(self):
         """Scalar multiplication preserves the :class:`Singfun` representation."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         h = 2.0 * f
         assert isinstance(h, Singfun)
         x = np.linspace(0.01, 0.99, 21)
@@ -196,7 +207,7 @@ class TestArithmetic:
 
     def test_negate(self):
         """Unary negation preserves the :class:`Singfun` representation."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         h = -f
         assert isinstance(h, Singfun)
         x = np.linspace(0.01, 0.99, 21)
@@ -211,7 +222,7 @@ class TestUtilities:
 
     def test_translate(self):
         """Translation shifts the support and rebuilds the map for the new endpoints."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         g = f.translate(2.0)
         assert g.support[0] == pytest.approx(2.0)
         assert g.support[1] == pytest.approx(3.0)

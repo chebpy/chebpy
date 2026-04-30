@@ -30,19 +30,19 @@ from __future__ import annotations
 from typing import Any
 
 from .classicfun import Classicfun, techdict
-from .maps import DoubleSlitMap, SingleSlitMap
+from .maps import DoubleSlitMap, MapParams, SingleSlitMap
 from .settings import _preferences as prefs
 from .utilities import Interval, IntervalMap
 
 
-def _build_map(a: float, b: float, sing: str, alpha: float) -> IntervalMap:
+def _build_map(a: float, b: float, sing: str, params: MapParams) -> IntervalMap:
     """Construct the appropriate non-affine map for the requested singularity pattern.
 
     Args:
         a: Left endpoint of the logical interval.
         b: Right endpoint of the logical interval.
         sing: One of ``"left"``, ``"right"``, or ``"both"``.
-        alpha: Positive clustering strength.
+        params: A :class:`MapParams` instance carrying ``(L, alpha)``.
 
     Returns:
         IntervalMap: A :class:`SingleSlitMap` (for ``"left"`` / ``"right"``)
@@ -52,9 +52,9 @@ def _build_map(a: float, b: float, sing: str, alpha: float) -> IntervalMap:
         ValueError: If ``sing`` is not one of the recognised values.
     """
     if sing in ("left", "right"):
-        return SingleSlitMap(a, b, alpha=alpha, side=sing)
+        return SingleSlitMap(a, b, params, side=sing)
     if sing == "both":
-        return DoubleSlitMap(a, b, alpha=alpha)
+        return DoubleSlitMap(a, b, params)
     msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
     raise ValueError(msg)
 
@@ -125,9 +125,9 @@ class Singfun(Classicfun):
         """Adaptively rebuild a :class:`Singfun` evaluating callable ``f`` on this map."""
         m = self._map
         if isinstance(m, SingleSlitMap):
-            return type(self).initfun_adaptive(f, self._interval, sing=m.side, alpha=m.alpha)
+            return type(self).initfun_adaptive(f, self._interval, sing=m.side, params=m.params)
         if isinstance(m, DoubleSlitMap):
-            return type(self).initfun_adaptive(f, self._interval, sing="both", alpha=m.alpha)
+            return type(self).initfun_adaptive(f, self._interval, sing="both", params=m.params)
         msg = "Singfun._rebuild_from_callable: unknown map type"
         raise NotImplementedError(msg)  # pragma: no cover
 
@@ -135,9 +135,9 @@ class Singfun(Classicfun):
     def _maps_equal(m1: IntervalMap, m2: IntervalMap) -> bool:
         """Structural equality check for the maps used by :class:`Singfun`."""
         if isinstance(m1, SingleSlitMap) and isinstance(m2, SingleSlitMap):
-            return m1.side == m2.side and m1.alpha == m2.alpha and m1.support == m2.support
+            return m1.side == m2.side and m1.params == m2.params and m1.support == m2.support
         if isinstance(m1, DoubleSlitMap) and isinstance(m2, DoubleSlitMap):
-            return m1.alpha == m2.alpha and m1.support == m2.support
+            return m1.params == m2.params and m1.support == m2.support
         return False
 
     # ------------
@@ -155,12 +155,19 @@ class Singfun(Classicfun):
     def initempty(cls) -> Singfun:
         """Initialise an empty :class:`Singfun` with a default left-clustered map."""
         iv = Interval(-1.0, 1.0)
-        m = SingleSlitMap(-1.0, 1.0, alpha=1.0, side="left")
+        m = SingleSlitMap(-1.0, 1.0, side="left")
         onefun = techdict[prefs.tech].initempty(interval=iv)
         return cls(onefun, iv, m)
 
     @classmethod
-    def initconst(cls, c: Any, interval: Any, *, sing: str = "left", alpha: float = 1.0) -> Singfun:
+    def initconst(
+        cls,
+        c: Any,
+        interval: Any,
+        *,
+        sing: str = "left",
+        params: MapParams | None = None,
+    ) -> Singfun:
         """Initialise a constant :class:`Singfun`.
 
         Args:
@@ -168,17 +175,23 @@ class Singfun(Classicfun):
             interval: The bounded logical interval.
             sing: Which endpoint(s) to cluster (``"left"`` / ``"right"`` / ``"both"``).
                 Default ``"left"``.
-            alpha: Positive clustering strength for the underlying map.
-                Default ``1.0``.
+            params: Slit-strip map parameters; if ``None``, :class:`MapParams`
+                defaults are used.
         """
         a, b = float(interval[0]), float(interval[1])
         iv = Interval(a, b)
-        m = _build_map(a, b, sing, alpha)
+        m = _build_map(a, b, sing, params if params is not None else MapParams())
         onefun = techdict[prefs.tech].initconst(c, interval=iv)
         return cls(onefun, iv, m)
 
     @classmethod
-    def initidentity(cls, interval: Any, *, sing: str = "left", alpha: float = 1.0) -> Singfun:
+    def initidentity(
+        cls,
+        interval: Any,
+        *,
+        sing: str = "left",
+        params: MapParams | None = None,
+    ) -> Singfun:
         """Initialise the identity ``f(x) = x`` as a :class:`Singfun`.
 
         Note that ``f(x) = x`` is itself analytic on ``[a, b]`` and does not
@@ -187,7 +200,7 @@ class Singfun(Classicfun):
         """
         a, b = float(interval[0]), float(interval[1])
         iv = Interval(a, b)
-        m = _build_map(a, b, sing, alpha)
+        m = _build_map(a, b, sing, params if params is not None else MapParams())
         # Sample x = m(t) at the t-Chebyshev nodes so the Onefun encodes f(m(t)) = m(t).
         onefun = techdict[prefs.tech].initfun(lambda t: m.formap(t), interval=iv)
         return cls(onefun, iv, m)
@@ -199,7 +212,7 @@ class Singfun(Classicfun):
         interval: Any,
         *,
         sing: str = "left",
-        alpha: float = 1.0,
+        params: MapParams | None = None,
     ) -> Singfun:
         """Adaptive constructor for a :class:`Singfun`.
 
@@ -213,14 +226,15 @@ class Singfun(Classicfun):
             interval: The bounded logical interval ``(a, b)``.
             sing: Which endpoint(s) of the interval carry a branch-type
                 singularity.  One of ``"left"``, ``"right"``, ``"both"``.
-            alpha: Positive clustering strength.
+            params: Slit-strip map parameters; if ``None``, :class:`MapParams`
+                defaults are used.
 
         Returns:
             Singfun: The newly constructed :class:`Singfun`.
         """
         a, b = float(interval[0]), float(interval[1])
         iv = Interval(a, b)
-        m = _build_map(a, b, sing, alpha)
+        m = _build_map(a, b, sing, params if params is not None else MapParams())
         onefun = techdict[prefs.tech].initfun(lambda t: f(m.formap(t)), interval=iv)
         return cls(onefun, iv, m)
 
@@ -232,12 +246,12 @@ class Singfun(Classicfun):
         n: int,
         *,
         sing: str = "left",
-        alpha: float = 1.0,
+        params: MapParams | None = None,
     ) -> Singfun:
         """Fixed-length constructor for a :class:`Singfun` (``n`` Chebyshev coefficients)."""
         a, b = float(interval[0]), float(interval[1])
         iv = Interval(a, b)
-        m = _build_map(a, b, sing, alpha)
+        m = _build_map(a, b, sing, params if params is not None else MapParams())
         onefun = techdict[prefs.tech].initfun(lambda t: f(m.formap(t)), n, interval=iv)
         return cls(onefun, iv, m)
 
@@ -339,7 +353,7 @@ class Singfun(Classicfun):
 
         if isinstance(m, SingleSlitMap):
             if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
-                return type(self).initfun_adaptive(self, new_iv, sing=m.side, alpha=m.alpha)
+                return type(self).initfun_adaptive(self, new_iv, sing=m.side, params=m.params)
             # Interior or opposite-end restriction: drop to Bndfun.
             return Bndfun.initfun_adaptive(self, new_iv)
 
@@ -349,9 +363,9 @@ class Singfun(Classicfun):
                 # therefore unreachable in normal usage.
                 return self  # pragma: no cover
             if touches_left:
-                return type(self).initfun_adaptive(self, new_iv, sing="left", alpha=m.alpha)
+                return type(self).initfun_adaptive(self, new_iv, sing="left", params=m.params)
             if touches_right:
-                return type(self).initfun_adaptive(self, new_iv, sing="right", alpha=m.alpha)
+                return type(self).initfun_adaptive(self, new_iv, sing="right", params=m.params)
             return Bndfun.initfun_adaptive(self, new_iv)
 
         # Unknown map type — conservative fallback.
@@ -375,9 +389,9 @@ class Singfun(Classicfun):
         """Return a copy of ``self._map`` rescaled to a new logical interval."""
         m = self._map
         if isinstance(m, SingleSlitMap):
-            return SingleSlitMap(a, b, alpha=m.alpha, side=m.side)
+            return SingleSlitMap(a, b, m.params, side=m.side)
         if isinstance(m, DoubleSlitMap):
-            return DoubleSlitMap(a, b, alpha=m.alpha)
+            return DoubleSlitMap(a, b, m.params)
         # Unknown map type — fall back to leaving the map unchanged; callers
         # of translate that need a non-trivial rebuild should override.
         return m  # pragma: no cover

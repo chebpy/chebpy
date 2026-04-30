@@ -10,6 +10,7 @@ import pytest
 import chebpy
 from chebpy import chebfun
 from chebpy.bndfun import Bndfun
+from chebpy.maps import MapParams
 from chebpy.singfun import Singfun
 
 
@@ -80,7 +81,7 @@ class TestMixedArithmetic:
     @pytest.fixture
     def s(self):
         """Square-root :class:`Singfun` on ``[0, 1]``."""
-        return Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        return Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
 
     @pytest.fixture
     def b(self):
@@ -119,7 +120,7 @@ class TestMixedArithmetic:
 
     def test_singfun_plus_singfun_same_map_fast_path(self, s):
         """Two :class:`Singfun` instances with identical maps share their t-grid."""
-        s2 = Singfun.initfun_adaptive(lambda x: 1.0 / (1.0 + x), [0.0, 1.0], sing="left", alpha=1.0)
+        s2 = Singfun.initfun_adaptive(lambda x: 1.0 / (1.0 + x), [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         assert s._can_share_onefun_with(s2)
         r = s + s2
         assert isinstance(r, Singfun)
@@ -128,7 +129,7 @@ class TestMixedArithmetic:
 
     def test_singfun_plus_singfun_different_alpha_rebuilds(self, s):
         """Two :class:`Singfun` instances with different alpha rebuild adaptively."""
-        s3 = Singfun.initfun_adaptive(lambda x: 1.0 / (1.0 + x), [0.0, 1.0], sing="left", alpha=2.0)
+        s3 = Singfun.initfun_adaptive(lambda x: 1.0 / (1.0 + x), [0.0, 1.0], sing="left", params=MapParams(alpha=2.0))
         assert not s._can_share_onefun_with(s3)
         r = s + s3
         assert isinstance(r, Singfun)
@@ -144,13 +145,13 @@ class TestRestrict:
 
     def test_trivial_restrict_returns_self(self):
         """Restricting to the full interval returns ``self``."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         r = f.restrict([0.0, 1.0])
         assert r is f
 
     def test_restrict_to_clustered_endpoint(self):
         """A subinterval sharing the clustered endpoint stays :class:`Singfun`."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         r = f.restrict([0.0, 0.5])
         assert isinstance(r, Singfun)
         assert tuple(r.support) == (0.0, 0.5)
@@ -159,7 +160,7 @@ class TestRestrict:
 
     def test_restrict_to_interior_returns_bndfun(self):
         """A purely interior subinterval drops to a :class:`Bndfun`."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             r = f.restrict([0.2, 0.8])
@@ -170,7 +171,7 @@ class TestRestrict:
 
     def test_restrict_to_opposite_endpoint_returns_bndfun(self):
         """Restricting a left-singular fun to a right-side range drops to :class:`Bndfun`."""
-        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", alpha=1.0)
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             r = f.restrict([0.5, 1.0])
@@ -183,7 +184,7 @@ class TestRestrict:
             lambda x: np.sqrt(x * (1.0 - x)),
             [0.0, 1.0],
             sing="both",
-            alpha=1.0,
+            params=MapParams(alpha=1.0),
         )
         r = f.restrict([0.0, 0.5])
         assert isinstance(r, Singfun)
@@ -195,7 +196,7 @@ class TestRestrict:
             lambda x: np.sqrt(x * (1.0 - x)),
             [0.0, 1.0],
             sing="both",
-            alpha=1.0,
+            params=MapParams(alpha=1.0),
         )
         r = f.restrict([0.5, 1.0])
         assert isinstance(r, Singfun)

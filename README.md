@@ -259,7 +259,23 @@ Functions with branch-type singularities at one or both endpoints — such
 as $\sqrt{x}$ on $[0, 1]$ — cannot be resolved by ordinary Chebyshev
 interpolation. Pass `sing="left"`, `"right"`, or `"both"` to switch the
 boundary pieces to `Singfun`, which uses an exponential clustering map
-to recover spectral accuracy:
+to recover spectral accuracy.
+
+The map $m: [-1, 1] \to [a, b]$ is the Adcock–Richardson slit-strip
+construction (Adcock & Richardson, *SIAM J. Numer. Anal.* 52(4),
+1887–1912, 2014; [doi:10.1137/130920460](https://doi.org/10.1137/130920460);
+[arXiv:1305.2643](https://arxiv.org/abs/1305.2643)). For `sing="left"`,
+with $s = L(t-1)/2$,
+
+$$
+m(t) = a + (b-a)\,\frac{\alpha}{\pi}\,\log(1 + e^{\pi(s + \gamma)/\alpha}),
+$$
+
+where $\gamma = (\alpha/\pi)\,\log(e^{\pi/\alpha} - 1)$ is chosen so the
+smooth endpoint $b$ is hit exactly, and $m'(\pm 1) \to 0$
+super-exponentially at the clustered endpoint. A `MapParams(L, alpha)`
+object tunes truncation and clustering; defaults work for the canonical
+$\sqrt{\cdot}$ cases:
 
 ```python
 from chebpy import chebfun

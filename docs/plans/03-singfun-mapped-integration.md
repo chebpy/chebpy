@@ -1,7 +1,19 @@
 # Plan: Singfun-via-Mapped-Representation — Endpoint Singularities on `[a, b]`
 
+> **Status (April 2026):** Phases 1–5 v1 are complete. The implemented
+> maps follow the paper faithfully:
+> [`SingleSlitMap`][chebpy.maps.SingleSlitMap] is the semi-infinite
+> slit-strip map $\varphi_S$ and
+> [`DoubleSlitMap`][chebpy.maps.DoubleSlitMap] is the infinite two-slit
+> strip map $\psi_S$. Both are parameterised by a single
+> [`MapParams(L, alpha)`][chebpy.maps.MapParams] dataclass; with the
+> default `L = 8.0` the truncation gap at the clustered endpoint is
+> below `1e-10`. The placeholder map names `SlitMap` / `DslitMap` and
+> the `alpha`/`beta` parameter pair used below are superseded by these.
+>
 > Reference: Adcock & Richardson, *New exponential variable transform methods
-> for functions with endpoint singularities*, arXiv:1305.2643. We adopt the
+> for functions with endpoint singularities*, SIAM J. Numer. Anal. 52(4),
+> 1887–1912, 2014, doi:10.1137/130920460; arXiv:1305.2643. We adopt the
 > exponential / double-exponential transforms `m: [-1, 1] → [a, b]` that
 > cluster grid points towards the endpoints, so that a function with
 > branch-point endpoint behaviour (e.g. `√x` on `[0, 1]`, `log(1−x)` on

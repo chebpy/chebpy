@@ -22,7 +22,7 @@ def chebfun(
     n: int | None = None,
     *,
     sing: str | None = None,
-    alpha: float = 1.0,
+    params: Any = None,
 ) -> "Chebfun":
     """Create a Chebfun object representing a function.
 
@@ -45,7 +45,9 @@ def chebfun(
             as :class:`~chebpy.singfun.Singfun` instances using the
             Adcock-Richardson exponential clustering map; interior pieces remain
             :class:`~chebpy.bndfun.Bndfun`.  Only supported with ``n=None``.
-        alpha: Positive clustering strength for the singular pieces.  Default ``1.0``.
+        params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`
+            carrying ``L`` and ``alpha``).  Default ``None`` uses
+            :class:`~chebpy.maps.MapParams` defaults.
 
     Returns:
         Chebfun: A Chebfun object representing the function.
@@ -78,7 +80,7 @@ def chebfun(
 
     # Callable fct in chebfun(lambda x: f(x), ... )
     if callable(f):
-        return Chebfun.initfun(f, domain, n, sing=sing, alpha=alpha)
+        return Chebfun.initfun(f, domain, n, sing=sing, params=params)
 
     # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():

@@ -35,7 +35,7 @@ def _generate_singular_funs(
     domain: Any,
     *,
     sing: str,
-    alpha: float,
+    params: Any,
 ) -> list[Any]:
     """Build per-piece funs for a Chebfun with endpoint singularities.
 
@@ -47,7 +47,9 @@ def _generate_singular_funs(
         f: Callable evaluating the function in logical coordinates.
         domain: Breakpoint sequence; outermost endpoints must be finite.
         sing: One of ``"left"``, ``"right"``, ``"both"``.
-        alpha: Positive clustering strength for singular pieces.
+        params: A :class:`~chebpy.maps.MapParams` instance carrying
+            ``(L, alpha)`` for the slit-strip clustering map. ``None`` means
+            use :class:`~chebpy.maps.MapParams` defaults.
 
     Returns:
         list: Per-piece funs ready to feed to :class:`Chebfun`.
@@ -57,11 +59,14 @@ def _generate_singular_funs(
     """
     # Local import: chebfun and singfun are siblings under classicfun and
     # would otherwise risk a cyclic top-level import.
+    from .maps import MapParams
     from .singfun import Singfun
 
     if sing not in ("left", "right", "both"):
         msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
         raise ValueError(msg)
+    if params is None:
+        params = MapParams()
     dom = Domain(domain if domain is not None else prefs.domain)
     intervals = list(dom.intervals)
     n_pieces = len(intervals)
@@ -84,7 +89,7 @@ def _generate_singular_funs(
         if piece_sing is None:
             funs.append(Bndfun.initfun_adaptive(f, interval))
         else:
-            funs.append(Singfun.initfun_adaptive(f, interval, sing=piece_sing, alpha=alpha))
+            funs.append(Singfun.initfun_adaptive(f, interval, sing=piece_sing, params=params))
     return funs
 
 
@@ -189,7 +194,7 @@ class Chebfun:
         domain: Any = None,
         *,
         sing: str | None = None,
-        alpha: float = 1.0,
+        params: Any = None,
     ) -> Chebfun:
         """Initialize a Chebfun by adaptively sampling a function.
 
@@ -205,8 +210,9 @@ class Chebfun:
                 pieces are built as :class:`~chebpy.singfun.Singfun` instances
                 using the Adcock-Richardson clustering map; interior pieces
                 remain :class:`~chebpy.bndfun.Bndfun`.
-            alpha: Positive clustering strength for the singular pieces.
-                Ignored when ``sing`` is ``None``.  Default ``1.0``.
+            params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`).
+                Ignored when ``sing`` is ``None``.  Default ``None`` (uses
+                :class:`~chebpy.maps.MapParams` defaults).
 
         Returns:
             Chebfun: A Chebfun object representing the function on the specified domain.
@@ -221,7 +227,7 @@ class Chebfun:
         """
         if sing is None:
             return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
-        return cls(_generate_singular_funs(f, domain, sing=sing, alpha=alpha))
+        return cls(_generate_singular_funs(f, domain, sing=sing, params=params))
 
     @classmethod
     def initfun_fixedlen(cls, f: Callable[..., Any], n: Any, domain: Any = None) -> Chebfun:
@@ -264,7 +270,7 @@ class Chebfun:
         n: Any = None,
         *,
         sing: str | None = None,
-        alpha: float = 1.0,
+        params: Any = None,
     ) -> Chebfun:
         """Initialize a Chebfun from a function.
 
@@ -279,14 +285,14 @@ class Chebfun:
                 the number adaptively. If provided, uses a fixed number of points.
             sing: Optional endpoint-singularity hint forwarded to
                 :meth:`initfun_adaptive`.  Only valid when ``n is None``.
-            alpha: Positive clustering strength for the singular pieces.
+            params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`).
                 Forwarded to :meth:`initfun_adaptive`.
 
         Returns:
             Chebfun: A Chebfun object representing the function on the specified domain.
         """
         if n is None:
-            return cls.initfun_adaptive(f, domain, sing=sing, alpha=alpha)
+            return cls.initfun_adaptive(f, domain, sing=sing, params=params)
         if sing is not None:
             msg = (
                 "fixed-length construction with sing= is not supported in v1; "

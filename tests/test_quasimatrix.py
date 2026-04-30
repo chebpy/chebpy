@@ -17,7 +17,7 @@ def x():
 
 
 @pytest.fixture
-def A(x):  # noqa: N802
+def A(x):
     """Quasimatrix of monomials 1, x, x^2, ..., x^5 on [-1, 1]."""
     return Quasimatrix([1, x, x**2, x**3, x**4, x**5])
 
