@@ -58,6 +58,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - Quickstart: user/quickstart.md
+  - Features: features.md
   - User Guide:
       - Introduction: user/intro.md
       - Installation: user/install.md
@@ -69,6 +70,7 @@ nav:
           - Plotting: user/features/plotting.md
           - Periodic Functions: user/features/periodic.md
           - Infinite Intervals: user/features/infinite-intervals.md
+          - Endpoint Singularities: user/features/singularities.md
           - Fast Convolution: user/features/convolution.md
           - Quasimatrix Algebra: user/features/quasimatrix.md
           - Gaussian Processes: user/features/gpr.md
@@ -79,6 +81,7 @@ nav:
       - Complex Chebfuns: notebooks/3_complex.html
       - Periodic Representations: notebooks/8_periodic.html
       - Infinite Intervals: notebooks/9_infinite_intervals.html
+      - Endpoint Singularities: notebooks/10_endpoint_singularities.html
       - Fast Convolution: notebooks/5_convolution.html
       - Quasimatrix Algebra: notebooks/4_quasimatrix.html
       - Gaussian Processes: notebooks/6_gaussian_process.html
@@ -91,4 +94,4 @@ nav:
   - Developer:
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
-  - History: history.md
+  - About: about.md

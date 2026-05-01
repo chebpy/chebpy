@@ -20,6 +20,9 @@ def chebfun(
     f: Callable[..., Any] | str | float | None = None,
     domain: np.ndarray | list[float] | None = None,
     n: int | None = None,
+    *,
+    sing: str | None = None,
+    params: Any = None,
 ) -> "Chebfun":
     """Create a Chebfun object representing a function.
 
@@ -37,6 +40,14 @@ def chebfun(
             specified in preferences.
         n: Optional number of points to use in the discretization. If None, adaptive
             construction is used.
+        sing: Optional endpoint-singularity hint, one of ``"left"``, ``"right"``,
+            or ``"both"``.  When set, the appropriate boundary pieces are built
+            as :class:`~chebpy.singfun.Singfun` instances using the
+            Adcock-Richardson exponential clustering map; interior pieces remain
+            :class:`~chebpy.bndfun.Bndfun`.  Only supported with ``n=None``.
+        params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`
+            carrying ``L`` and ``alpha``).  Default ``None`` uses
+            :class:`~chebpy.maps.MapParams` defaults.
 
     Returns:
         Chebfun: A Chebfun object representing the function.
@@ -57,6 +68,9 @@ def chebfun(
         >>>
         >>> # Constant function
         >>> c = chebfun(3.14)
+        >>>
+        >>> # Function with an endpoint singularity
+        >>> g = chebfun(np.sqrt, domain=[0.0, 1.0], sing="left")
     """
     # Empty via chebfun()
     if f is None:
@@ -66,7 +80,7 @@ def chebfun(
 
     # Callable fct in chebfun(lambda x: f(x), ... )
     if callable(f):
-        return Chebfun.initfun(f, domain, n)
+        return Chebfun.initfun(f, domain, n, sing=sing, params=params)
 
     # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():

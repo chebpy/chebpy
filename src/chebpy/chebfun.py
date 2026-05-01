@@ -30,6 +30,69 @@ from .trigtech import Trigtech
 from .utilities import Domain, Interval, check_funs, compute_breakdata, generate_funs
 
 
+def _generate_singular_funs(
+    f: Callable[..., Any],
+    domain: Any,
+    *,
+    sing: str,
+    params: Any,
+) -> list[Any]:
+    """Build per-piece funs for a Chebfun with endpoint singularities.
+
+    The leftmost / rightmost pieces (depending on ``sing``) are built as
+    :class:`~chebpy.singfun.Singfun` instances using the Adcock-Richardson
+    clustering map; all interior pieces are ordinary :class:`Bndfun`.
+
+    Args:
+        f: Callable evaluating the function in logical coordinates.
+        domain: Breakpoint sequence; outermost endpoints must be finite.
+        sing: One of ``"left"``, ``"right"``, ``"both"``.
+        params: A :class:`~chebpy.maps.MapParams` instance carrying
+            ``(L, alpha)`` for the slit-strip clustering map. ``None`` means
+            use :class:`~chebpy.maps.MapParams` defaults.
+
+    Returns:
+        list: Per-piece funs ready to feed to :class:`Chebfun`.
+
+    Raises:
+        ValueError: If ``sing`` is not one of the recognised values.
+    """
+    # Local import: chebfun and singfun are siblings under classicfun and
+    # would otherwise risk a cyclic top-level import.
+    from .maps import MapParams
+    from .singfun import Singfun
+
+    if sing not in ("left", "right", "both"):
+        msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
+        raise ValueError(msg)
+    if params is None:
+        params = MapParams()
+    dom = Domain(domain if domain is not None else prefs.domain)
+    intervals = list(dom.intervals)
+    n_pieces = len(intervals)
+    funs: list[Any] = []
+    for i, interval in enumerate(intervals):
+        is_first = i == 0
+        is_last = i == n_pieces - 1
+        piece_sing: str | None = None
+        if sing == "left" and is_first:
+            piece_sing = "left"
+        elif sing == "right" and is_last:
+            piece_sing = "right"
+        elif sing == "both":
+            if is_first and is_last:
+                piece_sing = "both"
+            elif is_first:
+                piece_sing = "left"
+            elif is_last:
+                piece_sing = "right"
+        if piece_sing is None:
+            funs.append(Bndfun.initfun_adaptive(f, interval))
+        else:
+            funs.append(Singfun.initfun_adaptive(f, interval, sing=piece_sing, params=params))
+    return funs
+
+
 class Chebfun:
     """Main class for representing and manipulating functions in ChebPy.
 
@@ -125,7 +188,14 @@ class Chebfun:
         return cls(generate_funs(domain, Bndfun.initconst, {"c": c}))
 
     @classmethod
-    def initfun_adaptive(cls, f: Callable[..., Any], domain: Any = None) -> Chebfun:
+    def initfun_adaptive(
+        cls,
+        f: Callable[..., Any],
+        domain: Any = None,
+        *,
+        sing: str | None = None,
+        params: Any = None,
+    ) -> Chebfun:
         """Initialize a Chebfun by adaptively sampling a function.
 
         This method determines the appropriate number of points needed to represent
@@ -135,6 +205,14 @@ class Chebfun:
             f (callable): The function to be approximated.
             domain (array-like, optional): Domain on which to define the function.
                 If None, uses the default domain from preferences.
+            sing: Optional endpoint-singularity hint, one of ``"left"``,
+                ``"right"``, or ``"both"``.  When set, the appropriate boundary
+                pieces are built as :class:`~chebpy.singfun.Singfun` instances
+                using the Adcock-Richardson clustering map; interior pieces
+                remain :class:`~chebpy.bndfun.Bndfun`.
+            params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`).
+                Ignored when ``sing`` is ``None``.  Default ``None`` (uses
+                :class:`~chebpy.maps.MapParams` defaults).
 
         Returns:
             Chebfun: A Chebfun object representing the function on the specified domain.
@@ -147,7 +225,9 @@ class Chebfun:
             >>> bool(abs(f(np.pi/2) - 1) < 1e-10)
             True
         """
-        return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
+        if sing is None:
+            return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
+        return cls(_generate_singular_funs(f, domain, sing=sing, params=params))
 
     @classmethod
     def initfun_fixedlen(cls, f: Callable[..., Any], n: Any, domain: Any = None) -> Chebfun:
@@ -183,7 +263,15 @@ class Chebfun:
         return cls(funs)
 
     @classmethod
-    def initfun(cls, f: Callable[..., Any], domain: Any = None, n: Any = None) -> Chebfun:
+    def initfun(
+        cls,
+        f: Callable[..., Any],
+        domain: Any = None,
+        n: Any = None,
+        *,
+        sing: str | None = None,
+        params: Any = None,
+    ) -> Chebfun:
         """Initialize a Chebfun from a function.
 
         This is a general-purpose constructor that delegates to either initfun_adaptive
@@ -195,14 +283,23 @@ class Chebfun:
                 If None, uses the default domain from preferences.
             n (int or array-like, optional): Number of points to use. If None, determines
                 the number adaptively. If provided, uses a fixed number of points.
+            sing: Optional endpoint-singularity hint forwarded to
+                :meth:`initfun_adaptive`.  Only valid when ``n is None``.
+            params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`).
+                Forwarded to :meth:`initfun_adaptive`.
 
         Returns:
             Chebfun: A Chebfun object representing the function on the specified domain.
         """
         if n is None:
-            return cls.initfun_adaptive(f, domain)
-        else:
-            return cls.initfun_fixedlen(f, n, domain)
+            return cls.initfun_adaptive(f, domain, sing=sing, params=params)
+        if sing is not None:
+            msg = (
+                "fixed-length construction with sing= is not supported in v1; "
+                "pass n=None for adaptive Singfun construction."
+            )
+            raise NotImplementedError(msg)
+        return cls.initfun_fixedlen(f, n, domain)
 
     # --------------------
     #  operator overloads
@@ -915,6 +1012,19 @@ class Chebfun:
                 "Aperiodic convolution and periodic (circular) convolution are "
                 "distinct operations; a dedicated circconv() for trigfuns is "
                 "not yet implemented."
+            )
+
+        # Singfun inputs are not supported: the Hale-Townsend Legendre algorithm
+        # and the Gauss-Legendre fallback both assume an affine map between the
+        # logical and reference variables, which the Adcock-Richardson clustering
+        # map breaks.
+        from .singfun import Singfun
+
+        if any(isinstance(fun, Singfun) for fun in self.funs) or any(isinstance(fun, Singfun) for fun in g.funs):
+            raise NotImplementedError(
+                "conv() is not supported for Chebfuns containing Singfun pieces "
+                "(functions with endpoint singularities represented by a non-affine "
+                "clustering map)."
             )
 
         # Fast path: both single-piece with equal-width finite domains.

@@ -50,9 +50,15 @@ numerical-support approach has two consequences:
 - **Decaying functions** (Gaussians, $e^{-x}$, $1/\Gamma(x+1)$) are handled
   cleanly and accurately, and benefit directly from the existing
   Hale–Townsend Legendre convolution machinery.
-- **Heavy-tailed or non-decaying functions** — $1/(1+x^2)$, $\tanh(x)$,
-  $1/(1+|x|)$ — are explicitly **refused** with a
-  `CompactFunConstructionError` rather than silently approximated.
+- **Sigmoid-like functions with non-zero asymptotic constants**
+  ($\tanh(x)$, the logistic $1/(1+e^{-x})$, smoothed steps) are
+  supported: ChebPy detects the asymptotic limits automatically and
+  stores them as `tail_left` / `tail_right` on the `CompactFun` piece,
+  so evaluation outside the storage window returns the correct constant.
+- **Heavy-tailed functions** that neither decay nor saturate to a
+  constant — $1/(1+x^2)$, $1/(1+\lvert x\rvert)$ — are explicitly
+  **refused** with a `CompactFunConstructionError` rather than silently
+  approximated.
 
 ## What gets refused
 
@@ -62,12 +68,20 @@ from chebpy.exceptions import CompactFunConstructionError
 for f in [
     lambda x: 1.0 / (np.pi * (1.0 + x * x)),   # Cauchy density: O(1/x²) decay
     lambda x: 1.0 / (1.0 + np.abs(x)),          # O(1/x) decay
-    lambda x: np.tanh(x - 1.0),                 # does not decay
 ]:
     try:
         chebfun(f, [-np.inf, np.inf])
     except CompactFunConstructionError as err:
         print(err)
+```
+
+Sigmoid-like inputs such as `np.tanh` are accepted; their tail
+constants are recovered automatically:
+
+```python
+t = chebfun(np.tanh, [-np.inf, np.inf])
+t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
+t(1e10)                                       # 1.0
 ```
 
 ## Convolution

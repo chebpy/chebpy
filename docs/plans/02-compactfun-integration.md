@@ -356,3 +356,11 @@ chebfun(lambda x: np.tanh(x), [-inf, inf])
 
 - Builds on existing `Bndfun`, `Chebtech`, and `_conv_legendre` machinery.
 - Independent of any trigtech / singfun / unbndfun work.
+
+## See also
+
+- [`docs/plans/03-singfun-mapped-integration.md`](03-singfun-mapped-integration.md)
+  — companion plan adding `Singfun` for endpoint-singular functions on
+  bounded intervals.  `CompactFun` and `Singfun` are siblings under
+  `Classicfun`: the former handles unbounded support with rapid decay;
+  the latter handles bounded support with branch-type endpoint behaviour.

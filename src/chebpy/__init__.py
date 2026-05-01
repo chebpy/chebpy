@@ -23,13 +23,17 @@ import importlib.metadata
 from .api import chebfun, chebpts, pwc, trigfun
 from .compactfun import CompactFun
 from .gpr import gpr
+from .maps import MapParams
 from .quasimatrix import Quasimatrix, polyfit
 from .settings import ChebPreferences as UserPreferences
+from .singfun import Singfun
 from .trigtech import Trigtech
 
 __all__ = [
     "CompactFun",
+    "MapParams",
     "Quasimatrix",
+    "Singfun",
     "Trigtech",
     "UserPreferences",
     "chebfun",
