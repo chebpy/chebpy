@@ -105,32 +105,33 @@ def _():
 @app.cell(hide_code=True)
 def _():
     mo.md(r"""
-    ## A one-sided square root
+    ## A one-sided logarithmic singularity
 
-    The simplest example: $f(x) = \sqrt{x}$ on $[0, 1]$, with the
-    singularity at the left endpoint.  Pass `sing="left"` to `chebfun`:
+    The simplest example: $f(x) = x\log x$ on $[0, 1]$, with the
+    derivative singularity at the left endpoint.  Pass `sing="left"` to
+    `chebfun`:
     """)
     return
 
 
 @app.cell
 def _():
-    sqrt_left = chebfun(np.sqrt, [0.0, 1.0], sing="left")
-    print(sqrt_left)
+    xlogx_left = chebfun(lambda x: x * np.log(x), [0.0, 1.0], sing="left")
+    print(xlogx_left)
     print()
-    print(f"piece type    : {type(sqrt_left.funs[0]).__name__}")
-    print(f"size          : {sqrt_left.funs[0].size} coefficients")
-    print(f"sum (= 2/3)   : {float(sqrt_left.sum()):.16f}")
-    print(f"            ref {2.0 / 3.0:.16f}")
-    return (sqrt_left,)
+    print(f"piece type    : {type(xlogx_left.funs[0]).__name__}")
+    print(f"size          : {xlogx_left.funs[0].size} coefficients")
+    print(f"sum (= -1/4)  : {float(xlogx_left.sum()):.16f}")
+    print(f"            ref {-1.0 / 4.0:.16f}")
+    return (xlogx_left,)
 
 
 @app.cell
-def _(sqrt_left):
+def _(xlogx_left):
     _fig, _ax = plt.subplots()
-    sqrt_left.plot(ax=_ax)
+    xlogx_left.plot(ax=_ax)
     _ax.set_xlabel("x")
-    _ax.set_title(r"$f(x) = \sqrt{x}$ on $[0, 1]$ (sing='left')")
+    _ax.set_title(r"$f(x) = x\log x$ on $[0, 1]$ (sing='left')")
     _fig
     return
 

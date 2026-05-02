@@ -12,8 +12,8 @@ Pass a `sing=` hint to `chebfun()` to flag which endpoint(s) carry a singularity
 import numpy as np
 from chebpy import chebfun
 
-# Left endpoint: f(x) = sqrt(x) on [0, 1]
-f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
+# Left endpoint: f(x) = x log(x) on [0, 1] (derivative blows up at x = 0)
+f = chebfun(lambda x: x * np.log(x), [0.0, 1.0], sing="left")
 
 # Right endpoint: f(x) = sqrt(1 - x) on [0, 1]
 g = chebfun(lambda x: np.sqrt(1.0 - x), [0.0, 1.0], sing="right")
@@ -22,7 +22,7 @@ g = chebfun(lambda x: np.sqrt(1.0 - x), [0.0, 1.0], sing="right")
 h = chebfun(lambda x: np.sqrt(x * (1.0 - x)), [0.0, 1.0], sing="both")
 
 # Definite integrals reach machine precision
-float(f.sum())   # 2/3 (up to a tiny endpoint-gap correction; see below)
+float(f.sum())   # -1/4 (up to a tiny endpoint-gap correction; see below)
 float(h.sum())   # pi/8
 ```
 
