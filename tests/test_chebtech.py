@@ -315,7 +315,7 @@ class TestRoots:
     """Tests for Chebtech roots functionality."""
 
     @pytest.mark.parametrize(("f", "roots"), rootstestfuns)
-    def test_roots(self, f, roots):  # noqa: F811
+    def test_roots(self, f, roots):
         ff = Chebtech.initfun_adaptive(f)
         rts = ff.roots()
         assert np.max(np.abs(rts - roots)) <= eps

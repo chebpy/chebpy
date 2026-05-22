@@ -253,7 +253,7 @@ class TestProperties:
         assert not self.f2.isconst
         assert not self.f3.isconst
 
-    def test_support(self):  # noqa: F811
+    def test_support(self):
         assert self.f0.support.size == 0
         assert np.all(self.f1.support == np.array([-1, 1]))
         assert np.all(self.f2.support == np.array([-1, 1]))
@@ -654,7 +654,7 @@ class TestRoots:
     """Tests for Chebfun roots functionality."""
 
     @pytest.mark.parametrize(("f", "roots"), rootstestfuns)
-    def test_roots(self, f, roots):  # noqa: F811
+    def test_roots(self, f, roots):
         ff = Chebfun.initfun_adaptive(f)
         rts = ff.roots()
         assert np.max(np.abs(rts - roots)) <= 1e-15
