@@ -62,11 +62,11 @@ typecheck: install ## run ty type checking
 PIP_AUDIT_ARGS ?=
 
 # The 'security' target performs security vulnerability scans.
-# 1. Runs pip-audit to check for known vulnerabilities in dependencies.
+# 1. Runs pip-audit via pip_audit_policy.py: fails on runtime dep CVEs, warns on tooling (pip/setuptools/wheel).
 # 2. Runs bandit to find common security issues in the source code.
 security: install ## run security scans (pip-audit and bandit)
 	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
-	@${UVX_BIN} pip-audit ${PIP_AUDIT_ARGS}
+	@${UV_BIN} run python .rhiza/utils/pip_audit_policy.py ${PIP_AUDIT_ARGS}
 	@printf "${BLUE}[INFO] Running bandit security scan...${RESET}\n"
 	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q --ini .bandit
 
@@ -125,19 +125,6 @@ hypothesis-test:: install ## run property-based tests with Hypothesis
 	  exit 0; \
 	fi; \
 	exit $$exit_code
-
-coverage-badge: test ## generate coverage badge into _tests/coverage-badge.svg
-	@if [ ! -d "${SOURCE_FOLDER}" ]; then \
-	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping coverage-badge${RESET}\n"; \
-	  exit 0; \
-	fi; \
-	if [ ! -f _tests/coverage.xml ]; then \
-	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.xml, run 'make test' first.${RESET}\n"; \
-	  exit 1; \
-	fi; \
-	printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
-	${UVX_BIN} "genbadge[coverage]" coverage -i _tests/coverage.xml -o _tests/coverage-badge.svg; \
-	printf "${GREEN}[SUCCESS] Coverage badge generated at _tests/coverage-badge.svg${RESET}\n"
 
 # The 'stress' target runs stress/load tests.
 # 1. Checks if stress tests exist in the tests/stress directory.
