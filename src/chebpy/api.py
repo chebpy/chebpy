@@ -20,6 +20,9 @@ def chebfun(
     f: Callable[..., Any] | str | float | None = None,
     domain: np.ndarray | list[float] | None = None,
     n: int | None = None,
+    *,
+    sing: str | None = None,
+    params: Any = None,
 ) -> "Chebfun":
     """Create a Chebfun object representing a function.
 
@@ -37,6 +40,14 @@ def chebfun(
             specified in preferences.
         n: Optional number of points to use in the discretization. If None, adaptive
             construction is used.
+        sing: Optional endpoint-singularity hint, one of ``"left"``, ``"right"``,
+            or ``"both"``.  When set, the appropriate boundary pieces are built
+            as :class:`~chebpy.singfun.Singfun` instances using the
+            Adcock-Richardson exponential clustering map; interior pieces remain
+            :class:`~chebpy.bndfun.Bndfun`.  Only supported with ``n=None``.
+        params: Slit-strip map parameters (a :class:`~chebpy.maps.MapParams`
+            carrying ``L`` and ``alpha``).  Default ``None`` uses
+            :class:`~chebpy.maps.MapParams` defaults.
 
     Returns:
         Chebfun: A Chebfun object representing the function.
@@ -57,6 +68,9 @@ def chebfun(
         >>>
         >>> # Constant function
         >>> c = chebfun(3.14)
+        >>>
+        >>> # Function with an endpoint singularity
+        >>> g = chebfun(np.sqrt, domain=[0.0, 1.0], sing="left")
     """
     # Empty via chebfun()
     if f is None:
@@ -66,7 +80,7 @@ def chebfun(
 
     # Callable fct in chebfun(lambda x: f(x), ... )
     if callable(f):
-        return Chebfun.initfun(f, domain, n)
+        return Chebfun.initfun(f, domain, n, sing=sing, params=params)
 
     # Identity via chebfun('x', ... )
     if isinstance(f, str) and len(f) == 1 and f.isalpha():
@@ -145,3 +159,48 @@ def chebpts(
     interval = Interval(*domain)
     pts = interval(pts)
     return pts, wts
+
+
+def trigfun(
+    f: Callable[..., Any] | str | float | None = None,
+    domain: np.ndarray | list[float] | None = None,
+    n: int | None = None,
+) -> "Chebfun":
+    """Create a Chebfun backed by Fourier (trigonometric) technology.
+
+    This is the explicit entry point for constructing periodic functions.
+    Unlike ``chebfun``, which always uses Chebyshev polynomial technology,
+    ``trigfun`` always uses :class:`~chebpy.trigtech.Trigtech` as the
+    underlying approximation technology.  The user is responsible for
+    ensuring that *f* is smooth and periodic on *domain*.
+
+    The API mirrors :func:`chebfun` exactly:
+
+    * ``trigfun()`` → empty Chebfun
+    * ``trigfun(lambda x: np.sin(np.pi*x), [-1, 1])`` → from callable
+    * ``trigfun('x')`` → identity (not truly periodic; provided for
+      interface compatibility)
+    * ``trigfun(3.14)`` → constant function
+
+    Args:
+        f: The function to represent.  Same semantics as :func:`chebfun`.
+        domain: Domain ``[a, b]``.  Defaults to ``prefs.domain``.
+        n: Fixed number of Fourier modes.  If None, adaptive construction
+            is used.
+
+    Returns:
+        Chebfun: A Chebfun object whose pieces are backed by Trigtech.
+
+    Examples:
+        >>> import numpy as np
+        >>> from chebpy import trigfun
+        >>> f = trigfun(lambda x: np.cos(np.pi * x), [-1, 1])
+        >>> float(f(0.0))
+        1.0
+        >>> g = trigfun(lambda x: np.sin(2 * np.pi * x))
+        >>> bool(abs(g.sum()) < 1e-12)
+        True
+    """
+    with prefs:
+        prefs.tech = "Trigtech"
+        return chebfun(f, domain, n)

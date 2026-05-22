@@ -766,6 +766,37 @@ def _numerical_conv_general(f: Chebfun, g: Chebfun, x: float, n: int = 200_000) 
 
 
 # ---------------------------------------------------------------------------
+# Trigfun rejection tests
+# ---------------------------------------------------------------------------
+
+
+class TestChebfunConvTrigfunRejection:
+    """conv() must refuse Trigtech-backed inputs.
+
+    Otherwise it would silently produce wrong results because the
+    Hale-Townsend algorithm assumes Chebyshev coefficients, not Fourier
+    ones.
+    """
+
+    def test_trigfun_self_conv_raises(self) -> None:
+        from chebpy import trigfun
+
+        f = trigfun(lambda x: np.sin(np.pi * x), [-1, 1])
+        with pytest.raises(NotImplementedError, match="trigfun"):
+            f.conv(f)
+
+    def test_trigfun_with_chebfun_raises(self) -> None:
+        from chebpy import chebfun, trigfun
+
+        f = trigfun(lambda x: np.sin(np.pi * x), [-1, 1])
+        g = chebfun(lambda x: x, [-1, 1])
+        with pytest.raises(NotImplementedError, match="trigfun"):
+            f.conv(g)
+        with pytest.raises(NotImplementedError, match="trigfun"):
+            g.conv(f)
+
+
+# ---------------------------------------------------------------------------
 # Piecewise Chebfun.conv tests
 # ---------------------------------------------------------------------------
 

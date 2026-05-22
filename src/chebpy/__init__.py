@@ -20,10 +20,27 @@ Main components and modules:
 
 import importlib.metadata
 
-from .api import chebfun, chebpts, pwc
+from .api import chebfun, chebpts, pwc, trigfun
+from .compactfun import CompactFun
 from .gpr import gpr
+from .maps import MapParams
 from .quasimatrix import Quasimatrix, polyfit
 from .settings import ChebPreferences as UserPreferences
+from .singfun import Singfun
+from .trigtech import Trigtech
 
-__all__ = ["Quasimatrix", "UserPreferences", "chebfun", "chebpts", "gpr", "polyfit", "pwc"]
+__all__ = [
+    "CompactFun",
+    "MapParams",
+    "Quasimatrix",
+    "Singfun",
+    "Trigtech",
+    "UserPreferences",
+    "chebfun",
+    "chebpts",
+    "gpr",
+    "polyfit",
+    "pwc",
+    "trigfun",
+]
 __version__ = importlib.metadata.version("chebfun")

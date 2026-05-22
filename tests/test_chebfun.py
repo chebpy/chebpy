@@ -477,7 +477,7 @@ class TestClassUsage:
 
     def test__repr__(self):
         assert "Chebfun" in repr(self.f1)
-        assert "domain" in repr(self.f1)
+        assert "interval" in repr(self.f1)
 
     def test__iter__(self):
         assert len(list(self.f1)) == 1

@@ -48,10 +48,16 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 > **Work with functions as easily as numbers**
 
 - 🔢 **Function Approximation**: Automatic Chebyshev polynomial approximation of smooth functions
+- 🌊 **Periodic Functions**: Fourier-based approximation via `trigfun` for smooth periodic functions
+- ♾️ **Infinite Intervals**: Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
+- 📍 **Endpoint Singularities**: Resolve $\sqrt{x}$, $\sqrt{x(1-x)}$ and similar branch-type endpoints to spectral accuracy
 - 📐 **Calculus Operations**: Differentiation, integration, and root-finding with machine precision
 - 📊 **Plotting**: Beautiful function visualizations with matplotlib integration
 - 🧮 **Arithmetic**: Add, subtract, multiply, and compose functions naturally
 - 🎯 **Adaptive**: Automatically determines optimal polynomial degree for given tolerance
+- 🔁 **Convolution**: Convolve two Chebfuns to produce a new function
+- 📏 **Quasimatrices**: Continuous linear algebra via QR, SVD, and least-squares
+- 🎲 **Gaussian Process Regression**: GP posteriors returned as Chebfun objects
 - 🔗 **Interoperability**: Works seamlessly with NumPy and SciPy ecosystems
 
 ---
@@ -133,10 +139,6 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 ```
 
-```result
-
-```
-
 ### More Examples
 
 ```python
@@ -204,9 +206,72 @@ extrema = f_mean.diff().roots()   # Local extrema via calculus
 integral = f_mean.sum()           # Definite integral
 ```
 
-```result
+### Periodic Functions
 
+Use `trigfun` for smooth periodic functions — the same API as `chebfun`,
+but backed by a Fourier (Trigtech) representation that is far more compact
+for periodic targets:
+
+```python
+from chebpy import trigfun
+import numpy as np
+
+f = trigfun(lambda x: np.exp(np.sin(np.pi * x)), [-1, 1])
+len(f)            # number of Fourier modes
+f.diff()          # spectral differentiation in Fourier space
+f.sum()           # ≈ 2 · I₀(1)
 ```
+
+The `gpr` interface accepts `trig=True` for a periodic GP posterior,
+also returned as a Trigtech-backed Chebfun.
+
+### Infinite Intervals
+
+Pass `np.inf` or `-np.inf` as a domain endpoint to construct a Chebfun
+on a (semi-)infinite interval. Pieces with infinite endpoints are
+automatically built as `CompactFun` objects: a Chebyshev expansion on
+the discovered numerical-support window, with optional non-zero tail
+constants (`tail_left`, `tail_right`) recovered automatically for
+sigmoid-like inputs (`tanh`, logistic, …).
+
+```python
+from chebpy import chebfun
+import numpy as np
+
+# Doubly-infinite Gaussian — sum is √π
+h = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
+h.sum()                           # ≈ √π
+
+# Sigmoid-like: tail constants are detected automatically
+t = chebfun(np.tanh, [-np.inf, np.inf])
+t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
+t(1e10)                                       # 1.0
+
+# Mixed: finite breakpoints with infinite endpoints
+p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
+[type(piece).__name__ for piece in p.funs]
+# ['CompactFun', 'Bndfun', 'Bndfun', 'CompactFun']
+```
+
+### Endpoint Singularities
+
+Functions with branch-type singularities at one or both endpoints —
+such as $\sqrt{x}$ on $[0, 1]$ — cannot be resolved by ordinary
+Chebyshev interpolation. Pass `sing="left"`, `"right"`, or `"both"` to
+switch the boundary pieces to `Singfun`, which uses an exponential
+clustering map to recover spectral accuracy.
+
+```python
+from chebpy import chebfun
+import numpy as np
+
+f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
+f.sum()                       # 2/3, to machine precision
+
+g = chebfun(lambda x: np.sqrt(x * (1 - x)), [0.0, 1.0], sing="both")
+g.sum()                       # pi/8, to machine precision
+```
+
 ---
 
 ## Documentation
@@ -260,14 +325,35 @@ Whether you're fixing bugs, adding features, or improving documentation, your he
 
 ### Acknowledgments 🙏
 
+ChebPy stands on the shoulders of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. The mathematical design,
+algorithmic ideas, and naming conventions in this library are direct
+adaptations of their work — most notably:
+
+- The original [MATLAB Chebfun](https://www.chebfun.org/) system
+  ([github.com/chebfun/chebfun](https://github.com/chebfun/chebfun)).
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019).
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/), Pafnuty
+  Publications, 2014.
+
+We are grateful for their decades of open scholarship, which made this
+Python port possible. Any errors in translation or adaptation are ours
+alone.
+
+📜 See the [About](https://chebpy.github.io/chebpy/about/) page for a
+fuller timeline, key contributors, and foundational publications.
+
+Project tooling:
+
 - [Jebel-Quant/rhiza](https://github.com/Jebel-Quant/rhiza) for standardised CI/CD templates and project tooling
 
 
 ---
 
 <div align="center">
-
-**Made with ❤️ by the ChebPy community**
 
 ⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
 

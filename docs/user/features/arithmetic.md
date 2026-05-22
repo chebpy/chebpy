@@ -45,3 +45,12 @@ print(f.norm())          # L2 norm
 print(np.max(f))         # maximum value
 print(np.min(f))         # minimum value
 ```
+
+## References
+
+- Z. Battles and L. N. Trefethen,
+  [*An extension of MATLAB to continuous functions and operators*](https://epubs.siam.org/doi/10.1137/S1064827503430126),
+  SIAM J. Sci. Comput., 25 (2004), pp. 1743–1770.
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
+  Pafnuty Publications, 2014.

@@ -13,6 +13,8 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 ## Features
 
 - **Function Approximation** — Automatic Chebyshev polynomial approximation of smooth functions
+- **Periodic Functions** — Fourier-based approximation via `trigfun` for smooth periodic functions
+- **Infinite Intervals** — Functions on $[a, \infty)$, $(-\infty, b]$ or the full real line via `CompactFun`
 - **Calculus Operations** — Differentiation, integration, and root-finding with machine precision
 - **Plotting** — Beautiful function visualisations with matplotlib integration
 - **Arithmetic** — Add, subtract, multiply, and compose functions naturally
@@ -37,6 +39,25 @@ integral = f.sum()
 roots = f.roots()
 ```
 
-## Getting Started
+## Quickstart
 
-Head to the [Getting Started](user/quickstart.md) guide for a hands-on introduction, or explore the [API Reference](api.md) for full documentation.
+Head to the [Quickstart](user/quickstart.md) guide for a hands-on introduction, or explore the [API Reference](api.md) for full documentation.
+
+## Acknowledgments
+
+ChebPy is a direct port of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. The mathematical design,
+algorithms, and naming conventions used here are adaptations of their
+decades of open scholarship, most notably:
+
+- The original [MATLAB Chebfun](https://www.chebfun.org/) system
+  ([github.com/chebfun/chebfun](https://github.com/chebfun/chebfun)).
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019).
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/), Pafnuty
+  Publications, 2014.
+
+We are grateful for their generosity in making this body of work freely
+available; any errors in translation or adaptation are ours alone.

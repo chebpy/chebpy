@@ -8,7 +8,7 @@ It defines the core data structures for representing and manipulating intervals 
 import itertools
 from collections import OrderedDict
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
@@ -33,12 +33,55 @@ def htol() -> float:
     return 5 * prefs.eps  # type: ignore[return-value]
 
 
+@runtime_checkable
+class IntervalMap(Protocol):
+    """Structural protocol for a bijective map between [-1, 1] and [a, b].
+
+    Any object exposing the three mapping methods below can be used as the
+    ``_interval`` of a :class:`~chebpy.classicfun.Classicfun`. The canonical
+    affine implementation is :class:`Interval`; non-affine implementations
+    (e.g. endpoint-clustering exponential transforms for representing
+    functions with branch-type endpoint singularities) are introduced by
+    follow-up plans without disturbing this contract.
+
+    Required methods:
+        formap(y): Map ``y`` from the reference interval [-1, 1] to ``x`` in [a, b].
+        invmap(x): Map ``x`` from [a, b] back to ``y`` in [-1, 1].
+        drvmap(y): Derivative dx/dy of ``formap`` evaluated at ``y``.
+
+    Notes:
+        - ``formap`` and ``invmap`` must be mutual inverses on their domains.
+        - ``drvmap(y)`` must be strictly positive on (-1, 1) so the map is
+          orientation-preserving. It may vanish at ``y = ±1`` for non-affine
+          maps with endpoint clustering.
+        - The protocol is purely structural; no runtime registration is
+          required. ``isinstance(obj, IntervalMap)`` is supported via
+          ``runtime_checkable`` for opt-in duck-type assertions only.
+    """
+
+    def formap(self, y: float | np.ndarray) -> Any:
+        """Map ``y`` from the reference interval [-1, 1] to ``x`` in [a, b]."""
+        ...
+
+    def invmap(self, x: float | np.ndarray) -> Any:
+        """Map ``x`` from [a, b] back to ``y`` in [-1, 1]."""
+        ...
+
+    def drvmap(self, y: float | np.ndarray) -> Any:
+        """Return the derivative ``dx/dy`` of :meth:`formap` at ``y``."""
+        ...
+
+
 class Interval(np.ndarray):
     """Utility class to implement Interval logic.
 
     The purpose of this class is to both enforce certain properties of domain
     components such as having exactly two monotonically increasing elements and
     also to implement the functionality of mapping to and from the unit interval.
+
+    ``Interval`` is the canonical affine implementer of the
+    :class:`IntervalMap` protocol: ``formap`` is a linear bijection between
+    [-1, 1] and [a, b] and ``drvmap`` is the constant ``(b - a) / 2``.
 
     Attributes:
         formap: Maps y in [-1,1] to x in [a,b]
@@ -229,10 +272,13 @@ class Domain(np.ndarray):
 
         Args:
             breakpoints (array-like): Collection of monotonically increasing breakpoints.
-                Must have at least 2 elements.
+                Must have at least 2 elements. The outermost breakpoints may be
+                ``-np.inf`` / ``+np.inf``; interior breakpoints must be finite.
 
         Raises:
-            InvalidDomain: If breakpoints has fewer than 2 elements or is not monotonically increasing.
+            InvalidDomain: If breakpoints has fewer than 2 elements, is not
+                monotonically increasing, or contains non-finite values at
+                interior positions.
 
         Returns:
             Domain: A new Domain instance.
@@ -240,10 +286,15 @@ class Domain(np.ndarray):
         bpts = np.asarray(breakpoints, dtype=float)
         if bpts.size == 0:
             return bpts.view(cls)  # type: ignore[return-value]
-        elif bpts.size < 2 or np.any(np.diff(bpts) <= 0):
+        if bpts.size < 2 or np.any(np.diff(bpts) <= 0):
             raise InvalidDomain
-        else:
-            return bpts.view(cls)  # type: ignore[return-value]
+        # Interior breakpoints must be finite; only the outermost two may be infinite.
+        if bpts.size > 2 and not np.all(np.isfinite(bpts[1:-1])):
+            raise InvalidDomain
+        # NaN is never permitted anywhere.
+        if np.any(np.isnan(bpts)):
+            raise InvalidDomain
+        return bpts.view(cls)  # type: ignore[return-value]
 
     def __contains__(self, other: object) -> bool:
         """Check whether one domain object is a subdomain of another (within tolerance).
@@ -459,7 +510,10 @@ def check_funs(funs: Any) -> np.ndarray:
     if funs.size == 0:
         sortedfuns = np.array([])
     else:
-        intervals = (fun.interval for fun in funs)
+        # Use ``support`` (logical interval) rather than ``interval`` (storage)
+        # so CompactFun pieces are validated against their unbounded user-facing
+        # endpoints rather than their finite numerical-support storage.
+        intervals = (fun.support for fun in funs)
         idx = _sortindex(intervals)
         sortedfuns = funs[idx]
     return sortedfuns
@@ -501,11 +555,17 @@ def generate_funs(
     """Generate a collection of function objects over a domain.
 
     This method is used by several of the Chebfun classmethod constructors to
-    generate a collection of function objects over the specified domain.
+    generate a collection of function objects over the specified domain. For
+    pieces with finite endpoints the supplied ``bndfun_constructor`` is used;
+    for pieces with one or both endpoints at ``±inf`` the corresponding
+    classmethod on :class:`CompactFun` is invoked instead, dispatched by
+    method name.
 
     Args:
         domain (array-like or None): Domain breakpoints. If None, uses default domain from preferences.
-        bndfun_constructor (callable): Constructor function for creating function objects.
+            The outermost breakpoints may be ``±inf``; interior breakpoints must be finite.
+        bndfun_constructor (callable): Constructor function for creating function objects on
+            finite intervals (typically a :class:`Bndfun` classmethod).
         kwds (dict, optional): Additional keyword arguments to pass to the constructor. Defaults to {}.
 
     Returns:
@@ -514,10 +574,27 @@ def generate_funs(
     if kwds is None:
         kwds = {}
     domain = Domain(domain if domain is not None else prefs.domain)
+    # Local import avoids a circular dependency with chebpy.compactfun, which
+    # imports from utilities for Interval / Domain.
+    from .compactfun import CompactFun
+
+    method_name = getattr(bndfun_constructor, "__name__", None)
+    compact_constructor: Callable[..., Any] | None = (
+        getattr(CompactFun, method_name) if method_name is not None and hasattr(CompactFun, method_name) else None
+    )
+
     funs = []
-    for interval in domain.intervals:
-        kwds = {**kwds, **{"interval": interval}}
-        funs.append(bndfun_constructor(**kwds))
+    for a, b in itertools.pairwise(domain):
+        a_f, b_f = float(a), float(b)
+        if np.isfinite(a_f) and np.isfinite(b_f):
+            interval = Interval(a_f, b_f)
+            ctor = bndfun_constructor
+        else:
+            if compact_constructor is None:
+                raise InvalidDomain
+            interval = (a_f, b_f)  # CompactFun classmethods accept (a, b) tuples with ±inf
+            ctor = compact_constructor
+        funs.append(ctor(**{**kwds, "interval": interval}))
     return funs
 
 

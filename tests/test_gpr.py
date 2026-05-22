@@ -6,8 +6,10 @@ import numpy as np
 import pytest
 
 from chebpy.chebfun import Chebfun
+from chebpy.chebtech import Chebtech
 from chebpy.gpr import gpr
 from chebpy.quasimatrix import Quasimatrix
+from chebpy.trigtech import Trigtech
 
 
 # ---------------------------------------------------------------------------
@@ -137,6 +139,45 @@ class TestGPRTrig:
         y = np.sin(x)
         f_mean, _ = gpr(x, y, domain=[0, 2 * np.pi], trig=True, length_scale=1.0)
         np.testing.assert_allclose(f_mean(x), y, atol=1e-4)
+
+    def test_trig_posterior_is_trigtech_backed(self) -> None:
+        """The trig posterior must be backed by Trigtech, not Chebtech."""
+        x = np.linspace(0, 2 * np.pi, 12, endpoint=False)
+        y = np.sin(x) + 0.3 * np.cos(3 * x)
+        f_mean, f_var = gpr(x, y, domain=[0, 2 * np.pi], trig=True)
+        for piece in f_mean.funs:
+            assert isinstance(piece.onefun, Trigtech)
+        for piece in f_var.funs:
+            assert isinstance(piece.onefun, Trigtech)
+
+    def test_trig_posterior_samples_are_trigtech_backed(self) -> None:
+        """Posterior samples under trig=True must also be Trigtech-backed."""
+        x = np.linspace(0, 2 * np.pi, 8, endpoint=False)
+        y = np.sin(x)
+        _, _, samples = gpr(x, y, domain=[0, 2 * np.pi], trig=True, n_samples=2)
+        for j in range(samples.shape[1]):
+            col = samples[:, j]
+            for piece in col.funs:
+                assert isinstance(piece.onefun, Trigtech)
+
+    def test_trig_posterior_is_periodic(self) -> None:
+        """Posterior mean must agree at the two endpoints (periodicity)."""
+        x = np.linspace(0, 2 * np.pi, 16, endpoint=False)
+        y = np.sin(x) + 0.3 * np.cos(3 * x)
+        f_mean, f_var = gpr(x, y, domain=[0, 2 * np.pi], trig=True)
+        np.testing.assert_allclose(float(f_mean(0.0)), float(f_mean(2 * np.pi)), atol=1e-10)
+        np.testing.assert_allclose(float(f_var(0.0)), float(f_var(2 * np.pi)), atol=1e-10)
+
+    def test_non_trig_posterior_is_chebtech_backed(self) -> None:
+        """Sanity check: the default posterior is still Chebtech-backed."""
+        rng = np.random.default_rng(3)
+        x = np.sort(-1 + 2 * rng.random(8))
+        y = np.cos(x)
+        f_mean, f_var = gpr(x, y, domain=[-1, 1])
+        for piece in f_mean.funs:
+            assert isinstance(piece.onefun, Chebtech)
+        for piece in f_var.funs:
+            assert isinstance(piece.onefun, Chebtech)
 
 
 # ---------------------------------------------------------------------------

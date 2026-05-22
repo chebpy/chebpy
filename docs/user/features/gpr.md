@@ -46,7 +46,11 @@ f_mean, f_var = gpr(x_obs, y_obs, domain=[-2, 2], n_samples=5)
 # f_var is a Quasimatrix with 5 sample columns
 ```
 
-## Reference
+## References
 
-C. E. Rasmussen & C. K. I. Williams, *Gaussian Processes for Machine Learning*,
-MIT Press, 2006.
+- C. E. Rasmussen and C. K. I. Williams,
+  [*Gaussian Processes for Machine Learning*](https://gaussianprocess.org/gpml/),
+  MIT Press, 2006.
+- S. Filip, A. Javeed, and L. N. Trefethen,
+  [*Smooth random functions, random ODEs, and Gaussian processes*](https://doi.org/10.1137/17M1161853),
+  SIAM Review, 61 (2019), 185–205.

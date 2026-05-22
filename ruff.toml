@@ -106,6 +106,7 @@ line-ending = "auto"
     "D101",     # Allow missing class docstrings in tests
     "D102",     # Allow missing method docstrings in tests
     "D105",     # Allow missing magic method docstrings in tests
+    "N802",     # Allow uppercase function names (math notation)
     "N803",     # Allow uppercase argument names (math notation)
     "N806",     # Allow uppercase variable names (math notation)
     "S101",     # Allow assert statements in tests
@@ -140,6 +141,12 @@ line-ending = "auto"
 "src/chebpy/quasimatrix.py" = [
     "N802",    # Allow uppercase function/property names (T for transpose)
     "N806",    # Allow uppercase variable names (math notation)
+]
+# Maps module - uses paper notation (L truncation parameter, etc.)
+"src/chebpy/maps.py" = [
+    "N802",    # Allow uppercase property names (L from Adcock-Richardson paper)
+    "N806",    # Allow uppercase variable names (math notation: L, etc.)
+    "RUF002",  # Allow en-dash in docstrings (citations, page ranges)
 ]
 # Internal utility scripts - specific exceptions for internal tooling
 ".rhiza/utils/*.py" = [

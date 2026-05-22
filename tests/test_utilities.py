@@ -21,7 +21,7 @@ from chebpy.exceptions import (
     SupportMismatch,
 )
 from chebpy.settings import DefaultPreferences
-from chebpy.utilities import Domain, Interval, check_funs, compute_breakdata, htol
+from chebpy.utilities import Domain, Interval, IntervalMap, check_funs, compute_breakdata, htol
 
 rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 eps = DefaultPreferences.eps
@@ -72,6 +72,18 @@ def test_init_disallow():
         Interval(2, 0)
     with pytest.raises(IntervalValues):
         Interval(0, 0)
+
+
+def test_interval_implements_intervalmap_protocol():
+    """Interval is the canonical affine implementer of the IntervalMap protocol."""
+    iv = Interval(-2.0, 3.0)
+    assert isinstance(iv, IntervalMap)
+    # Round-trip identities on a sample grid.
+    y = np.linspace(-1.0, 1.0, 17)
+    x = iv.formap(y)
+    assert np.allclose(iv.invmap(x), y)
+    # Affine derivative is the constant (b - a) / 2.
+    assert np.allclose(iv.drvmap(y), 0.5 * (3.0 - (-2.0)))
 
 
 def test__eq__(interval_fixtures):

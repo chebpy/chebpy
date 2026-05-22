@@ -16,10 +16,12 @@ from .exceptions import IntervalMismatch, NotSubinterval
 from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
-from .utilities import Interval
+from .trigtech import Trigtech
+from .utilities import Interval, IntervalMap
 
 techdict = {
     "Chebtech": Chebtech,
+    "Trigtech": Trigtech,
 }
 
 
@@ -34,6 +36,13 @@ class Classicfun(Fun, ABC):
     It handles the mapping between the arbitrary interval and the standard domain,
     delegating the actual function representation to the underlying Onefun object.
     """
+
+    # ``_singularity_priority`` lets mixed-type binary operations dispatch
+    # to the more "singular" representation when two ``Classicfun``
+    # subclasses meet on the same interval.  Higher wins.  ``Bndfun`` and
+    # ``CompactFun`` use the default of ``0``; ``Singfun`` overrides to
+    # ``10`` so that ``Singfun + Bndfun`` yields a ``Singfun``.
+    _singularity_priority: int = 0
 
     # --------------------------
     #  alternative constructors
@@ -139,7 +148,7 @@ class Classicfun(Fun, ABC):
             float or array-like: The value(s) of the function at the specified point(s).
                 Returns a scalar if x is a scalar, otherwise an array of the same size as x.
         """
-        y = self.interval.invmap(x)
+        y = self.map.invmap(x)
         return self.onefun(y, how)
 
     def __init__(self, onefun: Any, interval: Any) -> None:
@@ -154,6 +163,45 @@ class Classicfun(Fun, ABC):
         """
         self.onefun = onefun
         self._interval = interval
+
+    def _rebuild(self, onefun: Any) -> "Classicfun":
+        """Construct a new instance of this class with a replacement ``onefun``.
+
+        Subclasses that carry additional metadata beyond ``onefun`` and
+        ``interval`` (e.g. :class:`CompactFun`'s logical interval) should
+        override this method so that operations defined on the parent class
+        preserve that metadata.
+
+        Args:
+            onefun: The replacement Onefun object.
+
+        Returns:
+            Classicfun: A new instance of ``type(self)``.
+        """
+        return self.__class__(onefun, self._interval)
+
+    def _can_share_onefun_with(self, other: "Classicfun") -> bool:
+        """Return True if ``self`` and ``other`` represent functions on the same t-grid.
+
+        Two ``Classicfun`` instances can share onefun-level arithmetic when
+        they have the same concrete subclass, the same logical interval, and
+        the same map (so the underlying ``Onefun`` coefficients refer to the
+        same Chebyshev nodes in ``t``-space).  The default implementation
+        compares only the type and the interval, which is correct for the
+        affine-mapped subclasses (:class:`Bndfun`, :class:`CompactFun`).
+        :class:`~chebpy.singfun.Singfun` overrides this to additionally
+        compare maps.
+        """
+        return type(self) is type(other) and self._interval == other._interval
+
+    def _rebuild_from_callable(self, f: Any) -> "Classicfun":
+        """Adaptively rebuild a fun of this type evaluating callable ``f``.
+
+        Used by mixed-type binary operations to reconstruct the result on the
+        dominant operand's representation.  Subclasses with extra metadata
+        (e.g. :class:`~chebpy.singfun.Singfun`'s map) override this.
+        """
+        return type(self).initfun_adaptive(f, self._interval)
 
     def __repr__(self) -> str:  # pragma: no cover
         """Return a string representation of the function.
@@ -204,6 +252,22 @@ class Classicfun(Fun, ABC):
 
         Returns:
             Interval: The interval on which this function is defined.
+        """
+        return self._interval
+
+    @property
+    def map(self) -> IntervalMap:
+        """Return the bijective map between [-1, 1] and the function's interval.
+
+        Subclasses backed by a non-affine map (e.g. endpoint-clustering
+        transforms for endpoint singularities) override this to return a
+        different :class:`~chebpy.utilities.IntervalMap` implementer while
+        keeping ``self._interval`` as the logical support endpoints.
+
+        Returns:
+            IntervalMap: The map used to relate reference points ``y ∈ [-1, 1]``
+                to logical points ``x ∈ [a, b]``. Defaults to ``self._interval``,
+                which is the affine :class:`~chebpy.utilities.Interval` map.
         """
         return self._interval
 
@@ -297,7 +361,7 @@ class Classicfun(Fun, ABC):
             Classicfun: A new function representing the imaginary part of this function.
         """
         if self.iscomplex:
-            return self.__class__(self.onefun.imag(), self.interval)
+            return self._rebuild(self.onefun.imag())
         else:
             return self.initconst(0, interval=self.interval)
 
@@ -311,7 +375,7 @@ class Classicfun(Fun, ABC):
             Classicfun: A new function representing the real part of this function.
         """
         if self.iscomplex:
-            return self.__class__(self.onefun.real(), self.interval)
+            return self._rebuild(self.onefun.real())
         else:
             return self
 
@@ -368,7 +432,7 @@ class Classicfun(Fun, ABC):
                 sorted in ascending order.
         """
         uroots = self.onefun.roots()
-        return self.interval(uroots)
+        return self.map.formap(uroots)
 
     # ----------
     #  calculus
@@ -383,9 +447,9 @@ class Classicfun(Fun, ABC):
         Returns:
             Classicfun: A new function representing the indefinite integral of this function.
         """
-        a, b = self.support
+        a, b = self.interval
         onefun = 0.5 * (b - a) * self.onefun.cumsum()
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     def diff(self) -> "Classicfun":
         """Compute the derivative of the function.
@@ -397,9 +461,9 @@ class Classicfun(Fun, ABC):
         Returns:
             Classicfun: A new function representing the derivative of this function.
         """
-        a, b = self.support
+        a, b = self.interval
         onefun = 2.0 / (b - a) * self.onefun.diff()
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     def sum(self) -> Any:
         """Compute the definite integral of the function over its interval of definition.
@@ -411,7 +475,7 @@ class Classicfun(Fun, ABC):
         Returns:
             float or complex: The definite integral of the function over its interval of definition.
         """
-        a, b = self.support
+        a, b = self.interval
         return 0.5 * (b - a) * self.onefun.sum()
 
     # ----------
@@ -520,7 +584,7 @@ def add_zero_arg_op(methodname: str) -> None:
             Classicfun: A new Classicfun instance with the result of the operation.
         """
         onefun = getattr(self.onefun, methodname)(*args, **kwds)
-        return self.__class__(onefun, self.interval)
+        return self._rebuild(onefun)
 
     method.__name__ = methodname
     method.__doc__ = method.__doc__
@@ -533,6 +597,43 @@ for methodname in methods_onefun_zeroargs:
 # -----------------------------------------
 # binary operators returning a onefun
 # -----------------------------------------
+
+# Map from dunder method name to the corresponding callable acting on raw
+# values.  Used by the mixed-subclass binary-op fallback to reconstruct the
+# result adaptively on the dominant operand's representation.
+_BINOP_OPERATORS: dict[str, Any] = {
+    "__add__": lambda a, b: a + b,
+    "__sub__": lambda a, b: a - b,
+    "__mul__": lambda a, b: a * b,
+    "__truediv__": lambda a, b: a / b,
+    "__div__": lambda a, b: a / b,
+    "__pow__": lambda a, b: a**b,
+    "__radd__": lambda a, b: b + a,
+    "__rsub__": lambda a, b: b - a,
+    "__rmul__": lambda a, b: b * a,
+    "__rtruediv__": lambda a, b: b / a,
+    "__rdiv__": lambda a, b: b / a,
+    "__rpow__": lambda a, b: b**a,
+}
+
+
+def _classicfun_mixed_binop(self: "Classicfun", other: "Classicfun", methodname: str) -> "Classicfun":
+    """Reconstruct a same-interval, mixed-subclass binary op on the dominant operand.
+
+    When two :class:`Classicfun` instances of different subclasses (or
+    same subclass but with maps that disagree) meet on the same logical
+    interval, neither's onefun-level arithmetic is correct.  Pick the
+    operand with higher ``_singularity_priority`` and rebuild the
+    composition adaptively in its representation.  Ties go to ``self``.
+    """
+    op_fn = _BINOP_OPERATORS[methodname]
+    owner = self if self._singularity_priority >= other._singularity_priority else other
+
+    def combined(x: Any) -> Any:
+        return op_fn(self(x), other(x))
+
+    return owner._rebuild_from_callable(combined)
+
 
 # ToDo: change these to operator module methods
 methods_onefun_binary = (
@@ -589,20 +690,21 @@ def add_binary_op(methodname: str) -> None:
         Raises:
             IntervalMismatch: If f is a Classicfun with a different interval.
         """
-        cls = self.__class__
-        if isinstance(f, cls):
-            # TODO: as in ChebTech, is a decorator apporach here better?
+        if isinstance(f, Classicfun):
             if f.isempty:
                 return f.copy()
-            g = f.onefun
-            # raise Exception if intervals are not consistent
             if self.interval != f.interval:  # pragma: no cover
                 raise IntervalMismatch(self.interval, f.interval)
+            if not self._can_share_onefun_with(f):
+                # Mixed subclasses (or same subclass with disagreeing maps):
+                # rebuild adaptively on the dominant operand's representation.
+                return _classicfun_mixed_binop(self, f, methodname)
+            g = f.onefun
         else:
             # let the lower level classes raise any other exceptions
             g = f
         onefun = getattr(self.onefun, methodname)(g, *args, **kwds)
-        return cls(onefun, self.interval)
+        return self._rebuild(onefun)
 
     method.__name__ = methodname
     method.__doc__ = method.__doc__

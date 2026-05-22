@@ -44,3 +44,9 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 plt.show()
 ```
+
+## References
+
+- J. D. Hunter,
+  [*Matplotlib: A 2D Graphics Environment*](https://doi.org/10.1109/MCSE.2007.55),
+  Computing in Science & Engineering, 9 (2007), pp. 90–95.

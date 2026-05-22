@@ -5,7 +5,7 @@ repo_url: https://github.com/chebpy/chebpy
 repo_name: chebpy/chebpy
 
 docs_dir: docs
-site_dir: _mkdocs
+site_dir: _book
 
 theme:
   name: material
@@ -57,22 +57,41 @@ extra_javascript:
 
 nav:
   - Home: index.md
-  - Getting Started: user/quickstart.md
-  - Marimo Notebooks: notebooks.md
-  - Reports: reports.md
-  - API Reference: api.md
+  - Quickstart: user/quickstart.md
+  - Features: features.md
   - User Guide:
       - Introduction: user/intro.md
       - Installation: user/install.md
       - Features:
-          - Function Approximation: user/features/approximation.md
+          - Approximation: user/features/approximation.md
+          - Arithmetic: user/features/arithmetic.md
           - Calculus: user/features/calculus.md
           - Root-Finding: user/features/rootfinding.md
-          - Arithmetic: user/features/arithmetic.md
           - Plotting: user/features/plotting.md
-          - Convolution: user/features/convolution.md
-          - Quasimatrices: user/features/quasimatrix.md
-          - Gaussian Process Regression: user/features/gpr.md
+          - Periodic Functions: user/features/periodic.md
+          - Infinite Intervals: user/features/infinite-intervals.md
+          - Endpoint Singularities: user/features/singularities.md
+          - Fast Convolution: user/features/convolution.md
+          - Quasimatrix Algebra: user/features/quasimatrix.md
+          - Gaussian Processes: user/features/gpr.md
+  - Notebooks:
+      - Overview: notebooks/index.md
+      - Introduction: notebooks/1_introduction.html
+      - Examples: notebooks/2_examples.html
+      - Complex Chebfuns: notebooks/3_complex.html
+      - Periodic Representations: notebooks/8_periodic.html
+      - Infinite Intervals: notebooks/9_infinite_intervals.html
+      - Endpoint Singularities: notebooks/10_endpoint_singularities.html
+      - Fast Convolution: notebooks/5_convolution.html
+      - Quasimatrix Algebra: notebooks/4_quasimatrix.html
+      - Gaussian Processes: notebooks/6_gaussian_process.html
+      - Variance Swap Replication: notebooks/7_variance_swap.html
+  - Reports:
+      - Overview: reports.md
+      - Test Report: reports/html-report/report.html
+      - Coverage Report: reports/html-coverage/index.html
+  - API Reference: api.md
   - Developer:
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
+  - About: about.md

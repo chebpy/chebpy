@@ -42,3 +42,13 @@ df = F.diff()
 # df should agree with f to machine precision
 print(np.max(np.abs(f(np.linspace(-1, 1, 100)) - df(np.linspace(-1, 1, 100)))))
 ```
+
+## References
+
+- L. N. Trefethen, *Approximation Theory and Approximation Practice*,
+  SIAM, 2013 (extended edition 2019), chs. 19–21 (differentiation, integration, quadrature).
+- L. N. Trefethen, [*Is Gauss quadrature better than Clenshaw–Curtis?*](https://epubs.siam.org/doi/10.1137/060659831),
+  SIAM Review, 50 (2008), pp. 67–87.
+- T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.),
+  [*Chebfun Guide*](https://www.chebfun.org/docs/guide/),
+  Pafnuty Publications, 2014.

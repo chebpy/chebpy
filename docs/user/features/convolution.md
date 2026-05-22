@@ -27,3 +27,12 @@ $[a_g, b_g]$ are the domains of `f` and `g` respectively.
 Convolution is computed by converting to Legendre coefficients, exploiting the
 linearisation property of Legendre polynomials, and converting back to Chebyshev
 form.
+
+## References
+
+- N. Hale and A. Townsend,
+  [*An algorithm for the convolution of Legendre series*](https://epubs.siam.org/doi/10.1137/140955835),
+  SIAM J. Sci. Comput., 36 (2014), pp. A1207–A1220.
+- N. Hale and A. Townsend,
+  [*A fast, simple, and stable Chebyshev–Legendre transform using an asymptotic formula*](https://epubs.siam.org/doi/10.1137/130932223),
+  SIAM J. Sci. Comput., 36 (2014), pp. A148–A167.

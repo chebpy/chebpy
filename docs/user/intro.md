@@ -22,11 +22,15 @@ ChebPy uses a layered class hierarchy:
 | Layer | Class | Purpose |
 |-------|-------|---------|
 | Top | `Chebfun` | Piecewise function on arbitrary intervals |
-| Middle | `Bndfun` / `Classicfun` | Function on a single bounded interval $[a, b]$ |
-| Base | `Chebtech` | Chebyshev expansion on the canonical interval $[-1, 1]$ |
+| Middle | `Classicfun` (`Bndfun` / `CompactFun`) | Function on a single (possibly infinite) interval |
+| Base | `Chebtech` / `Trigtech` | Chebyshev or Fourier expansion on the canonical interval $[-1, 1]$ |
 
-A `Chebfun` consists of one or more `Bndfun` pieces, each of which maps its
-interval to $[-1, 1]$ and delegates to a `Chebtech` for all the numerical work.
+A `Chebfun` consists of one or more `Classicfun` pieces. Each piece maps its
+interval to $[-1, 1]$ and delegates to a `Smoothfun` (`Chebtech` for the
+default polynomial representation, or `Trigtech` for periodic
+[Fourier-based approximation](features/periodic.md)). Pieces with one or
+both endpoints at $\pm\infty$ are represented as
+[`CompactFun`s](features/infinite-intervals.md).
 
 ## Core Concepts
 
@@ -46,8 +50,17 @@ Once a function is represented as a Chebfun, operations such as differentiation,
 integration, and root-finding reduce to operations on the Chebyshev coefficients
 and are performed in $O(n)$ or $O(n \log n)$ time, where $n$ is the polynomial degree.
 
+## Acknowledgments
+
+ChebPy is a Python adaptation of the **Chebfun project** led by
+[Nick Trefethen](https://people.maths.ox.ac.uk/trefethen/) and the Chebfun
+development team at the University of Oxford. We follow their mathematical
+design, algorithms, and naming conventions throughout, and gratefully
+acknowledge the decades of open scholarship that made this port possible.
+
 ## References
 
 - L. N. Trefethen, *Approximation Theory and Approximation Practice*, SIAM, 2013.
 - T. A. Driscoll, N. Hale, and L. N. Trefethen (eds.), *Chebfun Guide*, Pafnuty Publications, 2014.
-- [chebfun.org](http://www.chebfun.org/)
+- [chebfun.org](http://www.chebfun.org/) — the original MATLAB Chebfun system.
+- [github.com/chebfun/chebfun](https://github.com/chebfun/chebfun) — Chebfun source on GitHub.
