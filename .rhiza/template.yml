@@ -1,12 +1,12 @@
 repository: "jebel-quant/rhiza"
-ref: "v0.10.3"
+ref: "v0.10.9"
 
 templates:
   - devcontainer
   - github
-  - marimo
-  - tests
-  - book
+  - github-marimo
+  - github-tests
+  - github-book
 
 exclude:
   - book/marimo/notebooks/rhiza.py  

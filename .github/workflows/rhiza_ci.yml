@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.versions.outputs.list }}
+      os_matrix: ${{ steps.os.outputs.list }}
     steps:
       - uses: actions/checkout@v6.0.2
         with:
@@ -32,7 +33,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -51,13 +52,22 @@ jobs:
         run: |
           echo "Python versions: ${{ steps.versions.outputs.list }}"
 
+      - id: os
+        run: |
+          OS_MATRIX=$(make -f .rhiza/rhiza.mk -s ci-os-matrix)
+          echo "list=$OS_MATRIX" >> "$GITHUB_OUTPUT"
+
+      - name: Debug OS matrix
+        run: |
+          echo "OS versions: ${{ steps.os.outputs.list }}"
+
   test:
     needs: generate-matrix
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: ${{ fromJson(needs.generate-matrix.outputs.os_matrix) }}
       fail-fast: false
 
     steps:
@@ -67,9 +77,18 @@ jobs:
           lfs: true
 
       - name: Install uv
+        id: install-uv
+        continue-on-error: true
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Retry uv installation
+        if: steps.install-uv.outcome == 'failure'
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "0.11.16"
           python-version: ${{ matrix.python-version }}
 
       - name: Configure git auth for private packages
@@ -102,7 +121,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -126,7 +145,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -169,7 +188,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -194,7 +213,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -216,7 +235,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -238,7 +257,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.11.7"
+          version: "0.11.16"
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth

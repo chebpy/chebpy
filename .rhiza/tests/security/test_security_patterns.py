@@ -16,6 +16,51 @@ These tests only verify that:
 import pathlib
 import re
 
+import pytest
+
+
+def _github_bundle_active(repo_root: pathlib.Path | None = None) -> bool:
+    """Return True if the github bundle is included in .rhiza/template.yml.
+
+    When running inside the rhiza framework repo itself (no template.yml present),
+    github files are always expected to exist.  In downstream repos the github
+    bundle must be explicitly listed in ``templates`` for these checks to apply.
+
+    Args:
+        repo_root: Repository root to inspect. Defaults to the root inferred from
+            this file's location (four levels up from the test file).
+    """
+    if repo_root is None:
+        repo_root = pathlib.Path(__file__).parent.parent.parent.parent
+    template_yml = repo_root / ".rhiza" / "template.yml"
+    if not template_yml.exists():
+        # Running inside rhiza itself - all bundles apply.
+        return True
+    # Parse manually (avoid adding a yaml dependency just for this helper).
+    content = template_yml.read_text()
+    in_templates_block = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("templates:"):
+            in_templates_block = True
+            continue
+        if in_templates_block:
+            if stripped.startswith("-"):
+                value = stripped.lstrip("-").strip().strip("'\"")
+                if value == "github":
+                    return True
+            elif stripped and not stripped.startswith("#"):
+                # A non-list line means the block has ended.
+                in_templates_block = False
+    return False
+
+
+_REQUIRES_GITHUB_BUNDLE = pytest.mark.skipif(
+    not _github_bundle_active(),
+    reason="github bundle not included in .rhiza/template.yml - SECURITY.md, dependabot.yml, and secret_scanning.yml "
+    "are not required",
+)
+
 
 class TestFileOperations:
     """Validate secure file handling practices."""
@@ -66,6 +111,23 @@ class TestSecurityConfiguration:
         # Check that "S" is in either select or extend-select
         assert '"S"' in content or "'S'" in content, "Ruff security checks (S) should be enabled in ruff.toml"
 
+    def test_no_python_cache_files_hook_configured(self) -> None:
+        """Verify that the no-python-cache-files hook is configured in pre-commit.
+
+        This ensures Python cache files (__pycache__, .pyc, .pyo, .pyd) cannot
+        be accidentally committed to the repository.
+        """
+        repo_root = pathlib.Path(__file__).parent.parent.parent.parent
+        precommit_config = repo_root / ".pre-commit-config.yaml"
+
+        assert precommit_config.exists(), ".pre-commit-config.yaml not found"
+
+        content = precommit_config.read_text()
+        assert "no-python-cache-files" in content, (
+            "no-python-cache-files hook should be configured in .pre-commit-config.yaml "
+            "to prevent committing Python cache files"
+        )
+
     def test_bandit_configured_in_precommit(self) -> None:
         """Verify that Bandit is configured in pre-commit hooks.
 
@@ -104,6 +166,7 @@ class TestSecurityConfiguration:
         content = bandit_ini.read_text()
         assert "[bandit]" in content, ".bandit file must contain a [bandit] section"
 
+    @_REQUIRES_GITHUB_BUNDLE
     def test_security_policy_exists(self) -> None:
         """Verify that a SECURITY.md file exists at the repository root.
 
@@ -119,6 +182,7 @@ class TestSecurityConfiguration:
             "to publish a responsible disclosure policy."
         )
 
+    @_REQUIRES_GITHUB_BUNDLE
     def test_secret_scanning_config_exists(self) -> None:
         """Verify that a secret scanning configuration file exists.
 
@@ -135,6 +199,7 @@ class TestSecurityConfiguration:
             "Remember to also enable secret scanning in repository settings."
         )
 
+    @_REQUIRES_GITHUB_BUNDLE
     def test_dependabot_configured(self) -> None:
         """Verify that Dependabot is configured for dependency updates.
 
@@ -178,3 +243,45 @@ class TestSecurityConfiguration:
             )
 
             assert has_security_docs, f"{conftest} should document security exceptions (S101/S603/S607)"
+
+
+class TestGithubBundleActive:
+    """Behavioural tests for the _github_bundle_active helper."""
+
+    def test_returns_true_when_no_template_yml(self, tmp_path: pathlib.Path) -> None:
+        """Returns True when .rhiza/template.yml is absent (rhiza repo itself)."""
+        assert _github_bundle_active(tmp_path) is True
+
+    def test_returns_true_when_github_bundle_listed(self, tmp_path: pathlib.Path) -> None:
+        """Returns True when github is present in the templates list."""
+        rhiza_dir = tmp_path / ".rhiza"
+        rhiza_dir.mkdir()
+        (rhiza_dir / "template.yml").write_text(
+            "repository: Jebel-Quant/rhiza\nref: main\ntemplates:\n- core\n- github\n- tests\n"
+        )
+        assert _github_bundle_active(tmp_path) is True
+
+    def test_returns_false_when_github_bundle_absent(self, tmp_path: pathlib.Path) -> None:
+        """Returns False when template.yml exists but github is not listed."""
+        rhiza_dir = tmp_path / ".rhiza"
+        rhiza_dir.mkdir()
+        (rhiza_dir / "template.yml").write_text(
+            "repository: Jebel-Quant/rhiza\nref: main\ntemplates:\n- core\n- tests\n- book\n- marimo\n"
+        )
+        assert _github_bundle_active(tmp_path) is False
+
+    def test_returns_false_when_templates_block_empty(self, tmp_path: pathlib.Path) -> None:
+        """Returns False when the templates block exists but is empty."""
+        rhiza_dir = tmp_path / ".rhiza"
+        rhiza_dir.mkdir()
+        (rhiza_dir / "template.yml").write_text("repository: Jebel-Quant/rhiza\nref: main\ntemplates: []\n")
+        assert _github_bundle_active(tmp_path) is False
+
+    def test_comments_in_templates_block_are_ignored(self, tmp_path: pathlib.Path) -> None:
+        """Comments inside the templates block do not terminate parsing."""
+        rhiza_dir = tmp_path / ".rhiza"
+        rhiza_dir.mkdir()
+        (rhiza_dir / "template.yml").write_text(
+            "repository: Jebel-Quant/rhiza\nref: main\ntemplates:\n# core bundles\n- core\n- github\n"
+        )
+        assert _github_bundle_active(tmp_path) is True

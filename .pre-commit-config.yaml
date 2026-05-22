@@ -10,8 +10,16 @@ repos:
         args: ['--unsafe']
         exclude: ^recipe/meta\.yaml$
 
+  - repo: local
+    hooks:
+      - id: no-python-cache-files
+        name: Prevent committing Python cache files
+        language: fail
+        entry: Python cache files (__pycache__, .pyc, .pyo, .pyd) must not be committed. Run 'make clean' to remove them.
+        files: '(/__pycache__/|\.py[cod]$)'
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.11'
+    rev: 'v0.15.14'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -26,7 +34,7 @@ repos:
         args: ["--disable", "MD013"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.1
+    rev: 0.37.2
     hooks:
       - id: check-renovate
         args: [ "--verbose" ]
@@ -51,7 +59,7 @@ repos:
         args: ["--ini", ".bandit", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.7
+    rev: 0.11.16
     hooks:
       - id: uv-lock
 
@@ -63,7 +71,7 @@ repos:
         files: ^src/
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.3.3  # Use the latest release
+    rev: v0.4.0  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names

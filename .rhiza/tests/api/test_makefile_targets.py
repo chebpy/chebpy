@@ -160,33 +160,6 @@ class TestMakefile:
         proc_override = run_make(logger, ["test", "COVERAGE_FAIL_UNDER=42"])
         assert "--cov-fail-under=42" in proc_override.stdout
 
-    def test_coverage_badge_target_dry_run(self, logger, tmp_path):
-        """Coverage-badge target should invoke genbadge via uvx and write badge locally."""
-        tests_dir = tmp_path / "_tests"
-        tests_dir.mkdir(exist_ok=True)
-        (tests_dir / "coverage.xml").write_text("")
-
-        proc = run_make(logger, ["coverage-badge"])
-        out = proc.stdout
-        assert "genbadge[coverage]" in out
-        assert "_tests/coverage.xml" in out
-        assert "_tests/coverage-badge.svg" in out
-
-    def test_coverage_badge_skips_without_source_folder(self, logger, tmp_path):
-        """Coverage-badge target should include a guard check for SOURCE_FOLDER in dry-run output."""
-        # Update .env to set SOURCE_FOLDER to a non-existent directory
-        env_file = tmp_path / ".rhiza" / ".env"
-        env_content = env_file.read_text()
-        env_content += "\nSOURCE_FOLDER=nonexistent_src\n"
-        env_file.write_text(env_content)
-
-        proc = run_make(logger, ["coverage-badge"])
-        out = proc.stdout
-        # Should contain the guard check for missing source folder
-        assert "if [ ! -d" in out
-        assert "nonexistent_src" in out
-        assert "skipping coverage-badge" in out
-
     def test_suppression_audit_target_dry_run(self, logger):
         """Suppression-audit target should invoke the Python audit script via uv run in dry-run output."""
         proc = run_make(logger, ["suppression-audit"])

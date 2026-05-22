@@ -126,19 +126,6 @@ hypothesis-test:: install ## run property-based tests with Hypothesis
 	fi; \
 	exit $$exit_code
 
-coverage-badge: test ## generate coverage badge into _tests/coverage-badge.svg
-	@if [ ! -d "${SOURCE_FOLDER}" ]; then \
-	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, skipping coverage-badge${RESET}\n"; \
-	  exit 0; \
-	fi; \
-	if [ ! -f _tests/coverage.xml ]; then \
-	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.xml, run 'make test' first.${RESET}\n"; \
-	  exit 1; \
-	fi; \
-	printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
-	${UVX_BIN} "genbadge[coverage]" coverage -i _tests/coverage.xml -o _tests/coverage-badge.svg; \
-	printf "${GREEN}[SUCCESS] Coverage badge generated at _tests/coverage-badge.svg${RESET}\n"
-
 # The 'stress' target runs stress/load tests.
 # 1. Checks if stress tests exist in the tests/stress directory.
 # 2. Runs pytest with the stress marker to execute only stress tests.

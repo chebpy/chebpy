@@ -34,7 +34,8 @@ RESET := \033[0m
 	summarise-sync \
 	sync \
 	validate \
-	version-matrix
+	version-matrix \
+	ci-os-matrix
 
 # we need absolute paths!
 INSTALL_DIR ?= $(abspath ./bin)
@@ -145,6 +146,9 @@ help: print-logo ## Display this help message
 version-matrix: install-uv ## Emit the list of supported Python versions from pyproject.toml
 	@${UVX_BIN} "rhiza-tools>=0.2.2" version-matrix
 
+ci-os-matrix: ## Emit GitHub CI OSes (RHIZA_CI_OS_MATRIX as JSON array, default ["ubuntu-latest"])
+	@printf '%s\n' '$(or $(RHIZA_CI_OS_MATRIX),["ubuntu-latest"])'
+
 print-% : ## print the value of a variable (usage: make print-VARIABLE)
 	@printf "${BLUE}[INFO] Printing value of variable '$*':${RESET}\n"
 	@printf "${BOLD}Value of $*:${RESET}\n"
@@ -155,4 +159,3 @@ print-% : ## print the value of a variable (usage: make print-VARIABLE)
 
 # Optional: repo extensions (committed)
 -include .rhiza/make.d/*.mk
-

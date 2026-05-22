@@ -259,7 +259,7 @@ class TestRoots:
     ]
 
     @pytest.mark.parametrize(("f", "interval", "roots_expected", "tol"), _roots_test_params)
-    def test_roots(self, f, interval, roots_expected, tol):  # noqa: F811
+    def test_roots(self, f, interval, roots_expected, tol):
         subinterval = Interval(*interval)
         ff = Bndfun.initfun_adaptive(f, subinterval)
         rts = ff.roots()
