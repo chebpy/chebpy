@@ -1,14 +1,17 @@
-name: "(RHIZA) WEEKLY"
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Weekly
+#
+# Purpose: Runs checks that are too slow or noisy for every push:
+#   dep-compat-test — resolves dependencies fresh (ignoring the lockfile) and
+#                     runs the full test suite to catch newly-released packages
+#                     that break compatibility before Renovate picks them up.
+#   link-check      — verifies all hyperlinks in README.md are reachable.
+#
+# Trigger: Weekly schedule (Monday 08:00 UTC) and manual dispatch.
 
-# Runs weekly checks that are too slow or noisy for every push:
-#
-#   dep-compat-test  — Resolves all dependencies fresh (ignoring the lockfile)
-#                      and runs the full test suite. Catches newly-released
-#                      packages that break compatibility before Renovate picks
-#                      them up. Runs on schedule/dispatch only.
-#
-#   link-check       — Verifies that all hyperlinks in README.md are reachable.
-#                      Runs on schedule/dispatch only.
+name: "(RHIZA) WEEKLY"
 
 permissions:
   contents: read
@@ -24,95 +27,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  dep-compat-test:
-    name: Test with latest compatible dependencies
-    runs-on: ubuntu-latest
-    #if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6.0.2
-        with:
-          lfs: true
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-        with:
-          version: "0.11.16"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Resolve and install latest compatible dependencies
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: |
-          # --upgrade ignores the committed lockfile and resolves the newest
-          # versions that satisfy pyproject.toml constraints.
-          uv sync --upgrade
-
-      - name: Show resolved package versions
-        run: |
-          echo "=== Installed package versions ==="
-          uv pip list
-
-      - name: Run tests
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: make test
-
-  semgrep:
-    name: Semgrep (numpy)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-        with:
-          version: "0.11.16"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Run Semgrep
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: make semgrep
-
-  pip-audit:
-    name: Dependency vulnerability scan
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-        with:
-          version: "0.11.16"
-
-      - name: Run pip-audit
-        run: uvx pip-audit
-
-  link-check:
-    name: Check links in README.md
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Check links in README.md
-        uses: lycheeverse/lychee-action@v2
-        with:
-          args: >-
-            --verbose
-            --no-progress
-            --accept 200,206,429
-            README.md
-          fail: true
+  weekly:
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_weekly.yml@v0.14.0
+    secrets: inherit
