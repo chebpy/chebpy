@@ -1,7 +1,7 @@
 repository: "jebel-quant/rhiza"
 ref: "v0.15.3"
 
-profile:
+profiles:
   - github-profile
   
 templates:
