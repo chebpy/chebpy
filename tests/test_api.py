@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import chebpy
-from chebpy import chebfun, pwc
+from chebpy import chebfun, equifun, pwc
 from chebpy.settings import DefaultPreferences
 
 
@@ -108,6 +108,99 @@ def test_pwc_defaults() -> None:
     assert f.funs[0].coeffs[0] == 0
     assert f.funs[1].coeffs[0] == 1
     assert np.array_equal(f.domain, np.array([-1, 0, 1]))
+
+
+# -------------------------------------------------------------------
+# equifun
+# -------------------------------------------------------------------
+
+
+def test_equifun_default_domain_approximates_sine() -> None:
+    """Test equifun from endpoint-inclusive equispaced samples."""
+    nodes = np.linspace(-1, 1, 41)
+    f = equifun(np.sin(nodes))
+    xx = np.linspace(-1, 1, 101)
+    assert f.domain == DefaultPreferences.domain
+    np.testing.assert_allclose(f(xx), np.sin(xx), atol=1e-12)
+
+
+def test_equifun_custom_domain() -> None:
+    """Test equifun on a custom finite interval."""
+    domain = [0.0, np.pi]
+    nodes = np.linspace(domain[0], domain[1], 35)
+    f = equifun(np.cos(nodes), domain)
+    xx = np.linspace(domain[0], domain[1], 101)
+    assert f.domain == np.array(domain)
+    np.testing.assert_allclose(f(xx), np.cos(xx), atol=1e-12)
+
+
+def test_equifun_behaves_like_regular_chebfun() -> None:
+    """Test equifun returns a regular Chebfun object."""
+    nodes = np.linspace(-1, 1, 21)
+    f = equifun(np.exp(nodes))
+    g = chebfun(np.exp)
+    assert isinstance(f, type(g))
+    assert abs((f - g).sum()) < 1e-12
+
+
+@pytest.mark.parametrize("n", [2, 3, 16, 40])
+def test_equifun_interpolates_original_nodes(n: int) -> None:
+    """Test values are reproduced at the original equispaced nodes."""
+    nodes = np.linspace(-1, 1, n)
+    values = np.exp(nodes) * np.cos(3 * nodes)
+    f = equifun(values)
+    np.testing.assert_allclose(f(nodes), values, atol=5e-12)
+
+
+def test_equifun_single_sample_is_constant() -> None:
+    """Test a single sample constructs a constant function."""
+    f = equifun([2.5], [2.0, 5.0])
+    assert f.isconst
+    np.testing.assert_allclose(f(np.linspace(2.0, 5.0, 5)), 2.5)
+
+
+def test_equifun_two_samples_are_linear() -> None:
+    """Test two samples construct the endpoint line."""
+    f = equifun([-3.0, 3.0])
+    xx = np.linspace(-1, 1, 21)
+    np.testing.assert_allclose(f(xx), 3 * xx, atol=1e-13)
+
+
+def test_equifun_complex_samples() -> None:
+    """Test complex-valued equispaced samples."""
+    nodes = np.linspace(-1, 1, 17)
+    values = np.exp(1j * np.pi * nodes)
+    f = equifun(values)
+    assert f.iscomplex
+    np.testing.assert_allclose(f(nodes), values, atol=5e-12)
+
+
+@pytest.mark.parametrize(
+    ("values", "match"),
+    [
+        ([], "non-empty"),
+        ([[1.0, 2.0]], "one-dimensional"),
+        (["not", "numeric"], "numeric"),
+    ],
+)
+def test_equifun_rejects_invalid_values(values: list[object], match: str) -> None:
+    """Test equifun validates sample data."""
+    with pytest.raises(ValueError, match=match):
+        equifun(values)
+
+
+@pytest.mark.parametrize(
+    ("domain", "match"),
+    [
+        ([-1.0, 0.0, 1.0], "exactly two"),
+        ([-np.inf, 1.0], "finite"),
+        ([0.0, np.inf], "finite"),
+    ],
+)
+def test_equifun_rejects_invalid_domains(domain: list[float], match: str) -> None:
+    """Test equifun rejects unsupported domains."""
+    with pytest.raises(ValueError, match=match):
+        equifun([1.0, 2.0], domain)
 
 
 def test_evaluate() -> None:

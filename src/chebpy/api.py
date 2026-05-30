@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from .algorithms import barywts2, chebpts2
+from .algorithms import barywts2, chebpts2, funqui
 from .bndfun import Bndfun
 from .chebfun import Chebfun
 from .settings import _preferences as prefs
@@ -94,6 +94,58 @@ def chebfun(
         return Chebfun.initconst(float(f), domain)
     except (OverflowError, ValueError) as err:
         raise ValueError(f) from err
+
+
+def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | list[float] | None = None) -> "Chebfun":
+    """Create a Chebfun from equispaced samples including both endpoints.
+
+    Args:
+        values: Non-empty one-dimensional sample values.
+        domain: Two finite endpoints for the sample interval. Defaults to
+            the configured preference domain.
+
+    Returns:
+        Chebfun: A scalar-valued Chebfun approximating the Floater-Hormann
+        rational interpolant through the equispaced samples.
+
+    Raises:
+        ValueError: If values are empty, non-numeric, not one-dimensional, or
+            if domain is not exactly two finite endpoints.
+
+    Examples:
+        >>> import numpy as np
+        >>> from chebpy import equifun
+        >>> x = np.linspace(-1, 1, 25)
+        >>> f = equifun(np.sin(x))
+        >>> bool(abs(f(0.0)) < 1e-12)
+        True
+    """
+    vals = np.asarray(values)
+    if vals.size == 0:
+        msg = "values must be non-empty"
+        raise ValueError(msg)
+    if vals.ndim != 1:
+        msg = "values must be one-dimensional"
+        raise ValueError(msg)
+    if not np.issubdtype(vals.dtype, np.number):
+        msg = "values must be numeric"
+        raise ValueError(msg)
+
+    dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
+    if dom.ndim != 1 or dom.size != 2:
+        msg = "domain must contain exactly two endpoints"
+        raise ValueError(msg)
+    if not np.all(np.isfinite(dom)):
+        msg = "domain endpoints must be finite"
+        raise ValueError(msg)
+    if dom[0] >= dom[1]:
+        msg = "domain endpoints must be strictly increasing"
+        raise ValueError(msg)
+    dom = Domain(dom)
+
+    if vals.size == 1:
+        return Chebfun.initconst(vals[0], dom)
+    return Chebfun.initfun(funqui(vals, dom), dom)
 
 
 def pwc(domain: list[float] | None = None, values: list[float] | None = None) -> "Chebfun":
