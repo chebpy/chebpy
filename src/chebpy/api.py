@@ -144,7 +144,8 @@ def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | lis
     dom = Domain(dom)
 
     if vals.size == 1:
-        return Chebfun.initconst(vals[0], dom)
+        value = complex(vals[0]) if np.iscomplexobj(vals) else vals[0]
+        return Chebfun.initconst(value, dom)
     return Chebfun.initfun(funqui(vals, dom), dom)
 
 

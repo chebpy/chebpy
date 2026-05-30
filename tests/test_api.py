@@ -175,6 +175,13 @@ def test_equifun_complex_samples() -> None:
     np.testing.assert_allclose(f(nodes), values, atol=5e-12)
 
 
+def test_equifun_single_complex64_sample() -> None:
+    """Test one complex64 sample preserves the imaginary part."""
+    f = equifun(np.array([1.0 + 2.0j], dtype=np.complex64))
+    assert f.iscomplex
+    np.testing.assert_allclose(f(np.linspace(-1, 1, 5)), 1.0 + 2.0j)
+
+
 @pytest.mark.parametrize(
     ("values", "match"),
     [
