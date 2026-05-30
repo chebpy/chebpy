@@ -67,7 +67,7 @@ ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringin
 ### Using pip (recommended)
 
 ```bash
-pip install chebpy
+pip install chebfun
 ```
 
 ### From source (development)
