@@ -630,6 +630,24 @@ class TestDomainBreakingOps:
         lscl = max([fun.size for fun in np.append(f1.funs, f2.funs)])
         assert np.max(np.abs(np.minimum(np.sin(xx), np.cos(xx)) - g(xx))) <= vscl * hscl * lscl * tol
 
+    def test_maximum_tangential_contact_does_not_switch_branches(self):
+        # Issue 45: this produces near-duplicate roots around +/- pi/2,
+        # which used to create tiny degenerate intervals in maximum().
+        x = chebfun("x", [-2, 3])
+        f1 = np.sin(3 * x)
+        f2 = -np.sin(x)
+        roots = (f1 - f2).roots()
+        assert roots.size > 3
+        assert np.any(np.abs(roots + 0.5 * np.pi) < 1e-6)
+        assert np.any(np.abs(roots - 0.5 * np.pi) < 1e-5)
+
+        g = f1.maximum(f2)
+
+        assert g.domain == Domain([-2, 0, 3])
+        assert np.all(np.diff(g.breakpoints) > 1e-6)
+        xx = np.linspace(-2, 3, 2001)
+        np.testing.assert_allclose(g(xx), np.maximum(np.sin(3 * xx), -np.sin(xx)), atol=1e-12)
+
     def test_maximum_empty(self):
         f_empty = Chebfun.initempty()
         f = chebfun(np.sin, [-1, 1])

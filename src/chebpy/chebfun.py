@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import operator
 from collections.abc import Callable, Iterator
+from itertools import pairwise
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -1448,8 +1449,13 @@ class Chebfun:
             # Recursively call with the restricted functions
             return self_restricted._maximum_minimum(other_restricted, comparator)
 
-        # Continue with the original algorithm
-        roots = (self - other).roots()
+        # Continue with the original algorithm.  Only roots where the
+        # difference changes sign are switch points; tangential contacts can
+        # produce near-duplicate numerical roots but should not introduce
+        # degenerate intervals.
+        diff = self - other
+        roots = diff.roots()
+        roots = self._branch_switch_roots(diff, roots)
         newdom = newdom.merge(roots)
         switch = newdom.support.merge(roots)
 
@@ -1457,15 +1463,54 @@ class Chebfun:
         if switch.size == 0:  # pragma: no cover
             return self.__class__.initempty()
 
-        keys = 0.5 * ((-1) ** np.arange(switch.size - 1) + 1)
-        if switch.size > 0 and comparator(other(switch[0]), self(switch[0])):
-            keys = 1 - keys
         funs = np.array([])
-        for interval, use_self in zip(switch.intervals, keys, strict=False):
+        for interval in switch.intervals:
+            midpoint = interval[0] + 0.5 * (interval[-1] - interval[0])
+            use_self = comparator(self(midpoint), other(midpoint))
             subdom = newdom.restrict(interval)
             subfun = self.restrict(subdom) if use_self else other.restrict(subdom)
             funs = np.append(funs, subfun.funs)
         return self.__class__(funs)
+
+    @staticmethod
+    def _branch_switch_roots(diff: Chebfun, roots: np.ndarray) -> np.ndarray:
+        """Return roots where ``diff`` changes sign.
+
+        Rootfinding around even-multiplicity roots is ill-conditioned and can
+        return close pairs around a tangential contact.  Those are equality
+        points but not branch switches for max/min operations.
+        """
+        if roots.size == 0:
+            return roots
+
+        support = diff.support
+        breakpoints = np.concatenate(([support[0]], roots, [support[-1]]))
+        value_tol = max(1e2 * diff.vscale * prefs.eps, prefs.eps)
+        interval_signs = np.zeros(breakpoints.size - 1)
+        for idx, (left, right) in enumerate(pairwise(breakpoints)):
+            if right <= left:
+                continue
+            midpoint = left + 0.5 * (right - left)
+            value = float(diff(midpoint))
+            if abs(value) > value_tol:
+                interval_signs[idx] = np.sign(value)
+
+        def nearest_nonzero(start: int, step: int) -> float:
+            idx = start
+            while 0 <= idx < interval_signs.size:
+                sign = interval_signs[idx]
+                if sign != 0:
+                    return sign
+                idx += step
+            return 0.0
+
+        switch_roots = []
+        for idx, root in enumerate(roots):
+            left_sign = nearest_nonzero(idx, -1)
+            right_sign = nearest_nonzero(idx + 1, +1)
+            if left_sign * right_sign < 0:
+                switch_roots.append(root)
+        return np.asarray(switch_roots)
 
     # ----------
     #  plotting
