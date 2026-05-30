@@ -19,6 +19,7 @@ from chebpy.algorithms import (
     cheb2leg,
     clenshaw,
     coeffmult,
+    funqui,
     leg2cheb,
     standard_chop,
 )
@@ -225,6 +226,42 @@ def test_bary(testfunctions: list) -> None:
             for _k, xx in enumerate(evalpts):
                 print(f"Testing bary {fun.__name__}")
                 assert _eval_tester(bary, fun, xx, chebpts)
+
+
+def test_funqui_interpolates_equispaced_nodes() -> None:
+    """Test funqui reproduces equispaced sample data."""
+    domain = np.array([-1.0, 1.0])
+    nodes = np.linspace(domain[0], domain[1], 21)
+    values = np.sin(nodes) + 0.25 * np.cos(3 * nodes)
+    interpolant = funqui(values, domain)
+    np.testing.assert_allclose(interpolant(nodes), values, atol=1e-12)
+
+
+def test_funqui_custom_domain_approximates_smooth_data() -> None:
+    """Test funqui on a finite interval other than [-1, 1]."""
+    domain = np.array([0.0, 2.0 * np.pi])
+    nodes = np.linspace(domain[0], domain[1], 33)
+    values = np.sin(nodes)
+    interpolant = funqui(values, domain)
+    xx = np.linspace(domain[0], domain[1], 101)
+    np.testing.assert_allclose(interpolant(xx), np.sin(xx), atol=1e-12)
+
+
+def test_funqui_two_samples_are_linear() -> None:
+    """Test funqui constructs the endpoint line for two samples."""
+    domain = np.array([-2.0, 2.0])
+    interpolant = funqui(np.array([-1.0, 3.0]), domain)
+    xx = np.linspace(domain[0], domain[1], 25)
+    np.testing.assert_allclose(interpolant(xx), xx + 1.0, atol=1e-13)
+
+
+def test_funqui_complex_samples() -> None:
+    """Test funqui supports complex-valued sample data."""
+    domain = np.array([-1.0, 1.0])
+    nodes = np.linspace(domain[0], domain[1], 17)
+    values = np.exp(1j * np.pi * nodes)
+    interpolant = funqui(values, domain)
+    np.testing.assert_allclose(interpolant(nodes), values, atol=1e-12)
 
 
 def test_clenshaw(testfunctions: list) -> None:
