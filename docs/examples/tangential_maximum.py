@@ -1,8 +1,8 @@
-"""Visualise issue 45: tangential roots in pointwise maximum.
+"""Visualise tangential roots in pointwise maximum.
 
 Run from the repository root with:
 
-    uv run python docs/examples/issue45_tangential_maximum.py
+    uv run python docs/examples/tangential_maximum.py
 """
 
 import numpy as np

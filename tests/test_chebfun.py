@@ -631,8 +631,6 @@ class TestDomainBreakingOps:
         assert np.max(np.abs(np.minimum(np.sin(xx), np.cos(xx)) - g(xx))) <= vscl * hscl * lscl * tol
 
     def test_maximum_tangential_contact_does_not_switch_branches(self):
-        # Issue 45: this produces near-duplicate roots around +/- pi/2,
-        # which used to create tiny degenerate intervals in maximum().
         x = chebfun("x", [-2, 3])
         f1 = np.sin(3 * x)
         f2 = -np.sin(x)
