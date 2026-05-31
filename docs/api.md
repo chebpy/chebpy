@@ -8,6 +8,8 @@
 
 ::: chebpy.trigtech.Trigtech
 
+::: chebpy.linalg
+
 ::: chebpy.quasimatrix.Quasimatrix
 
 ::: chebpy.quasimatrix.polyfit
