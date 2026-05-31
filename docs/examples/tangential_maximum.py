@@ -5,38 +5,53 @@ Run from the repository root with:
     uv run python docs/examples/tangential_maximum.py
 """
 
-import numpy as np
+from itertools import pairwise
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 from chebpy import chebfun
 
 
 def main() -> None:
+    """Plot historical duplicate-root behavior and the fixed maximum."""
     x = chebfun("x", [-2, 3])
     f1 = np.sin(3 * x)
     f2 = -np.sin(x)
     diff = f1 - f2
     roots = diff.roots()
+    historical_roots = np.array(
+        [
+            -0.5 * np.pi - 1e-8,
+            -0.5 * np.pi + 1e-8,
+            0.0,
+            0.5 * np.pi - 1e-8,
+            0.5 * np.pi + 1e-8,
+        ]
+    )
 
     xx = np.linspace(-2, 3, 3000)
     f1_values = np.sin(3 * xx)
     f2_values = -np.sin(xx)
 
-    # Recreate the old failure mode for illustration: split at every raw
-    # root and alternate branches blindly.
-    breakpoints = np.r_[-2, roots, 3]
+    # Recreate the old failure mode for illustration: split at every
+    # historical raw root and alternate branches blindly.
+    breakpoints = np.r_[-2, historical_roots, 3]
     old_values = np.empty_like(xx)
     midpoint = 0.5 * (breakpoints[0] + breakpoints[1])
     use_f1 = f1(float(midpoint)) >= f2(float(midpoint))
-    for left, right in zip(breakpoints[:-1], breakpoints[1:], strict=False):
+    for left, right in pairwise(breakpoints):
         mask = (left <= xx) & (xx <= right)
         old_values[mask] = f1_values[mask] if use_f1 else f2_values[mask]
         use_f1 = not use_f1
 
     fixed = f1.maximum(f2)
 
-    print("Raw roots of sin(3*x) + sin(x):")
+    print("Current roots of sin(3*x) + sin(x):")
     print(roots)
+    print()
+    print("Historical duplicate roots used for the visualization:")
+    print(historical_roots)
     print()
     print("Fixed maximum domain:")
     print(fixed.domain)
@@ -49,14 +64,14 @@ def main() -> None:
     axes[0].plot(xx, f2_values, label="-sin(x)")
     axes[0].plot(xx, diff(xx), color="0.3", linewidth=1, label="difference")
     axes[0].axhline(0, color="0.7", linewidth=1)
-    axes[0].plot(roots, np.zeros_like(roots), "rx", label="raw roots")
-    axes[0].set_title("Raw roots include near-duplicate tangential contacts")
+    axes[0].plot(historical_roots, np.zeros_like(historical_roots), "rx", label="historical raw roots")
+    axes[0].set_title("Tangential contacts can appear as near-duplicate roots")
     axes[0].legend()
 
     axes[1].plot(xx, np.maximum(f1_values, f2_values), "k", linewidth=3, label="true max")
     axes[1].plot(xx, old_values, "--", label="old alternating switch behavior")
     axes[1].plot(xx, fixed(xx), ":", linewidth=3, label="fixed maximum()")
-    for root in roots:
+    for root in historical_roots:
         axes[1].axvline(root, color="r", alpha=0.2)
     axes[1].set_title("Only sign-changing roots become branch switches")
     axes[1].legend()

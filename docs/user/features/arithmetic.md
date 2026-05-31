@@ -62,12 +62,15 @@ f = np.sin(3 * x)
 g = -np.sin(x)
 
 (f - g).roots()
-# array close to [-pi/2, -pi/2, 0, pi/2, pi/2]
+# Some BLAS/FFT/platform combinations report roots close to:
+# [-pi/2, -pi/2, 0, pi/2, pi/2]
 ```
 
 The contacts at `+/- pi/2` do not change which branch is active, so
 `f.maximum(g)` filters them as switch points and only splits at the true
-crossing near `0`.
+crossing near `0`.  The script
+`docs/examples/tangential_maximum.py` visualises both the historical
+duplicate-root failure mode and the fixed result.
 
 ## References
 
