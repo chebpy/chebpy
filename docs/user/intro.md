@@ -44,6 +44,10 @@ by default). This means:
 - Functions with localised features may require breakpoint detection
 - The resulting representation is accurate to roughly 15 digits
 
+See [Accuracy and Preferences](features/approximation.md#accuracy-and-preferences)
+for how `eps`, `maxpow2`, and non-convergence warnings affect adaptive
+construction.
+
 ### Operations
 
 Once a function is represented as a Chebfun, operations such as differentiation,
