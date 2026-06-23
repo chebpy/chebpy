@@ -17,14 +17,19 @@ dependencies = [
 dev = [
     "seaborn==0.13.2",
     "marimo==0.23.10",
-    "ruff>=0.14.14",
-    "pandas",
+    "pandas>=2.2",
     "plotly",
+]
+test = [
+    "pytest>=8.0",
+]
+lint = [
+    "ruff>=0.14.14",
 ]
 
 [project.urls]
-repository = "https://github.com/chebpy/chebpy"
-homepage = "https://chebpy.github.io/chebpy/"
+Homepage = "https://chebpy.github.io/chebpy/"
+Repository = "https://github.com/chebpy/chebpy"
 
 [build-system]
 requires = ["hatchling"]
