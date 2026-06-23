@@ -33,7 +33,7 @@ class Onefun(ABC):
     # --------------------------
     @classmethod
     @abstractmethod
-    def initconst(cls, c: float) -> "Onefun":  # pragma: no cover
+    def initconst(cls, c: float, *, interval: Any = None) -> "Onefun":  # pragma: no cover
         """Initialize a constant function.
 
         This constructor creates a function that represents a constant value
@@ -41,6 +41,7 @@ class Onefun(ABC):
 
         Args:
             c: The constant value.
+            interval: Optional interval associated with the function (used by mapped subclasses).
 
         Returns:
             Onefun: A new instance representing the constant function f(x) = c.
@@ -49,11 +50,14 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initempty(cls) -> "Onefun":  # pragma: no cover
+    def initempty(cls, *, interval: Any = None) -> "Onefun":  # pragma: no cover
         """Initialize an empty function.
 
         This constructor creates an empty function representation, which is
         useful as a placeholder or for special cases.
+
+        Args:
+            interval: Optional interval associated with the function (used by mapped subclasses).
 
         Returns:
             Onefun: A new empty instance.
@@ -75,7 +79,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initfun(cls, f: Any, n: Any = None) -> "Onefun":  # pragma: no cover
+    def initfun(cls, f: Any, n: Any = None, *, interval: Any = None) -> "Onefun":  # pragma: no cover
         """Initialize from a callable function.
 
         This is a general constructor that delegates to either initfun_adaptive
@@ -85,6 +89,7 @@ class Onefun(ABC):
             f (callable): The function to be approximated.
             n (int, optional): If provided, specifies the number of points to use.
                 If None, determines the number adaptively.
+            interval: Optional interval associated with the function (used by mapped subclasses).
 
         Returns:
             Onefun: A new instance representing the function f.
@@ -126,7 +131,7 @@ class Onefun(ABC):
 
     @classmethod
     @abstractmethod
-    def initvalues(cls, values: Any) -> "Onefun":  # pragma: no cover
+    def initvalues(cls, values: Any, *, interval: Any = None) -> "Onefun":  # pragma: no cover
         """Initialize from function values at Chebyshev points.
 
         This constructor creates a function representation from values
@@ -134,6 +139,7 @@ class Onefun(ABC):
 
         Args:
             values: Function values at Chebyshev points.
+            interval: Optional interval associated with the function (used by mapped subclasses).
 
         Returns:
             Onefun: A new instance representing the function with the given values.

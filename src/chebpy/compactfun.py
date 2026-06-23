@@ -675,7 +675,7 @@ class CompactFun(Classicfun):
         if isinstance(other, CompactFun):
             return other._tail_left, other._tail_right
         if np.isscalar(other):
-            v = float(other)
+            v = float(cast(Any, other))
             return v, v
         # Anything else (e.g. a different Classicfun subclass) is treated as
         # zero-tailed; tail propagation may be inexact in that case.

@@ -37,7 +37,7 @@ References:
 
 import warnings
 from abc import ABC
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -209,7 +209,7 @@ class Trigtech(Smoothfun, ABC):
         self._coeffs = np.array(coeffs, dtype=complex)
         self._interval = Interval(*interval)
 
-    def __call__(self, x: Any, how: str = "fft") -> Any:
+    def __call__(self, x: Any, how: str = "fft") -> Any:  # noqa: ARG002 (how kept for Chebtech interface parity)
         """Evaluate the Trigtech at points *x* via the DFT summation formula.
 
         f(x) = Σ_k  coeffs[k] * exp(i*π*ω_k*(x+1))
@@ -432,7 +432,7 @@ class Trigtech(Smoothfun, ABC):
             cfs[0] += f  # add to DC component
             return cls(cfs, interval=self._interval)
         if f.isempty:
-            return f.copy()
+            return cast("Trigtech", f.copy())
         g = self
         n, m = g.size, f.size
         if n < m:
@@ -453,7 +453,7 @@ class Trigtech(Smoothfun, ABC):
         if np.isscalar(f):
             return cls(self._coeffs / np.asarray(f), interval=self._interval)
         if f.isempty:
-            return f.copy()
+            return cast("Trigtech", f.copy())
         return cls.initfun_adaptive(lambda x: self(x) / f(x), interval=self._interval)
 
     __truediv__ = __div__
@@ -471,7 +471,7 @@ class Trigtech(Smoothfun, ABC):
         if np.isscalar(g):
             return cls(g * self._coeffs, interval=self._interval)
         if g.isempty:
-            return g.copy()
+            return cast("Trigtech", g.copy())
         n = self.size + g.size
         f_vals = self.prolong(n).values()
         g_vals = g.prolong(n).values()
@@ -510,7 +510,7 @@ class Trigtech(Smoothfun, ABC):
 
     def __rsub__(self, f: Any) -> "Trigtech":
         """Compute f - self."""
-        return -(self - f)
+        return cast("Trigtech", -(self - f))
 
     @self_empty()
     def __rpow__(self, f: Any) -> "Trigtech":
@@ -522,7 +522,7 @@ class Trigtech(Smoothfun, ABC):
 
     def __sub__(self, f: Any) -> "Trigtech":
         """Subtract *f* (scalar or Trigtech) from this Trigtech."""
-        return self + (-f)
+        return cast("Trigtech", self + (-f))
 
     # ------------------------------------------------------------------
     #  rootfinding
@@ -635,7 +635,7 @@ class Trigtech(Smoothfun, ABC):
         n = vals.size
         if n == 0:
             return np.array([], dtype=complex)
-        return np.fft.fft(vals) / n
+        return cast(np.ndarray, np.fft.fft(vals) / n)
 
     @staticmethod
     def _coeffs2vals(coeffs: Any) -> np.ndarray:
@@ -652,7 +652,7 @@ class Trigtech(Smoothfun, ABC):
         max_real = float(np.max(np.abs(np.real(vals))))
         if float(np.max(np.abs(np.imag(vals)))) < 1e-10 * max(max_real, 1.0):
             return np.real(vals)
-        return vals
+        return cast(np.ndarray, vals)
 
     # ------------------------------------------------------------------
     #  plotting

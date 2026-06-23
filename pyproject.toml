@@ -48,3 +48,9 @@ invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
 invalid-assignment = "ignore"
 unsupported-operator = "ignore"
+
+[tool.interrogate]
+# The project test suite is exempt from the docstring-coverage gate: test intent
+# is carried by descriptive test names and assertions rather than docstrings.
+# src/ (and the Rhiza-managed .rhiza/tests and .rhiza/utils) stay fully covered.
+exclude = ["tests"]

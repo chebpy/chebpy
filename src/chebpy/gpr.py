@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -59,8 +60,8 @@ def _kernel_matrix(
     r = x1[:, None] - x2[None, :]
     if opts.trig:
         period = opts.domain[1] - opts.domain[0]
-        return opts.sigma**2 * np.exp(-2.0 / opts.length_scale**2 * np.sin(np.pi / period * r) ** 2)
-    return opts.sigma**2 * np.exp(-0.5 / opts.length_scale**2 * r**2)
+        return cast(np.ndarray, opts.sigma**2 * np.exp(-2.0 / opts.length_scale**2 * np.sin(np.pi / period * r) ** 2))
+    return cast(np.ndarray, opts.sigma**2 * np.exp(-0.5 / opts.length_scale**2 * r**2))
 
 
 def _log_marginal_likelihood(

@@ -6,7 +6,7 @@ polynomials and various factory functions to construct such polynomials.
 
 import warnings
 from collections.abc import Callable
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -96,7 +96,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         else:
             return self
 
-    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:
+    def __call__(self, arg: ScalarLike | ArrayLike) -> ScalarLike | np.ndarray:  # type: ignore[override]  # numpy ABCPolyBase.__call__ uses a looser arg/return type
         """Evaluate the polynomial at points x.
 
         Args:
@@ -191,7 +191,7 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         a, b = self.domain
         ch = ChebyshevPolynomial(self.coef, domain=self.domain)  # window = [-1, 1] by default
         integral = ch.integ()
-        return float(integral(b) - integral(a))
+        return float(cast(Any, integral(b) - integral(a)))
 
     def plot(self, ax: Axes | None = None, n: int | None = None, **kwds: Any) -> Axes:
         """Plot the Chebyshev polynomial over its domain.
@@ -421,7 +421,7 @@ def from_constant(
     if isinstance(c, int):
         c = float(c)
 
-    return ChebyshevPolynomial([c], domain, window, symbol)
+    return ChebyshevPolynomial(cast(ArrayLike, [c]), domain, window, symbol)
 
 
 def from_function(
@@ -458,6 +458,7 @@ def from_function(
 
     # Create a wrapper function that maps points from [-1, 1] to the custom domain
     def mapped_fun(x: np.ndarray) -> np.ndarray:
+        """Evaluate the user function after mapping *x* from [-1, 1] to the custom domain."""
         # Map x from [-1, 1] to the custom domain
         a, b = domain_arr
         mapped_x = 0.5 * (b - a) * (x + 1) + a
