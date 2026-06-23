@@ -67,22 +67,44 @@ select = [
 extend-select = [
     "D105",  # pydocstyle - Require docstrings for magic methods
     "D107",  # pydocstyle - Require docstrings for __init__
+    "A",     # flake8-builtins - Don't shadow Python builtins
+    "ANN001", # flake8-annotations - Require function argument annotations
+    "ANN2",   # flake8-annotations - Require function return annotations
+    "ARG",   # flake8-unused-arguments - Unused arguments (tests exempt below: pytest fixtures)
     "B",     # flake8-bugbear - Find likely bugs and design problems
+    "BLE",   # flake8-blind-except - No bare `except Exception` swallowing
     "C4",    # flake8-comprehensions - Better list/set/dict comprehensions
+    "PIE",   # flake8-pie - Miscellaneous lints (duplicate class fields, useless spread, ...)
     "SIM",   # flake8-simplify - Simplify code
     "PT",    # flake8-pytest-style - Check pytest best practices
     "RUF",   # Ruff-specific rules
     "S",     # flake8-bandit - Find security issues
-    #"ERA",   # eradicate - Find commented out code
-    #"T10",   # flake8-debugger - Check for debugger imports and calls
     "TRY",   # flake8-try-except-raise - Try/except/raise checks
     "ICN",   # flake8-import-conventions - Import convention enforcement
-    #"PIE",   # flake8-pie - Miscellaneous rules
-    #"PL",    # Pylint rules
 ]
+
+# Deliberately NOT enabled — exclusions are decisions, not omissions.
+# One-line rationale per family; revisit when the rationale stops holding:
+# ERA: templates, notebooks, and shipped configs legitimately carry commented-out example code
+# T10: stray breakpoints/pdb imports would fail local pre-commit mid-debugging; review catches leftovers
+# PL: Pylint family is large and opinionated (magic values, arg counts) — high noise for a template repo
+# FBT: boolean positional flags (e.g. dry_run=True) are idiomatic in our test/make drivers
+# COM: trailing-comma layout is owned by `ruff format`
+# ISC: implicit string concatenation is handled/conflicted by `ruff format`
+# Q: quote style is owned by `ruff format` (double quotes, configured below)
+# RET: return-statement micro-style; SIM already covers the valuable simplifications
+# EM: literal exception messages are fine at our scale; TRY covers exception-flow issues
+# DTZ: no runtime code handling datetimes ships from this repo
+# SLF: private-member access is needed in tests; too coarse to enable repo-wide
+# TCH/TID: no typing-only import cycles or import-tidiness issues at this size
+# RSE: raise micro-style; TRY covers the error-prone patterns
+# NPY/PD: no NumPy/pandas runtime code in this repository
+# YTT: Python 2020 sys.version checks are irrelevant on py311+
+# PGH: its eval/blanket-ignore checks overlap with the S and RUF rules already enabled
 
 # Resolve incompatible pydocstyle rules: prefer D211 and D212 over D203 and D213
 ignore = [
+    "ANN401",  # dynamically typed *args/**kwargs in framework hooks are intentional
     "D203",  # one-blank-line-before-class (conflicts with D211)
     "D213",  # multi-line-summary-second-line (conflicts with D212)
 ]
@@ -101,29 +123,35 @@ line-ending = "auto"
 
 # File-specific rule exceptions
 [lint.per-file-ignores]
-# Test files - allow assert statements and subprocess calls for testing
+# All test code, wherever it lives (project suite under tests/, smoke tests under
+# .rhiza/tests/, and their bundle copies under bundles/). This glob subsumes the
+# project suite; tests/**/*.py below adds project-suite-only allowances on top.
 "**/tests/**/*.py" = [
+    "ANN",      # tests prioritize readability and fixtures over strict annotation coverage
+    "ARG",      # pytest fixtures are requested by name for their side effects, not always read
     "D101",     # Allow missing class docstrings in tests
     "D102",     # Allow missing method docstrings in tests
     "D105",     # Allow missing magic method docstrings in tests
     "N802",     # Allow uppercase function names (math notation)
     "N803",     # Allow uppercase argument names (math notation)
     "N806",     # Allow uppercase variable names (math notation)
-    "S101",     # Allow assert statements in tests
-    "S603",     # Allow subprocess calls without shell=False check
-    "S607",     # Allow starting processes with partial paths in tests
+    "S101",     # assert is the test idiom
+    "S603",     # tests drive git/make/uv via subprocess with fixed argument lists
+    "S607",     # partial executable paths (git, make) are intentional in test drivers
     "PLW1510",  # Allow subprocess without explicit check parameter
 ]
+# Project test suite only — allowances the synced .rhiza/tests should not inherit
 "tests/**/*.py" = [
     "ERA001",   # Allow commented out code in project tests
     "PLR2004",  # Allow magic values in project tests
     "PT011",    # Allow broad pytest.raises in project tests
-    "RUF002",   # Allow ambiguous unicode in project tests
-    "RUF012",   # Allow mutable class attributes in project tests
+    "RUF002",   # docstrings quote prose with typographic unicode (e.g. en dash)
+    "RUF012",   # pytest class attributes are conventionally bare mutables, not ClassVar
     "TRY003",   # Allow long exception messages in project tests
 ]
 # Marimo notebooks - allow flexible coding patterns for interactive exploration
 "**/notebooks/*.py" = [
+    "ANN",     # notebooks prioritize interactive readability over strict annotation coverage
     "D100",    # No module docstring - marimo requires `import marimo` as the first statement
     "E501",    # Allow long lines for LaTeX formulas in markdown cells
     "E741",    # Allow ambiguous variable names (e.g. O for orth) in notebooks

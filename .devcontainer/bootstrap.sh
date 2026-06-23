@@ -16,7 +16,8 @@ error_with_recovery() {
 
 # Read Python version from .python-version (single source of truth)
 if [ -f ".python-version" ]; then
-    export PYTHON_VERSION=$(cat .python-version | tr -d '[:space:]')
+    PYTHON_VERSION=$(tr -d '[:space:]' < .python-version)
+    export PYTHON_VERSION
     echo "✓ Using Python version from .python-version: $PYTHON_VERSION"
 else
     error_with_recovery \
@@ -42,16 +43,22 @@ export UV_VENV_CLEAR=1
 export UV_LINK_MODE=copy
 
 # Make UV environment variables persistent for all sessions
-echo "export UV_LINK_MODE=copy" >> ~/.bashrc
-echo "export UV_VENV_CLEAR=1" >> ~/.bashrc
-echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> ~/.bashrc
+{
+    echo "export UV_LINK_MODE=copy"
+    echo "export UV_VENV_CLEAR=1"
+    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+} >> ~/.bashrc
 
 # Add to current PATH so subsequent commands can find uv
 export PATH="$INSTALL_DIR:$PATH"
 
+# Default to a lightweight dependency set in devcontainers.
+# Override with UV_SYNC_ARGS to install different groups.
+export UV_SYNC_ARGS="${UV_SYNC_ARGS:---group lint --group test}"
+
 # Install dependencies with recovery options
 echo "📦 Installing project dependencies..."
-if ! make install; then
+if ! make install UV_SYNC_ARGS="$UV_SYNC_ARGS"; then
     error_with_recovery \
         "Dependency installation" \
         "make install failed" \

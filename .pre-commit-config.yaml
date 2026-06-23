@@ -1,6 +1,12 @@
 # This file is part of the jebel-quant/rhiza repository
 # (https://github.com/jebel-quant/rhiza).
 #
+# Pin node so pre-commit provisions a compatible runtime instead of using the
+# system node. Some npm-based hooks (markdownlint-cli) pull transitive deps that
+# reject odd-numbered current node releases (e.g. v25), failing on EBADENGINE.
+default_language_version:
+  node: "24.12.0"
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -18,8 +24,14 @@ repos:
         entry: Python cache files (__pycache__, .pyc, .pyo, .pyd) must not be committed. Run 'make clean' to remove them.
         files: '(/__pycache__/|\.py[cod]$)'
 
+      - id: no-rej-files
+        name: Reject .rej files
+        entry: "bash -c 'find . -type f -name \"*.rej\" | grep -q . && { echo \"ERROR: .rej files detected\"; find . -type f -name \"*.rej\"; exit 1; } || exit 0'"
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.14'
+    rev: 'v0.15.18'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -28,24 +40,30 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.48.0
+    rev: v0.49.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.2
+    rev: 0.37.3
     hooks:
       - id: check-renovate
         args: [ "--verbose" ]
 
       - id: check-github-workflows
         args: ["--verbose"]
+        # Generated gh-aw output (DO NOT EDIT headers) uses concurrency keys
+        # ahead of the published workflow schema - the compiler owns its validity
+        exclude: ^\.github/workflows/(.*\.lock\.yml|agentics-maintenance\.yml)$
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
       - id: actionlint
+        # Same carve-out as check-github-workflows above: gh-aw-generated
+        # workflows are owned and validated by the gh-aw compiler
+        exclude: ^\.github/workflows/(.*\.lock\.yml|agentics-maintenance\.yml)$
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.25
@@ -58,8 +76,13 @@ repos:
       - id: bandit
         args: ["--ini", ".bandit", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache"]
 
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.5.0
+    hooks:
+      - id: betterleaks
+
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.16
+    rev: 0.11.23
     hooks:
       - id: uv-lock
 
@@ -71,7 +94,7 @@ repos:
         files: ^src/
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.4.0  # Use the latest release
+    rev: v0.6.3  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names

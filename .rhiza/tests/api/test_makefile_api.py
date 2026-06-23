@@ -249,17 +249,18 @@ def test_global_variable_override(logger, setup_api_env):
 
     This tests the pattern documented in CUSTOMIZATION.md:
     Set variables before the include line to override defaults.
-    """
-    # Add variable override to root Makefile (before include line)
-    makefile = setup_api_env / "Makefile"
-    original = makefile.read_text()
-    new_content = (
-        """# Override default coverage threshold (defaults to 90)
-COVERAGE_FAIL_UNDER := 42
-export COVERAGE_FAIL_UNDER
 
-"""
-        + original
+    The Makefile is rebuilt from a pristine root (just the override and the
+    Rhiza include) rather than prepended to the consuming project's own
+    Makefile, so a coverage override the project itself sets cannot shadow the
+    value under test.
+    """
+    makefile = setup_api_env / "Makefile"
+    new_content = (
+        "# Override default coverage threshold (defaults to 90)\n"
+        "COVERAGE_FAIL_UNDER := 42\n"
+        "export COVERAGE_FAIL_UNDER\n\n"
+        "include .rhiza/rhiza.mk\n"
     )
     makefile.write_text(new_content)
 

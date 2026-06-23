@@ -65,6 +65,7 @@ assert_contains() {
     fi
 }
 
+# shellcheck disable=SC2329  # helper kept for tests that assert on exit codes
 assert_exit_code() {
     local expected_code="$1"
     local actual_code="$2"

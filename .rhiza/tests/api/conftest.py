@@ -35,6 +35,7 @@ SPLIT_MAKEFILES = [
     ".rhiza/make.d/bootstrap.mk",
     ".rhiza/make.d/quality.mk",
     ".rhiza/make.d/releasing.mk",
+    ".rhiza/make.d/doctor.mk",
     ".rhiza/make.d/test.mk",
     ".rhiza/make.d/book.mk",
     ".rhiza/make.d/marimo.mk",
