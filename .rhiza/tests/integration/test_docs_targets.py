@@ -46,3 +46,12 @@ def test_mkdocs_build_dry_run_with_extra_packages(git_repo, book_makefile):
             assert pkg in result.stdout, (
                 f"MKDOCS_EXTRA_PACKAGES package '{pkg}' should be visible in the dry-run command"
             )
+
+
+def test_default_book_command_does_not_use_editable_install(git_repo):
+    """Test default book dry-run avoids editable local package installation."""
+    result = subprocess.run([MAKE, "-n", "book"], cwd=git_repo, capture_output=True, text=True)  # nosec
+
+    assert result.returncode == 0, f"Dry-run failed: {result.stderr}"
+    assert "--with-editable ." not in result.stdout
+    assert "--with 'mkdocstrings[python]'" in result.stdout

@@ -61,7 +61,7 @@ class ChebpyBaseError(Exception, ABC):
 # ===============================================
 
 # Exception raised when two intervals overlap but should be disjoint
-IntervalOverlap = type(
+IntervalOverlap: type[ChebpyBaseError] = type(
     "IntervalOverlap",
     (ChebpyBaseError,),
     {
@@ -75,7 +75,7 @@ IntervalOverlap = type(
 )
 
 # Exception raised when intervals have gaps between them
-IntervalGap = type(
+IntervalGap: type[ChebpyBaseError] = type(
     "IntervalGap",
     (ChebpyBaseError,),
     {
@@ -90,7 +90,7 @@ IntervalGap = type(
 )
 
 # Exception raised when intervals don't match for an operation
-IntervalMismatch = type(
+IntervalMismatch: type[ChebpyBaseError] = type(
     "IntervalMismatch",
     (ChebpyBaseError,),
     {
@@ -104,7 +104,7 @@ IntervalMismatch = type(
 )
 
 # Exception raised when an interval is not a subinterval of another
-NotSubinterval = type(
+NotSubinterval: type[ChebpyBaseError] = type(
     "NotSubinterval",
     (ChebpyBaseError,),
     {
@@ -118,7 +118,7 @@ NotSubinterval = type(
 )
 
 # Exception raised when interval values are not strictly increasing
-IntervalValues = type(
+IntervalValues: type[ChebpyBaseError] = type(
     "IntervalValues",
     (ChebpyBaseError,),
     {
@@ -137,7 +137,7 @@ IntervalValues = type(
 # ===============================================
 
 # Exception raised when a domain is invalid
-InvalidDomain = type(
+InvalidDomain: type[ChebpyBaseError] = type(
     "InvalidDomain",
     (ChebpyBaseError,),
     {
@@ -153,7 +153,7 @@ InvalidDomain = type(
 )
 
 # Exception raised when a domain is not a subdomain of another
-NotSubdomain = type(
+NotSubdomain: type[ChebpyBaseError] = type(
     "NotSubdomain",
     (ChebpyBaseError,),
     {
@@ -169,7 +169,7 @@ NotSubdomain = type(
 )
 
 # Exception raised when supports don't match for an operation
-SupportMismatch = type(
+SupportMismatch: type[ChebpyBaseError] = type(
     "SupportMismatch",
     (ChebpyBaseError,),
     {
@@ -183,7 +183,7 @@ SupportMismatch = type(
 )
 
 # Exception raised when the length argument for a function is invalid
-BadFunLengthArgument = type(
+BadFunLengthArgument: type[ChebpyBaseError] = type(
     "BadFunLengthArgument",
     (ChebpyBaseError,),
     {
@@ -205,7 +205,7 @@ BadFunLengthArgument = type(
 # ===============================================
 
 # Exception raised when a CompactFun cannot be constructed
-CompactFunConstructionError = type(
+CompactFunConstructionError: type[ChebpyBaseError] = type(
     "CompactFunConstructionError",
     (ChebpyBaseError,),
     {
@@ -221,7 +221,7 @@ CompactFunConstructionError = type(
 )
 
 # Exception raised when an integral is divergent
-DivergentIntegralError = type(
+DivergentIntegralError: type[ChebpyBaseError] = type(
     "DivergentIntegralError",
     (ChebpyBaseError,),
     {

@@ -12,8 +12,12 @@ Outputs a detailed per-file report, an ASCII histogram, and a letter grade.
 
 from __future__ import annotations
 
+import argparse
 import io
+import json
 import re
+import shutil
+import subprocess  # nosec B404
 import sys
 import tokenize
 from collections import Counter
@@ -123,8 +127,8 @@ def scan_file(path: Path) -> list[Suppression]:
                         )
                     )
                     break  # count each comment line once
-    except tokenize.TokenError:
-        pass  # skip files with tokenization errors (e.g. incomplete source)
+    except (tokenize.TokenError, IndentationError):
+        pass  # skip files with tokenization errors or bad indentation
 
     return suppressions
 
@@ -189,6 +193,8 @@ _BOLD = "\033[1m"
 _BLUE = "\033[36m"
 _YELLOW = "\033[33m"
 _GREEN = "\033[32m"
+_RED = "\033[31m"
+_CVE_RE = re.compile(r"\bCVE-\d{4}-\d+\b", re.IGNORECASE)
 
 
 # ---------------------------------------------------------------------------
@@ -196,13 +202,49 @@ _GREEN = "\033[32m"
 # ---------------------------------------------------------------------------
 
 
-def main() -> int:
-    """Run the suppression audit and print a structured report."""
-    root = Path(".")
+def _active_pip_audit_ids(extra_args: list[str]) -> set[str]:
+    """Return vulnerability IDs currently reported by pip-audit."""
+    uvx = shutil.which("uvx") or "uvx"
+    cmd = [uvx, "pip-audit", "--format", "json", *extra_args]
+    proc = subprocess.run(cmd, capture_output=True, text=True)  # noqa: S603  # nosec B603
 
+    if proc.returncode not in {0, 1}:
+        sys.stdout.write(proc.stdout)
+        sys.stderr.write(proc.stderr)
+        raise RuntimeError("pip-audit execution failed")
+
+    try:
+        data = json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("pip-audit did not return valid JSON") from exc
+
+    ids: set[str] = set()
+    for dep in data.get("dependencies", []):
+        for vuln in dep.get("vulns", []):
+            vuln_id = vuln.get("id")
+            if vuln_id:
+                ids.add(str(vuln_id).upper())
+            for alias in vuln.get("aliases", []):
+                ids.add(str(alias).upper())
+    return ids
+
+
+def _nosec_cves(suppressions: list[Suppression]) -> set[str]:
+    """Extract CVE identifiers referenced by # nosec suppressions."""
+    cves: set[str] = set()
+    for sup in suppressions:
+        if sup.kind != "nosec":
+            continue
+        cves.update(match.upper() for match in _CVE_RE.findall(sup.raw))
+    return cves
+
+
+def _collect_suppressions(root: Path) -> tuple[list[Path], list[Suppression], int]:
+    """Collect Python files, suppressions, and non-empty line counts."""
     in_rhiza_repo = _is_rhiza_repo(root)
 
     def _include(p: Path) -> bool:
+        """Return True when a Python file should be scanned for suppressions."""
         if _should_skip(p):
             return False
         # In consumer repos, skip the .rhiza/ framework directory entirely
@@ -212,11 +254,15 @@ def main() -> int:
 
     all_suppressions: list[Suppression] = []
     total_lines = 0
-
     for py_file in py_files:
         all_suppressions.extend(scan_file(py_file))
         total_lines += count_non_empty_lines(py_file)
 
+    return py_files, all_suppressions, total_lines
+
+
+def _print_report(py_files: list[Path], all_suppressions: list[Suppression], total_lines: int) -> None:
+    """Print the suppression audit report."""
     # -----------------------------------------------------------------------
     # Header
     # -----------------------------------------------------------------------
@@ -275,8 +321,50 @@ def main() -> int:
     print(f"  Grade           : {grade_colour}{_BOLD}{grade}{_RESET}")
     print()
 
+
+def _check_stale_nosec_cves(suppressions: list[Suppression], pip_audit_args: list[str]) -> int:
+    """Validate CVE-tagged # nosec suppressions against active pip-audit findings."""
+    suppressed_cves = _nosec_cves(suppressions)
+    if not suppressed_cves:
+        print(f"{_GREEN}[OK]{_RESET} No CVE-tagged # nosec suppressions found.")
+        return 0
+
+    try:
+        active_cves = _active_pip_audit_ids(pip_audit_args)
+    except RuntimeError as exc:
+        print(f"{_RED}[FAIL]{_RESET} {exc}")
+        return 2
+
+    stale = sorted(cve for cve in suppressed_cves if cve not in active_cves)
+    if stale:
+        print(f"{_RED}[FAIL]{_RESET} Stale # nosec CVE suppressions detected:")
+        for cve in stale:
+            print(f"  - {cve}")
+        return 1
+
+    print(f"{_GREEN}[OK]{_RESET} All CVE-tagged # nosec suppressions match active pip-audit findings.")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the suppression audit and print a structured report."""
+    parser = argparse.ArgumentParser(add_help=True)
+    parser.add_argument(
+        "--fail-stale-nosec-cve",
+        action="store_true",
+        help="Fail when # nosec comments reference CVEs that pip-audit no longer reports.",
+    )
+    args, pip_audit_args = parser.parse_known_args(argv)
+
+    root = Path(".")
+    py_files, all_suppressions, total_lines = _collect_suppressions(root)
+    _print_report(py_files, all_suppressions, total_lines)
+
+    if args.fail_stale_nosec_cve:
+        return _check_stale_nosec_cves(all_suppressions, pip_audit_args)
+
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

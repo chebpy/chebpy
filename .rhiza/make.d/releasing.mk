@@ -2,7 +2,7 @@
 # This file provides targets for version bumping and release management.
 
 # Declare phony targets (they don't produce files)
-.PHONY: bump release publish release-status pre-bump post-bump pre-release post-release
+.PHONY: bump release release-status changelog pre-bump post-bump pre-release post-release
 
 # Hook targets (double-colon rules allow multiple definitions)
 pre-bump:: ; @:
@@ -12,7 +12,7 @@ post-release:: ; @:
 
 # DRY_RUN support: pass DRY_RUN=1 to preview changes without applying them
 _DRY_RUN_FLAG := $(if $(DRY_RUN),--dry-run,)
-_VERSION=0.3.3
+_VERSION=0.7.1
 
 ##@ Releasing and Versioning
 bump: pre-bump ## bump version of the project (supports DRY_RUN=1)
@@ -28,12 +28,8 @@ bump: pre-bump ## bump version of the project (supports DRY_RUN=1)
 	fi
 	@$(MAKE) post-bump
 
-release: pre-release install-uv ## create tag and push to remote repository triggering release workflow (supports DRY_RUN=1)
+release: pre-release install-uv ## bump version, create tag and push to trigger the release workflow (supports DRY_RUN=1)
 	${UVX_BIN} "rhiza-tools>=$(_VERSION)" release $(_DRY_RUN_FLAG);
-	@$(MAKE) post-release
-
-publish: pre-release install-uv ## bump version, create tag and push in one step (supports DRY_RUN=1)
-	${UVX_BIN} "rhiza-tools>=$(_VERSION)" release --with-bump $(_DRY_RUN_FLAG);
 	@$(MAKE) post-release
 
 release-status: ## show release workflow status and latest release information
@@ -45,6 +41,11 @@ else ifeq ($(FORGE_TYPE),gitlab)
 else
 	@printf "${RED}[ERROR] Could not detect forge type (.github/workflows/ or .gitlab-ci.yml not found)${RESET}\n"
 endif
+
+changelog: install-uv ## generate/update CHANGELOG.md from git history using git-cliff (config: cliff.toml)
+	@printf "${BLUE}[INFO] Generating CHANGELOG.md with git-cliff...${RESET}\n"
+	@${UVX_BIN} git-cliff --output CHANGELOG.md
+	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
 
 
 

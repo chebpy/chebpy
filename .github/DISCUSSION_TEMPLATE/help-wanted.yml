@@ -1,0 +1,48 @@
+title: "[Help Wanted] "
+labels: ["help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to surface a contribution opportunity. It lets maintainers
+        describe work that is ready to be picked up — without opening a formal issue.
+
+  - type: input
+    id: area
+    attributes:
+      label: Topic / Area
+      description: Which part of the project does this involve?
+      placeholder: e.g. CI workflows, documentation, a specific bundle
+    validations:
+      required: true
+
+  - type: textarea
+    id: help-needed
+    attributes:
+      label: What Help Is Needed
+      description: Describe the task and what "done" looks like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: getting-started
+    attributes:
+      label: Getting Started
+      description: Pointers to relevant files, docs, or prior discussion that help a contributor begin.
+      placeholder: |
+        - Relevant files: ...
+        - Related docs: ...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: skill-level
+    attributes:
+      label: Skill Level
+      description: Roughly how much experience is needed to take this on?
+      options:
+        - Good first issue (beginner friendly)
+        - Intermediate
+        - Advanced
+    validations:
+      required: false

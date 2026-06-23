@@ -5,6 +5,8 @@
 # Declare phony targets (they don't produce files)
 .PHONY: install-uv install clean pre-install post-install
 
+UV_SYNC_ARGS ?= --all-extras --all-groups
+
 # Hook targets (double-colon rules allow multiple definitions)
 pre-install:: ; @:
 post-install:: ; @:
@@ -45,10 +47,10 @@ install: pre-install install-uv ## install
 	      exit 1; \
 	    fi; \
 	    printf "${BLUE}[INFO] Installing dependencies from lock file${RESET}\n"; \
-	    ${UV_BIN} sync --all-extras --all-groups --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	    ${UV_BIN} sync $(UV_SYNC_ARGS) --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
 	  else \
 	    printf "${YELLOW}[WARN] uv.lock not found. Generating lock file and installing dependencies...${RESET}\n"; \
-	    ${UV_BIN} sync --all-extras || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
+	    ${UV_BIN} sync $(UV_SYNC_ARGS) || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
 	  fi; \
 	else \
 	  printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"; \
@@ -70,10 +72,15 @@ install: pre-install install-uv ## install
 	  ${UV_BIN} pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }; \
 	fi
 
-	# Install pre-commit hooks
+	# Install pre-commit hooks (skip when core.hooksPath is set, e.g. by an
+	# external hook manager — pre-commit refuses to install in that case)
 	@if [ -f ".pre-commit-config.yaml" ]; then \
-	  printf "${BLUE}[INFO] Installing pre-commit hooks...${RESET}\n"; \
-	  ${UVX_BIN} -p ${PYTHON_VERSION} pre-commit install || { printf "${YELLOW}[WARN] Failed to install pre-commit hooks${RESET}\n"; }; \
+	  if [ -n "$$(git config --get core.hooksPath 2>/dev/null)" ]; then \
+	    printf "${BLUE}[INFO] Skipping pre-commit hook install: core.hooksPath is set${RESET}\n"; \
+	  else \
+	    printf "${BLUE}[INFO] Installing pre-commit hooks...${RESET}\n"; \
+	    ${UVX_BIN} -p ${PYTHON_VERSION} pre-commit install || { printf "${YELLOW}[WARN] Failed to install pre-commit hooks${RESET}\n"; }; \
+	  fi; \
 	fi
 
 	@$(MAKE) post-install
@@ -104,4 +111,4 @@ clean: ## Clean project artifacts and stale local branches
 
 	@git fetch --prune
 
-	@git branch -vv | awk '/: gone]/{print $$1}' | xargs -r git branch -D
+	@git branch -vv | awk '/: gone]/ && $$1 != "*" && $$1 != "+" {print $$1}' | xargs -r git branch -D

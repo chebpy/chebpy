@@ -1,0 +1,45 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: OSSF Scorecard
+#
+# Purpose: Run the OpenSSF Scorecard supply-chain security analysis and upload
+#          the results to GitHub code scanning. On public repositories the
+#          results are also published to the OpenSSF REST API, which powers
+#          the README badge and lets adopters verify the score independently.
+#          Set the SCORECARD_ENABLED repository variable to 'true' to
+#          force-enable on private repos, 'false' to disable, or leave unset
+#          for auto-detect (public repositories only).
+#
+#          Thin stub: the analysis logic and its enablement/visibility gate
+#          live in the reusable workflow in jebel-quant/rhiza; this file only
+#          wires up the triggers and grants the token scopes Scorecard needs.
+#
+# Trigger: Weekly schedule, pushes to main, branch-protection changes, and
+#          manual dispatch.
+
+name: "(RHIZA) SCORECARD"
+
+on:
+  # Re-evaluate when branch protection rules change (Scorecard's
+  # Branch-Protection check reads them).
+  branch_protection_rule:
+  schedule:
+    - cron: '34 2 * * 2'
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+# Least privilege by default; the called workflow grants its job only what
+# Scorecard needs (see the job-level permissions below).
+permissions: read-all
+
+jobs:
+  scorecard:
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_scorecard.yml@v0.19.4
+    secrets: inherit
+    permissions:
+      security-events: write   # Upload the SARIF results to code scanning
+      id-token: write          # Publish results to the OpenSSF REST API (badge)
+      contents: read
+      actions: read
