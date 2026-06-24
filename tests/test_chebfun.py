@@ -630,6 +630,34 @@ class TestDomainBreakingOps:
         lscl = max([fun.size for fun in np.append(f1.funs, f2.funs)])
         assert np.max(np.abs(np.minimum(np.sin(xx), np.cos(xx)) - g(xx))) <= vscl * hscl * lscl * tol
 
+    def test_maximum_tangential_contact_does_not_switch_branches(self):
+        x = chebfun("x", [-2, 3])
+        f1 = np.sin(3 * x)
+        f2 = -np.sin(x)
+        diff = f1 - f2
+
+        # Historical builds produced near-duplicate roots around tangential
+        # contacts at +/- pi/2. They are equality points but not branch
+        # switches.
+        historical_roots = np.array(
+            [
+                -0.5 * np.pi - 1e-8,
+                -0.5 * np.pi + 1e-8,
+                0.0,
+                0.5 * np.pi - 1e-8,
+                0.5 * np.pi + 1e-8,
+            ]
+        )
+        switch_roots = Chebfun._branch_switch_roots(diff, historical_roots)
+        np.testing.assert_allclose(switch_roots, [0.0], atol=1e-12)
+
+        g = f1.maximum(f2)
+
+        assert g.domain == Domain([-2, 0, 3])
+        assert np.all(np.diff(g.breakpoints) > 1e-6)
+        xx = np.linspace(-2, 3, 2001)
+        np.testing.assert_allclose(g(xx), np.maximum(np.sin(3 * xx), -np.sin(xx)), atol=1e-12)
+
     def test_maximum_empty(self):
         f_empty = Chebfun.initempty()
         f = chebfun(np.sin, [-1, 1])
