@@ -20,7 +20,7 @@ Main components and modules:
 
 import importlib.metadata
 
-from .api import chebfun, chebpts, pwc, trigfun
+from .api import chebfun, chebpts, equifun, pwc, trigfun
 from .compactfun import CompactFun
 from .gpr import gpr
 from .maps import MapParams
@@ -38,6 +38,7 @@ __all__ = [
     "UserPreferences",
     "chebfun",
     "chebpts",
+    "equifun",
     "gpr",
     "polyfit",
     "pwc",
