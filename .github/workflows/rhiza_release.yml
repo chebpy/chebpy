@@ -126,7 +126,7 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -211,7 +211,7 @@ jobs:
       attestations: write   # SLSA provenance + SBOM attestations (public repos only)
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -221,7 +221,7 @@ jobs:
           version: "0.11.16"
 
       - name: Configure git auth for private packages
-        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v0.19.4
+        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v0.19.9
         with:
           token: ${{ secrets.GH_PAT }}
 
@@ -260,7 +260,7 @@ jobs:
 
       - name: Install Python for SBOM generation
         if: hashFiles('pyproject.toml') != ''
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
         with:
           python-version-file: .python-version
 
@@ -286,7 +286,7 @@ jobs:
         # The XML format is provided for compatibility but doesn't need separate attestation.
         id: attest-sbom
         if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
-        uses: actions/attest@v4.1.0
+        uses: actions/attest@v4.1.1
         with:
           subject-path: sbom.cdx.json
           sbom-path: sbom.cdx.json
@@ -313,7 +313,7 @@ jobs:
       - name: Generate SLSA provenance attestations
         id: provenance
         if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         with:
           subject-path: dist/*
 
@@ -341,7 +341,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -392,7 +392,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -449,7 +449,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -468,7 +468,7 @@ jobs:
 
       - name: Set up Python
         if: steps.check_conda.outputs.should_generate == 'true'
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
         with:
           python-version-file: .python-version
 
@@ -514,7 +514,7 @@ jobs:
       image_name: ${{ steps.image_name.outputs.image_name }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -543,7 +543,7 @@ jobs:
 
       - name: Login to Container Registry
         if: steps.check_publish.outputs.should_publish == 'true'
-        uses: docker/login-action@v4.2.0
+        uses: docker/login-action@v4.4.0
         with:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
@@ -601,7 +601,7 @@ jobs:
       contents: write   # Needed to undraft/publish the GitHub release
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -618,7 +618,7 @@ jobs:
           uv sync --all-extras --all-groups --frozen
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
 
       - name: Generate Devcontainer Link
         id: devcontainer_link
