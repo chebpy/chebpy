@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import operator
 from collections.abc import Callable, Iterator
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,6 +24,7 @@ from .bndfun import Bndfun
 from .chebtech import Chebtech
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument, SupportMismatch
+from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
 from .trigtech import Trigtech
@@ -590,7 +591,7 @@ class Chebfun:
             return f
         if np.isscalar(f):
             chbfn1 = self
-            chbfn2 = f * np.ones(self.funs.size)
+            chbfn2 = cast(Any, f) * np.ones(self.funs.size)
             simplify = False
         else:
             newdom = self.domain.union(f.domain)
@@ -1180,7 +1181,7 @@ class Chebfun:
         # wrapped as CompactFun when the corresponding logical edge is ±inf;
         # interior pieces are always finite Bndfuns.
         n_pieces = len(out_breaks) - 1
-        funs_list = []
+        funs_list: list[Fun] = []
         for i in range(n_pieces):
             a_storage = float(out_breaks[i])
             b_storage = float(out_breaks[i + 1])
@@ -1552,7 +1553,7 @@ def add_ufunc(op: Callable[..., Any]) -> None:
         """
         return self.__class__([op(fun) for fun in self])
 
-    name = op.__name__  # type: ignore[attr-defined]
+    name = op.__name__  # ty: ignore[unresolved-attribute]
     method.__name__ = name
     method.__doc__ = method.__doc__
     setattr(Chebfun, name, method)

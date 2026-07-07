@@ -13,6 +13,8 @@ changes.
 from __future__ import annotations
 
 import os
+import re
+from pathlib import Path
 
 import pytest
 from api.conftest import SPLIT_MAKEFILES, run_make, setup_rhiza_git_repo, strip_ansi
@@ -50,6 +52,38 @@ class TestMakefile:
         assert "Targets:" in out
         assert "Bootstrap" in out or "Meta" in out  # section headers
 
+    def test_doctor_target_appears_in_help(self, logger):
+        """Doctor target should appear in help under the Dev section."""
+        proc = run_make(logger, ["help"])
+        out = proc.stdout
+        assert "Dev" in out
+        assert "doctor" in out
+
+    def test_doctor_fails_when_minimum_version_is_not_met(self, logger, tmp_path):
+        """Doctor should exit non-zero when a prerequisite version is below the minimum."""
+        fake_bin = tmp_path / "fake-bin"
+        fake_bin.mkdir(exist_ok=True)
+
+        for name, content in {
+            "uv": "#!/usr/bin/env sh\necho 'uv 0.3.0'\n",
+            "python": "#!/usr/bin/env sh\necho 'Python 3.12.2'\n",
+            "make": "#!/usr/bin/env sh\necho 'GNU Make 4.4.1'\n",
+            "git": "#!/usr/bin/env sh\necho 'git version 2.44.0'\n",
+        }.items():
+            script = fake_bin / name
+            script.write_text(content)
+            script.chmod(0o755)
+
+        env = os.environ.copy()
+        env["PATH"] = f"{fake_bin}:{env.get('PATH', '')}"
+
+        proc = run_make(logger, ["doctor"], dry_run=False, check=False, env=env)
+        out = strip_ansi(proc.stdout)
+        assert proc.returncode != 0
+        assert "[❌] uv" in out
+        assert "0.3.0" in out
+        assert "0.4.0" in out
+
     def test_fmt_target_dry_run(self, logger, tmp_path):
         """Fmt target should invoke pre-commit via uvx with Python version in dry-run output."""
         # Create clean environment without PYTHON_VERSION so Makefile reads from .python-version
@@ -81,22 +115,16 @@ class TestMakefile:
         out = proc.stdout
         assert_uvx_command_uses_version(out, tmp_path, "deptry src")
 
-    def test_typecheck_target_dry_run(self, logger, tmp_path):
-        """Typecheck target should invoke ty via uv run in dry-run output."""
-        # Create a mock SOURCE_FOLDER directory so the typecheck command runs
-        source_folder = tmp_path / "src"
-        source_folder.mkdir(exist_ok=True)
-
-        # Update .env to set SOURCE_FOLDER
-        env_file = tmp_path / ".rhiza" / ".env"
-        env_content = env_file.read_text()
-        env_content += "\nSOURCE_FOLDER=src\n"
-        env_file.write_text(env_content)
-
+    def test_typecheck_target_dry_run(self, logger):
+        """Typecheck target should invoke ty and mypy via uv run and include .rhiza/utils."""
         proc = run_make(logger, ["typecheck"])
         out = proc.stdout
-        # Check for uv run command
-        assert "uv run ty check src" in out
+        # Both type checkers are invoked
+        assert "uv run ty check" in out
+        assert "uv run mypy --strict" in out
+        # .rhiza/utils is folded into the path list so utility code is type-checked
+        assert 'if [ -d ".rhiza/utils" ]' in out
+        assert ".rhiza/utils" in out
 
     def test_test_target_dry_run(self, logger):
         """Test target should invoke pytest via uv with coverage and HTML outputs in dry-run output."""
@@ -128,6 +156,23 @@ class TestMakefile:
         # Should still run pytest but without coverage flags
         assert "uv run pytest" in out
         assert "--html=_tests/html-report/report.html" in out
+
+    def test_docs_coverage_includes_rhiza_utils(self, logger):
+        """Docs coverage should include .rhiza/utils so utility docstrings are gated."""
+        proc = run_make(logger, ["docs-coverage"])
+        out = proc.stdout
+        assert 'if [ -d ".rhiza/utils" ]' in out
+        assert "uv run interrogate" in out
+        assert ".rhiza/utils" in out
+
+    def test_security_target_includes_rhiza_utils_and_skip_warning(self, logger):
+        """Security target should scan .rhiza/utils or emit an explicit skip warning."""
+        proc = run_make(logger, ["security"])
+        out = proc.stdout
+        assert 'if [ -d ".rhiza/utils" ]' in out
+        assert "Running bandit security scan in:" in out
+        assert ".rhiza/utils" in out
+        assert "No bandit scan folders found" in out
 
     def test_python_version_defaults_to_3_13_if_missing(self, logger, tmp_path):
         """`PYTHON_VERSION` should default to `3.13` if .python-version is missing."""
@@ -180,6 +225,12 @@ class TestMakefile:
         proc = run_make(logger, ["license", "LICENSE_FAIL_ON=MIT;Apache"])
         out = proc.stdout
         assert '--fail-on="MIT;Apache"' in out
+
+    def test_serve_target_uses_uv_run_python_http_server(self, logger):
+        """Serve target should use uv run instead of directly calling python3."""
+        proc = run_make(logger, ["serve"])
+        out = proc.stdout
+        assert "uv run python -m http.server 8000" in out
 
 
 class TestMakefileRootFixture:
@@ -265,7 +316,7 @@ from pathlib import Path
 args = sys.argv[1:]
 print(f"[MOCK] uvx {' '.join(args)}")
 
-# Check if this is the bump command: "rhiza-tools>=0.3.3" bump
+# Check if this is the bump command: "rhiza-tools>=0.7.0" bump
 if "bump" in args:
     # Simulate bumping version in pyproject.toml
     pyproject = Path("pyproject.toml")
@@ -294,8 +345,11 @@ if "bump" in args:
         # Run make bump with dry_run=False to actually execute the shell commands
         result = run_make(logger, ["bump", f"UV_BIN={uv_bin}", f"UVX_BIN={uvx_bin}"], dry_run=False)
 
-        # Verify that the mock tools were called
-        assert "[MOCK] uvx rhiza-tools>=0.3.3 bump" in result.stdout
+        # Verify that the mock tools were called. The rhiza-tools pin tracks _VERSION
+        # in releasing.mk, so read it from the copied makefile rather than hardcoding.
+        releasing_mk = Path(".rhiza/make.d/releasing.mk").read_text()
+        version = re.search(r"^_VERSION=(\S+)", releasing_mk, re.MULTILINE).group(1)
+        assert f"[MOCK] uvx rhiza-tools>={version} bump" in result.stdout
         assert "[MOCK] uv lock" in result.stdout
 
         # Verify that 'make install' was called (which calls uv sync)

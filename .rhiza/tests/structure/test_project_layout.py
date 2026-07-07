@@ -22,7 +22,7 @@ class TestRootFixture:
     def test_root_contains_expected_directories(self, root):
         """Root should contain all expected project directories."""
         required_dirs = [".rhiza"]
-        optional_dirs = ["src", "tests", "book"]  # src/ is optional (rhiza itself doesn't have one)
+        # optional_dirs = ["src", "tests", "book"]  # src/ is optional (rhiza itself doesn't have one)
 
         for dirname in required_dirs:
             assert (root / dirname).exists(), f"Required directory {dirname} not found"
@@ -32,9 +32,9 @@ class TestRootFixture:
         if not any((root / ci_dir).exists() for ci_dir in ci_dirs):
             pytest.fail(f"At least one CI directory from {ci_dirs} must exist")
 
-        for dirname in optional_dirs:
-            if not (root / dirname).exists():
-                pytest.skip(f"Optional directory {dirname} not present in this project")
+        # for dirname in optional_dirs:
+        #     if not (root / dirname).exists():
+        #         pytest.skip(f"Optional directory {dirname} not present in this project")
 
     def test_root_contains_expected_files(self, root):
         """Root should contain all expected configuration files."""

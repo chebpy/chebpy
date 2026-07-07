@@ -10,11 +10,13 @@ IMA Journal of Numerical Analysis, 30 (2010), 887-897.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Iterator
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
 
 from .chebfun import Chebfun
 
@@ -83,7 +85,7 @@ class Quasimatrix:
         """Support interval of the quasimatrix."""
         if not self.columns:
             return (0.0, 0.0)
-        return self.columns[0].support
+        return cast("tuple[float, float]", self.columns[0].support)
 
     @property
     def isempty(self) -> bool:
@@ -114,7 +116,7 @@ class Quasimatrix:
         """Return the number of columns."""
         return len(self.columns)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Chebfun]:
         """Iterate over the columns."""
         return iter(self.columns)
 
@@ -343,7 +345,7 @@ class Quasimatrix:
         ax = ax or plt.gca()
         n = len(self.columns)
         # Draw the bounding rectangle
-        rect = plt.Rectangle((0.5, 0.5), n, 10, fill=False, edgecolor="black", linewidth=1.5)
+        rect = Rectangle((0.5, 0.5), n, 10, fill=False, edgecolor="black", linewidth=1.5)
         ax.add_patch(rect)
         # A dot for each column
         for j in range(n):
@@ -406,7 +408,7 @@ class _TransposedQuasimatrix:
         """Visualise the shape of the transposed quasimatrix."""
         ax = ax or plt.gca()
         n = len(self._qm.columns)
-        rect = plt.Rectangle((0.5, 0.5), 10, n, fill=False, edgecolor="black", linewidth=1.5)
+        rect = Rectangle((0.5, 0.5), 10, n, fill=False, edgecolor="black", linewidth=1.5)
         ax.add_patch(rect)
         for j in range(n):
             ax.plot(5.5, j + 1, "bs", markersize=8, **kwds)
@@ -445,4 +447,4 @@ def polyfit(f: Chebfun, n: int) -> Chebfun:
         cols.append(xk)
     A = Quasimatrix(cols)
     c = A.solve(f)
-    return A @ c
+    return cast("Chebfun", A @ c)
