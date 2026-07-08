@@ -71,6 +71,41 @@ def _discover_one_side(
         CompactFunConstructionError: If ``f`` does not converge to a
             constant within the probing budget or ``max_width``.
     """
+    radii, values = _probe_side(f, anchor, sign, max_width, max_probes)
+    if not radii:
+        return anchor + sign * 1.0, 0.0, 0.0
+
+    vscale = max(abs(v) for v in values)
+    tail = _detect_tail(radii, values, anchor, sign, tol, vscale)
+
+    # Find the largest radius at which f is still "active" (above threshold
+    # relative to the tail).
+    threshold = tol * max(abs(tail), vscale, 1.0)
+    active_r = 0.0
+    for ri, vi in zip(radii, values, strict=False):
+        if abs(vi - tail) > threshold:
+            active_r = ri
+
+    boundary_r = max(2.0 * active_r, 1.0)
+    # Defensive: the last-3 convergence window forces active_r <= r_{N-3}, so
+    # boundary_r = 2*active_r stays below the largest probed radius (<= max_width).
+    if boundary_r > max_width:  # pragma: no cover
+        raise CompactFunConstructionError(  # noqa: TRY003
+            f"Discovered numerical support exceeds max_width = {max_width:g}; "
+            f"heavy-tailed inputs are not supported in this release."
+        )
+    return anchor + sign * boundary_r, tail, vscale
+
+
+def _probe_side(f: Any, anchor: float, sign: int, max_width: float, max_probes: int) -> tuple[list[float], list[float]]:
+    """Geometrically probe ``f`` on one side, returning ``(radii, values)``.
+
+    Samples ``f`` at ``anchor + sign * 2**k`` for ``k = 0, 1, ...`` while the
+    radius stays within ``max_width`` and the probe budget is not exhausted.
+
+    Raises:
+        CompactFunConstructionError: If ``f`` returns a non-finite value.
+    """
     radii: list[float] = []
     values: list[float] = []  # signed values
     r = 1.0
@@ -92,14 +127,19 @@ def _discover_one_side(
         radii.append(r)
         values.append(v)
         r *= 2.0
+    return radii, values
 
-    if not radii:
-        return anchor + sign * 1.0, 0.0, 0.0
 
-    abs_values = [abs(v) for v in values]
-    vscale = max(abs_values) if abs_values else 0.0
+def _detect_tail(radii: list[float], values: list[float], anchor: float, sign: int, tol: float, vscale: float) -> float:
+    """Detect the asymptotic constant of ``f`` from its probed ``values``.
 
-    # Need at least three probes to verify convergence to a constant.
+    Requires at least three probes and that the last three agree to within
+    ``tol * max(vscale, 1)``; a tail below that threshold is reported as ``0``.
+
+    Raises:
+        CompactFunConstructionError: If there are too few probes or the last
+            few do not settle to a constant (heavy-tailed / oscillating input).
+    """
     last_n = 3
     if len(values) < last_n:
         raise CompactFunConstructionError(  # noqa: TRY003
@@ -124,24 +164,7 @@ def _discover_one_side(
     tail = float(np.mean(tail_window))
     if abs(tail) < conv_threshold:
         tail = 0.0
-
-    # Find the largest radius at which f is still "active" (above threshold
-    # relative to the tail).
-    threshold = tol * max(abs(tail), vscale, 1.0)
-    active_r = 0.0
-    for ri, vi in zip(radii, values, strict=False):
-        if abs(vi - tail) > threshold:
-            active_r = ri
-
-    boundary_r = max(2.0 * active_r, 1.0)
-    # Defensive: the last-3 convergence window forces active_r <= r_{N-3}, so
-    # boundary_r = 2*active_r stays below the largest probed radius (<= max_width).
-    if boundary_r > max_width:  # pragma: no cover
-        raise CompactFunConstructionError(  # noqa: TRY003
-            f"Discovered numerical support exceeds max_width = {max_width:g}; "
-            f"heavy-tailed inputs are not supported in this release."
-        )
-    return anchor + sign * boundary_r, tail, vscale
+    return tail
 
 
 def _discover_numsupp(
