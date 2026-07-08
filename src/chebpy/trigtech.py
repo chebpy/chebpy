@@ -99,7 +99,9 @@ def _trig_adaptive(
         # Convergence: the Nyquist/highest-frequency mode is negligible.
         if abs_sym[-1] <= tol:
             above = np.where(abs_sym > tol)[0]
-            if len(above) == 0:
+            if len(above) == 0:  # pragma: no cover
+                # Defensive: the normalised peak coefficient is >= 1/n >> tol
+                # whenever vscale > tol, so 'above' is never empty here.
                 return np.array([0.0])
             max_k = int(above[-1])  # highest significant frequency index
             start = dc_idx - max_k
@@ -397,7 +399,9 @@ class Trigtech(Smoothfun, ABC):
             abs_sym[ki] = max(abs(p), abs(q)) / abs_max
 
         above = np.where(abs_sym > tol)[0]
-        if len(above) == 0:
+        if len(above) == 0:  # pragma: no cover
+            # Defensive: with abs_max > 0 the normalised peak equals 1 > tol,
+            # so 'above' always contains at least the peak index.
             return self.initconst(0.0, interval=self._interval)
         max_k = int(above[-1])
         max_k = min(max_k, oldlen // 2)  # don't exceed original size
