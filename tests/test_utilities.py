@@ -21,7 +21,7 @@ from chebpy.exceptions import (
     SupportMismatch,
 )
 from chebpy.settings import DefaultPreferences
-from chebpy.utilities import Domain, Interval, IntervalMap, check_funs, compute_breakdata, htol
+from chebpy.utilities import Domain, Interval, IntervalMap, check_funs, compute_breakdata, generate_funs, htol
 
 rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 eps = DefaultPreferences.eps
@@ -241,6 +241,24 @@ def test_domain_init_disallow():
         Domain([-1, 0, 0])
     with pytest.raises(ValueError, match="could not convert string to float"):
         Domain(["a", "b"])
+    # A non-finite interior breakpoint is rejected (only the outermost two may be ±inf/NaN-adjacent).
+    with pytest.raises(InvalidDomain):
+        Domain([0.0, np.nan, 1.0])
+    # NaN is never permitted, even at an endpoint.
+    with pytest.raises(InvalidDomain):
+        Domain([np.nan, 1.0])
+
+
+def test_generate_funs_infinite_without_compact_constructor():
+    """An unbounded piece with no matching CompactFun constructor is rejected."""
+
+    # A constructor whose name is not a CompactFun classmethod yields no compact
+    # fallback, so an infinite endpoint has nothing to build the piece with.
+    def not_a_real_constructor(**_kwds):
+        return None  # pragma: no cover - never reached; the guard fires first
+
+    with pytest.raises(InvalidDomain):
+        generate_funs([-np.inf, np.inf], not_a_real_constructor)
 
 
 def test_domain_iter():

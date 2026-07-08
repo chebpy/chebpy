@@ -578,6 +578,17 @@ class TestEdgeCases:
         bnd = Bndfun.initconst(2.0, Interval(0.0, 1.0))
         assert f._other_tails(bnd) == (0.0, 0.0)
 
+    def test_mixed_bndfun_compactfun_rebuilds_on_dominant(self) -> None:
+        # A finite CompactFun and a Bndfun on the same interval are different
+        # subclasses of equal singularity priority, so the binary op rebuilds
+        # adaptively on the left (dominant) operand's representation.
+        bnd = Bndfun.initfun_adaptive(np.cos, Interval(-1.0, 2.0))
+        compact = CompactFun.initfun_adaptive(np.sin, (-1.0, 2.0))
+        h = bnd + compact
+        assert isinstance(h, Bndfun)
+        x = np.linspace(-1.0, 2.0, 21)
+        np.testing.assert_allclose(h(x), np.cos(x) + np.sin(x), atol=1e-10)
+
 
 # -----------------------------
 # plotting
