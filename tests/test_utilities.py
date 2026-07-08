@@ -250,15 +250,33 @@ def test_domain_init_disallow():
 
 
 def test_generate_funs_infinite_without_compact_constructor():
-    """An unbounded piece with no matching CompactFun constructor is rejected."""
+    """An unbounded piece with no injected compact_constructor is rejected."""
 
-    # A constructor whose name is not a CompactFun classmethod yields no compact
-    # fallback, so an infinite endpoint has nothing to build the piece with.
-    def not_a_real_constructor(**_kwds):
+    # With no compact_constructor injected, an infinite endpoint has nothing to
+    # build the piece with, so the domain is rejected.
+    def bnd_constructor(**_kwds):
         return None  # pragma: no cover - never reached; the guard fires first
 
     with pytest.raises(InvalidDomain):
-        generate_funs([-np.inf, np.inf], not_a_real_constructor)
+        generate_funs([-np.inf, np.inf], bnd_constructor)
+
+
+def test_generate_funs_injects_compact_constructor():
+    """The injected compact_constructor builds the unbounded pieces."""
+    calls = []
+
+    def bnd_constructor(*, interval):
+        calls.append(("bnd", interval))
+        return ("bnd", interval)
+
+    def compact_constructor(*, interval):
+        calls.append(("compact", interval))
+        return ("compact", interval)
+
+    # Domain [-inf, 0, inf]: two unbounded pieces, both built by the injected
+    # compact constructor; utilities itself never imports CompactFun.
+    funs = generate_funs([-np.inf, 0.0, np.inf], bnd_constructor, compact_constructor=compact_constructor)
+    assert [kind for kind, _ in funs] == ["compact", "compact"]
 
 
 def test_domain_iter():

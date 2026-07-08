@@ -550,23 +550,35 @@ def compute_breakdata(funs: np.ndarray) -> OrderedDict[float, Any]:
 
 
 def generate_funs(
-    domain: Domain | list[float] | None, bndfun_constructor: Callable[..., Any], kwds: dict[str, Any] | None = None
+    domain: Domain | list[float] | None,
+    bndfun_constructor: Callable[..., Any],
+    kwds: dict[str, Any] | None = None,
+    *,
+    compact_constructor: Callable[..., Any] | None = None,
 ) -> list[Any]:
     """Generate a collection of function objects over a domain.
 
     This method is used by several of the Chebfun classmethod constructors to
     generate a collection of function objects over the specified domain. For
     pieces with finite endpoints the supplied ``bndfun_constructor`` is used;
-    for pieces with one or both endpoints at ``±inf`` the corresponding
-    classmethod on :class:`CompactFun` is invoked instead, dispatched by
-    method name.
+    for pieces with one or both endpoints at ``±inf`` the injected
+    ``compact_constructor`` is invoked instead.
+
+    The compact constructor is passed in (rather than imported here) so this
+    low-level utility module never depends on the higher-level
+    :class:`~chebpy.compactfun.CompactFun`; see the caller in
+    :mod:`chebpy.chebfun`.
 
     Args:
         domain (array-like or None): Domain breakpoints. If None, uses default domain from preferences.
             The outermost breakpoints may be ``±inf``; interior breakpoints must be finite.
-        bndfun_constructor (callable): Constructor function for creating function objects on
-            finite intervals (typically a :class:`Bndfun` classmethod).
+        bndfun_constructor (callable): Constructor for pieces on finite intervals
+            (typically a :class:`~chebpy.bndfun.Bndfun` classmethod).
         kwds (dict, optional): Additional keyword arguments to pass to the constructor. Defaults to {}.
+        compact_constructor (callable, optional): Constructor for pieces with an
+            ``±inf`` endpoint (typically the matching
+            :class:`~chebpy.compactfun.CompactFun` classmethod). If ``None`` and
+            the domain has an unbounded piece, :class:`InvalidDomain` is raised.
 
     Returns:
         list: List of function objects covering the domain.
@@ -574,14 +586,6 @@ def generate_funs(
     if kwds is None:
         kwds = {}
     domain = Domain(domain if domain is not None else prefs.domain)
-    # Local import avoids a circular dependency with chebpy.compactfun, which
-    # imports from utilities for Interval / Domain.
-    from .compactfun import CompactFun
-
-    method_name = getattr(bndfun_constructor, "__name__", None)
-    compact_constructor: Callable[..., Any] | None = (
-        getattr(CompactFun, method_name) if method_name is not None and hasattr(CompactFun, method_name) else None
-    )
 
     funs = []
     for a, b in itertools.pairwise(domain):
