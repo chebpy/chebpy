@@ -145,6 +145,12 @@ post-sync:: ; @:
 pre-validate:: ; @:
 post-validate:: ; @:
 
+# Detected once at parse time: non-empty when origin is the jebel-quant/rhiza
+# mother repository, which by design has no template.yml. The sync/summarise/
+# validate targets are no-ops there. Evaluated a single time and reused so the
+# origin regex lives in exactly one place.
+IS_MOTHER_REPO := $(shell git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$' && echo 1)
+
 ##@ Rhiza Workflows
 
 print-logo:
@@ -152,7 +158,7 @@ print-logo:
 
 
 sync: pre-sync ## sync with template repository as defined in .rhiza/template.yml
-	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
+	@if [ -n "$(IS_MOTHER_REPO)" ]; then \
 		printf "${BLUE}[INFO] Skipping sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv && \
@@ -173,7 +179,7 @@ materialize: ## [DEPRECATED] use 'make sync' instead — materialize --force is 
 	@$(MAKE) sync
 
 summarise-sync: install-uv ## summarise differences created by sync with template repository
-	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
+	@if [ -n "$(IS_MOTHER_REPO)" ]; then \
 		printf "${BLUE}[INFO] Skipping summarise-sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
@@ -182,13 +188,13 @@ summarise-sync: install-uv ## summarise differences created by sync with templat
 
 rhiza-test: install ## run rhiza's own tests (if any)
 	@if [ -d ".rhiza/tests" ]; then \
-		${UV_BIN} run pytest .rhiza/tests; \
+		${UV_BIN} run --with pytest --with pytest-timeout --with python-dotenv --with packaging pytest .rhiza/tests; \
 	else \
 		printf "${YELLOW}[WARN] No .rhiza/tests directory found, skipping rhiza-tests${RESET}\n"; \
 	fi
 
 validate: pre-validate rhiza-test ## validate project structure against template repository as defined in .rhiza/template.yml
-	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
+	@if [ -n "$(IS_MOTHER_REPO)" ]; then \
 		printf "${BLUE}[INFO] Skipping validate in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \

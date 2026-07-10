@@ -166,36 +166,24 @@ To remove unwanted extensions, simply delete the corresponding line from the `ex
 
 If you prefer different extensions for local development, you can:
 1. Install them manually in VS Code (they won't affect others)
-2. Create a `.vscode/extensions.json` file for team recommendations
+2. Add the [`vscode` bundle](#non-container-development-the-vscode-bundle) for team recommendations
 3. Use VS Code profiles to separate personal preferences from project requirements
 
-## Manual Installation (Non-Container Development)
+## Non-Container Development (the `vscode` bundle)
 
-If you're not using the Dev Container but want the same extensions:
+If you're not using the Dev Container but want recommended extensions and
+editor settings anyway, add the `vscode` bundle to `.rhiza/template.yml`:
 
-1. Open the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
-2. Run "Extensions: Configure Recommended Extensions (Workspace)"
-3. Copy the extension IDs from `.devcontainer/devcontainer.json`
-4. Or install each extension individually from the VS Code marketplace
-
-Alternatively, create `.vscode/extensions.json` with:
-
-```json
-{
-    "recommendations": [
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "marimo-team.vscode-marimo",
-        "marimo-ai.marimo-vscode",
-        "charliermarsh.ruff",
-        "tamasfe.even-better-toml",
-        "ms-vscode.makefile-tools",
-        "github.copilot-chat",
-        "github.copilot",
-        "anthropic.claude-code"
-    ]
-}
+```yaml
+templates:
+  - vscode
 ```
+
+Syncing this bundle materialises `.vscode/extensions.json` (workspace-recommended
+extensions) and `.vscode/settings.json` (Python/Ruff editor defaults), so VS Code
+prompts to install the recommended extensions the first time the workspace is
+opened — no Dev Container or Codespace required. See `bundles/vscode/.vscode/extensions.json`
+in the Rhiza repository for the exact list.
 
 ## Related Documentation
 
