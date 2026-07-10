@@ -92,6 +92,7 @@ nav:
       - Coverage Report: reports/html-coverage/index.html
   - API Reference: api.md
   - Developer:
+      - Architecture: development/architecture.md
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
   - About: about.md
