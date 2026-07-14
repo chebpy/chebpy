@@ -26,5 +26,5 @@ on:
 
 jobs:
   ci:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v0.19.4
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v0.19.9
     secrets: inherit

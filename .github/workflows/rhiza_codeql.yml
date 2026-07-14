@@ -26,7 +26,7 @@ on:
 
 jobs:
   codeql:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_codeql.yml@v0.19.4
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_codeql.yml@v0.19.9
     secrets: inherit
     permissions:
       security-events: write   # Upload CodeQL results to code scanning
