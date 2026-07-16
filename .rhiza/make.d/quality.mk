@@ -14,7 +14,11 @@ all: fmt deptry test docs-coverage security license typecheck rhiza-test ## run 
 # contributes the folders it owns to DEPTRY_FOLDERS (and any per-folder ignores
 # to DEPTRY_IGNORE), so this core target never needs to know which bundles are
 # present. Core itself contributes SOURCE_FOLDER when it exists; see e.g.
-# marimo.mk for a bundle that appends its own folder.
+# marimo.mk for a bundle that appends its own folder. Rhiza's own test folder
+# (.rhiza/tests) is deliberately excluded: its tooling is provisioned on the fly
+# via `uv run --with` in the individual targets, not declared in the project's
+# pyproject, so deptry (which validates against pyproject) would only emit noise
+# for it.
 DEPTRY_FOLDERS ?=
 DEPTRY_IGNORE ?=
 ifneq ($(wildcard $(SOURCE_FOLDER)),)
@@ -48,9 +52,9 @@ todos: ## search and report all TODO/FIXME/HACK comments in the codebase
 		printf "${GREEN}[SUCCESS] No TODO/FIXME/HACK comments found!${RESET}\n"
 	@printf "\n${BLUE}[INFO] Search complete.${RESET}\n"
 
-suppression-audit: ## scan codebase for inline suppressions and report (grade, detail, histogram)
+suppression-audit: install-uv ## scan codebase for inline suppressions and report (grade, detail, histogram)
 	@printf "${BLUE}[INFO] Running suppression audit...${RESET}\n"
-	@${UV_BIN} run python .rhiza/utils/suppression_audit.py
+	@${UVX_BIN} "rhiza-tools>=0.8.1" suppression-audit
 
 semgrep: install ## run Semgrep static analysis
 	@printf "${BLUE}[INFO] Running Semgrep...${RESET}\n"

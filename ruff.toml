@@ -176,8 +176,3 @@ line-ending = "auto"
     "N806",    # Allow uppercase variable names (math notation: L, etc.)
     "RUF002",  # Allow en-dash in docstrings (citations, page ranges)
 ]
-# Internal utility scripts - specific exceptions for internal tooling
-".rhiza/utils/*.py" = [
-    "PLW2901",  # Allow loop variable overwriting in utility scripts
-    "TRY003",   # Allow long exception messages in utility scripts
-]
