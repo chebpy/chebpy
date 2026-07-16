@@ -36,7 +36,7 @@ permissions: read-all
 
 jobs:
   scorecard:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_scorecard.yml@v1.1.2
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_scorecard.yml@v1.2.0
     secrets: inherit
     permissions:
       security-events: write   # Upload the SARIF results to code scanning
