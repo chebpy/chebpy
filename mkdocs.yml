@@ -40,6 +40,8 @@ plugins:
             show_signature_annotations: true
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.snippets:

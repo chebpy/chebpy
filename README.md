@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" markdown="1">
 
 # ChebPy
 
@@ -29,6 +29,7 @@ Symbolic-numeric computation with functions
 </div>
 
 ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision accuracy.
+
 ---
 
 ## Table of Contents
@@ -113,7 +114,7 @@ make coverage
 
 ## Quick Start
 
-<div align="center">
+<div align="center" markdown="1">
   <img src="docs/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
@@ -353,7 +354,7 @@ Project tooling:
 
 ---
 
-<div align="center">
+<div align="center" markdown="1">
 
 ⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
 

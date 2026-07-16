@@ -265,7 +265,7 @@ pytest-benchmark>=5.2.3
 pygal>=3.1.0
 ```
 
-These are automatically installed when running `make install` or by installing from `.rhiza/requirements/tests.txt`.
+These are provisioned on the fly by the relevant `make` targets via `uv run --with …` (e.g. `make test`, `make benchmark`), so no separate install step is required.
 
 ## Troubleshooting
 
