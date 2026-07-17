@@ -1,4 +1,0 @@
-# Documentation dependencies for rhiza
-interrogate>=1.7.0
-mike>=2.2.0
-zensical>=0.0.33

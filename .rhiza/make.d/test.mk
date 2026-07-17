@@ -4,7 +4,7 @@
 # executing performance benchmarks.
 
 # Declare phony targets (they don't produce files)
-.PHONY: test benchmark typecheck security docs-coverage hypothesis-test coverage-badge stress test-pyproject mutation
+.PHONY: test benchmark typecheck security docs-coverage hypothesis-test stress test-pyproject mutation
 
 # Default directory for tests
 TESTS_FOLDER := tests
@@ -12,6 +12,13 @@ TESTS_FOLDER := tests
 # Minimum coverage percent for tests to pass
 # (Can be overridden in local.mk or via environment variable)
 COVERAGE_FAIL_UNDER ?= 90
+
+# Which static type checker(s) the 'typecheck' target runs: ty, mypy, or both.
+# Running both is the default for backward compatibility, but ty and mypy
+# occasionally disagree (e.g. one accepts a suppression the other still flags),
+# forcing duplicate `# type: ignore` / `# ty: ignore` comments. Set this to
+# 'ty' or 'mypy' in local.mk or .rhiza/.env to run a single checker instead.
+TYPECHECKER ?= both
 
 ##@ Development and Testing
 
@@ -59,7 +66,7 @@ test:: install ## run all tests
 	while :; do \
 	  rm -f .coverage .coverage.* _tests/coverage.xml _tests/coverage.json 2>/dev/null || true; \
 	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ${UV_BIN} run pytest "$$@"; status=$$?; \
+	  ${UV_BIN} run --with pytest --with pytest-cov --with pytest-xdist --with pytest-html --with pytest-timeout --with pytest-mock pytest "$$@"; status=$$?; \
 	  if [ $$status -ne 3 ]; then exit $$status; fi; \
 	  if [ $$attempt -ge $$max_attempts ]; then \
 	    printf "${RED}[ERROR] pytest reported an internal (teardown) error after %s attempts; failing.${RESET}\n" "$$attempt"; \
@@ -69,48 +76,59 @@ test:: install ## run all tests
 	  attempt=$$((attempt + 1)); \
 	done
 
-# The 'typecheck' target runs static type analysis using ty and mypy.
+# The 'typecheck' target runs static type analysis using ty and/or mypy.
 # 1. Builds a list of existing Python source folders to check.
-# 2. Runs ty on those folders.
-# 3. Runs mypy in strict mode on those folders as a cross-check.
-typecheck: install ## run ty and mypy type checking
+# 2. Depending on TYPECHECKER (ty|mypy|both, default: both), runs ty,
+#    mypy in strict mode, or both in sequence as a cross-check.
+typecheck: install ## run ty and/or mypy type checking (TYPECHECKER=ty|mypy|both, default: both)
 	@typecheck_paths=""; \
 	if [ -d "${SOURCE_FOLDER}" ]; then \
 	  typecheck_paths="${SOURCE_FOLDER}"; \
 	fi; \
-	if [ -d ".rhiza/utils" ]; then \
-	  typecheck_paths="$${typecheck_paths} .rhiza/utils"; \
+	if [ -z "$${typecheck_paths}" ]; then \
+	  printf "${YELLOW}[WARN] No typecheck folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping typecheck${RESET}\n"; \
+	  exit 0; \
 	fi; \
-	if [ -n "$${typecheck_paths}" ]; then \
-	  printf "${BLUE}[INFO] Running ty type checking in:$${typecheck_paths}${RESET}\n"; \
-	  ${UV_BIN} run ty check $${typecheck_paths} && \
-	  printf "${BLUE}[INFO] Running mypy strict type checking in:$${typecheck_paths}${RESET}\n"; \
-	  ${UV_BIN} run mypy --strict $${typecheck_paths}; \
-	else \
-	  printf "${YELLOW}[WARN] No typecheck folders found (SOURCE_FOLDER='${SOURCE_FOLDER}', .rhiza/utils missing), skipping typecheck${RESET}\n"; \
-	fi
+	case "${TYPECHECKER}" in \
+	  ty) \
+	    printf "${BLUE}[INFO] Running ty type checking in:$${typecheck_paths}${RESET}\n"; \
+	    ${UV_BIN} run --with ty ty check $${typecheck_paths} \
+	    ;; \
+	  mypy) \
+	    printf "${BLUE}[INFO] Running mypy strict type checking in:$${typecheck_paths}${RESET}\n"; \
+	    ${UV_BIN} run --with mypy mypy --strict $${typecheck_paths} \
+	    ;; \
+	  both) \
+	    printf "${BLUE}[INFO] Running ty type checking in:$${typecheck_paths}${RESET}\n"; \
+	    ${UV_BIN} run --with ty ty check $${typecheck_paths} && \
+	    printf "${BLUE}[INFO] Running mypy strict type checking in:$${typecheck_paths}${RESET}\n"; \
+	    ${UV_BIN} run --with mypy mypy --strict $${typecheck_paths} \
+	    ;; \
+	  *) \
+	    printf "${RED}[ERROR] Invalid TYPECHECKER='${TYPECHECKER}' (expected: ty, mypy, or both)${RESET}\n"; \
+	    exit 1 \
+	    ;; \
+	esac
 
 # Extra flags forwarded to pip-audit (e.g. --ignore-vuln CVE-XXXX-YYYY)
 PIP_AUDIT_ARGS ?=
 
 # The 'security' target performs security vulnerability scans.
-# 1. Runs pip-audit via pip_audit_policy.py: fails on runtime dep CVEs, warns on tooling (pip/setuptools/wheel).
+# 1. Runs pip-audit via `rhiza-tools pip-audit` (tiered policy): fails on runtime
+#    dep CVEs, warns on tooling (pip/setuptools/wheel).
 # 2. Runs bandit to find common security issues in Python source folders that exist.
 security: install ## run security scans (pip-audit and bandit)
 	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
-	@${UV_BIN} run python .rhiza/utils/pip_audit_policy.py ${PIP_AUDIT_ARGS}
+	@${UVX_BIN} "rhiza-tools>=0.8.1" pip-audit ${PIP_AUDIT_ARGS}
 	@bandit_paths=""; \
 	if [ -d "${SOURCE_FOLDER}" ]; then \
 	  bandit_paths="${SOURCE_FOLDER}"; \
-	fi; \
-	if [ -d ".rhiza/utils" ]; then \
-	  bandit_paths="$${bandit_paths} .rhiza/utils"; \
 	fi; \
 	if [ -n "$${bandit_paths}" ]; then \
 	  printf "${BLUE}[INFO] Running bandit security scan in:$${bandit_paths}${RESET}\n"; \
 	  ${UVX_BIN} bandit -r $${bandit_paths} -ll -q --ini .bandit; \
 	else \
-	  printf "${YELLOW}[WARN] No bandit scan folders found (SOURCE_FOLDER='${SOURCE_FOLDER}', .rhiza/utils missing), skipping bandit${RESET}\n"; \
+	  printf "${YELLOW}[WARN] No bandit scan folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping bandit${RESET}\n"; \
 	fi
 
 # The 'benchmark' target runs performance benchmarks using pytest-benchmark.
@@ -121,9 +139,8 @@ security: install ## run security scans (pip-audit and bandit)
 benchmark:: install ## run performance benchmarks
 	@if [ -d "${TESTS_FOLDER}/benchmarks" ]; then \
 	  printf "${BLUE}[INFO] Running performance benchmarks...${RESET}\n"; \
-	  ${UV_BIN} pip install pytest-benchmark==5.2.3 pygal==3.1.0; \
 	  mkdir -p _tests/benchmarks; \
-	  ${UV_BIN} run pytest "${TESTS_FOLDER}/benchmarks/" \
+	  ${UV_BIN} run --with pytest --with pytest-benchmark==5.2.3 --with pygal==3.1.0 pytest "${TESTS_FOLDER}/benchmarks/" \
 	  		--benchmark-only \
 			--benchmark-histogram=_tests/benchmarks/histogram \
 			--benchmark-json=_tests/benchmarks/results.json; \
@@ -140,9 +157,6 @@ docs-coverage: install ## check documentation coverage with interrogate
 	if [ -d "${SOURCE_FOLDER}" ]; then \
 	  docstring_paths="${SOURCE_FOLDER}"; \
 	fi; \
-	if [ -d ".rhiza/utils" ]; then \
-	  docstring_paths="$${docstring_paths} .rhiza/utils"; \
-	fi; \
 	if [ -d "tests" ]; then \
 	  docstring_paths="$${docstring_paths} tests"; \
 	fi; \
@@ -151,9 +165,9 @@ docs-coverage: install ## check documentation coverage with interrogate
 	fi; \
 	if [ -n "$${docstring_paths}" ]; then \
 	  printf "${BLUE}[INFO] Checking documentation coverage in:$${docstring_paths}${RESET}\n"; \
-	  ${UV_BIN} run interrogate -vv --fail-under 100 --ignore-init-method --ignore-magic $${docstring_paths}; \
+	  ${UV_BIN} run --with interrogate interrogate -vv --fail-under 100 --ignore-init-method --ignore-magic $${docstring_paths}; \
 	else \
-	  printf "${YELLOW}[WARN] No docs-coverage folders found (SOURCE_FOLDER='${SOURCE_FOLDER}', .rhiza/utils missing), skipping docs-coverage${RESET}\n"; \
+	  printf "${YELLOW}[WARN] No docs-coverage folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping docs-coverage${RESET}\n"; \
 	fi
 
 # The 'hypothesis-test' target runs property-based tests using Hypothesis.
@@ -167,7 +181,7 @@ hypothesis-test:: install ## run property-based tests with Hypothesis
 	fi; \
 	printf "${BLUE}[INFO] Running Hypothesis property-based tests...${RESET}\n"; \
 	mkdir -p _tests/hypothesis; \
-	PYTEST_HTML_TITLE="Hypothesis tests" ${UV_BIN} run pytest \
+	PYTEST_HTML_TITLE="Hypothesis tests" ${UV_BIN} run --with pytest --with hypothesis --with pytest-html pytest \
 	  --ignore=${TESTS_FOLDER}/benchmarks \
 	  -v \
 	  --hypothesis-show-statistics \
@@ -193,7 +207,7 @@ stress:: install ## run stress/load tests
 	fi; \
 	printf "${BLUE}[INFO] Running stress/load tests...${RESET}\n"; \
 	mkdir -p _tests/stress; \
-	${UV_BIN} run pytest \
+	${UV_BIN} run --with pytest --with pytest-html pytest \
 	  -v \
 	  -m stress \
 	  --tb=short \
@@ -207,17 +221,17 @@ mutation: install ## run mutation tests with mutmut
 	printf "${BLUE}[INFO] Running mutation tests on ${SOURCE_FOLDER}...${RESET}\n"; \
 	mkdir -p _tests/mutation; \
 	run_status=0; \
-	${UV_BIN} run mutmut run \
+	${UV_BIN} run --with mutmut mutmut run \
 	  --paths-to-mutate="${SOURCE_FOLDER}" \
 	  --tests-dir="${TESTS_FOLDER}" || run_status=$$?; \
-	${UV_BIN} run mutmut html || exit $$?; \
+	${UV_BIN} run --with mutmut mutmut html || exit $$?; \
 	rm -rf _tests/mutation/html; \
 	mv html _tests/mutation/html || exit $$?; \
-	${UV_BIN} run mutmut results || exit $$?; \
+	${UV_BIN} run --with mutmut mutmut results || exit $$?; \
 	exit $$run_status
 
 test-pyproject: install ## run pyproject.toml structure tests
-	@${UV_BIN} run pytest .rhiza/tests/structure/test_pyproject.py \
+	@${UV_BIN} run --with pytest pytest .rhiza/tests/test_pyproject.py \
 		-v \
 		--tb=long \
 		--showlocals \

@@ -221,7 +221,7 @@ jobs:
           version: "0.11.16"
 
       - name: Configure git auth for private packages
-        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v0.19.4
+        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v1.1.2
         with:
           token: ${{ secrets.GH_PAT }}
 
@@ -483,7 +483,21 @@ jobs:
           mkdir -p /tmp/conda-recipe
           cd /tmp/conda-recipe
 
-          grayskull pypi "$PACKAGE_NAME" --strict-conda-forge
+          # PyPI metadata for a just-published release — especially the first
+          # release of a new package — can lag the upload by several minutes,
+          # so retry before giving up.
+          MAX_ATTEMPTS=5
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            if grayskull pypi "$PACKAGE_NAME" --strict-conda-forge; then
+              break
+            fi
+            if [[ "$attempt" -eq "$MAX_ATTEMPTS" ]]; then
+              echo "::error::grayskull failed after $MAX_ATTEMPTS attempts — PyPI metadata for $PACKAGE_NAME may not be available yet"
+              exit 1
+            fi
+            echo "grayskull attempt $attempt/$MAX_ATTEMPTS failed — waiting 60s for PyPI metadata to propagate"
+            sleep 60
+          done
 
           RECIPE_PATH=$(find . -type f -path "*/meta.yaml" | head -n 1)
           if [[ -z "$RECIPE_PATH" ]]; then
