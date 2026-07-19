@@ -1091,7 +1091,7 @@ class Chebfun:
     @self_empty()
     @cast_arg_to_chebfun
     def minimum(self, other: Any) -> Any:
-        """Pointwise mimimum of self and another chebfun."""
+        """Pointwise minimum of self and another chebfun."""
         from ._pointwise import maximum_minimum
 
         return maximum_minimum(self, other, operator.lt)
