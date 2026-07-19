@@ -15,83 +15,16 @@ import operator
 from collections.abc import Callable, Iterator
 from typing import Any, cast
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-from .algorithms import _conv_legendre, cheb2leg, leg2cheb
+from ._ufuncs import register_ufuncs
 from .bndfun import Bndfun
-from .chebtech import Chebtech
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
-from .exceptions import BadFunLengthArgument, SupportMismatch
-from .fun import Fun
-from .plotting import plotfun
+from .exceptions import BadFunLengthArgument
+from .plotting import plot_chebfun, plotcoeffs_chebfun
 from .settings import _preferences as prefs
-from .trigtech import Trigtech
-from .utilities import Domain, Interval, check_funs, compute_breakdata, generate_funs
-
-
-def _generate_singular_funs(
-    f: Callable[..., Any],
-    domain: Any,
-    *,
-    sing: str,
-    params: Any,
-) -> list[Any]:
-    """Build per-piece funs for a Chebfun with endpoint singularities.
-
-    The leftmost / rightmost pieces (depending on ``sing``) are built as
-    :class:`~chebpy.singfun.Singfun` instances using the Adcock-Richardson
-    clustering map; all interior pieces are ordinary :class:`Bndfun`.
-
-    Args:
-        f: Callable evaluating the function in logical coordinates.
-        domain: Breakpoint sequence; outermost endpoints must be finite.
-        sing: One of ``"left"``, ``"right"``, ``"both"``.
-        params: A :class:`~chebpy.maps.MapParams` instance carrying
-            ``(L, alpha)`` for the slit-strip clustering map. ``None`` means
-            use :class:`~chebpy.maps.MapParams` defaults.
-
-    Returns:
-        list: Per-piece funs ready to feed to :class:`Chebfun`.
-
-    Raises:
-        ValueError: If ``sing`` is not one of the recognised values.
-    """
-    # Local import: chebfun and singfun are siblings under classicfun and
-    # would otherwise risk a cyclic top-level import.
-    from .maps import MapParams
-    from .singfun import Singfun
-
-    if sing not in ("left", "right", "both"):
-        msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
-        raise ValueError(msg)
-    if params is None:
-        params = MapParams()
-    dom = Domain(domain if domain is not None else prefs.domain)
-    intervals = list(dom.intervals)
-    n_pieces = len(intervals)
-    funs: list[Any] = []
-    for i, interval in enumerate(intervals):
-        is_first = i == 0
-        is_last = i == n_pieces - 1
-        piece_sing: str | None = None
-        if sing == "left" and is_first:
-            piece_sing = "left"
-        elif sing == "right" and is_last:
-            piece_sing = "right"
-        elif sing == "both":
-            if is_first and is_last:
-                piece_sing = "both"
-            elif is_first:
-                piece_sing = "left"
-            elif is_last:
-                piece_sing = "right"
-        if piece_sing is None:
-            funs.append(Bndfun.initfun_adaptive(f, interval))
-        else:
-            funs.append(Singfun.initfun_adaptive(f, interval, sing=piece_sing, params=params))
-    return funs
+from .utilities import Domain, check_funs, compute_breakdata, generate_funs
 
 
 class Chebfun:
@@ -228,7 +161,9 @@ class Chebfun:
         """
         if sing is None:
             return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
-        return cls(_generate_singular_funs(f, domain, sing=sing, params=params))
+        from ._singular_construction import generate_singular_funs
+
+        return cls(generate_singular_funs(f, domain, sing=sing, params=params))
 
     @classmethod
     def initfun_fixedlen(cls, f: Callable[..., Any], n: Any, domain: Any = None) -> Chebfun:
@@ -996,209 +931,9 @@ class Chebfun:
             >>> bool(abs(h(1.0) - 1.0) < 1e-10)
             True
         """
-        if self.isempty or g.isempty:
-            return self.__class__.initempty()
+        from ._convolution import convolve
 
-        # Trigtech inputs are not supported: the underlying algorithms assume
-        # Chebyshev coefficients and would silently produce incorrect results
-        # if applied to Fourier coefficients. See chebfun's @trigtech/conv.m
-        # for the same restriction; periodic functions need a circular
-        # convolution (circconv) instead, which has different semantics
-        # (fixed period, no domain expansion).
-        if any(isinstance(fun.onefun, Trigtech) for fun in self.funs) or any(
-            isinstance(fun.onefun, Trigtech) for fun in g.funs
-        ):
-            raise NotImplementedError(
-                "conv() is not supported for trigfun (Trigtech-backed) inputs. "
-                "Aperiodic convolution and periodic (circular) convolution are "
-                "distinct operations; a dedicated circconv() for trigfuns is "
-                "not yet implemented."
-            )
-
-        # Singfun inputs are not supported: the Hale-Townsend Legendre algorithm
-        # and the Gauss-Legendre fallback both assume an affine map between the
-        # logical and reference variables, which the Adcock-Richardson clustering
-        # map breaks.
-        from .singfun import Singfun
-
-        if any(isinstance(fun, Singfun) for fun in self.funs) or any(isinstance(fun, Singfun) for fun in g.funs):
-            raise NotImplementedError(
-                "conv() is not supported for Chebfuns containing Singfun pieces "
-                "(functions with endpoint singularities represented by a non-affine "
-                "clustering map)."
-            )
-
-        # Fast path: both single-piece with equal-width finite domains.
-        # CompactFun pieces (with possibly infinite logical support) always
-        # take the general piecewise path so the output is wrapped correctly.
-        from .compactfun import CompactFun
-        from .exceptions import DivergentIntegralError
-
-        # Convolution of a function with non-zero asymptotic limits diverges
-        # on an unbounded interval, so refuse early with a clear error
-        # pointing the user at the algebraic-closure escape hatch.
-        for label, h in (("self", self), ("other", g)):
-            for piece in h.funs:
-                if isinstance(piece, CompactFun) and (piece.tail_left != 0.0 or piece.tail_right != 0.0):
-                    raise DivergentIntegralError(  # noqa: TRY003
-                        f"Convolution requires both operands to decay to zero at "
-                        f"±inf; got tail_left={piece.tail_left}, "
-                        f"tail_right={piece.tail_right} for {label}. Consider "
-                        f"subtracting a matched sigmoid first so the residual "
-                        f"has zero tails, then convolving the residual."
-                    )
-
-        any_compact = any(isinstance(fun, CompactFun) for fun in self.funs) or any(
-            isinstance(fun, CompactFun) for fun in g.funs
-        )
-        if not any_compact and self.funs.size == 1 and g.funs.size == 1:
-            f_fun, g_fun = self.funs[0], g.funs[0]
-            f_w = float(f_fun.support[1]) - float(f_fun.support[0])
-            g_w = float(g_fun.support[1]) - float(g_fun.support[0])
-            if np.isclose(f_w, g_w):
-                return self._conv_equal_width_pair(f_fun, g_fun)
-
-        # General piecewise convolution
-        return self._conv_piecewise(g)
-
-    def _conv_equal_width_pair(self, f_fun: Any, g_fun: Any) -> Chebfun:
-        """Convolve two single Bndfuns of equal width using the fast algorithm.
-
-        Uses the Hale-Townsend Legendre convolution.  The two funs may be on
-        different intervals as long as they have the same width.
-        """
-        a = float(f_fun.support[0])
-        b = float(f_fun.support[1])
-        c = float(g_fun.support[0])
-        d = float(g_fun.support[1])
-
-        h = (b - a) / 2.0  # half-width (same for both funs)
-
-        leg_f = cheb2leg(f_fun.coeffs)
-        leg_g = cheb2leg(g_fun.coeffs)
-
-        gamma_left, gamma_right = _conv_legendre(leg_f, leg_g)
-
-        gamma_left = h * gamma_left
-        gamma_right = h * gamma_right
-
-        cheb_left = leg2cheb(gamma_left)
-        cheb_right = leg2cheb(gamma_right)
-
-        mid = (a + b + c + d) / 2.0
-        left_interval = Interval(a + c, mid)
-        right_interval = Interval(mid, b + d)
-
-        left_fun = Bndfun(Chebtech(cheb_left), left_interval)
-        right_fun = Bndfun(Chebtech(cheb_right), right_interval)
-
-        return self.__class__([left_fun, right_fun])
-
-    def _conv_piecewise(self, g: Chebfun) -> Chebfun:
-        """General piecewise convolution via Gauss-Legendre quadrature.
-
-        The breakpoints of the result are the sorted, unique pairwise sums of
-        the breakpoints of self and g.  On each sub-interval the convolution
-        integral is smooth, so we construct it adaptively.  When either input
-        contains :class:`CompactFun` pieces, the corresponding ``±inf``
-        breakpoints are replaced with the numerical-support bounds for the
-        purposes of integration; the outermost output pieces are then wrapped
-        as :class:`CompactFun` so the result preserves the unbounded logical
-        support.
-        """
-        from .compactfun import CompactFun
-
-        def _effective_breakpoints(h: Chebfun) -> np.ndarray:
-            """Return breakpoints with ±inf replaced by numerical_support bounds."""
-            bps = np.array(h.breakpoints, dtype=float)
-            if not np.isfinite(bps[0]) and isinstance(h.funs[0], CompactFun):
-                bps[0] = float(h.funs[0].numerical_support[0])
-            if not np.isfinite(bps[-1]) and isinstance(h.funs[-1], CompactFun):
-                bps[-1] = float(h.funs[-1].numerical_support[1])
-            return bps
-
-        f_logical_breaks = np.array(self.breakpoints, dtype=float)
-        g_logical_breaks = np.array(g.breakpoints, dtype=float)
-        left_inf = (not np.isfinite(f_logical_breaks[0])) or (not np.isfinite(g_logical_breaks[0]))
-        right_inf = (not np.isfinite(f_logical_breaks[-1])) or (not np.isfinite(g_logical_breaks[-1]))
-
-        f_breaks = _effective_breakpoints(self)
-        g_breaks = _effective_breakpoints(g)
-        f_a, f_b = float(f_breaks[0]), float(f_breaks[-1])
-        g_c, g_d = float(g_breaks[0]), float(g_breaks[-1])
-
-        # Output breakpoints: all pairwise sums, uniquified and coalesced
-        out_breaks = np.unique(np.add.outer(f_breaks, g_breaks).ravel())
-        hscl = max(abs(out_breaks[0]), abs(out_breaks[-1]), 1.0)
-        tol = 10.0 * np.finfo(float).eps * hscl
-        mask = np.concatenate(([True], np.diff(out_breaks) > tol))
-        out_breaks = out_breaks[mask]
-
-        # Quadrature order: sufficient for exact integration of polynomial
-        # integrand on each smooth sub-interval
-        max_deg = max(fun.size for fun in self.funs) + max(fun.size for fun in g.funs)
-        n_quad = max(int(np.ceil((max_deg + 1) / 2)), 16)
-        quad_nodes, quad_weights = np.polynomial.legendre.leggauss(n_quad)
-
-        # Pre-convert breakpoints to plain float lists for the inner loop
-        f_bps = [float(bp) for bp in f_breaks]
-        g_bps = [float(bp) for bp in g_breaks]
-
-        def conv_eval(x: np.ndarray) -> np.ndarray:
-            """Evaluate (self ★ g)(x) via Gauss-Legendre quadrature."""
-            x = np.atleast_1d(np.asarray(x, dtype=float))
-            result = np.zeros(x.shape)
-            for idx in range(x.size):
-                xi = x[idx]
-                t_lo = max(f_a, xi - g_d)
-                t_hi = min(f_b, xi - g_c)
-                if t_hi <= t_lo:
-                    continue
-                # Break integration at breakpoints of f and shifted breakpoints
-                # of g so the integrand is polynomial on each sub-interval.
-                inner = [t_lo, t_hi]
-                for bp in f_bps:
-                    if t_lo < bp < t_hi:
-                        inner.append(bp)
-                for bp in g_bps:
-                    shifted = xi - bp
-                    if t_lo < shifted < t_hi:
-                        inner.append(shifted)
-                inner = sorted(set(inner))
-
-                total = 0.0
-                for j in range(len(inner) - 1):
-                    a_int, b_int = inner[j], inner[j + 1]
-                    hw = (b_int - a_int) / 2.0
-                    mid = (a_int + b_int) / 2.0
-                    nodes = hw * quad_nodes + mid
-                    wts = hw * quad_weights
-                    total += np.dot(wts, self(nodes) * g(xi - nodes))
-                result[idx] = total
-            return result
-
-        # Build a fun on each output sub-interval.  Outermost pieces are
-        # wrapped as CompactFun when the corresponding logical edge is ±inf;
-        # interior pieces are always finite Bndfuns.
-        n_pieces = len(out_breaks) - 1
-        funs_list: list[Fun] = []
-        for i in range(n_pieces):
-            a_storage = float(out_breaks[i])
-            b_storage = float(out_breaks[i + 1])
-            interval = Interval(a_storage, b_storage)
-            bnd = Bndfun.initfun_adaptive(conv_eval, interval)
-            is_first = i == 0
-            is_last = i == n_pieces - 1
-            wrap_left = is_first and left_inf
-            wrap_right = is_last and right_inf
-            if wrap_left or wrap_right:
-                a_logical = -np.inf if wrap_left else a_storage
-                b_logical = np.inf if wrap_right else b_storage
-                funs_list.append(CompactFun(bnd.onefun, interval, logical_interval=(a_logical, b_logical)))
-            else:
-                funs_list.append(bnd)
-
-        return self.__class__(funs_list)
+        return convolve(self, g)
 
     def sum(self) -> Any:
         """Compute the definite integral of the Chebfun over its domain.
@@ -1292,9 +1027,9 @@ class Chebfun:
     @self_empty()
     def absolute(self) -> Chebfun:
         """Absolute value of a Chebfun."""
-        newdom = self.domain.merge(self.roots())
-        funs = [x.absolute() for x in self._break(newdom)]
-        return self.__class__(funs)
+        from ._pointwise import absolute
+
+        return absolute(self)
 
     abs = absolute
 
@@ -1309,22 +1044,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing sign(f(x)).
         """
-        roots = self.roots()
-        newdom = self.domain.merge(roots)
-        funs = []
-        for fun in self._break(newdom):
-            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
-            s = float(np.sign(float(self(mid))))
-            funs.append(Bndfun.initconst(s, fun.interval))
-        result = self.__class__(funs)
-        # Set breakdata: at roots sign is 0, elsewhere use sign of function
-        htol = max(1e2 * self.hscale * prefs.eps, prefs.eps)
-        for bp in result.breakpoints:
-            if roots.size > 0 and np.any(np.abs(bp - roots) <= htol):
-                result.breakdata[bp] = 0.0
-            else:
-                result.breakdata[bp] = float(np.sign(float(self(bp))))
-        return result
+        from ._pointwise import sign
+
+        return sign(self)
 
     @self_empty()
     def ceil(self) -> Chebfun:
@@ -1338,17 +1060,9 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing ceil(f(x)).
         """
-        crossings = self._integer_crossings()
-        newdom = self.domain.merge(crossings)
-        funs = []
-        for fun in self._break(newdom):
-            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
-            c = float(np.ceil(float(self(mid))))
-            funs.append(Bndfun.initconst(c, fun.interval))
-        result = self.__class__(funs)
-        for bp in result.breakpoints:
-            result.breakdata[bp] = float(np.ceil(float(self(bp))))
-        return result
+        from ._pointwise import ceil
+
+        return ceil(self)
 
     @self_empty()
     def floor(self) -> Chebfun:
@@ -1362,111 +1076,25 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing floor(f(x)).
         """
-        crossings = self._integer_crossings()
-        newdom = self.domain.merge(crossings)
-        funs = []
-        for fun in self._break(newdom):
-            mid = fun.support[0] + 0.5 * (fun.support[-1] - fun.support[0])
-            c = float(np.floor(float(self(mid))))
-            funs.append(Bndfun.initconst(c, fun.interval))
-        result = self.__class__(funs)
-        for bp in result.breakpoints:
-            result.breakdata[bp] = float(np.floor(float(self(bp))))
-        return result
+        from ._pointwise import floor
 
-    def _integer_crossings(self) -> np.ndarray:
-        """Find where this Chebfun crosses integer values.
-
-        This helper method identifies all points in the domain where the
-        Chebfun value equals an integer, by finding roots of (self - n)
-        for each integer n in the range of the function.
-
-        Returns:
-            numpy.ndarray: Array of x-values where the function crosses integers.
-        """
-        all_values = np.concatenate([fun.values() for fun in self])
-        lo = int(np.floor(np.min(all_values)))
-        hi = int(np.ceil(np.max(all_values)))
-        crossings = []
-        for n in range(lo, hi + 1):
-            shifted = self - n
-            crossings.extend(shifted.roots().tolist())
-        return np.array(crossings)
+        return floor(self)
 
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other: Any) -> Any:
         """Pointwise maximum of self and another chebfun."""
-        return self._maximum_minimum(other, operator.ge)
+        from ._pointwise import maximum_minimum
+
+        return maximum_minimum(self, other, operator.ge)
 
     @self_empty()
     @cast_arg_to_chebfun
     def minimum(self, other: Any) -> Any:
-        """Pointwise mimimum of self and another chebfun."""
-        return self._maximum_minimum(other, operator.lt)
+        """Pointwise minimum of self and another chebfun."""
+        from ._pointwise import maximum_minimum
 
-    def _maximum_minimum(self, other: Chebfun, comparator: Callable[..., bool]) -> Any:
-        """Method for computing the pointwise maximum/minimum of two Chebfuns.
-
-        This internal method implements the algorithm for computing the pointwise
-        maximum or minimum of two Chebfun objects, based on the provided comparator.
-        It is used by the maximum() and minimum() methods.
-
-        Args:
-            other (Chebfun): Another Chebfun to compare with this one.
-            comparator (callable): A function that compares two values and returns
-                a boolean. For maximum, this is operator.ge (>=), and for minimum,
-                this is operator.lt (<).
-
-        Returns:
-            Chebfun: A new Chebfun representing the pointwise maximum or minimum.
-        """
-        # Handle empty Chebfuns
-        if self.isempty or other.isempty:
-            return self.__class__.initempty()
-
-        # Find the intersection of domains
-        try:
-            # Try to use union if supports match
-            newdom = self.domain.union(other.domain)
-        except SupportMismatch:
-            # If supports don't match, find the intersection
-            a_min, a_max = self.support
-            b_min, b_max = other.support
-
-            # Calculate intersection
-            c_min = max(a_min, b_min)
-            c_max = min(a_max, b_max)
-
-            # If there's no intersection, return empty
-            if c_min >= c_max:
-                return self.__class__.initempty()
-
-            # Restrict both functions to the intersection
-            self_restricted = self.restrict([c_min, c_max])
-            other_restricted = other.restrict([c_min, c_max])
-
-            # Recursively call with the restricted functions
-            return self_restricted._maximum_minimum(other_restricted, comparator)
-
-        # Continue with the original algorithm
-        roots = (self - other).roots()
-        newdom = newdom.merge(roots)
-        switch = newdom.support.merge(roots)
-
-        # Handle the case where switch is empty
-        if switch.size == 0:  # pragma: no cover
-            return self.__class__.initempty()
-
-        keys = 0.5 * ((-1) ** np.arange(switch.size - 1) + 1)
-        if switch.size > 0 and comparator(other(switch[0]), self(switch[0])):
-            keys = 1 - keys
-        funs = np.array([])
-        for interval, use_self in zip(switch.intervals, keys, strict=False):
-            subdom = newdom.restrict(interval)
-            subfun = self.restrict(subdom) if use_self else other.restrict(subdom)
-            funs = np.append(funs, subfun.funs)
-        return self.__class__(funs)
+        return maximum_minimum(self, other, operator.lt)
 
     # ----------
     #  plotting
@@ -1490,15 +1118,7 @@ class Chebfun:
         Returns:
             matplotlib.axes.Axes: The axes on which the plot was created.
         """
-        a, b = float(self.support[0]), float(self.support[-1])
-        if not np.isfinite(a):
-            left = self.funs[0]
-            a = float(left.plot_support[0]) if hasattr(left, "plot_support") else a
-        if not np.isfinite(b):
-            right = self.funs[-1]
-            b = float(right.plot_support[1]) if hasattr(right, "plot_support") else b
-        support = kwds.pop("support", (a, b))
-        return plotfun(self, support, ax=ax, **kwds)
+        return plot_chebfun(self, ax=ax, **kwds)
 
     def plotcoeffs(self, ax: Axes | None = None, **kwds: Any) -> Axes:
         """Plot the coefficients of the Chebfun on a semilogy scale.
@@ -1515,72 +1135,10 @@ class Chebfun:
         Returns:
             matplotlib.axes.Axes: The axes on which the plot was created.
         """
-        ax = ax or plt.gca()
-        for fun in self:
-            fun.plotcoeffs(ax=ax, **kwds)
-        return ax
+        return cast(Axes, plotcoeffs_chebfun(self, ax=ax, **kwds))
 
 
 # ---------
 #  ufuncs
 # ---------
-def add_ufunc(op: Callable[..., Any]) -> None:
-    """Add a NumPy universal function method to the Chebfun class.
-
-    This function creates a method that applies a NumPy universal function (ufunc)
-    to each piece of a Chebfun and returns a new Chebfun representing the result.
-
-    Args:
-        op (callable): The NumPy universal function to apply.
-
-    Note:
-        The created method will have the same name as the NumPy function
-        and will take no arguments other than self.
-    """
-
-    @self_empty()
-    def method(self: Chebfun) -> Chebfun:
-        """Apply a NumPy universal function to this Chebfun.
-
-        This method applies a NumPy universal function (ufunc) to each piece
-        of this Chebfun and returns a new Chebfun representing the result.
-
-        Args:
-            self (Chebfun): The Chebfun object to which the function is applied.
-
-        Returns:
-            Chebfun: A new Chebfun representing op(f(x)).
-        """
-        return self.__class__([op(fun) for fun in self])
-
-    name = op.__name__  # ty: ignore[unresolved-attribute]
-    method.__name__ = name
-    method.__doc__ = method.__doc__
-    setattr(Chebfun, name, method)
-
-
-ufuncs = (
-    np.arccos,
-    np.arccosh,
-    np.arcsin,
-    np.arcsinh,
-    np.arctan,
-    np.arctanh,
-    np.cos,
-    np.cosh,
-    np.exp,
-    np.exp2,
-    np.expm1,
-    np.log,
-    np.log2,
-    np.log10,
-    np.log1p,
-    np.sinh,
-    np.sin,
-    np.tan,
-    np.tanh,
-    np.sqrt,
-)
-
-for op in ufuncs:
-    add_ufunc(op)
+register_ufuncs(Chebfun)

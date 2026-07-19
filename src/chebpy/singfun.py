@@ -346,30 +346,53 @@ class Singfun(Classicfun):
 
         m = self._map
         new_iv = Interval(sa, sb)
-
-        # Decide which clustered endpoints (if any) the subinterval still touches.
+        # Which clustered endpoints (if any) the subinterval still touches.
         touches_left = sa == a
         touches_right = sb == b
 
         if isinstance(m, SingleSlitMap):
-            if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
-                return type(self).initfun_adaptive(self, new_iv, sing=m.side, params=m.params)
-            # Interior or opposite-end restriction: drop to Bndfun.
-            return Bndfun.initfun_adaptive(self, new_iv)
-
+            return self._restrict_single_slit(m, new_iv, touches_left=touches_left, touches_right=touches_right)
         if isinstance(m, DoubleSlitMap):
-            if touches_left and touches_right:
-                # Subinterval == self.interval handled above; this branch is
-                # therefore unreachable in normal usage.
-                return self  # pragma: no cover
-            if touches_left:
-                return type(self).initfun_adaptive(self, new_iv, sing="left", params=m.params)
-            if touches_right:
-                return type(self).initfun_adaptive(self, new_iv, sing="right", params=m.params)
-            return Bndfun.initfun_adaptive(self, new_iv)
+            return self._restrict_double_slit(m, new_iv, touches_left=touches_left, touches_right=touches_right)
 
         # Unknown map type — conservative fallback.
         return Bndfun.initfun_adaptive(self, new_iv)  # pragma: no cover
+
+    def _restrict_single_slit(
+        self, m: SingleSlitMap, new_iv: Interval, *, touches_left: bool, touches_right: bool
+    ) -> Classicfun:
+        """Restrict a single-slit :class:`Singfun`.
+
+        Retains the :class:`Singfun` representation when the subinterval still
+        touches the clustered endpoint; otherwise the function is analytic on
+        the subinterval and drops to a :class:`~chebpy.bndfun.Bndfun`.
+        """
+        from .bndfun import Bndfun
+
+        if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
+            return type(self).initfun_adaptive(self, new_iv, sing=m.side, params=m.params)
+        return Bndfun.initfun_adaptive(self, new_iv)
+
+    def _restrict_double_slit(
+        self, m: DoubleSlitMap, new_iv: Interval, *, touches_left: bool, touches_right: bool
+    ) -> Classicfun:
+        """Restrict a double-slit :class:`Singfun`.
+
+        A subinterval that still touches one clustered endpoint becomes a
+        one-sided :class:`Singfun`; a purely interior subinterval drops to a
+        :class:`~chebpy.bndfun.Bndfun`.
+        """
+        from .bndfun import Bndfun
+
+        if touches_left and touches_right:
+            # Subinterval == self.interval handled by the caller; this branch is
+            # therefore unreachable in normal usage.
+            return self  # pragma: no cover
+        if touches_left:
+            return type(self).initfun_adaptive(self, new_iv, sing="left", params=m.params)
+        if touches_right:
+            return type(self).initfun_adaptive(self, new_iv, sing="right", params=m.params)
+        return Bndfun.initfun_adaptive(self, new_iv)
 
     def translate(self, c: float) -> Singfun:
         """Translate the function: ``g(x) = f(x - c)``.
