@@ -30,8 +30,10 @@ a container of `Fun` pieces, not part of the `Fun` hierarchy. `Chebfun`'s public
 methods are thin wrappers that delegate to the `_convolution` / `_pointwise` /
 `_singular_construction` / `_ufuncs` implementation modules.
 
-The module-scope import graph is acyclic (a DAG): no module imports a higher
-layer, even via a deferred import. Where a low-level module would otherwise
+The runtime module-scope import graph is acyclic (a DAG): no module imports a
+higher layer at module scope. Deferred (`TYPE_CHECKING`) or function-local
+imports exist but are not used to introduce runtime upward dependencies.
+Where a low-level module would otherwise
 reach up — `utilities.generate_funs()` building an unbounded piece with a
 `CompactFun` constructor — the constructor is injected by the caller rather than
 imported (resolved in [#417](https://github.com/chebpy/chebpy/issues/417)).
