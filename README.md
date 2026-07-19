@@ -162,7 +162,7 @@ from chebpy import chebfun
 import numpy as np
 
 f = chebfun(lambda x: np.exp(-x**2), [-1, 1])
-g = chebfun(lambda x: np.where(np.abs(x) < 0.5, 1.0, 0.0), [-1, 1])
+g = chebfun(lambda x: np.cos(np.pi * x), [-1, 1])
 
 h = f.conv(g)        # h(x) = ∫ f(t) g(x−t) dt, a Chebfun on [−2, 2]
 h.plot()

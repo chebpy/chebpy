@@ -11,7 +11,8 @@ import numpy as np
 import pytest
 
 from chebpy.settings import DefaultPreferences
-from chebpy.trigtech import Trigtech
+from chebpy.settings import _preferences as prefs
+from chebpy.trigtech import Trigtech, _trig_adaptive
 from chebpy.utilities import Interval
 
 mpl.use("Agg")
@@ -570,3 +571,100 @@ class TestPlotting:
         fig, ax = plt.subplots()
         f.plotcoeffs(ax=ax)
         plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# Adaptive-constructor and simplify edge cases
+# ---------------------------------------------------------------------------
+class TestConstructorEdgeCases:
+    def test_adaptive_zero_function_returns_constant(self):
+        """A function below tolerance everywhere collapses to the zero constant."""
+        f = Trigtech.initfun_adaptive(lambda x: 0.0 * x)
+        assert f.isconst
+        assert float(np.real(f.coeffs[0])) == 0.0
+
+    def test_trig_adaptive_nonconvergence_warns(self):
+        """A non-periodic target warns once the probe budget is exhausted."""
+        with pytest.warns(UserWarning, match="did not converge"):
+            coeffs = _trig_adaptive(Trigtech, lambda x: x, hscale=1.0, maxpow2=4)
+        assert coeffs.size > 0
+
+    def test_initidentity_is_a_trigtech(self):
+        """``initidentity`` builds a (non-convergent) Trigtech of the identity."""
+        with prefs:
+            prefs.maxpow2 = 4
+            with pytest.warns(UserWarning, match="did not converge"):
+                f = Trigtech.initidentity(interval=Interval(-1.0, 1.0))
+        assert isinstance(f, Trigtech)
+
+    def test_simplify_zero_coeffs_returns_constant(self):
+        """Simplifying an all-zero Trigtech yields the zero constant."""
+        z = Trigtech(np.zeros(4))
+        s = z.simplify()
+        assert s.isconst
+        assert float(s(0.0)) == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Properties and algebra branches
+# ---------------------------------------------------------------------------
+class TestPropertiesAndAlgebra:
+    def test_interval_property(self):
+        f = Trigtech.initfun_adaptive(lambda x: sin(pi * x), interval=Interval(-1.0, 1.0))
+        assert isinstance(f.interval, Interval)
+
+    def test_iscomplex_all_zero_is_false(self):
+        assert Trigtech(np.zeros(4)).iscomplex is False
+
+    def test_add_shorter_operand_is_prolonged(self):
+        big = Trigtech.initfun_adaptive(lambda x: sin(3.0 * pi * x))
+        small = Trigtech.initconst(1.0)
+        h = big + small
+        x = np.linspace(-0.9, 0.9, 21)
+        assert np.allclose(h(x), sin(3.0 * pi * x) + 1.0, atol=1e-9)
+
+    def test_add_cancelling_operands_collapse_to_zero(self):
+        f = Trigtech.initfun_adaptive(lambda x: sin(pi * x))
+        h = f + (-f)
+        assert h.isconst
+        assert float(h(0.3)) == pytest.approx(0.0, abs=1e-12)
+
+    def test_div_by_empty_returns_empty(self):
+        f = Trigtech.initfun_adaptive(lambda x: 2.0 + sin(pi * x))
+        empty = Trigtech.initempty()
+        assert (f / empty).isempty
+
+    def test_div_by_trigtech(self):
+        f = Trigtech.initfun_adaptive(lambda x: 2.0 + sin(pi * x))
+        two = Trigtech.initconst(2.0)
+        h = f / two
+        x = np.linspace(-0.9, 0.9, 21)
+        assert np.allclose(h(x), (2.0 + sin(pi * x)) / 2.0, atol=1e-9)
+
+    def test_mul_by_empty_returns_empty(self):
+        f = Trigtech.initfun_adaptive(lambda x: sin(pi * x))
+        empty = Trigtech.initempty()
+        assert (f * empty).isempty
+
+    def test_rdiv_scalar(self):
+        f = Trigtech.initfun_adaptive(lambda x: 2.0 + sin(pi * x))
+        h = 3.0 / f
+        x = np.linspace(-0.9, 0.9, 21)
+        assert np.allclose(h(x), 3.0 / (2.0 + sin(pi * x)), atol=1e-9)
+
+    def test_rsub_scalar(self):
+        f = Trigtech.initfun_adaptive(lambda x: sin(pi * x))
+        h = 2.0 - f
+        x = np.linspace(-0.9, 0.9, 21)
+        assert np.allclose(h(x), 2.0 - sin(pi * x), atol=1e-9)
+
+    def test_rpow_scalar(self):
+        f = Trigtech.initfun_adaptive(lambda x: 2.0 + sin(pi * x))
+        h = 2.0**f
+        x = np.linspace(-0.9, 0.9, 21)
+        assert np.allclose(h(x), 2.0 ** (2.0 + sin(pi * x)), atol=1e-9)
+
+    def test_values_of_complex_function_stay_complex(self):
+        f = Trigtech.initfun_adaptive(lambda x: exp(1j * pi * x))
+        vals = f.values()
+        assert np.iscomplexobj(vals)

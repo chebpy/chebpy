@@ -702,6 +702,17 @@ class TestPlotting:
         self.f3.plot(ax=ax, color="g")
         plt.close(fig)
 
+    def test_plot_infinite_domain_uses_compactfun_window(self):
+        # A doubly-infinite Chebfun replaces each ±inf endpoint with the outer
+        # CompactFun piece's finite plot_support window.
+        g = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        fig, ax = plt.subplots()
+        g.plot(ax=ax)
+        left, right = ax.get_xlim()
+        assert np.isfinite(left)
+        assert np.isfinite(right)
+        plt.close(fig)
+
     def test_plotcoeffs(self):
         fig, ax = plt.subplots()
         self.f1.plotcoeffs(ax=ax)

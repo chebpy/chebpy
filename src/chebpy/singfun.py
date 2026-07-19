@@ -128,7 +128,7 @@ class Singfun(Classicfun):
             return type(self).initfun_adaptive(f, self._interval, sing=m.side, params=m.params)
         if isinstance(m, DoubleSlitMap):
             return type(self).initfun_adaptive(f, self._interval, sing="both", params=m.params)
-        msg = "Singfun._rebuild_from_callable: unknown map type"
+        msg = "Singfun._rebuild_from_callable: unknown map type"  # pragma: no cover
         raise NotImplementedError(msg)  # pragma: no cover
 
     @staticmethod

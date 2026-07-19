@@ -134,7 +134,9 @@ def _discover_one_side(
             active_r = ri
 
     boundary_r = max(2.0 * active_r, 1.0)
-    if boundary_r > max_width:
+    # Defensive: the last-3 convergence window forces active_r <= r_{N-3}, so
+    # boundary_r = 2*active_r stays below the largest probed radius (<= max_width).
+    if boundary_r > max_width:  # pragma: no cover
         raise CompactFunConstructionError(  # noqa: TRY003
             f"Discovered numerical support exceeds max_width = {max_width:g}; "
             f"heavy-tailed inputs are not supported in this release."
@@ -193,9 +195,9 @@ def _discover_numsupp(
             f"max_width = {max_width:g}; heavy-tailed inputs are not supported "
             f"in this release."
         )
-    if b_storage <= a_storage:
-        # Function appears identically constant on both sides; pick a small
-        # default storage interval.
+    if b_storage <= a_storage:  # pragma: no cover
+        # Defensive: each discovered boundary is >= 1 from the anchor, so
+        # b_storage > a_storage always holds; kept as a safety net.
         a_storage, b_storage = anchor - 1.0, anchor + 1.0
     return a_storage, b_storage, tail_left, tail_right
 

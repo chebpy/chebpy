@@ -7,7 +7,10 @@ import pytest
 
 from chebpy import CompactFun, chebfun
 from chebpy.bndfun import Bndfun
+from chebpy.classicfun import techdict
+from chebpy.compactfun import _discover_numsupp, _discover_one_side
 from chebpy.exceptions import CompactFunConstructionError, DivergentIntegralError
+from chebpy.settings import _preferences as prefs
 from chebpy.utilities import Interval
 
 
@@ -454,3 +457,155 @@ class TestTailConstants:
             f.conv(g)
         with pytest.raises(DivergentIntegralError):
             g.conv(f)
+
+
+# -----------------------------
+# numerical-support discovery internals
+# -----------------------------
+class TestDiscoveryInternals:
+    """Direct tests for the module-level support-discovery helpers."""
+
+    def test_probe_nonfinite_raises(self) -> None:
+        # A function returning a non-finite value at a probe is rejected.
+        with pytest.raises(CompactFunConstructionError):
+            _discover_one_side(lambda x: np.nan, 0.0, 1, 1e-10, 1e6, 60)
+
+    def test_zero_width_returns_default_boundary(self) -> None:
+        # max_width < 1 leaves no room for even one probe \u2192 default boundary.
+        boundary, tail, vscale = _discover_one_side(lambda x: np.exp(-x * x), 0.0, 1, 1e-10, 0.5, 60)
+        assert boundary == 1.0
+        assert tail == 0.0
+        assert vscale == 0.0
+
+    def test_too_few_probes_raises(self) -> None:
+        # Only one probe fits before max_width \u2192 cannot confirm convergence.
+        with pytest.raises(CompactFunConstructionError):
+            _discover_one_side(lambda x: np.exp(-x * x), 0.0, 1, 1e-10, 1.5, 60)
+
+    def test_numsupp_exceeds_max_width_raises(self) -> None:
+        with pytest.raises(CompactFunConstructionError):
+            _discover_numsupp(lambda x: np.exp(-x * x), -np.inf, np.inf, 1e-10, 0.5, 60)
+
+
+# -----------------------------
+# additional construction paths
+# -----------------------------
+class TestConstructionExtra:
+    """Constructor branches not exercised by the primary suite."""
+
+    def test_init_default_logical_interval(self) -> None:
+        # Omitting logical_interval falls back to the storage interval.
+        storage = Interval(-1.0, 1.0)
+        onefun = techdict[prefs.tech].initconst(1.0, interval=storage)
+        f = CompactFun(onefun, storage)
+        assert tuple(f.support) == (-1.0, 1.0)
+
+    def test_initconst_left_infinite(self) -> None:
+        # (-inf, 0]: the constant becomes the left tail; storage hugs the finite end.
+        f = CompactFun.initconst(2.0, (-np.inf, 0.0))
+        assert f.tail_left == 2.0
+        assert f.tail_right == 0.0
+        assert f(-1e6) == 2.0
+
+    def test_initfun_fixedlen(self) -> None:
+        # Fixed-length construction discovers the support and tails like the
+        # adaptive path, but caps the coefficient count (so it need not resolve
+        # to machine precision).
+        f = CompactFun.initfun_fixedlen(lambda x: np.exp(-(x**2)), (-np.inf, np.inf), 32)
+        assert isinstance(f, CompactFun)
+        assert f.size == 32
+        assert f.tail_left == 0.0
+        assert f.tail_right == 0.0
+        # Outside the numerical support the tail constants are returned exactly.
+        assert f(1e6) == 0.0
+        assert f(-1e6) == 0.0
+        # A higher-resolution fixed length recovers the function to good accuracy.
+        g = CompactFun.initfun_fixedlen(lambda x: np.exp(-(x**2)), (-np.inf, np.inf), 128)
+        x = np.linspace(-2.0, 2.0, 11)
+        np.testing.assert_allclose(g(x), np.exp(-(x**2)), atol=1e-6)
+
+
+# -----------------------------
+# calculus divergence on the right tail only
+# -----------------------------
+class TestOneSidedDivergence:
+    """Divergence checks triggered by a non-zero *right* tail only."""
+
+    def test_sum_diverges_right_tail_only(self) -> None:
+        # Left endpoint finite (tail_left = 0), right endpoint +inf with tail 1.
+        f = CompactFun.initconst(1.0, (0.0, np.inf))
+        with pytest.raises(DivergentIntegralError):
+            f.sum()
+
+    def test_cumsum_diverges_right_tail_only(self) -> None:
+        f = CompactFun.initconst(1.0, (0.0, np.inf))
+        with pytest.raises(DivergentIntegralError):
+            f.cumsum()
+
+
+# -----------------------------
+# rootfinding / restriction edge cases
+# -----------------------------
+class TestEdgeCases:
+    """Empty-root shortcut, infinite-restriction guard, and tail helpers."""
+
+    def test_roots_empty_returns_empty(self) -> None:
+        # A non-zero constant has no roots; the raw-empty shortcut is taken.
+        f = CompactFun.initconst(1.0, (-1.0, 2.0))
+        assert f.roots().size == 0
+
+    def test_restrict_infinite_subinterval_raises(self) -> None:
+        f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        with pytest.raises(NotImplementedError):
+            f.restrict((-np.inf, 1.0))
+
+    def test_mul_scalar_propagates_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
+        g = f * 2.0
+        assert g.tail_left == pytest.approx(-2.0, abs=1e-12)
+        assert g.tail_right == pytest.approx(2.0, abs=1e-12)
+
+    def test_add_two_compactfuns_combines_tails(self) -> None:
+        f = CompactFun.initconst(1.0, (0.0, np.inf))
+        g = CompactFun.initconst(2.0, (0.0, np.inf))
+        h = f + g
+        assert isinstance(h, CompactFun)
+        assert h.tail_right == pytest.approx(3.0, abs=1e-12)
+
+    def test_other_tails_non_scalar_returns_zero(self) -> None:
+        # A non-CompactFun, non-scalar operand is treated as zero-tailed.
+        f = CompactFun.initconst(1.0, (0.0, np.inf))
+        bnd = Bndfun.initconst(2.0, Interval(0.0, 1.0))
+        assert f._other_tails(bnd) == (0.0, 0.0)
+
+    def test_mixed_bndfun_compactfun_rebuilds_on_dominant(self) -> None:
+        # A finite CompactFun and a Bndfun on the same interval are different
+        # subclasses of equal singularity priority, so the binary op rebuilds
+        # adaptively on the left (dominant) operand's representation.
+        bnd = Bndfun.initfun_adaptive(np.cos, Interval(-1.0, 2.0))
+        compact = CompactFun.initfun_adaptive(np.sin, (-1.0, 2.0))
+        h = bnd + compact
+        assert isinstance(h, Bndfun)
+        x = np.linspace(-1.0, 2.0, 21)
+        np.testing.assert_allclose(h(x), np.cos(x) + np.sin(x), atol=1e-10)
+
+
+# -----------------------------
+# plotting
+# -----------------------------
+class TestPlotting:
+    """Finite plotting window derived from numerical support."""
+
+    def test_plot_support_pads_infinite_endpoints(self) -> None:
+        f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        a, b = f.plot_support
+        a_s, b_s = f.numerical_support
+        assert np.isfinite(a)
+        assert np.isfinite(b)
+        assert a < a_s
+        assert b > b_s
+
+    def test_plot_returns_axes(self) -> None:
+        f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        ax = f.plot()
+        assert ax is not None
