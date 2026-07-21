@@ -42,7 +42,7 @@ jobs:
     # this repo sets the `MUTATION_ENABLED` variable to 'true'. Gating here in
     # the caller keeps it optional regardless of the pinned reusable workflow.
     if: ${{ vars.MUTATION_ENABLED == 'true' }}
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_mutation.yml@v1.1.2
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_mutation.yml@v1.2.2
     secrets: inherit
     permissions:
       contents: read
