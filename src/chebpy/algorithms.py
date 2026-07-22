@@ -140,15 +140,16 @@ def bary(xx: np.ndarray, fk: np.ndarray, xk: np.ndarray, vk: np.ndarray) -> np.n
         Review (2004)
     """
     # either iterate over the evaluation points, or ...
+    dtype = np.result_type(xx, fk, xk, vk, 1.0)
     if xx.size < 4 * xk.size:
-        out = np.zeros(xx.size)
+        out = np.zeros(xx.size, dtype=dtype)
         for i in range(xx.size):
             tt = vk / (xx[i] - xk)
             out[i] = np.dot(tt, fk) / tt.sum()
 
     # ... iterate over the barycenters
     else:
-        numer = np.zeros(xx.size)
+        numer = np.zeros(xx.size, dtype=dtype)
         denom = np.zeros(xx.size)
         for j in range(xk.size):
             temp = vk[j] / (xx - xk[j])
@@ -163,6 +164,112 @@ def bary(xx: np.ndarray, fk: np.ndarray, xk: np.ndarray, vk: np.ndarray) -> np.n
             out[k] = fk[idx[0]]
 
     return out
+
+
+def fh_barywts(x: np.ndarray, d: int, maxind: int | None = None) -> np.ndarray:
+    """Compute Floater-Hormann barycentric weights.
+
+    Args:
+        x: Interpolation nodes.
+        d: Floater-Hormann blending degree.
+        maxind: Optional number of leading weights to compute.
+
+    Returns:
+        Barycentric weights for the Floater-Hormann rational interpolant.
+    """
+    x = np.asarray(x, dtype=float)
+    n = x.size - 1
+    if n < 0:
+        return np.array([])
+    if d < 0 or d > n:
+        msg = f"d must satisfy 0 <= d <= {n}; got {d}"
+        raise ValueError(msg)
+    num_weights = min(n + 1, n + 1 if maxind is None else maxind)
+    w = np.zeros(num_weights)
+    for k in range(num_weights):
+        for i in range(max(0, k - d), min(k, n - d) + 1):
+            s = 1.0
+            for j in range(i, min(n, i + d) + 1):
+                if j != k:
+                    s /= x[k] - x[j]
+            w[k] += (-1.0) ** i * s
+    return w
+
+
+def _funqui_max_degree(n: int) -> int:
+    """Return Chebfun's sample-count dependent maximum FH degree."""
+    if n < 60:
+        return min(n, 35)
+    if n < 100:
+        return 30
+    if n < 1000:
+        return 25
+    if n < 5000:
+        return 20
+    return 15
+
+
+def _fh_weights(x: np.ndarray, d: int) -> np.ndarray:
+    """Compute FH weights using Chebfun's symmetric equispaced-data shortcut."""
+    n = x.size - 1
+    if d <= (n + 1) / 2:
+        wl = np.abs(fh_barywts(x, d, d + 1))
+        wm = np.full(max(n - 1 - 2 * d, 0), wl[-1])
+        w = np.concatenate((wl, wm))
+        w = w[: int(np.ceil((n + 1) / 2))]
+        w = np.concatenate((w, w[::-1])) if n % 2 else np.concatenate((w[:-1], w[::-1]))
+        w[::2] *= -1
+        return w
+    return fh_barywts(x, d)
+
+
+def _funqui_degree(x: np.ndarray, values: np.ndarray) -> int:
+    """Choose the Floater-Hormann degree used for equispaced data."""
+    n = values.size - 1
+    maxd = _funqui_max_degree(n)
+    if n <= 2:
+        return min(4, n)
+
+    rm_index = np.unique(np.array([1, n - 2]))
+    xrm = np.delete(x, rm_index)
+    valsrm = np.delete(values, rm_index)
+
+    if np.linalg.norm(values[rm_index], ord=np.inf) < 2 * np.finfo(float).eps * np.linalg.norm(values, ord=np.inf):
+        return min(4, n)
+
+    errs = []
+    for d in range(min(n - 2, maxd) + 1):
+        if d <= (n - 5) / 2:
+            wl = np.abs(fh_barywts(xrm, d, d + 2))
+            wr = np.abs(fh_barywts(xrm[::-1], d, d + 2))[::-1]
+            wm = np.full(max(n - 5 - 2 * d, 0), wl[-1])
+            w = np.concatenate((wl, wm, wr))
+            w[::2] *= -1
+        else:
+            w = fh_barywts(xrm, d)
+        held_out = bary(x[rm_index], valsrm, xrm, w)
+        errs.append(float(np.max(np.abs(held_out - values[rm_index]))))
+        if errs[-1] > 1000 * min(errs):
+            break
+    return int(np.argmin(errs))
+
+
+def funqui(values: np.ndarray, domain: np.ndarray) -> Callable[..., Any]:
+    """Return a Floater-Hormann interpolant for equispaced endpoint data.
+
+    Args:
+        values: One-dimensional sample values on an equispaced grid.
+        domain: Two finite endpoints defining the sample interval.
+
+    Returns:
+        Callable rational interpolant through the supplied data.
+    """
+    values = np.asarray(values)
+    domain = np.asarray(domain, dtype=float)
+    x = np.linspace(domain[0], domain[1], values.size)
+    d = _funqui_degree(x, values)
+    w = _fh_weights(x, d)
+    return lambda zz: bary(zz, values, x, w)
 
 
 @preandpostprocess
