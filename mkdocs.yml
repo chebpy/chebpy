@@ -84,6 +84,7 @@ nav:
       - Periodic Representations: notebooks/8_periodic.html
       - Infinite Intervals: notebooks/9_infinite_intervals.html
       - Endpoint Singularities: notebooks/10_endpoint_singularities.html
+      - Equispaced Data: notebooks/11_equispaced_data.html
       - Fast Convolution: notebooks/5_convolution.html
       - Quasimatrix Algebra: notebooks/4_quasimatrix.html
       - Gaussian Processes: notebooks/6_gaussian_process.html

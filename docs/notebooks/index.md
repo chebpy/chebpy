@@ -14,3 +14,4 @@ Interactive Marimo notebooks exploring ChebPy features. Each notebook opens as a
 | [Periodic Representations](8_periodic.html) | `trigfun` for smooth periodic functions via Fourier series |
 | [Infinite Intervals](9_infinite_intervals.html) | `CompactFun` for functions on (semi-)infinite domains |
 | [Endpoint Singularities](10_endpoint_singularities.html) | `Singfun` for square-root and other branch-type endpoint singularities |
+| [Equispaced Data](11_equispaced_data.html) | `equifun` for reconstructing functions from equispaced samples via Floater–Hormann interpolation |
