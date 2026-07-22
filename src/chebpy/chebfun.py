@@ -20,6 +20,7 @@ from matplotlib.axes import Axes
 
 from ._ufuncs import register_ufuncs
 from .bndfun import Bndfun
+from .compactfun import CompactFun
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument
 from .plotting import plot_chebfun, plotcoeffs_chebfun
@@ -95,7 +96,7 @@ class Chebfun:
             >>> np.allclose(x([0, 0.5, 1]), [0, 0.5, 1])
             True
         """
-        return cls(generate_funs(domain, Bndfun.initidentity))
+        return cls(generate_funs(domain, Bndfun.initidentity, compact_constructor=CompactFun.initidentity))
 
     @classmethod
     def initconst(cls, c: Any, domain: Any = None) -> Chebfun:
@@ -119,7 +120,7 @@ class Chebfun:
             >>> np.allclose(f([0, 0.5, 1]), [3.14, 3.14, 3.14])
             True
         """
-        return cls(generate_funs(domain, Bndfun.initconst, {"c": c}))
+        return cls(generate_funs(domain, Bndfun.initconst, {"c": c}, compact_constructor=CompactFun.initconst))
 
     @classmethod
     def initfun_adaptive(
@@ -160,7 +161,11 @@ class Chebfun:
             True
         """
         if sing is None:
-            return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
+            return cls(
+                generate_funs(
+                    domain, Bndfun.initfun_adaptive, {"f": f}, compact_constructor=CompactFun.initfun_adaptive
+                )
+            )
         from ._singular_construction import generate_singular_funs
 
         return cls(generate_singular_funs(f, domain, sing=sing, params=params))
@@ -188,7 +193,9 @@ class Chebfun:
         """
         nn = np.array(n)
         if nn.size < 2:
-            funs = generate_funs(domain, Bndfun.initfun_fixedlen, {"f": f, "n": n})
+            funs = generate_funs(
+                domain, Bndfun.initfun_fixedlen, {"f": f, "n": n}, compact_constructor=CompactFun.initfun_fixedlen
+            )
         else:
             domain = Domain(domain if domain is not None else prefs.domain)
             if not nn.size == domain.size - 1:

@@ -99,25 +99,30 @@ results via `f.__class__(...)`) and reference `Chebfun` only under
 
 ## Import direction and deferred imports
 
-The layering rule is enforced by keeping upward references out of module scope.
-Function-local (deferred) imports are used for three reasons:
+The layering rule is enforced by keeping upward references out of the *runtime*
+module-scope import graph. That graph is acyclic (a DAG): no module imports a
+higher layer at module scope. Deferred (function-local) and
+`TYPE_CHECKING`-guarded imports exist for three reasons; none introduces a
+*runtime* upward dependency:
 
 1. **Typing only** — `_convolution`, `_pointwise`, `_ufuncs` import `Chebfun`
-   under `TYPE_CHECKING`.
+   under `TYPE_CHECKING`. These are upward references, but they are never
+   executed at runtime, so they do not affect the module-scope DAG.
 2. **Breaking sibling cycles** — e.g. `singfun`/`compactfun` import `bndfun`
    inside `restrict`; `trigtech` imports `chebtech` inside `roots`.
 3. **Lazy/optional heavy paths** — `chebfun` imports its implementation modules
    (`_convolution`, `_pointwise`, `_singular_construction`) inside the relevant
    methods.
 
-### Known exception (tech debt)
+### Dependency injection instead of an upward import
 
-`utilities.generate_funs()` contains a function-local
-`from .compactfun import CompactFun` — an **L1 module reaching up to L5**. This
-is the one genuine layering back-edge (a hidden `utilities ↔ compactfun`
-cycle), deferred so it does not manifest at import time. It is tracked in
-[issue #417](https://github.com/chebpy/chebpy/issues/417); the intended fix is
-to inject the compact constructor rather than import it here.
+The one place a low-level module would otherwise reach up is
+`utilities.generate_funs()`, which builds an unbounded piece with a
+`CompactFun` (L5) constructor. Rather than import `compactfun` from `utilities`
+(L1), the constructor is **injected** by the caller: `chebfun` passes the
+matching `CompactFun` classmethod as `generate_funs(..., compact_constructor=…)`.
+This keeps `utilities` free of any dependency on `compactfun` (resolved in
+[#417](https://github.com/chebpy/chebpy/issues/417)).
 
 ## Source ownership: this repo vs Rhiza
 
