@@ -5,7 +5,7 @@ by mapping them to a standard domain [-1, 1] and using a Onefun representation.
 """
 
 from abc import ABC
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,6 +43,61 @@ class Classicfun(Fun, ABC):
     # ``CompactFun`` use the default of ``0``; ``Singfun`` overrides to
     # ``10`` so that ``Singfun + Bndfun`` yields a ``Singfun``.
     _singularity_priority: int = 0
+
+    if TYPE_CHECKING:
+        # The algebra/utility methods below are attached to ``Classicfun`` at
+        # import time by the ``setattr`` blocks further down (they delegate to
+        # the underlying ``onefun``). They satisfy the abstract methods declared
+        # on :class:`Fun`; declaring them here lets static type checkers see the
+        # concrete implementations, so subclasses such as ``Bndfun`` are
+        # treated as instantiable and ``super().__op__()`` calls resolve safely.
+        def __add__(self, other: Any) -> Fun:
+            """Add another function or scalar (dynamically attached)."""
+            ...
+
+        def __sub__(self, other: Any) -> Fun:
+            """Subtract another function or scalar (dynamically attached)."""
+            ...
+
+        def __mul__(self, other: Any) -> Fun:
+            """Multiply by another function or scalar (dynamically attached)."""
+            ...
+
+        def __pow__(self, power: Any) -> Fun:
+            """Raise to a power (dynamically attached)."""
+            ...
+
+        def __radd__(self, other: Any) -> Fun:
+            """Right-hand addition (dynamically attached)."""
+            ...
+
+        def __rsub__(self, other: Any) -> Fun:
+            """Right-hand subtraction (dynamically attached)."""
+            ...
+
+        def __rmul__(self, other: Any) -> Fun:
+            """Right-hand multiplication (dynamically attached)."""
+            ...
+
+        def __neg__(self) -> Fun:
+            """Negate this function (dynamically attached)."""
+            ...
+
+        def __pos__(self) -> Fun:
+            """Return this function unchanged (dynamically attached)."""
+            ...
+
+        def copy(self) -> Fun:
+            """Return a deep copy (dynamically attached)."""
+            ...
+
+        def simplify(self) -> Fun:
+            """Return a simplified representation (dynamically attached)."""
+            ...
+
+        def values(self) -> np.ndarray:
+            """Return the function values at the representation points (dynamically attached)."""
+            ...
 
     # --------------------------
     #  alternative constructors
@@ -269,7 +324,7 @@ class Classicfun(Fun, ABC):
                 to logical points ``x ∈ [a, b]``. Defaults to ``self._interval``,
                 which is the affine :class:`~chebpy.utilities.Interval` map.
         """
-        return self._interval
+        return cast(IntervalMap, self._interval)
 
     @property
     def isconst(self) -> Any:
@@ -630,6 +685,7 @@ def _classicfun_mixed_binop(self: "Classicfun", other: "Classicfun", methodname:
     owner = self if self._singularity_priority >= other._singularity_priority else other
 
     def combined(x: Any) -> Any:
+        """Evaluate the binary op pointwise on both operands at *x*."""
         return op_fn(self(x), other(x))
 
     return owner._rebuild_from_callable(combined)

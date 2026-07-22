@@ -1,0 +1,24 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Benchmarks
+#
+# Purpose: Run the benchmark suite on pushes to main to create a measurable
+#          performance baseline over time.
+#
+# Trigger: This workflow runs on pushes to the main branch.
+
+name: "(RHIZA) BENCHMARK"
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  benchmark:
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_benchmark.yml@v1.1.2
+    secrets: inherit

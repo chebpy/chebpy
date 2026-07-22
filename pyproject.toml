@@ -16,15 +16,20 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.23.6",
-    "ruff>=0.14.14",
-    "pandas",
+    "marimo==0.23.14",
+    "pandas>=2.2",
     "plotly",
+]
+test = [
+    "pytest>=8.0",
+]
+lint = [
+    "ruff>=0.14.14",
 ]
 
 [project.urls]
-repository = "https://github.com/chebpy/chebpy"
-homepage = "https://chebpy.github.io/chebpy/"
+Homepage = "https://chebpy.github.io/chebpy/"
+Repository = "https://github.com/chebpy/chebpy"
 
 [build-system]
 requires = ["hatchling"]
@@ -48,3 +53,9 @@ invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
 invalid-assignment = "ignore"
 unsupported-operator = "ignore"
+
+[tool.interrogate]
+# The project test suite is exempt from the docstring-coverage gate: test intent
+# is carried by descriptive test names and assertions rather than docstrings.
+# src/ (and the Rhiza-managed .rhiza/tests and .rhiza/utils) stay fully covered.
+exclude = ["tests"]

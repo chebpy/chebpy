@@ -1,0 +1,40 @@
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose an idea before implementing it. This lightweight RFC process lets the
+        community gauge interest and shape the design before any code is written.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The Idea
+      description: What are you proposing? Describe it clearly enough that others can react.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve, and who benefits?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other approaches you weighed, and why this one is preferable.
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to prior art, related discussions, issues, or external resources.
+    validations:
+      required: false

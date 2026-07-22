@@ -8,7 +8,7 @@ It defines the core data structures for representing and manipulating intervals 
 import itertools
 from collections import OrderedDict
 from collections.abc import Callable, Iterable
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 import numpy as np
 
@@ -30,7 +30,7 @@ def htol() -> float:
     Returns:
         float: 5 times the machine epsilon from preferences.
     """
-    return 5 * prefs.eps  # type: ignore[return-value]
+    return 5 * prefs.eps
 
 
 @runtime_checkable
@@ -117,7 +117,7 @@ class Interval(np.ndarray):
         """
         if a >= b:
             raise IntervalValues
-        return np.asarray((a, b), dtype=float).view(cls)  # type: ignore[return-value]
+        return cast("Interval", np.asarray((a, b), dtype=float).view(cls))
 
     def formap(self, y: float | np.ndarray) -> Any:
         """Map from the reference interval [-1,1] to this interval [a,b].
@@ -202,7 +202,7 @@ class Interval(np.ndarray):
         Returns:
             bool: True if other is contained within this interval, False otherwise.
         """
-        other_interval: Interval = other
+        other_interval = cast(Interval, other)
         (a, b), (x, y) = self, other_interval
         return bool((a <= x) & (y <= b))
 
@@ -285,7 +285,7 @@ class Domain(np.ndarray):
         """
         bpts = np.asarray(breakpoints, dtype=float)
         if bpts.size == 0:
-            return bpts.view(cls)  # type: ignore[return-value]
+            return cast("Domain", bpts.view(cls))
         if bpts.size < 2 or np.any(np.diff(bpts) <= 0):
             raise InvalidDomain
         # Interior breakpoints must be finite; only the outermost two may be infinite.
@@ -294,7 +294,7 @@ class Domain(np.ndarray):
         # NaN is never permitted anywhere.
         if np.any(np.isnan(bpts)):
             raise InvalidDomain
-        return bpts.view(cls)  # type: ignore[return-value]
+        return cast("Domain", bpts.view(cls))
 
     def __contains__(self, other: object) -> bool:
         """Check whether one domain object is a subdomain of another (within tolerance).
@@ -305,7 +305,7 @@ class Domain(np.ndarray):
         Returns:
             bool: True if other is contained within this domain (within tolerance), False otherwise.
         """
-        other_domain: Domain = other
+        other_domain = cast(Domain, other)
         a, b = self.support
         x, y = other_domain.support
         bounds = np.array([1 - htol(), 1 + htol()])
@@ -433,7 +433,7 @@ class Domain(np.ndarray):
             # Try to convert array-like objects to Domain for comparison
             try:
                 other = Domain(other)
-            except Exception:
+            except (InvalidDomain, ValueError, TypeError):
                 return NotImplemented
         if self.size != other.size:
             return False
@@ -587,7 +587,7 @@ def generate_funs(
     for a, b in itertools.pairwise(domain):
         a_f, b_f = float(a), float(b)
         if np.isfinite(a_f) and np.isfinite(b_f):
-            interval = Interval(a_f, b_f)
+            interval: Any = Interval(a_f, b_f)
             ctor = bndfun_constructor
         else:
             if compact_constructor is None:

@@ -11,7 +11,7 @@ in Trefethen's "Approximation Theory and Approximation Practice".
 
 import warnings
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.fft import fft, ifft
@@ -739,7 +739,7 @@ def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
         res = main * v
         res[1:] += sub * v[:-1]
         res[:-1] += supra * v[1:]
-        return res
+        return cast(np.ndarray, res)
 
     def _rec(alpha_arg: np.ndarray, beta: np.ndarray, sgn: float, s00: float) -> np.ndarray:
         """Compute Legendre coefficients of the convolution on one piece.
@@ -796,7 +796,7 @@ def _conv_legendre(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
             gamma = gamma[: loc[-1] + 1] if loc.size > 0 else gamma[:1]
         else:
             gamma = gamma[:1]
-        return gamma
+        return cast(np.ndarray, gamma)
 
     gamma_left = _rec(alpha.copy(), b, -1.0, 1.0)
     gamma_right = _rec(-alpha.copy(), b, 1.0, -1.0)

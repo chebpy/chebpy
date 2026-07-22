@@ -1,0 +1,50 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Mutation Testing
+#
+# Purpose: Measure test *assertion strength* with mutmut. 100% line/branch
+#          coverage proves code is executed, not that a wrong result would be
+#          caught; surviving mutants reveal assertions that are too weak.
+#
+#          Opt-in: mutation testing is OFF by default and very optional. Set the
+#          repository variable `MUTATION_ENABLED` to 'true' to run it; otherwise
+#          the reusable workflow skips the mutation job (the run stays green).
+#
+#          Enforced gate (when enabled): mutation runs are required and fail when
+#          mutants survive (100% mutation score threshold in the reusable
+#          workflow).
+#
+#          Thin stub: the mutation logic and the opt-in gate live in the
+#          reusable workflow in jebel-quant/rhiza; this file only wires up the
+#          triggers.
+#
+#          Published mutation badge URL (when enabled):
+#          https://<org>.github.io/<repo>/mutation-badge.svg
+#
+# Trigger: Weekly schedule, manual dispatch, and pull_request so mutation
+#          testing is included in PR CI.
+
+name: "(RHIZA) MUTATION"
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 9 * * 1"  # Monday 09:00 UTC (after the rhiza weekly job at 08:00)
+  workflow_dispatch:
+
+jobs:
+  mutation:
+    # Opt-in gate: mutation testing is OFF by default. The job only runs when
+    # this repo sets the `MUTATION_ENABLED` variable to 'true'. Gating here in
+    # the caller keeps it optional regardless of the pinned reusable workflow.
+    if: ${{ vars.MUTATION_ENABLED == 'true' }}
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_mutation.yml@v1.1.2
+    secrets: inherit
+    permissions:
+      contents: read
+      pages: write       # publish-mutation-badge deploys the badge to Pages
+      id-token: write    # publish-mutation-badge needs OIDC for the Pages deploy

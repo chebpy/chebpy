@@ -40,6 +40,8 @@ plugins:
             show_signature_annotations: true
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.snippets:
@@ -92,6 +94,7 @@ nav:
       - Coverage Report: reports/html-coverage/index.html
   - API Reference: api.md
   - Developer:
+      - Architecture: development/architecture.md
       - Contributing: CONTRIBUTING.md
       - Code of Conduct: CODE_OF_CONDUCT.md
   - About: about.md

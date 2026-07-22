@@ -72,6 +72,15 @@ uv run pytest tests/property/ -v --hypothesis-max-examples=1000
 uv run pytest tests/property/ -v --hypothesis-verbosity=verbose
 ```
 
+### Opting in to live DEBUG logs
+
+By default, the template disables live pytest CLI logging (`log_cli = false`) to keep normal test output concise.
+When you need detailed live logs for debugging, enable them per-run:
+
+```bash
+uv run pytest -o log_cli=true --log-cli-level=DEBUG
+```
+
 ### Example Tests
 
 The following property-based tests are included as examples:
@@ -256,7 +265,7 @@ pytest-benchmark>=5.2.3
 pygal>=3.1.0
 ```
 
-These are automatically installed when running `make install` or by installing from `.rhiza/requirements/tests.txt`.
+These are provisioned on the fly by the relevant `make` targets via `uv run --with …` (e.g. `make test`, `make benchmark`), so no separate install step is required.
 
 ## Troubleshooting
 

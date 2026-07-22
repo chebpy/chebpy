@@ -14,7 +14,7 @@ which is imported by other modules to access the current settings.
 """
 
 from types import TracebackType
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 
@@ -93,7 +93,7 @@ class ChebPreferences(DefaultPreferences):
             ChebPreferences: The preferences object (self._instance).
         """
         self._stash.append({k: getattr(self, k) for k in DefaultPreferences._defaults()})
-        return self._instance  # type: ignore[return-value]
+        return cast("ChebPreferences", self._instance)
 
     def __exit__(
         self,
