@@ -132,10 +132,20 @@ def _(fh, runge):
     _xx = np.linspace(-1.0, 1.0, 2001)
 
     _fig, _ax = plt.subplots()
-    _ax.plot(_xx, runge(_xx), color="C0", linewidth=2, label="$r(x) = 1/(1+25x^2)$")
-    _ax.plot(_xx, fh(_xx), color="C1", linewidth=1.5, label="equifun")
-    _ax.plot(_xx, np.polyval(_coeffs, _xx), color="C3", linewidth=1.2, label="degree-24 polynomial")
-    _ax.plot(_nodes, runge(_nodes), "k.", label="samples")
+    _ax.plot(_xx, runge(_xx), color="black", linewidth=3.0, label="$r(x) = 1/(1+25x^2)$")
+    _ax.plot(_xx, fh(_xx), color="#D55E00", linestyle="--", linewidth=1.5, label="equifun")
+    _ax.plot(_xx, np.polyval(_coeffs, _xx), color="#0072B2", linewidth=1.0, alpha=0.9, label="degree-24 polynomial")
+    _ax.plot(
+        _nodes,
+        runge(_nodes),
+        linestyle="none",
+        marker="o",
+        markersize=4,
+        markerfacecolor="white",
+        markeredgecolor="black",
+        markeredgewidth=0.8,
+        label="samples",
+    )
     _ax.set_ylim(-1.0, 2.0)
     _ax.set_xlabel("x")
     _ax.set_title("Equispaced interpolation of Runge's function")
