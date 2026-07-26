@@ -32,3 +32,19 @@ values = [
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
+
+# Keep the reusable-workflow stubs in the bundles pinned to the current release.
+# These stubs are synced into downstream repos and must reference an existing tag.
+# The search is a regex anchored to the `jebel-quant/rhiza/...` path so it rewrites
+# the pin from ANY prior version (not just {current_version}) — this prevents silent
+# drift if a stub was left behind — while leaving third-party action pins
+# (actions/checkout@vX, astral-sh/setup-uv@vX, ...) in the same files untouched.
+# This block ships verbatim in the synced downstream .cfg.toml; there it is a
+# harmless no-op because a downstream repo has no bundles/ tree (the glob matches
+# nothing and bump-my-version skips it).
+[[tool.bumpversion.files]]
+glob = "bundles/**/.github/workflows/*.yml"
+regex = true
+search = "(jebel-quant/rhiza/[^@\\s]+)@v\\d+\\.\\d+\\.\\d+"
+replace = "\\1@v{new_version}"
+ignore_missing_version = true

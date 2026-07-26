@@ -22,5 +22,3 @@ class Smoothfun(Onefun, ABC):
     Concrete subclasses must implement all the abstract methods defined in the
     Onefun base class.
     """
-
-    pass

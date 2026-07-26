@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 from chebpy import chebfun, pwc
+from chebpy._pointwise import branch_switch_roots
 from chebpy.bndfun import Bndfun
 from chebpy.chebfun import Chebfun
 from chebpy.exceptions import (
@@ -648,7 +649,7 @@ class TestDomainBreakingOps:
                 0.5 * np.pi + 1e-8,
             ]
         )
-        switch_roots = Chebfun._branch_switch_roots(diff, historical_roots)
+        switch_roots = branch_switch_roots(diff, historical_roots)
         np.testing.assert_allclose(switch_roots, [0.0], atol=1e-12)
 
         g = f1.maximum(f2)
@@ -728,6 +729,17 @@ class TestPlotting:
         self.f1.plot(ax=ax)
         self.f2.plot(ax=ax, color="r")
         self.f3.plot(ax=ax, color="g")
+        plt.close(fig)
+
+    def test_plot_infinite_domain_uses_compactfun_window(self):
+        # A doubly-infinite Chebfun replaces each ±inf endpoint with the outer
+        # CompactFun piece's finite plot_support window.
+        g = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+        fig, ax = plt.subplots()
+        g.plot(ax=ax)
+        left, right = ax.get_xlim()
+        assert np.isfinite(left)
+        assert np.isfinite(right)
         plt.close(fig)
 
     def test_plotcoeffs(self):

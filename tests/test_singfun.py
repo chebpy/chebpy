@@ -3,8 +3,11 @@
 import numpy as np
 import pytest
 
+from chebpy.bndfun import Bndfun
+from chebpy.exceptions import NotSubinterval
 from chebpy.maps import DoubleSlitMap, MapParams, SingleSlitMap
 from chebpy.singfun import Singfun
+from chebpy.utilities import Interval
 
 
 # ---------------------------------------------------------------------------
@@ -234,3 +237,66 @@ class TestUtilities:
         f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
         g = f.restrict(f.interval)
         assert g is f
+
+    def test_restrict_not_a_subinterval_raises(self):
+        """Restricting to an interval outside the support raises :class:`NotSubinterval`."""
+        f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
+        with pytest.raises(NotSubinterval):
+            f.restrict(Interval(-1.0, 2.0))
+
+    def test_restrict_double_interior_returns_bndfun(self):
+        """An interior restriction of a double-slit :class:`Singfun` drops to :class:`Bndfun`."""
+        f = Singfun.initfun_adaptive(
+            lambda x: np.sqrt(x * (1.0 - x)),
+            [0.0, 1.0],
+            sing="both",
+            params=MapParams(alpha=1.0),
+        )
+        g = f.restrict(Interval(0.3, 0.7))
+        assert isinstance(g, Bndfun)
+        x = np.linspace(0.35, 0.65, 11)
+        assert np.allclose(g(x), np.sqrt(x * (1.0 - x)), atol=1e-8)
+
+    def test_translate_double_slit(self):
+        """Translating a double-slit :class:`Singfun` rebuilds the double-slit map."""
+        f = Singfun.initconst(1.0, [0.0, 1.0], sing="both", params=MapParams(alpha=1.0))
+        g = f.translate(2.0)
+        assert isinstance(g.map, DoubleSlitMap)
+        assert g.support[0] == pytest.approx(2.0)
+        assert g.support[1] == pytest.approx(3.0)
+
+
+# ---------------------------------------------------------------------------
+#  empty / mixed-map behaviour
+# ---------------------------------------------------------------------------
+class TestEmptyAndMixedMaps:
+    """Empty-input calculus and mixed-map arithmetic fallbacks."""
+
+    def test_cumsum_empty(self):
+        """``cumsum`` of an empty :class:`Singfun` stays empty."""
+        f = Singfun.initempty()
+        F = f.cumsum()
+        assert F.isempty
+
+    def test_same_double_map_arithmetic_shares(self):
+        """Two double-slit :class:`Singfun` instances with equal maps add as a :class:`Singfun`."""
+        f = Singfun.initfun_adaptive(
+            lambda x: np.sqrt(x * (1.0 - x)), [0.0, 1.0], sing="both", params=MapParams(alpha=1.0)
+        )
+        g = Singfun.initfun_adaptive(
+            lambda x: 2.0 * np.sqrt(x * (1.0 - x)), [0.0, 1.0], sing="both", params=MapParams(alpha=1.0)
+        )
+        h = f + g
+        assert isinstance(h, Singfun)
+        x = np.linspace(0.05, 0.95, 21)
+        assert np.allclose(h(x), 3.0 * np.sqrt(x * (1.0 - x)), atol=1e-6)
+
+    def test_mixed_map_arithmetic_rebuilds_on_double(self):
+        """Adding a double-slit and a single-slit :class:`Singfun` rebuilds on the double map."""
+        f = Singfun.initfun_adaptive(
+            lambda x: np.sqrt(x * (1.0 - x)), [0.0, 1.0], sing="both", params=MapParams(alpha=1.0)
+        )
+        g = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left", params=MapParams(alpha=1.0))
+        h = f + g
+        x = np.linspace(0.05, 0.95, 21)
+        assert np.allclose(h(x), np.sqrt(x * (1.0 - x)) + np.sqrt(x), atol=1e-5)

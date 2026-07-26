@@ -34,7 +34,7 @@ _book-notebooks:
 	    name=$$(basename "$$nb" .py); \
 	    printf "${BLUE}[INFO] Exporting $$nb -> ${ROOT}/docs/notebooks/$$name.html${RESET}\n"; \
 	    abs_output="${ROOT}/docs/notebooks/$$name.html"; \
-	    (cd "$$(dirname "$$nb")" && ${UV_BIN} run marimo export html --sandbox "$$(basename "$$nb")" -o "$$abs_output"); \
+	    (cd "$$(dirname "$$nb")" && ${UV_BIN} run --with marimo marimo export html --sandbox "$$(basename "$$nb")" -o "$$abs_output"); \
 	  done; \
 	else \
 	  printf "${YELLOW}[WARN] MARIMO_FOLDER not set or missing, skipping notebook export${RESET}\n"; \

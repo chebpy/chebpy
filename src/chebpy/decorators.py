@@ -35,16 +35,17 @@ def cache(f: Callable[..., Any]) -> Callable[..., Any]:
     # TODO: look into replacing this with one of the functools cache decorators
     @wraps(f)
     def wrapper(self: Any) -> Any:
+        """Return the cached method result, computing and storing it on first call."""
         try:
             # f has been executed previously
-            out = self._cache[f.__name__]  # type: ignore[attr-defined]
+            out = self._cache[f.__name__]  # ty: ignore[unresolved-attribute]
         except AttributeError:
             # f has not been executed previously and self._cache does not exist
             self._cache = {}
-            out = self._cache[f.__name__] = f(self)  # type: ignore[attr-defined]
+            out = self._cache[f.__name__] = f(self)  # ty: ignore[unresolved-attribute]
         except KeyError:  # pragma: no cover
             # f has not been executed previously, but self._cache exists
-            out = self._cache[f.__name__] = f(self)  # type: ignore[attr-defined]
+            out = self._cache[f.__name__] = f(self)  # ty: ignore[unresolved-attribute]
         return out
 
     return wrapper
@@ -70,8 +71,11 @@ def self_empty(resultif: Any = None) -> Callable[..., Any]:
 
     # TODO: add unit test for this
     def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
+        """Wrap *f* with the empty-object short-circuit logic."""
+
         @wraps(f)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            """Return the empty-case result if *self* is empty, else call *f*."""
             if self.isempty:
                 if resultif is not None:
                     return resultif
@@ -103,6 +107,7 @@ def preandpostprocess(f: Callable[..., Any]) -> Callable[..., Any]:
 
     @wraps(f)
     def thewrapper(*args: Any, **kwargs: Any) -> Any:
+        """Handle empty/constant/NaN/scalar edge cases around *f*."""
         xx, akfk = args[:2]
         # are any of the first two arguments empty arrays?
         if (np.asarray(xx).size == 0) | (np.asarray(akfk).size == 0):
@@ -144,6 +149,7 @@ def float_argument(f: Callable[..., Any]) -> Callable[..., Any]:
 
     @wraps(f)
     def thewrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        """Coerce the first argument to an array and match scalar/array output to it."""
         x = args[0]
         xx = np.array([x]) if np.isscalar(x) else np.array(x)
         # discern between the array(0.1) and array([0.1]) cases
@@ -173,6 +179,7 @@ def cast_arg_to_chebfun(f: Callable[..., Any]) -> Callable[..., Any]:
 
     @wraps(f)
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        """Cast the first argument to a chebfun (if needed) before calling *f*."""
         other = args[0]
         if not isinstance(other, self.__class__):
             fun = self.initconst(args[0], self.support)
@@ -201,6 +208,7 @@ def cast_other(f: Callable[..., Any]) -> Callable[..., Any]:
 
     @wraps(f)
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        """Cast the first argument to ``type(self)`` (if needed) before calling *f*."""
         cls = self.__class__
         other = args[0]
         if not isinstance(other, cls):

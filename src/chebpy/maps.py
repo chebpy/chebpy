@@ -34,7 +34,7 @@ their constructor parameters; they carry no ``Onefun`` payload.
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -186,14 +186,14 @@ class SingleSlitMap:
         """Compute ``u(s) = (alpha/pi) * log(1 + exp(pi(s+gamma)/alpha))`` stably."""
         a_p = self.params.alpha
         z = np.pi * (s + self._gamma) / a_p
-        return (a_p / np.pi) * np.logaddexp(0.0, z)
+        return cast(np.ndarray, (a_p / np.pi) * np.logaddexp(0.0, z))
 
     def _du_ds(self, s: np.ndarray) -> np.ndarray:
         """Derivative ``du/ds = sigmoid(pi(s+gamma)/alpha)``."""
         a_p = self.params.alpha
         z = np.pi * (s + self._gamma) / a_p
         # 1 / (1 + exp(-z)), numerically stable.
-        return np.where(z >= 0.0, 1.0 / (1.0 + np.exp(-z)), np.exp(z) / (1.0 + np.exp(z)))
+        return cast(np.ndarray, np.where(z >= 0.0, 1.0 / (1.0 + np.exp(-z)), np.exp(z) / (1.0 + np.exp(z))))
 
     def _s_of_u(self, u: np.ndarray) -> np.ndarray:
         """Inverse of :meth:`_u_of_s`. Maps ``u in (0, 1]`` to ``s in (-inf, 0]``.
@@ -205,7 +205,7 @@ class SingleSlitMap:
         w = np.pi * u / a_p
         # log(exp(w) - 1) = w + log1p(-exp(-w)).
         log_em1 = w + np.log1p(-np.exp(-w))
-        return (a_p / np.pi) * log_em1 - self._gamma
+        return cast(np.ndarray, (a_p / np.pi) * log_em1 - self._gamma)
 
     # IntervalMap protocol ---------------------------------------------
     def formap(self, y: float | np.ndarray) -> Any:

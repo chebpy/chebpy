@@ -1,6 +1,14 @@
 ## Makefile.marimo - Marimo notebook targets
 # This file is included by the main Makefile
 
+# Contribute the marimo notebook folder to the shared deptry scan defined in
+# quality.mk. DEP004 (misplaced development dependency) is ignored because
+# notebooks legitimately import packages declared as development dependencies.
+ifneq ($(wildcard $(MARIMO_FOLDER)),)
+DEPTRY_FOLDERS += $(MARIMO_FOLDER)
+DEPTRY_IGNORE += --ignore DEP004
+endif
+
 # Declare phony targets (they don't produce files)
 .PHONY: marimo-validate marimo
 

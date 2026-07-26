@@ -75,3 +75,49 @@ def plotfuncoeffs(abscoeffs: np.ndarray, ax: Any = None, **kwds: Any) -> Any:
     ax.set_xlabel(kwds.pop("ylabel", "polynomial degree"))
     ax.semilogy(abscoeffs, **kwds)
     return ax
+
+
+def plot_chebfun(f: Any, ax: Any = None, **kwds: Any) -> Any:
+    """Plot a Chebfun over its domain.
+
+    For Chebfuns with ``±inf`` endpoints (containing :class:`CompactFun`
+    pieces), each unbounded endpoint is replaced with the corresponding
+    ``plot_support`` endpoint of the outermost piece so the decay-to-zero
+    region is visible.
+
+    Args:
+        f: The Chebfun to plot.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+            a new axes will be created. Defaults to None.
+        **kwds: Additional keyword arguments to pass to matplotlib's plot function.
+
+    Returns:
+        matplotlib.axes.Axes: The axes on which the plot was created.
+    """
+    a, b = float(f.support[0]), float(f.support[-1])
+    if not np.isfinite(a):
+        left = f.funs[0]
+        a = float(left.plot_support[0]) if hasattr(left, "plot_support") else a
+    if not np.isfinite(b):
+        right = f.funs[-1]
+        b = float(right.plot_support[1]) if hasattr(right, "plot_support") else b
+    support = kwds.pop("support", (a, b))
+    return plotfun(f, support, ax=ax, **kwds)
+
+
+def plotcoeffs_chebfun(f: Any, ax: Any = None, **kwds: Any) -> Any:
+    """Plot the per-piece coefficient magnitudes of a Chebfun on a semilogy scale.
+
+    Args:
+        f: The Chebfun whose pieces' coefficients are plotted.
+        ax (matplotlib.axes.Axes, optional): The axes on which to plot. If None,
+            a new axes will be created. Defaults to None.
+        **kwds: Additional keyword arguments to pass to matplotlib's semilogy function.
+
+    Returns:
+        matplotlib.axes.Axes: The axes on which the plot was created.
+    """
+    ax = ax or plt.gca()
+    for fun in f:
+        fun.plotcoeffs(ax=ax, **kwds)
+    return ax

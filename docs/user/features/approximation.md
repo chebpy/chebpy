@@ -23,6 +23,34 @@ Specify the number of points explicitly with the `n` parameter:
 f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi], n=32)
 ```
 
+## Equispaced Sample Data
+
+Use `equifun` when you already have one-dimensional values sampled on an
+equispaced grid that includes both interval endpoints:
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+from chebpy import equifun
+
+nodes = np.linspace(0.0, 2.0 * np.pi, 17)
+values = np.sin(nodes) + 0.25 * np.cos(3.0 * nodes)
+f = equifun(values, [0.0, 2.0 * np.pi])
+
+xx = np.linspace(0.0, 2.0 * np.pi, 500)
+plt.plot(xx, f(xx), label="equifun")
+plt.plot(nodes, values, "o", label="samples")
+plt.legend()
+plt.savefig("docs/assets/equifun-examples.png", dpi=180)
+```
+
+For equispaced data, ChebPy first builds a Floater-Hormann rational interpolant
+through the samples and then adaptively represents it as a Chebfun. This is often
+more stable than high-degree polynomial interpolation on equispaced nodes,
+including Runge-style data:
+
+![Equifun examples](../../assets/equifun-examples.png)
+
 ## Special Constructors
 
 ```python

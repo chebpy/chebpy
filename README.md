@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" markdown="1">
 
 # ChebPy
 
@@ -20,8 +20,6 @@
 [![MARIMO](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_marimo.yml)
 [![DEVCONTAINER](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml/badge.svg?event=push)](https://github.com/chebpy/chebpy/actions/workflows/rhiza_devcontainer.yml)
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/chebpy/chebpy)
-
 **🔬 Numerical computing with Chebyshev series approximations**
 
 Symbolic-numeric computation with functions
@@ -29,6 +27,7 @@ Symbolic-numeric computation with functions
 </div>
 
 ChebPy is a Python implementation of [Chebfun](http://www.chebfun.org/), bringing the power of Chebyshev polynomial approximations to Python. It allows you to work with functions as first-class objects, performing operations like differentiation, integration, and root-finding with machine precision accuracy.
+
 ---
 
 ## Table of Contents
@@ -113,7 +112,7 @@ make coverage
 
 ## Quick Start
 
-<div align="center">
+<div align="center" markdown="1">
   <img src="docs/notebooks/chebpy-readme-image1.png" alt="ChebPy Example" width="80%">
 </div>
 
@@ -161,7 +160,7 @@ from chebpy import chebfun
 import numpy as np
 
 f = chebfun(lambda x: np.exp(-x**2), [-1, 1])
-g = chebfun(lambda x: np.where(np.abs(x) < 0.5, 1.0, 0.0), [-1, 1])
+g = chebfun(lambda x: np.cos(np.pi * x), [-1, 1])
 
 h = f.conv(g)        # h(x) = ∫ f(t) g(x−t) dt, a Chebfun on [−2, 2]
 h.plot()
@@ -353,7 +352,7 @@ Project tooling:
 
 ---
 
-<div align="center">
+<div align="center" markdown="1">
 
 ⭐ *If you find ChebPy useful, please consider giving it a star!* ⭐
 

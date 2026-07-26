@@ -1,6 +1,17 @@
 # This file is part of the jebel-quant/rhiza repository
 # (https://github.com/jebel-quant/rhiza).
 #
+# ⚠️  WHY THIS WORKFLOW CANNOT USE A STUB
+#
+# Rhiza normally distributes workflows as thin stubs that delegate to a reusable
+# workflow in this repository via `workflow_call`. That pattern cannot be used here
+# because PyPI Trusted Publishing (OIDC) validates the *exact* workflow file path
+# and repository that invokes `pypa/gh-action-pypi-publish`. When a stub delegates
+# to a reusable workflow in jebel-quant/rhiza, PyPI sees rhiza's repository as the
+# publisher — not the downstream project's — and rejects the OIDC token. This file
+# must therefore be synced directly into each downstream project so that the publish
+# step runs under the correct repository identity.
+#
 # Release Workflow for Python Packages with Optional Devcontainer Publishing
 #
 # This workflow implements a secure, maintainable release pipeline with distinct phases:
@@ -10,10 +21,14 @@
 #   2. 🏗️ Build - Build Python package with Hatch (if [build-system] is defined in pyproject.toml)
 #   3. 📦 Generate SBOM - Create Software Bill of Materials (CycloneDX format)
 #   4. 📝 Draft Release - Create draft GitHub release with build artifacts and SBOM
-#   5. 📄 Update CHANGELOG - Generate and commit CHANGELOG.md to the default branch
-#   6. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
+#   5. 🚀 Publish to PyPI - Publish package using OIDC or custom feed
+#   6. 📦 Generate Conda Recipe - Generate conda-forge recipe with grayskull (conditional)
 #   7. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
 #   8. ✅ Finalize Release - Publish the GitHub release with links
+#
+# 📄 CHANGELOG: not updated here. The rhiza-tools `bump` command folds a freshly
+# generated CHANGELOG.md into the version-bump commit (git-cliff pre-commit hook),
+# so the tagged commit already carries the changelog — no separate post-tag commit.
 #
 # 📦 SBOM Generation:
 #   - Generated using CycloneDX format (industry standard for software supply chain security)
@@ -38,6 +53,11 @@
 #   - For custom feeds, use PYPI_REPOSITORY_URL and PYPI_TOKEN secrets
 #   - Adds PyPI/custom feed link to GitHub release notes
 #
+# 📦 Conda Recipe Generation:
+#   - Runs only when PyPI publishing is enabled and succeeds
+#   - Uses grayskull to generate a conda-forge compatible recipe from PyPI metadata
+#   - Uploads conda-recipe/meta.yaml as a workflow artifact for downstream feedstock updates
+#
 # 🔐 Security:
 #   - No PyPI credentials stored; relies on Trusted Publishing via GitHub OIDC
 #   - For custom feeds, PYPI_TOKEN secret is used with default username __token__
@@ -48,6 +68,7 @@
 # 📄 Requirements:
 #   - pyproject.toml with top-level version field (for Python packages)
 #   - Package registered on PyPI as Trusted Publisher (for PyPI publishing)
+#   - Conda recipe generation is optional and only runs when PyPI publishing is active
 #   - PUBLISH_DEVCONTAINER variable set to "true" (for devcontainer publishing)
 #   - .devcontainer/devcontainer.json file (for devcontainer publishing)
 #
@@ -70,17 +91,37 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Version tag to release (e.g. v1.2.3). Required when called via workflow_call.'
+        required: true
+        type: string
+    secrets:
+      GH_PAT:
+        required: false
+      UV_EXTRA_INDEX_URL:
+        required: false
+      PYPI_TOKEN:
+        required: false
 
+# Queue runs instead of cancelling: a release or sync must never be
+# interrupted mid-publish or mid-push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# Least-privilege default: every job below re-declares exactly the write
+# scopes it needs (Scorecard Token-Permissions). Top-level stays read-only.
 permissions:
-  contents: write       # Needed to create releases
-  id-token: write       # Needed for OIDC authentication with PyPI
-  packages: write       # Needed to publish devcontainer image
-  attestations: write   # Needed for SLSA provenance attestations (public repos only)
+  contents: read
 
 jobs:
   tag:
     name: Validate Tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: read   # Validation only: reads tags and release state
     outputs:
       tag: ${{ steps.set_tag.outputs.tag }}
     steps:
@@ -92,7 +133,11 @@ jobs:
       - name: Set Tag Variable
         id: set_tag
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
+          if [[ -n "${{ inputs.tag }}" ]]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Validate Release
@@ -110,10 +155,60 @@ jobs:
             fi
           fi
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+
+      - name: Ensure release version is newer than latest published
+        env:
+          TAG: ${{ steps.set_tag.outputs.tag }}
+        run: |
+          # Backstop for issue #1126: refuse a tag that is not strictly newer than the
+          # highest version already released. A diverged branch with a stale pyproject.toml
+          # can otherwise publish an older version (e.g. v0.3.3 after v0.4.0). The bump
+          # tooling enforces the same rule; this guards manually-pushed tags too.
+          git tag -l 'v*' | uv run --with packaging --no-project python3 -c '
+          import sys
+          from packaging.version import Version, InvalidVersion
+
+          new = sys.argv[1].lstrip("v")
+          try:
+              new_v = Version(new)
+          except InvalidVersion:
+              print(f"::error::Tag {sys.argv[1]} is not a valid version")
+              sys.exit(1)
+
+          latest = None
+          for line in sys.stdin:
+              tag = line.strip().lstrip("v")
+              if not tag:
+                  continue
+              try:
+                  candidate = Version(tag)
+              except InvalidVersion:
+                  continue
+              if candidate == new_v:
+                  continue
+              if latest is None or candidate > latest:
+                  latest = candidate
+
+          if latest is not None and new_v <= latest:
+              print(
+                  f"::error::Refusing to release v{new_v}: it is not newer than the latest "
+                  f"released version v{latest} (issue #1126). Sync with the default branch and bump again."
+              )
+              sys.exit(1)
+          print(f"v{new_v} is newer than the latest released version v{latest}" if latest
+                else f"v{new_v} is the first release")
+          ' "$TAG"
+
   build:
     name: Build
     runs-on: ubuntu-latest
     needs: tag
+    permissions:
+      contents: read
+      id-token: write       # OIDC for attestation signing
+      attestations: write   # SLSA provenance + SBOM attestations (public repos only)
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6.0.2
@@ -121,12 +216,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.11.16"
 
       - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
+        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v1.1.2
         with:
           token: ${{ secrets.GH_PAT }}
 
@@ -189,11 +284,21 @@ jobs:
       - name: Attest SBOM
         # Attest only the JSON format as it's the canonical machine-readable format.
         # The XML format is provided for compatibility but doesn't need separate attestation.
+        id: attest-sbom
         if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
         uses: actions/attest@v4.1.0
         with:
           subject-path: sbom.cdx.json
           sbom-path: sbom.cdx.json
+
+      - name: Stage SBOM attestation for the GitHub release
+        # Attach the SBOM's Sigstore attestation bundle to the release as a
+        # recognised signature asset (*.sigstore.json). Non-buildable repos
+        # (no [build-system], so no dist/*.intoto.jsonl provenance) would
+        # otherwise ship releases without any signature asset, which fails
+        # OpenSSF Scorecard's Signed-Releases check.
+        if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
+        run: cp "${{ steps.attest-sbom.outputs.bundle-path }}" sbom.cdx.json.sigstore.json
 
       - name: Upload SBOM artifacts
         if: hashFiles('pyproject.toml') != ''
@@ -203,12 +308,21 @@ jobs:
           path: |
             sbom.cdx.json
             sbom.cdx.xml
+            sbom.cdx.json.sigstore.json
 
       - name: Generate SLSA provenance attestations
+        id: provenance
         if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@v4.1.0
         with:
           subject-path: dist/*
+
+      - name: Stage provenance bundle for the GitHub release
+        # Attach the SLSA provenance bundle to the release as a recognised
+        # signature asset (*.intoto.jsonl) so consumers — and OpenSSF
+        # Scorecard's Signed-Releases check — can verify the artifacts.
+        if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
+        run: cp "${{ steps.provenance.outputs.bundle-path }}" dist/provenance.intoto.jsonl
 
       - name: Upload dist artifact
         if: steps.buildable.outputs.buildable == 'true'
@@ -222,6 +336,8 @@ jobs:
     name: Draft GitHub Release
     runs-on: ubuntu-latest
     needs: [tag, build]
+    permissions:
+      contents: write   # Needed to create the GitHub release and upload artifacts
 
     steps:
       - name: Checkout Code
@@ -230,7 +346,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v7.6.0
 
       - name: Generate release notes with git-cliff
         run: uvx git-cliff --latest --output RELEASE_NOTES.md
@@ -243,6 +359,15 @@ jobs:
           path: sbom
         continue-on-error: true
 
+      - name: Download dist artifact
+        # Brings in provenance.intoto.jsonl (and the built distributions) staged
+        # by the build job, so the SLSA provenance ships as a release asset.
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: dist
+          path: dist
+        continue-on-error: true
+
       - name: Create GitHub Release with artifacts
         uses: ncipollo/release-action@v1.21.0
         with:
@@ -251,35 +376,7 @@ jobs:
           bodyFile: RELEASE_NOTES.md
           draft: true
           allowUpdates: true
-          artifacts: "sbom/*"
-
-  update-changelog:
-    name: Update CHANGELOG.md
-    runs-on: ubuntu-latest
-    needs: [tag, draft-release]
-    steps:
-      - name: Checkout Default Branch
-        uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-
-      - name: Generate CHANGELOG.md with git-cliff
-        run: uvx git-cliff --output CHANGELOG.md
-
-      - name: Commit and push CHANGELOG.md
-        env:
-          TAG: ${{ needs.tag.outputs.tag }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for $TAG [skip ci]"
-          git push origin ${{ github.event.repository.default_branch }}
+          artifacts: "sbom/*,dist/provenance.intoto.jsonl"
 
   # Decide at step-level whether to publish
   pypi:
@@ -287,6 +384,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     needs: [tag, build, draft-release]
+    permissions:
+      contents: read
+      id-token: write   # OIDC Trusted Publishing to PyPI (no stored credentials)
     outputs:
       should_publish: ${{ steps.check_dist.outputs.should_publish }}
 
@@ -319,22 +419,110 @@ jobs:
           fi
           cat "$GITHUB_OUTPUT"
 
+      - name: Remove non-distribution files before publish
+        # The dist artifact also carries the SLSA provenance bundle (staged for
+        # the GitHub release). twine/pypi-publish rejects it as an unknown
+        # distribution format, so strip it here before publishing.
+        if: ${{ steps.check_dist.outputs.should_publish == 'true' }}
+        run: rm -f dist/*.intoto.jsonl
+
       # this should not take place, as "Private :: Do Not Upload" set in pyproject.toml
       # repository-url and password only used for custom feeds, not for PyPI with OIDC
       - name: Publish to PyPI
         if: ${{ steps.check_dist.outputs.should_publish == 'true' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
           packages-dir: dist/
           skip-existing: true
           repository-url: ${{ vars.PYPI_REPOSITORY_URL }}
           password: ${{ secrets.PYPI_TOKEN }}
 
+
+  conda:
+    name: Generate Conda Recipe
+    runs-on: ubuntu-latest
+    needs: [tag, pypi]
+    permissions:
+      contents: read   # Generates a recipe and uploads it as a workflow artifact only
+    outputs:
+      should_generate: ${{ steps.check_conda.outputs.should_generate }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Check if conda recipe should be generated
+        id: check_conda
+        env:
+          PUBLISH_CONDA: ${{ vars.PUBLISH_CONDA }}
+        run: |
+          PUBLISH_CONDA="${PUBLISH_CONDA:-true}"
+          if [[ "$PUBLISH_CONDA" == "true" ]] && [[ "${{ needs.pypi.outputs.should_publish }}" == "true" ]] && [[ "${{ needs.pypi.result }}" == "success" ]]; then
+            echo "should_generate=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_generate=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Skipping conda recipe generation (PUBLISH_CONDA not true, or PyPI publish disabled or failed)"
+          fi
+
+      - name: Set up Python
+        if: steps.check_conda.outputs.should_generate == 'true'
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: .python-version
+
+      - name: Install grayskull
+        if: steps.check_conda.outputs.should_generate == 'true'
+        run: python -m pip install --upgrade grayskull
+
+      - name: Generate conda recipe with grayskull
+        if: steps.check_conda.outputs.should_generate == 'true'
+        run: |
+          PACKAGE_NAME=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
+          mkdir -p /tmp/conda-recipe
+          cd /tmp/conda-recipe
+
+          # PyPI metadata for a just-published release — especially the first
+          # release of a new package — can lag the upload by several minutes,
+          # so retry before giving up.
+          MAX_ATTEMPTS=5
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            if grayskull pypi "$PACKAGE_NAME" --strict-conda-forge; then
+              break
+            fi
+            if [[ "$attempt" -eq "$MAX_ATTEMPTS" ]]; then
+              echo "::error::grayskull failed after $MAX_ATTEMPTS attempts — PyPI metadata for $PACKAGE_NAME may not be available yet"
+              exit 1
+            fi
+            echo "grayskull attempt $attempt/$MAX_ATTEMPTS failed — waiting 60s for PyPI metadata to propagate"
+            sleep 60
+          done
+
+          RECIPE_PATH=$(find . -type f -path "*/meta.yaml" | head -n 1)
+          if [[ -z "$RECIPE_PATH" ]]; then
+            echo "::error::grayskull did not produce a meta.yaml file"
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/conda-recipe"
+          cp "$RECIPE_PATH" "$GITHUB_WORKSPACE/conda-recipe/meta.yaml"
+
+      - name: Upload conda recipe artifact
+        if: steps.check_conda.outputs.should_generate == 'true'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: conda-recipe
+          path: conda-recipe/meta.yaml
+
   devcontainer:
     name: Publish Devcontainer Image
     runs-on: ubuntu-latest
     environment: release
     needs: [tag, build, draft-release]
+    permissions:
+      contents: read
+      packages: write   # Needed to push the devcontainer image to the registry
     outputs:
       should_publish: ${{ steps.check_publish.outputs.should_publish }}
       image_name: ${{ steps.image_name.outputs.image_name }}
@@ -369,7 +557,7 @@ jobs:
 
       - name: Login to Container Registry
         if: steps.check_publish.outputs.should_publish == 'true'
-        uses: docker/login-action@v4.1.0
+        uses: docker/login-action@v4.2.0
         with:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
@@ -411,7 +599,7 @@ jobs:
 
       - name: Build and Publish Devcontainer Image
         if: steps.check_publish.outputs.should_publish == 'true'
-        uses: devcontainers/ci@v0.3
+        uses: devcontainers/ci@v0.3.1900000450
         with:
           configFile: .devcontainer/devcontainer.json
           push: always
@@ -421,8 +609,10 @@ jobs:
   finalise-release:
     name: Finalise Release
     runs-on: ubuntu-latest
-    needs: [tag, pypi, devcontainer]
-    if: needs.pypi.result == 'success' || needs.devcontainer.result == 'success'
+    needs: [tag, pypi, conda, devcontainer]
+    if: needs.pypi.result == 'success' || needs.conda.result == 'success' || needs.devcontainer.result == 'success'
+    permissions:
+      contents: write   # Needed to undraft/publish the GitHub release
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6.0.2
@@ -430,7 +620,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.11.16"
 
@@ -482,12 +672,25 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Generate Conda Recipe Note
+        id: conda_link
+        if: needs.conda.outputs.should_generate == 'true' && needs.conda.result == 'success'
+        run: |
+          {
+            echo "message<<EOF"
+            echo "### Conda Recipe"
+            echo ""
+            echo "A conda-forge recipe was generated with grayskull and uploaded as the \`conda-recipe\` workflow artifact."
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.tag.outputs.tag }}
           DEVCONTAINER_MSG: ${{ steps.devcontainer_link.outputs.message }}
           PYPI_MSG: ${{ steps.pypi_link.outputs.message }}
+          CONDA_MSG: ${{ steps.conda_link.outputs.message }}
         run: |
           # Get existing auto-generated release notes (gracefully handle missing release)
           EXISTING=$(gh release view "$TAG" --json body --jq '.body // ""' 2>/dev/null || echo "")
@@ -497,7 +700,7 @@ jobs:
             printf '%s' "$EXISTING"
             [ -n "$DEVCONTAINER_MSG" ] && printf '\n\n%s' "$DEVCONTAINER_MSG"
             [ -n "$PYPI_MSG" ] && printf '\n\n%s' "$PYPI_MSG"
+            [ -n "$CONDA_MSG" ] && printf '\n\n%s' "$CONDA_MSG"
           } > /tmp/notes.md
 
           gh release edit "$TAG" --draft=false --notes-file /tmp/notes.md
-

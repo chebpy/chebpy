@@ -156,9 +156,11 @@ class Chebtech(Smoothfun, ABC):
             raise ValueError(how) from err
 
     def __call__clenshaw(self, x: Any) -> Any:
+        """Evaluate at *x* using Clenshaw recurrence on the coefficients."""
         return clenshaw(x, self.coeffs)
 
     def __call__bary(self, x: Any) -> Any:
+        """Evaluate at *x* using the barycentric interpolation formula."""
         fk = self.values()
         xk = self._chebpts(fk.size)
         vk = self._barywts(fk.size)
