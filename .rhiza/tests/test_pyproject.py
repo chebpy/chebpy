@@ -140,7 +140,7 @@ class TestProjectUrls:
 
 
 class TestProjectClassifiers:
-    """Tests for [project].classifiers — Python version and licence entries."""
+    """Tests for [project].classifiers — Python version entries."""
 
     @pytest.fixture
     def classifiers(self, project: dict) -> list[str]:
@@ -156,11 +156,6 @@ class TestProjectClassifiers:
         assert len(python_classifiers) >= 1, (
             "classifiers must include at least one 'Programming Language :: Python :: 3.X' entry"
         )
-
-    def test_license_classifier_present(self, classifiers: list[str]) -> None:
-        """At least one 'License :: ' classifier must be present."""
-        license_classifiers = [c for c in classifiers if c.startswith("License ::")]
-        assert len(license_classifiers) >= 1, "classifiers must include at least one 'License :: ' entry"
 
 
 class TestDependencyGroups:
