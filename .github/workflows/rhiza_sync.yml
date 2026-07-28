@@ -35,7 +35,7 @@ on:
 
 jobs:
   sync:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_sync.yml@v1.1.2
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_sync.yml@v1.2.2
     with:
       direct: ${{ github.event_name == 'push' }}
       create-pr: ${{ github.event_name != 'push' && (github.event_name == 'schedule' || inputs.create-pr == true) }}
