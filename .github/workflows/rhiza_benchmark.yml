@@ -20,5 +20,5 @@ on:
 
 jobs:
   benchmark:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_benchmark.yml@v1.1.2
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_benchmark.yml@v1.2.2
     secrets: inherit
