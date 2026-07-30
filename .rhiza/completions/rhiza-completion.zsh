@@ -92,9 +92,6 @@ _rhiza_make() {
     # Common make variables
     variables=(
         'DRY_RUN=1:preview mode without making changes'
-        'BUMP=patch:bump patch version'
-        'BUMP=minor:bump minor version'
-        'BUMP=major:bump major version'
         'ENV=dev:development environment'
         'ENV=staging:staging environment'
         'ENV=prod:production environment'

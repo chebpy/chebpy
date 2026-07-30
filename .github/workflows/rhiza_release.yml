@@ -26,9 +26,10 @@
 #   7. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
 #   8. ✅ Finalize Release - Publish the GitHub release with links
 #
-# 📄 CHANGELOG: not updated here. The rhiza-tools `bump` command folds a freshly
-# generated CHANGELOG.md into the version-bump commit (git-cliff pre-commit hook),
-# so the tagged commit already carries the changelog — no separate post-tag commit.
+# 📄 CHANGELOG: not updated here. The release process (rhiza-claude `/release`)
+# folds a freshly generated CHANGELOG.md into the version-bump commit before the
+# tag is pushed, so the tagged commit already carries the changelog — no separate
+# post-tag commit.
 #
 # 📦 SBOM Generation:
 #   - Generated using CycloneDX format (industry standard for software supply chain security)
@@ -221,7 +222,7 @@ jobs:
           version: "0.11.16"
 
       - name: Configure git auth for private packages
-        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v1.2.2
+        uses: jebel-quant/actions/configure-git-auth@6d52725ca371d609489c5b50236965ad70bbe528 # v1
         with:
           token: ${{ secrets.GH_PAT }}
 

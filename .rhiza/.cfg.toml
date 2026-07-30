@@ -28,10 +28,22 @@ values = [
     "prod"
 ]
 
+# Anchored to the [project] table on purpose. `search`/`replace` are applied to
+# EVERY occurrence in the file, so the obvious `version = "{current_version}"`
+# also rewrites any [tool.*] table that happens to share the current number.
+# Dependency pins (httpx>=1.2.0, rich==1.2.0) are never at risk either way —
+# they are not line-anchored `version = ` assignments — but a second table is.
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
+regex = true
+search = '(?ms)^\[project\]((?:(?!^\[)[\s\S])*?)^version = "{current_version}"'
+replace = '[project]\1version = "{new_version}"'
+
+# NOTE for downstream projects: do NOT add a glob over your own
+# .github/workflows/*.yml here. Those stubs pin jebel-quant/rhiza's version
+# (the template you sync from), not your project's, so rewriting them with your
+# version would point them at a rhiza tag that does not exist. The template ref
+# is managed by /rhiza:update via .rhiza/template.yml instead.
 
 # Keep the reusable-workflow stubs in the bundles pinned to the current release.
 # These stubs are synced into downstream repos and must reference an existing tag.

@@ -56,7 +56,7 @@ _rhiza_make_completion() {
     fi
 
     # Add common make variables that can be overridden
-    local vars="DRY_RUN=1 BUMP=patch BUMP=minor BUMP=major ENV=dev ENV=staging ENV=prod"
+    local vars="DRY_RUN=1 ENV=dev ENV=staging ENV=prod"
     opts="$opts $vars"
 
     # Generate completions

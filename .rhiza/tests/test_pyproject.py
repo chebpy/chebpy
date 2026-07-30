@@ -157,6 +157,18 @@ class TestProjectClassifiers:
             "classifiers must include at least one 'Programming Language :: Python :: 3.X' entry"
         )
 
+    def test_no_license_classifier(self, project: dict) -> None:
+        """No deprecated 'License :: ' classifier may be present.
+
+        PyPI has deprecated the ``License ::`` trove classifiers in favor of the SPDX
+        ``license`` expression field, so the shipped pyproject must not declare one.
+        """
+        classifiers = project.get("classifiers", [])
+        license_classifiers = [c for c in classifiers if c.startswith("License ::")]
+        assert not license_classifiers, (
+            f"classifiers must not include any deprecated 'License :: ' entry; found {license_classifiers}"
+        )
+
 
 class TestDependencyGroups:
     """Tests for [dependency-groups] — ensures required groups are declared."""

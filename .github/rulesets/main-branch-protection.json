@@ -27,12 +27,12 @@
       "parameters": {
         "strict_required_status_checks_policy": false,
         "required_status_checks": [
-          { "context": "Pre-commit hooks" },
-          { "context": "validation" },
-          { "context": "Check dependencies with deptry" },
-          { "context": "docs-coverage" },
-          { "context": "Security scanning" },
-          { "context": "License compliance scan" }
+          { "context": "Pre-commit hooks", "integration_id": 15368 },
+          { "context": "Check dependencies with deptry", "integration_id": 15368 },
+          { "context": "docs-coverage", "integration_id": 15368 },
+          { "context": "Security scanning", "integration_id": 15368 },
+          { "context": "License compliance scan", "integration_id": 15368 },
+          { "context": "CI gate", "integration_id": 15368 }
         ]
       }
     }

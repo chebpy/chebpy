@@ -1,7 +1,7 @@
-sha: b0748ea2ac6b1b0e3bbf76470b717427cf22a289
+sha: e5d7005e2d9fc3d5a23b96d13b203b4f2afe3cce
 repo: jebel-quant/rhiza
 host: github
-ref: v1.1.2
+ref: v1.2.5
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
@@ -27,6 +27,7 @@ files:
 - .github/pull_request_template.md
 - .github/release.yml
 - .github/rulesets/main-branch-protection.json
+- .github/rulesets/tag-protection.json
 - .github/secret_scanning.yml
 - .github/workflows/rhiza_benchmark.yml
 - .github/workflows/rhiza_book.yml
@@ -37,7 +38,6 @@ files:
 - .github/workflows/rhiza_mutation.yml
 - .github/workflows/rhiza_release.yml
 - .github/workflows/rhiza_scorecard.yml
-- .github/workflows/rhiza_sync.yml
 - .github/workflows/rhiza_weekly.yml
 - .gitignore
 - .pre-commit-config.yaml
@@ -45,20 +45,19 @@ files:
 - .rhiza/.cfg.toml
 - .rhiza/.env
 - .rhiza/.gitignore
-- .rhiza/.rhiza-version
 - .rhiza/assets/rhiza-logo.svg
 - .rhiza/completions/README.md
 - .rhiza/completions/rhiza-completion.bash
 - .rhiza/completions/rhiza-completion.zsh
 - .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
+- .rhiza/make.d/completions.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
 - .rhiza/make.d/doctor.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
 - .rhiza/make.d/quality.mk
-- .rhiza/make.d/releasing.mk
 - .rhiza/make.d/test.mk
 - .rhiza/rhiza.mk
 - .rhiza/semgrep.yml
@@ -78,5 +77,5 @@ files:
 - docs/mkdocs-base.yml
 - pytest.ini
 - ruff.toml
-synced_at: '2026-07-10T10:22:31Z'
+synced_at: '2026-07-30T10:44:30Z'
 strategy: merge
