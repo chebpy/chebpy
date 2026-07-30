@@ -6,11 +6,26 @@ This directory contains shell completion scripts for Bash and Zsh that provide t
 
 - ✅ Tab-complete all available make targets
 - ✅ Show target descriptions in Zsh
-- ✅ Complete common make variables (DRY_RUN, BUMP, ENV, etc.)
+- ✅ Complete common make variables (DRY_RUN, ENV, etc.)
 - ✅ Works with any Rhiza-based project
 - ✅ Auto-discovers targets from Makefile and included .mk files
 
 ## Installation
+
+### Quick install (recommended)
+
+From the project root:
+
+```bash
+make install-completions              # install for both bash and zsh
+make install-completions SHELL_KIND=zsh   # or just one: bash | zsh | both
+```
+
+This copies the appropriate script into your user completion directory
+(`${XDG_DATA_HOME:-~/.local/share}/bash-completion/completions/make` for bash,
+`${XDG_DATA_HOME:-~/.local/share}/zsh/site-functions/_make` for zsh) and prints
+any follow-up step. Start a new shell afterwards. The manual methods below remain
+available if you prefer to wire it up yourself.
 
 ### Bash
 
@@ -102,7 +117,7 @@ make <TAB>
 make te<TAB>  # Expands to: make test
 
 # Complete variables
-make BUMP=<TAB>  # Shows: patch, minor, major
+make ENV=<TAB>  # Shows: dev, staging, prod
 
 # Works with any target
 make doc<TAB>  # Shows: docs, docker-build, docker-run, etc.
@@ -129,7 +144,6 @@ The completion scripts understand these common variables:
 | Variable | Values | Description |
 |----------|--------|-------------|
 | `DRY_RUN` | `1` | Preview mode without making changes |
-| `BUMP` | `patch`, `minor`, `major` | Version bump type |
 | `ENV` | `dev`, `staging`, `prod` | Target environment |
 | `COVERAGE_FAIL_UNDER` | (number) | Minimum coverage threshold |
 | `PYTHON_VERSION` | (version) | Override Python version |
@@ -141,10 +155,10 @@ Example usage:
 make DRY_<TAB>     # Expands to: make DRY_RUN=1
 
 # Tab-complete variable values
-make BUMP=<TAB>    # Shows: patch minor major
+make ENV=<TAB>    # Shows: dev staging prod
 
 # Combine with targets
-make bump BUMP=<TAB>
+make deploy ENV=<TAB>
 ```
 
 ## Troubleshooting

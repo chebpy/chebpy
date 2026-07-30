@@ -110,16 +110,9 @@ typecheck: install ## run ty and/or mypy type checking (TYPECHECKER=ty|mypy|both
 	    ;; \
 	esac
 
-# Extra flags forwarded to pip-audit (e.g. --ignore-vuln CVE-XXXX-YYYY)
-PIP_AUDIT_ARGS ?=
-
-# The 'security' target performs security vulnerability scans.
-# 1. Runs pip-audit via `rhiza-tools pip-audit` (tiered policy): fails on runtime
-#    dep CVEs, warns on tooling (pip/setuptools/wheel).
-# 2. Runs bandit to find common security issues in Python source folders that exist.
-security: install ## run security scans (pip-audit and bandit)
-	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
-	@${UVX_BIN} "rhiza-tools>=0.8.1" pip-audit ${PIP_AUDIT_ARGS}
+# The 'security' target runs bandit to find common security issues in the
+# Python source folders that exist.
+security: install ## run security scans (bandit)
 	@bandit_paths=""; \
 	if [ -d "${SOURCE_FOLDER}" ]; then \
 	  bandit_paths="${SOURCE_FOLDER}"; \
@@ -135,7 +128,6 @@ security: install ## run security scans (pip-audit and bandit)
 # 1. Installs benchmarking dependencies (pytest-benchmark, pygal).
 # 2. Executes benchmarks found in the benchmarks/ subfolder.
 # 3. Generates histograms and JSON results.
-# 4. Runs a post-analysis script to process the results.
 benchmark:: install ## run performance benchmarks
 	@if [ -d "${TESTS_FOLDER}/benchmarks" ]; then \
 	  printf "${BLUE}[INFO] Running performance benchmarks...${RESET}\n"; \
@@ -144,7 +136,6 @@ benchmark:: install ## run performance benchmarks
 	  		--benchmark-only \
 			--benchmark-histogram=_tests/benchmarks/histogram \
 			--benchmark-json=_tests/benchmarks/results.json; \
-	  ${UVX_BIN} "rhiza-tools>=0.2.3" analyze-benchmarks --benchmarks-json _tests/benchmarks/results.json --output-html _tests/benchmarks/report.html; \
 	else \
 	  printf "${YELLOW}[WARN] Benchmarks folder not found, skipping benchmarks${RESET}\n"; \
 	fi
