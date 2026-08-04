@@ -202,6 +202,8 @@ def test_equifun_rejects_invalid_values(values: list[object], match: str) -> Non
         ([-1.0, 0.0, 1.0], "exactly two"),
         ([-np.inf, 1.0], "finite"),
         ([0.0, np.inf], "finite"),
+        ([1.0, -1.0], "strictly increasing"),
+        ([1.0, 1.0], "strictly increasing"),
     ],
 )
 def test_equifun_rejects_invalid_domains(domain: list[float], match: str) -> None:

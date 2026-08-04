@@ -65,3 +65,15 @@ unsupported-operator = "ignore"
 # is carried by descriptive test names and assertions rather than docstrings.
 # src/ (and the Rhiza-managed .rhiza/tests and .rhiza/utils) stay fully covered.
 exclude = ["tests"]
+
+# Must live here rather than in .rhiza/.cfg.toml: that path is never auto-discovered,
+# so bump-my-version silently fell back to `git describe` and could cut a release at
+# an already-published version. With the table here, [project].version above is read
+# and rewritten natively — so no current_version key and no [[tool.bumpversion.files]]
+# entry for it, either of which would duplicate the version string and then drift.
+[tool.bumpversion]
+allow_dirty = false
+# /rhiza:release commits and tags itself, so that the changelog lands in the bump
+# commit; a bare `bump-my-version bump` would add a second commit and a duplicate tag.
+commit = false
+tag = false
