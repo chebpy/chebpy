@@ -71,6 +71,16 @@ exclude = ["tests"]
 # an already-published version. With the table here, [project].version above is read
 # and rewritten natively — so no current_version key and no [[tool.bumpversion.files]]
 # entry for it, either of which would duplicate the version string and then drift.
+[tool.check_test_layout]
+# Tests are flat per-module (tests/test_<name>.py) rather than mirroring the
+# src/chebpy/ package depth, so path-parity reports every module twice — once as a
+# missing tests/chebpy/test_<name>.py, once as an orphan tests/test_<name>.py — while
+# in fact all 25 modules are covered. Per-module coverage is guaranteed instead by
+# COVERAGE_FAIL_UNDER = 100 in the Makefile, which is the condition the checker
+# documents for opting out.
+enforce = false
+reason = "Tests are flat per-module rather than mirroring src/chebpy/ package depth; per-module coverage is guaranteed by the 100% coverage gate in `make test`."
+
 [tool.bumpversion]
 allow_dirty = false
 # /rhiza:release commits and tags itself, so that the changelog lands in the bump
