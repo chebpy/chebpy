@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   fuzzing:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_fuzzing.yml@v1.2.5
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_fuzzing.yml@v1.3.2
     secrets: inherit
     permissions:
       contents: read

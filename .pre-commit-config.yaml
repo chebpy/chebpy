@@ -31,7 +31,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.16.0'
+    rev: 'v0.16.1'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -71,12 +71,12 @@ repos:
         args: ["--ini", ".bandit", "--exclude", ".venv,tests,.rhiza/tests,.git,.pytest_cache"]
 
   - repo: https://github.com/betterleaks/betterleaks
-    rev: v1.7.2
+    rev: v1.7.3
     hooks:
       - id: betterleaks
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.0
+    rev: 0.12.1
     hooks:
       - id: uv-lock
 
@@ -88,7 +88,7 @@ repos:
         files: ^src/
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v0.7.0  # Use the latest release
+    rev: v1.2.0  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names
@@ -97,4 +97,14 @@ repos:
       - id: check-rhiza-config
       - id: check-makefile-targets
       - id: check-python-version-consistency
+      # check-bumpversion-config asserts that bump-my-version can actually discover the
+      # project's version config (issue #1453) — for this layer, the [tool.bumpversion]
+      # table in pyproject.toml, since python-core deliberately ships no .bumpversion.toml.
+      # It ships as of v1.1.0; it stays off because the .rhiza/tests/test_pyproject.py this
+      # layer also ships enforces the same invariant one gate later.
+      # - id: check-bumpversion-config
+      # check-template-bundles validates .rhiza/template.yml against the template repo's
+      # remote bundle list, so it fires only when that file is staged — and unlike in the
+      # mother repo (which has no template.yml) it is live in a synced project. Disabled in
+      # #660 (rhiza-hooks 0.3.0) with no reason recorded.
       # - id: check-template-bundles

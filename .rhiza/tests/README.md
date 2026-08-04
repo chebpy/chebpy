@@ -1,9 +1,9 @@
 # Rhiza Test Suite (`.rhiza/tests/`)
 
 This directory is **synced from [jebel-quant/rhiza](https://github.com/jebel-quant/rhiza)**
-via the `tests` bundle and runs in your project with `make rhiza-test`. Its job is to
-validate the parts of *your* repository that Rhiza cares about — the metadata, docs, and
-docstrings that vary per project — using the shared fixtures and helpers below.
+and runs in your project with `make rhiza-test`. Its job is to validate the parts of *your*
+repository that Rhiza cares about — the metadata, release config, docs and docstrings that
+vary per project — using the shared fixtures below.
 
 > Tests that only exercise Rhiza's *own* template files (Makefile targets, workflow stubs,
 > the project skeleton) live in Rhiza's mother-repo `tests/` suite and are **not** synced
@@ -12,19 +12,30 @@ docstrings that vary per project — using the shared fixtures and helpers below
 
 ## Layout
 
-The suite is flat — one file per concern:
+The suite is flat — one file per concern — but **which files you get depends on the
+bundles you sync**. Each is owned by whichever bundle the assertion belongs to, so a Rust
+project gets the Rust manifest checks and none of the Python ones:
 
-- `test_pyproject.py` — validates `pyproject.toml` structure and required fields
-- `test_readme_validation.py` — executes/syntax-checks `README.md` code blocks (see below)
-- `test_docstrings.py` — runs doctests across the modules in your source folder
-- `conftest.py` — shared fixtures (`root`, `logger`)
+| file | owned by | checks |
+| --- | --- | --- |
+| `conftest.py` | `core` | shared fixtures (`root`, `logger`, `latest_tag`) |
+| `test_release_tags.py` | `core` | the newest tag is reachable from a branch |
+| `test_readme.py` | `core` | README exists; every `bash` fence parses |
+| `test_pyproject.py` | `python-core` | `pyproject.toml` structure, and its `[tool.bumpversion]` block |
+| `test_docstrings.py` | `python-core` | doctests across the modules in your source folder |
+| `test_readme_validation.py` | `tests` | executes `python` fences and diffs them against `result` (see below) |
+| `test_cargo_toml.py` | `rust-core` | `Cargo.toml` structure and the `.bumpversion.toml` wiring |
+| `test_go_module.py` | `go-core` | `go.mod`, the `Version` constant, and the same wiring |
+
+Every profile pairs `core` with exactly one language layer, so `conftest.py` is always
+present alongside whichever layer's modules arrived.
 
 ### Skipping README code blocks with `+RHIZA_SKIP`
 
-By default, every `python` and `bash` code block in `README.md` is executed or
-syntax-checked by `test_readme_validation.py`. To mark a block as intentionally
-non-runnable (e.g. illustrative snippets or environment-specific commands), add
-`+RHIZA_SKIP` to the opening fence line:
+By default, every `bash` fence in `README.md` is syntax-checked (`test_readme.py`, any
+language) and every `python` fence is executed (`test_readme_validation.py`, Python
+projects). To mark a block as intentionally non-runnable — an illustrative snippet, an
+environment-specific command — add `+RHIZA_SKIP` to the opening fence line:
 
 ~~~markdown
 ```python +RHIZA_SKIP

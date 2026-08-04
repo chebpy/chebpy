@@ -156,6 +156,48 @@ jobs:
             fi
           fi
 
+      - name: Ensure the tagged commit is reachable from a branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.set_tag.outputs.tag }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Backstop for issue #1454: a release cut on a branch that is then
+          # squash-merged leaves the tag on the pre-squash commit, and the squash
+          # puts the same content on the default branch under a new SHA. The tag is
+          # then permanently orphaned — no branch contains it, `git describe` skips
+          # the release, and a git-cliff regeneration silently deletes that version's
+          # CHANGELOG section because it cannot place a boundary at an unreachable
+          # tag. Publishing from such a tag is never intended, so refuse it.
+          # The checkout above uses fetch-depth: 0; this fetch only adds the remote
+          # branch refs, which a tag-push checkout does not need otherwise.
+          git fetch --no-tags --quiet origin '+refs/heads/*:refs/remotes/origin/*'
+
+          if [ -z "$DEFAULT_BRANCH" ]; then
+            DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
+          fi
+          if ! git rev-parse --verify --quiet "refs/remotes/origin/$DEFAULT_BRANCH" >/dev/null; then
+            echo "::error::Cannot resolve the default branch 'origin/$DEFAULT_BRANCH' — refusing to release without a reachability check."
+            exit 1
+          fi
+
+          COMMIT=$(git rev-parse "$TAG^{commit}")
+          if git merge-base --is-ancestor "$COMMIT" "refs/remotes/origin/$DEFAULT_BRANCH"; then
+            echo "✅ $TAG ($COMMIT) is an ancestor of $DEFAULT_BRANCH"
+            exit 0
+          fi
+
+          # Reachable from some other branch: a maintenance/hotfix release. Legitimate,
+          # but a changelog regenerated from the default branch still cannot see it.
+          BRANCHES=$(git branch -r --contains "$COMMIT" --format='%(refname:short)')
+          if [ -n "$BRANCHES" ]; then
+            echo "::warning::Tag $TAG is not an ancestor of $DEFAULT_BRANCH; it is contained in: $(echo "$BRANCHES" | tr '\n' ' '). A CHANGELOG regenerated from $DEFAULT_BRANCH will not include this release."
+            exit 0
+          fi
+
+          echo "::error::Tag $TAG points at $COMMIT, which no branch contains. It is most likely a pre-squash commit from a squash-merged release branch: re-tag the merged commit on $DEFAULT_BRANCH and delete this tag (issue #1454)."
+          exit 1
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7.6.0
 

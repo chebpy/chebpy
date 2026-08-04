@@ -1,128 +1,26 @@
-## Makefile.tests - Testing and benchmarking targets
+## .rhiza/make.d/test.mk - optional Python testing extras (bundle: tests)
 # This file is included by the main Makefile.
-# It provides targets for running the test suite with coverage and
-# executing performance benchmarks.
+#
+# The gates the language contract names — `test`, `typecheck`, `security`,
+# `docs-coverage` — moved into `python.mk` in #1475, because `python.mk`'s own `all`
+# named them while this bundle owned them: a project syncing `core + python-core`
+# without `tests` got an `all` that could not run. The Rust and Go layers never had
+# that split, and now neither does Python.
+#
+# What is left here is what genuinely *is* optional — four gates no layer's `all`
+# depends on, each of which needs its own tool and its own folder convention:
+# benchmarks, Hypothesis property tests, stress/load tests and mutation testing.
+# Keeping them out of the layer is what lets a project take the Python gate set
+# without also declaring an opinion on mutation testing.
+#
+# `TESTS_FOLDER`, and the shared pytest config in `pytest.ini`, come from
+# `python.mk` / `python-core`. This bundle requires `python-core`, so both are always
+# present alongside it.
 
 # Declare phony targets (they don't produce files)
-.PHONY: test benchmark typecheck security docs-coverage hypothesis-test stress test-pyproject mutation
+.PHONY: benchmark hypothesis-test stress mutation
 
-# Default directory for tests
-TESTS_FOLDER := tests
-
-# Minimum coverage percent for tests to pass
-# (Can be overridden in local.mk or via environment variable)
-COVERAGE_FAIL_UNDER ?= 90
-
-# Which static type checker(s) the 'typecheck' target runs: ty, mypy, or both.
-# Running both is the default for backward compatibility, but ty and mypy
-# occasionally disagree (e.g. one accepts a suppression the other still flags),
-# forcing duplicate `# type: ignore` / `# ty: ignore` comments. Set this to
-# 'ty' or 'mypy' in local.mk or .rhiza/.env to run a single checker instead.
-TYPECHECKER ?= both
-
-##@ Development and Testing
-
-# The 'test' target runs the complete test suite.
-# 1. Cleans up any previous test results in _tests/ and stale coverage data.
-# 2. Creates directories for HTML coverage and test reports.
-# 3. Invokes pytest via the local virtual environment.
-# 4. Generates terminal output, HTML coverage, JSON coverage, and HTML test reports.
-#
-# Parallel (pytest-xdist) runs occasionally crash *during worker/session
-# teardown* even though every test passed — e.g. the xdist
-# `worker_workerfinished` KeyError or a pytest-html report-write race. pytest
-# signals these runner-internal crashes with exit code 3 (INTERNALERROR),
-# which is distinct from real test failures (1), interruptions (2) and usage
-# errors (4). We therefore retry the suite once on exit code 3 only, so a
-# teardown race no longer flips a green run red, while genuine failures still
-# fail immediately. Stale `.coverage*` data is removed before each attempt so a
-# previously crashed run cannot leave a corrupt data file that reports a false
-# 0% coverage on the next run.
-test:: install ## run all tests
-	@rm -rf _tests
-	@if [ -z "$$(find ${TESTS_FOLDER} -name 'test_*.py' -o -name '*_test.py' 2>/dev/null)" ]; then \
-	  printf "${YELLOW}[WARN] No test files found in ${TESTS_FOLDER}, skipping tests.${RESET}\n"; \
-	  exit 0; \
-	fi; \
-	if [ -d ${SOURCE_FOLDER} ]; then \
-	  set -- -n auto \
-	    --ignore=${TESTS_FOLDER}/benchmarks \
-	    --ignore=${TESTS_FOLDER}/stress \
-	    --cov=${SOURCE_FOLDER} \
-	    --cov-report=term \
-	    --cov-report=html:_tests/html-coverage \
-	    --cov-fail-under=$(COVERAGE_FAIL_UNDER) \
-	    --cov-report=json:_tests/coverage.json \
-	    --cov-report=xml:_tests/coverage.xml \
-	    --html=_tests/html-report/report.html; \
-	else \
-	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, running tests without coverage${RESET}\n"; \
-	  set -- -n auto \
-	    --ignore=${TESTS_FOLDER}/benchmarks \
-	    --ignore=${TESTS_FOLDER}/stress \
-	    --html=_tests/html-report/report.html; \
-	fi; \
-	attempt=1; max_attempts=2; \
-	while :; do \
-	  rm -f .coverage .coverage.* _tests/coverage.xml _tests/coverage.json 2>/dev/null || true; \
-	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ${UV_BIN} run --with pytest --with pytest-cov --with pytest-xdist --with pytest-html --with pytest-timeout --with pytest-mock pytest "$$@"; status=$$?; \
-	  if [ $$status -ne 3 ]; then exit $$status; fi; \
-	  if [ $$attempt -ge $$max_attempts ]; then \
-	    printf "${RED}[ERROR] pytest reported an internal (teardown) error after %s attempts; failing.${RESET}\n" "$$attempt"; \
-	    exit $$status; \
-	  fi; \
-	  printf "${YELLOW}[WARN] pytest exited 3 (xdist/teardown internal error, all tests may have passed); retrying suite (attempt %s/%s)...${RESET}\n" "$$((attempt + 1))" "$$max_attempts"; \
-	  attempt=$$((attempt + 1)); \
-	done
-
-# The 'typecheck' target runs static type analysis using ty and/or mypy.
-# 1. Builds a list of existing Python source folders to check.
-# 2. Depending on TYPECHECKER (ty|mypy|both, default: both), runs ty,
-#    mypy in strict mode, or both in sequence as a cross-check.
-typecheck: install ## run ty and/or mypy type checking (TYPECHECKER=ty|mypy|both, default: both)
-	@typecheck_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  typecheck_paths="${SOURCE_FOLDER}"; \
-	fi; \
-	if [ -z "$${typecheck_paths}" ]; then \
-	  printf "${YELLOW}[WARN] No typecheck folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping typecheck${RESET}\n"; \
-	  exit 0; \
-	fi; \
-	case "${TYPECHECKER}" in \
-	  ty) \
-	    printf "${BLUE}[INFO] Running ty type checking in:$${typecheck_paths}${RESET}\n"; \
-	    ${UV_BIN} run --with ty ty check $${typecheck_paths} \
-	    ;; \
-	  mypy) \
-	    printf "${BLUE}[INFO] Running mypy strict type checking in:$${typecheck_paths}${RESET}\n"; \
-	    ${UV_BIN} run --with mypy mypy --strict $${typecheck_paths} \
-	    ;; \
-	  both) \
-	    printf "${BLUE}[INFO] Running ty type checking in:$${typecheck_paths}${RESET}\n"; \
-	    ${UV_BIN} run --with ty ty check $${typecheck_paths} && \
-	    printf "${BLUE}[INFO] Running mypy strict type checking in:$${typecheck_paths}${RESET}\n"; \
-	    ${UV_BIN} run --with mypy mypy --strict $${typecheck_paths} \
-	    ;; \
-	  *) \
-	    printf "${RED}[ERROR] Invalid TYPECHECKER='${TYPECHECKER}' (expected: ty, mypy, or both)${RESET}\n"; \
-	    exit 1 \
-	    ;; \
-	esac
-
-# The 'security' target runs bandit to find common security issues in the
-# Python source folders that exist.
-security: install ## run security scans (bandit)
-	@bandit_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  bandit_paths="${SOURCE_FOLDER}"; \
-	fi; \
-	if [ -n "$${bandit_paths}" ]; then \
-	  printf "${BLUE}[INFO] Running bandit security scan in:$${bandit_paths}${RESET}\n"; \
-	  ${UVX_BIN} bandit -r $${bandit_paths} -ll -q --ini .bandit; \
-	else \
-	  printf "${YELLOW}[WARN] No bandit scan folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping bandit${RESET}\n"; \
-	fi
+##@ Development and Testing (extras)
 
 # The 'benchmark' target runs performance benchmarks using pytest-benchmark.
 # 1. Installs benchmarking dependencies (pytest-benchmark, pygal).
@@ -138,27 +36,6 @@ benchmark:: install ## run performance benchmarks
 			--benchmark-json=_tests/benchmarks/results.json; \
 	else \
 	  printf "${YELLOW}[WARN] Benchmarks folder not found, skipping benchmarks${RESET}\n"; \
-	fi
-
-# The 'docs-coverage' target checks documentation coverage using interrogate.
-# 1. Builds a list of existing Python source folders to check.
-# 2. Runs interrogate with verbose output against those folders.
-docs-coverage: install ## check documentation coverage with interrogate
-	@docstring_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  docstring_paths="${SOURCE_FOLDER}"; \
-	fi; \
-	if [ -d "tests" ]; then \
-	  docstring_paths="$${docstring_paths} tests"; \
-	fi; \
-	if [ -d ".rhiza/tests" ]; then \
-	  docstring_paths="$${docstring_paths} .rhiza/tests"; \
-	fi; \
-	if [ -n "$${docstring_paths}" ]; then \
-	  printf "${BLUE}[INFO] Checking documentation coverage in:$${docstring_paths}${RESET}\n"; \
-	  ${UV_BIN} run --with interrogate interrogate -vv --fail-under 100 --ignore-init-method --ignore-magic $${docstring_paths}; \
-	else \
-	  printf "${YELLOW}[WARN] No docs-coverage folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping docs-coverage${RESET}\n"; \
 	fi
 
 # The 'hypothesis-test' target runs property-based tests using Hypothesis.
@@ -220,12 +97,3 @@ mutation: install ## run mutation tests with mutmut
 	mv html _tests/mutation/html || exit $$?; \
 	${UV_BIN} run --with mutmut mutmut results || exit $$?; \
 	exit $$run_status
-
-test-pyproject: install ## run pyproject.toml structure tests
-	@${UV_BIN} run --with pytest pytest .rhiza/tests/test_pyproject.py \
-		-v \
-		--tb=long \
-		--showlocals \
-		-rA \
-		--durations=0 \
-		--no-header

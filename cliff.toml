@@ -66,7 +66,14 @@ sort_commits = "oldest"
 commit_parsers = [
   # Drop automated noise commits that don't provide user-facing signal.
   { message = ".*\\[skip ci\\].*", skip = true },
-  { message = "^chore(\\([^)]+\\))?:\\s*(bump|release)( version)?\\b", skip = true },
+  # Only the release flow's own commits. A bare `bump` alternative here also ate every
+  # `chore(deps): bump <dependency>` — the rhiza-hooks v1.2.0 bump (#1487) vanished from
+  # v1.3.2's notes that way, and had been vanishing for a while unnoticed: a Dependabot
+  # subject escapes by the accident of its doubled `(deps)(deps)` scope, and #1482's
+  # identical bump survived only because it was typed `fix(deps):`. So this names
+  # `release` and the older `bump version` form explicitly rather than `bump` at large.
+  { message = "^chore(\\([^)]+\\))?:\\s*release\\b", skip = true },
+  { message = "^chore(\\([^)]+\\))?:\\s*bump version\\b", skip = true },
   { message = "^chore:\\s*update changelog\\.md\\b", skip = true },
   { message = "^feat", group = "<!-- 0 -->New Features" },
   { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
