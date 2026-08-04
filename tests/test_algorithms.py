@@ -14,11 +14,14 @@ import pytest
 
 from chebpy.algorithms import (
     _conv_legendre,
+    _funqui_degree,
+    _funqui_max_degree,
     adaptive,
     bary,
     cheb2leg,
     clenshaw,
     coeffmult,
+    fh_barywts,
     funqui,
     leg2cheb,
     standard_chop,
@@ -262,6 +265,51 @@ def test_funqui_complex_samples() -> None:
     values = np.exp(1j * np.pi * nodes)
     interpolant = funqui(values, domain)
     np.testing.assert_allclose(interpolant(nodes), values, atol=1e-12)
+
+
+def test_fh_barywts_no_nodes_is_empty() -> None:
+    """Test fh_barywts returns no weights when there are no nodes."""
+    np.testing.assert_array_equal(fh_barywts(np.array([]), 0), np.array([]))
+
+
+@pytest.mark.parametrize("d", [-1, 6])
+def test_fh_barywts_rejects_degree_outside_range(d: int) -> None:
+    """Test fh_barywts requires the blending degree to satisfy 0 <= d <= n."""
+    x = np.linspace(-1.0, 1.0, 6)
+    with pytest.raises(ValueError, match=r"d must satisfy 0 <= d <= 5"):
+        fh_barywts(x, d)
+
+
+@pytest.mark.parametrize(
+    ("n", "expected"),
+    [
+        (59, 35),
+        (60, 30),
+        (99, 30),
+        (100, 25),
+        (999, 25),
+        (1000, 20),
+        (4999, 20),
+        (5000, 15),
+    ],
+)
+def test_funqui_max_degree_tiers(n: int, expected: int) -> None:
+    """Test the sample-count dependent Floater-Hormann degree cap."""
+    assert _funqui_max_degree(n) == expected
+
+
+def test_funqui_degree_falls_back_when_held_out_values_are_negligible() -> None:
+    """Test the degree search short-circuits when the held-out samples vanish.
+
+    _funqui_degree gauges candidate degrees by how well each reproduces the
+    samples at indices 1 and n-2. When those are negligible against the norm of
+    the data there is no signal to compare against, so a fixed low degree is
+    used instead of the error-minimising search.
+    """
+    nodes = np.linspace(-1.0, 1.0, 11)
+    values = np.ones(11)
+    values[[1, 8]] = 0.0
+    assert _funqui_degree(nodes, values) == 4
 
 
 def test_clenshaw(testfunctions: list) -> None:
