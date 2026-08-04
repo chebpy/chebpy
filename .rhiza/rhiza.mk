@@ -62,18 +62,28 @@ RESET := \033[0m
 	version-matrix \
 	ci-os-matrix
 
+# ---------------------------------------------------------------------------
+# uv as a *tool runner*, not as a language choice.
+#
+# Rhiza reaches for uvx to run pre-commit, mkdocs, semgrep and the rest whatever
+# the project is written in, so provisioning it belongs to core. What is Python-
+# specific — the project virtualenv, the `install` target that syncs it, and the
+# project's own interpreter version — lives in the language layer
+# (`bundles/python-core`), which ships `.rhiza/make.d/python.mk`.
+# ---------------------------------------------------------------------------
+
 # we need absolute paths!
 INSTALL_DIR ?= $(abspath ./bin)
 UV_BIN ?= $(shell command -v uv 2>/dev/null || echo ${INSTALL_DIR}/uv)
 UVX_BIN ?= $(shell command -v uvx 2>/dev/null || echo ${INSTALL_DIR}/uvx)
-VENV ?= .venv
 
-# Read Python version from .python-version (single source of truth)
+# The interpreter rhiza's own tooling runs on. A Python project overrides this
+# from `.python-version` (see python.mk, which makes it the project's version
+# too); anywhere else the fallback is simply the Python uvx provisions.
 PYTHON_VERSION ?= $(strip $(shell cat .python-version 2>/dev/null || echo "3.13"))
 export PYTHON_VERSION
 
 export UV_NO_MODIFY_PATH := 1
-export UV_VENV_CLEAR := 1
 
 # Unset VIRTUAL_ENV to prevent uv from warning about path mismatches
 # when a virtual environment is already activated in the shell
@@ -123,20 +133,13 @@ print-logo:
 	@printf "${BLUE}$$RHIZA_LOGO${RESET}\n"
 
 
-rhiza-test: install ## run rhiza's own tests (if any)
-	@if [ -d ".rhiza/tests" ]; then \
-		${UV_BIN} run --with pytest --with pytest-timeout --with python-dotenv --with packaging pytest .rhiza/tests; \
-	else \
-		printf "${YELLOW}[WARN] No .rhiza/tests directory found, skipping rhiza-tests${RESET}\n"; \
-	fi
-
 ##@ Meta
 
 help: print-logo ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"
 	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
 	+@printf "$(BOLD)Targets:$(RESET)\n"
-	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-20s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  $(BLUE)%-20s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 	+@printf "\n"
 
 ci-os-matrix: ## Emit GitHub CI OSes (RHIZA_CI_OS_MATRIX as JSON array, default ["ubuntu-latest"])

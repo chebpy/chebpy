@@ -1,7 +1,7 @@
-sha: e5d7005e2d9fc3d5a23b96d13b203b4f2afe3cce
+sha: 996d5df684d8967907d883e43e0d28376b0ac140
 repo: jebel-quant/rhiza
 host: github
-ref: v1.2.5
+ref: v1.3.2
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
@@ -42,7 +42,6 @@ files:
 - .gitignore
 - .pre-commit-config.yaml
 - .python-version
-- .rhiza/.cfg.toml
 - .rhiza/.env
 - .rhiza/.gitignore
 - .rhiza/assets/rhiza-logo.svg
@@ -57,6 +56,7 @@ files:
 - .rhiza/make.d/doctor.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
+- .rhiza/make.d/python.mk
 - .rhiza/make.d/quality.mk
 - .rhiza/make.d/test.mk
 - .rhiza/rhiza.mk
@@ -65,7 +65,9 @@ files:
 - .rhiza/tests/conftest.py
 - .rhiza/tests/test_docstrings.py
 - .rhiza/tests/test_pyproject.py
+- .rhiza/tests/test_readme.py
 - .rhiza/tests/test_readme_validation.py
+- .rhiza/tests/test_release_tags.py
 - Makefile
 - cliff.toml
 - docs/assets/rhiza-logo.svg
@@ -77,5 +79,6 @@ files:
 - docs/mkdocs-base.yml
 - pytest.ini
 - ruff.toml
-synced_at: '2026-07-30T10:44:30Z'
+- tests/test_rhiza_packaging.py
+synced_at: '2026-08-04T18:39:08Z'
 strategy: merge
