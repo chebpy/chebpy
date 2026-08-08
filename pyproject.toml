@@ -78,8 +78,12 @@ exclude = ["tests"]
 # in fact all 25 modules are covered. Per-module coverage is guaranteed instead by
 # COVERAGE_FAIL_UNDER = 100 in the Makefile, which is the condition the checker
 # documents for opting out.
+#
+# Keep the reason free of a literal `%`: radon feeds the whole of this file to
+# configparser, which reads `%` as interpolation syntax and dies before analysing
+# anything. See https://github.com/chebpy/chebpy/issues/457.
 enforce = false
-reason = "Tests are flat per-module rather than mirroring src/chebpy/ package depth; per-module coverage is guaranteed by the 100% coverage gate in `make test`."
+reason = "Tests are flat per-module rather than mirroring src/chebpy/ package depth; per-module coverage is guaranteed by the full-coverage gate in `make test`."
 
 [tool.bumpversion]
 allow_dirty = false
