@@ -16,6 +16,14 @@ from .settings import _preferences as prefs
 from .utilities import Domain, Interval
 
 
+def _cannot_construct(f: object) -> str:
+    """Return the error message for an input ``chebfun`` cannot turn into a constant."""
+    return (
+        f"cannot construct a Chebfun from {f!r}: expected None, a callable, "
+        "a single alphabetic character such as 'x', or a number"
+    )
+
+
 def chebfun(
     f: Callable[..., Any] | str | float | None = None,
     domain: np.ndarray | list[float] | None = None,
@@ -53,9 +61,10 @@ def chebfun(
         Chebfun: A Chebfun object representing the function.
 
     Raises:
-        ValueError: If ``f`` is none of the accepted forms — that is, if it is
-            neither None, nor callable, nor a single alphabetic character, nor
-            convertible to a float.
+        TypeError: If ``f`` is of a type that cannot be converted to a float at
+            all, such as a list or a dict.
+        ValueError: If ``f`` is of a convertible type but holds no usable value,
+            such as a non-numeric string or an out-of-range integer.
 
     Examples:
         >>> # Empty Chebfun
@@ -91,15 +100,48 @@ def chebfun(
         else:
             return Chebfun.initidentity(domain)
 
+    # Constant fct via chebfun(3.14, ... ), chebfun('3.14', ... ).
+    # Only the conversion is guarded: a failure inside initconst is about the domain,
+    # not about f, and must not be relabelled as if f were at fault.
     try:
-        # Constant fct via chebfun(3.14, ... ), chebfun('3.14', ... )
-        return Chebfun.initconst(float(f), domain)
+        value = float(f)
+    except TypeError as err:
+        # A wrong *type* of argument (list, dict, ...) stays a TypeError, so callers
+        # already catching it keep working; only the message improves.
+        raise TypeError(_cannot_construct(f)) from err
     except (OverflowError, ValueError) as err:
-        msg = (
-            f"cannot construct a Chebfun from {f!r}: expected None, a callable, "
-            "a single alphabetic character such as 'x', or a number"
-        )
-        raise ValueError(msg) from err
+        raise ValueError(_cannot_construct(f)) from err
+    return Chebfun.initconst(value, domain)
+
+
+def _validated_samples(values: np.ndarray | list[float | complex]) -> np.ndarray:
+    """Return *values* as a one-dimensional numeric array, or raise ValueError."""
+    vals = np.asarray(values)
+    if vals.size == 0:
+        msg = "values must be non-empty"
+        raise ValueError(msg)
+    if vals.ndim != 1:
+        msg = "values must be one-dimensional"
+        raise ValueError(msg)
+    if not np.issubdtype(vals.dtype, np.number):
+        msg = "values must be numeric"
+        raise ValueError(msg)
+    return vals
+
+
+def _validated_interval(domain: np.ndarray | list[float] | None) -> Domain:
+    """Return *domain* as a Domain of two finite increasing endpoints, or raise ValueError."""
+    dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
+    if dom.ndim != 1 or dom.size != 2:
+        msg = "domain must contain exactly two endpoints"
+        raise ValueError(msg)
+    if not np.all(np.isfinite(dom)):
+        msg = "domain endpoints must be finite"
+        raise ValueError(msg)
+    if dom[0] >= dom[1]:
+        msg = "domain endpoints must be strictly increasing"
+        raise ValueError(msg)
+    return Domain(dom)
 
 
 def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | list[float] | None = None) -> "Chebfun":
@@ -126,28 +168,8 @@ def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | lis
         >>> bool(abs(f(0.0)) < 1e-12)
         True
     """
-    vals = np.asarray(values)
-    if vals.size == 0:
-        msg = "values must be non-empty"
-        raise ValueError(msg)
-    if vals.ndim != 1:
-        msg = "values must be one-dimensional"
-        raise ValueError(msg)
-    if not np.issubdtype(vals.dtype, np.number):
-        msg = "values must be numeric"
-        raise ValueError(msg)
-
-    dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
-    if dom.ndim != 1 or dom.size != 2:
-        msg = "domain must contain exactly two endpoints"
-        raise ValueError(msg)
-    if not np.all(np.isfinite(dom)):
-        msg = "domain endpoints must be finite"
-        raise ValueError(msg)
-    if dom[0] >= dom[1]:
-        msg = "domain endpoints must be strictly increasing"
-        raise ValueError(msg)
-    dom = Domain(dom)
+    vals = _validated_samples(values)
+    dom = _validated_interval(domain)
 
     if vals.size == 1:
         value = complex(vals[0]) if np.iscomplexobj(vals) else vals[0]
