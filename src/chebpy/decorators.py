@@ -69,7 +69,6 @@ def self_empty(resultif: Any = None) -> Callable[..., Any]:
         This decorator is primarily used in chebtech.py.
     """
 
-    # TODO: add unit test for this
     def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
         """Wrap *f* with the empty-object short-circuit logic."""
 
