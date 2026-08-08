@@ -104,6 +104,29 @@ def test_chebfun_raises_describes_the_failure() -> None:
     assert isinstance(excinfo.value.__cause__, ValueError)
 
 
+@pytest.mark.parametrize("bad", [[1, 2], {"a": 1}, (1, 2), {1, 2}])
+def test_chebfun_unconvertible_type_raises_typeerror(bad: object) -> None:
+    """Test that inputs of an unconvertible type raise a described TypeError."""
+    with pytest.raises(TypeError) as excinfo:
+        chebfun(bad)  # ty: ignore[invalid-argument-type]
+
+    message = str(excinfo.value)
+    # the message names chebfun's contract rather than leaking float()'s wording
+    assert "cannot construct a Chebfun from" in message
+    assert "expected None, a callable" in message
+    # the type is preserved, so callers already catching TypeError keep working
+    assert isinstance(excinfo.value.__cause__, TypeError)
+
+
+def test_chebfun_overflowing_int_raises_valueerror() -> None:
+    """Test that an int too large for a float is reported as a ValueError."""
+    with pytest.raises(ValueError) as excinfo:
+        chebfun(10**400)
+
+    assert "cannot construct a Chebfun from" in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, OverflowError)
+
+
 def test_pwc() -> None:
     """Test creating piecewise constant functions."""
     dom = [-1, 0, 1]
