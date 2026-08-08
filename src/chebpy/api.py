@@ -114,6 +114,36 @@ def chebfun(
     return Chebfun.initconst(value, domain)
 
 
+def _validated_samples(values: np.ndarray | list[float | complex]) -> np.ndarray:
+    """Return *values* as a one-dimensional numeric array, or raise ValueError."""
+    vals = np.asarray(values)
+    if vals.size == 0:
+        msg = "values must be non-empty"
+        raise ValueError(msg)
+    if vals.ndim != 1:
+        msg = "values must be one-dimensional"
+        raise ValueError(msg)
+    if not np.issubdtype(vals.dtype, np.number):
+        msg = "values must be numeric"
+        raise ValueError(msg)
+    return vals
+
+
+def _validated_interval(domain: np.ndarray | list[float] | None) -> Domain:
+    """Return *domain* as a Domain of two finite increasing endpoints, or raise ValueError."""
+    dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
+    if dom.ndim != 1 or dom.size != 2:
+        msg = "domain must contain exactly two endpoints"
+        raise ValueError(msg)
+    if not np.all(np.isfinite(dom)):
+        msg = "domain endpoints must be finite"
+        raise ValueError(msg)
+    if dom[0] >= dom[1]:
+        msg = "domain endpoints must be strictly increasing"
+        raise ValueError(msg)
+    return Domain(dom)
+
+
 def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | list[float] | None = None) -> "Chebfun":
     """Create a Chebfun from equispaced samples including both endpoints.
 
@@ -138,28 +168,8 @@ def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | lis
         >>> bool(abs(f(0.0)) < 1e-12)
         True
     """
-    vals = np.asarray(values)
-    if vals.size == 0:
-        msg = "values must be non-empty"
-        raise ValueError(msg)
-    if vals.ndim != 1:
-        msg = "values must be one-dimensional"
-        raise ValueError(msg)
-    if not np.issubdtype(vals.dtype, np.number):
-        msg = "values must be numeric"
-        raise ValueError(msg)
-
-    dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
-    if dom.ndim != 1 or dom.size != 2:
-        msg = "domain must contain exactly two endpoints"
-        raise ValueError(msg)
-    if not np.all(np.isfinite(dom)):
-        msg = "domain endpoints must be finite"
-        raise ValueError(msg)
-    if dom[0] >= dom[1]:
-        msg = "domain endpoints must be strictly increasing"
-        raise ValueError(msg)
-    dom = Domain(dom)
+    vals = _validated_samples(values)
+    dom = _validated_interval(domain)
 
     if vals.size == 1:
         value = complex(vals[0]) if np.iscomplexobj(vals) else vals[0]
