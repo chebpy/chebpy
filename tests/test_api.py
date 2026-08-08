@@ -89,6 +89,21 @@ def test_chebfun_raises() -> None:
         chebfun("asdfasdf")
 
 
+def test_chebfun_raises_describes_the_failure() -> None:
+    """Test that the ValueError message explains the failure rather than echoing the input."""
+    with pytest.raises(ValueError) as excinfo:
+        chebfun("asdfasdf")
+
+    message = str(excinfo.value)
+    # the offending input is quoted, so the caller can see what was rejected
+    assert "'asdfasdf'" in message
+    # ...but the message also says what would have been accepted
+    assert "expected None, a callable" in message
+    assert "a number" in message
+    # and the underlying conversion failure is preserved for debugging
+    assert isinstance(excinfo.value.__cause__, ValueError)
+
+
 def test_pwc() -> None:
     """Test creating piecewise constant functions."""
     dom = [-1, 0, 1]

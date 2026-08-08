@@ -53,7 +53,9 @@ def chebfun(
         Chebfun: A Chebfun object representing the function.
 
     Raises:
-        ValueError: If unable to construct a constant function from the input.
+        ValueError: If ``f`` is none of the accepted forms — that is, if it is
+            neither None, nor callable, nor a single alphabetic character, nor
+            convertible to a float.
 
     Examples:
         >>> # Empty Chebfun
@@ -93,7 +95,11 @@ def chebfun(
         # Constant fct via chebfun(3.14, ... ), chebfun('3.14', ... )
         return Chebfun.initconst(float(f), domain)
     except (OverflowError, ValueError) as err:
-        raise ValueError(f) from err
+        msg = (
+            f"cannot construct a Chebfun from {f!r}: expected None, a callable, "
+            "a single alphabetic character such as 'x', or a number"
+        )
+        raise ValueError(msg) from err
 
 
 def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | list[float] | None = None) -> "Chebfun":
