@@ -1,0 +1,896 @@
+% chebpy.tex --- A description of the ChebPy library, its architecture and
+% the numerical algorithms it implements.
+%
+% Compiled by .github/workflows/rhiza_paper.yml via
+%     latexmk -pdf -bibtex -interaction=nonstopmode chebpy.tex
+% or locally with `make paper`.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.7cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\definecolor{codebg}{gray}{0.96}
+\definecolor{codekw}{rgb}{0.13,0.29,0.53}
+\definecolor{codestr}{rgb}{0.16,0.44,0.16}
+\definecolor{codecom}{gray}{0.45}
+
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codebg},
+  framesep=5pt,
+  showstringspaces=false,
+  columns=fullflexible,
+  breaklines=true,
+  xleftmargin=0pt,
+  aboveskip=1.0em,
+  belowskip=1.0em,
+}
+\lstset{style=py}
+
+\newcommand{\cheb}[1]{T_{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\eps}{\varepsilon_{\mathrm{mach}}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{ChebPy}\\[0.35em]
+       \large Computing with Functions via Chebyshev Approximation in Python}
+\author{The ChebPy Developers}
+\date{Version 0.10.0}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+ChebPy is a Python library for numerical computing with \emph{functions} rather
+than numbers. A smooth function is replaced by a polynomial interpolant through
+Chebyshev points, accurate to close to machine precision, and thereafter
+differentiation, integration, rootfinding, convolution and ordinary arithmetic
+are carried out on that surrogate. The result is a system in which
+\code{f + g}, \code{f.diff()} and \code{f.roots()} mean what a mathematician
+expects them to mean. This paper describes the mathematical foundation
+(Section~\ref{sec:approx}), the numerical kernels that implement it
+(Section~\ref{sec:algorithms}), the two-hierarchy object model that organises
+them (Section~\ref{sec:architecture}), the extensions that carry the idea
+beyond smooth functions on bounded intervals --- Fourier technology for
+periodic functions, support truncation for infinite intervals and
+endpoint-clustering maps for branch singularities (Section~\ref{sec:beyond})
+--- and the higher-level applications built on top (Section~\ref{sec:apps}).
+ChebPy is a Python descendant of the MATLAB package Chebfun, and follows its
+algorithmic choices closely while departing from them where a different design
+suits the host language better.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+%==============================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Numerical software usually asks the user to discretise first and compute
+afterwards: choose a grid, evaluate, and then apply a quadrature rule or a
+finite-difference stencil to the resulting array. The discretisation is the
+user's responsibility, and its accuracy is the user's problem.
+
+ChebPy inverts that arrangement. The object of computation is the function
+itself. When a user writes
+
+\begin{lstlisting}
+from chebpy import chebfun
+import numpy as np
+
+f = chebfun(lambda x: np.sin(10 * x) * np.exp(-x**2), [-3, 3])
+f.sum()        # definite integral over [-3, 3]
+f.diff()       # derivative, again a chebfun
+f.roots()      # every root in [-3, 3]
+(f * f).sum()  # integral of the square
+\end{lstlisting}
+
+\noindent
+the constructor samples \code{f} at Chebyshev points, adaptively increasing the
+sample count until the Chebyshev coefficients have decayed to the level of
+rounding error, and stores the truncated coefficient vector. Every subsequent
+operation is exact on that polynomial, and therefore accurate to roughly
+machine precision on the original function. The user chose no grid and no step
+size.
+
+This is the design of Chebfun~\cite{chebfun,driscoll2014}, the MATLAB system
+developed at Oxford since 2004. ChebPy brings it to Python, built on NumPy, and
+is distributed on PyPI under the name \code{chebfun} while being imported as
+\code{chebpy}. The library was begun by Mark Richardson and is released under
+the BSD-3-Clause licence.
+
+The central claim that makes any of this practical is one of approximation
+theory: for functions with even modest smoothness, polynomial interpolation in
+Chebyshev points converges fast, and for analytic functions it converges
+geometrically. Section~\ref{sec:approx} states this precisely; the rest of the
+paper is about turning it into software.
+
+%==============================================================================
+\section{Chebyshev approximation}
+\label{sec:approx}
+
+\subsection{Chebyshev polynomials and series}
+
+The Chebyshev polynomial of the first kind of degree $k$ is defined on
+$[-1,1]$ by
+\begin{equation}
+  \cheb{k}(x) = \cos\!\bigl(k \arccos x\bigr), \qquad x \in [-1, 1],
+  \label{eq:Tdef}
+\end{equation}
+equivalently by the three-term recurrence
+\begin{equation}
+  \cheb{0}(x) = 1, \quad \cheb{1}(x) = x, \quad
+  \cheb{k+1}(x) = 2x\,\cheb{k}(x) - \cheb{k-1}(x).
+  \label{eq:Trec}
+\end{equation}
+Under the substitution $x = \cos\theta$, \eqref{eq:Tdef} becomes
+$\cheb{k}(\cos\theta) = \cos k\theta$: a Chebyshev series in $x$ is a cosine
+series in $\theta$. Nearly every algorithm in this paper is, at bottom, an
+exploitation of that identity --- it is what allows the fast Fourier transform
+to do the work.
+
+A Lipschitz-continuous $f$ on $[-1,1]$ has a unique absolutely and uniformly
+convergent Chebyshev expansion
+\begin{equation}
+  f(x) = \sum_{k=0}^{\infty} a_k \cheb{k}(x),
+  \qquad
+  a_k = \frac{2 - \delta_{k0}}{\pi} \int_{-1}^{1}
+        \frac{f(x)\,\cheb{k}(x)}{\sqrt{1 - x^2}} \, dx .
+  \label{eq:series}
+\end{equation}
+
+\subsection{Why the coefficients decay}
+
+The speed at which $a_k \to 0$ governs everything. Let $E_\rho$ denote the
+\emph{Bernstein ellipse}: the image of the circle $|z| = \rho > 1$ under the
+Joukowski map $z \mapsto (z + z^{-1})/2$, an ellipse with foci $\pm 1$ and
+semi-axis sum $\rho$.
+
+\begin{theorem}[Geometric convergence; see \cite{trefethen2013}, Ch.~8]
+\label{thm:analytic}
+If $f$ is analytic in $E_\rho$ and satisfies $|f| \le M$ there, then
+\[
+  |a_k| \le 2M\rho^{-k},
+  \qquad
+  \bigl\| f - f_n \bigr\|_\infty \le \frac{2M\rho^{-n}}{\rho - 1},
+\]
+where $f_n$ is the degree-$n$ truncation of \eqref{eq:series}.
+\end{theorem}
+
+\begin{theorem}[Algebraic convergence; see \cite{trefethen2013}, Ch.~7]
+\label{thm:diff}
+If $f$ has $\nu \ge 1$ derivatives on $[-1,1]$ with $f^{(\nu)}$ of bounded
+variation $V$, then $|a_k| = O(k^{-\nu-1})$ and
+$\|f - f_n\|_\infty = O(n^{-\nu})$.
+\end{theorem}
+
+So an entire function is captured to machine precision by a few dozen
+coefficients; a $C^\infty$ function by rather more; a function with a branch
+point on $[-1,1]$ by far too many --- which is precisely the case handled by
+the splitting and singularity machinery of Sections~\ref{sec:chebfun-container}
+and~\ref{sec:singfun}.
+
+\subsection{Interpolation, and why it is nearly as good}
+
+ChebPy does not compute the integrals in \eqref{eq:series}. It interpolates.
+The \emph{Chebyshev points of the second kind} are
+\begin{equation}
+  x_j = \cos\!\left(\frac{(n-1-j)\pi}{n-1}\right), \qquad j = 0, \ldots, n-1,
+  \label{eq:chebpts}
+\end{equation}
+which are the extrema of $\cheb{n-1}$ together with the endpoints $\pm 1$,
+ordered left to right so that $x_0 = -1$ and $x_{n-1} = 1$. In ChebPy these are
+produced by \code{algorithms.chebpts2(n)}.
+
+Let $p_{n-1}$ be the unique polynomial of degree $\le n-1$ interpolating $f$ at
+these points, with discrete Chebyshev coefficients $c_k$. The relationship
+between $c_k$ and the true $a_k$ is \emph{aliasing}: on the grid
+\eqref{eq:chebpts}, $\cheb{m}$ and $\cheb{2(n-1)\pm m}$ are indistinguishable,
+so
+\begin{equation}
+  c_k = a_k + a_{2(n-1)-k} + a_{2(n-1)+k} + a_{4(n-1)-k} + \cdots .
+  \label{eq:aliasing}
+\end{equation}
+Under the hypotheses of Theorem~\ref{thm:analytic} the aliasing error is of the
+same order as the truncation error itself. The practical consequence is the one
+that matters: \emph{interpolation is within a small factor of the best
+polynomial approximation}, so ChebPy can use function samples --- cheap --- and
+lose almost nothing.
+
+Two classical facts complete the picture. Interpolation in these points is
+stable: the Lebesgue constant grows only like $\tfrac{2}{\pi}\log n$. And it
+underlies Clenshaw--Curtis quadrature, so the integration routine of
+Section~\ref{sec:calculus} inherits the same accuracy as the representation.
+
+%==============================================================================
+\section{The numerical kernels}
+\label{sec:algorithms}
+
+This section describes the algorithms in \code{chebpy.algorithms} and
+\code{chebpy.chebtech}, which together constitute the computational core.
+Table~\ref{tab:complexity} summarises their costs.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Operation} & \textbf{Method} & \textbf{Cost} \\
+\midrule
+Values $\to$ coefficients & DCT-I via FFT           & $O(n \log n)$ \\
+Coefficients $\to$ values & IDCT-I via FFT          & $O(n \log n)$ \\
+Truncation length         & \code{standard\_chop}   & $O(n)$ \\
+Construction              & adaptive doubling       & $O(n \log n)$ \\
+Evaluation at $m$ points  & Clenshaw / barycentric  & $O(mn)$ \\
+Differentiation           & coefficient recurrence  & $O(n)$ \\
+Indefinite integration    & coefficient recurrence  & $O(n)$ \\
+Definite integration      & Clenshaw--Curtis weights& $O(n)$ \\
+Multiplication            & FFT coefficient convolution & $O(n \log n)$ \\
+Rootfinding               & colleague eigenvalues + subdivision & $O(n^3)$ per block \\
+Chebyshev $\leftrightarrow$ Legendre & three-term recurrence & $O(n^2)$ \\
+\bottomrule
+\end{tabular}
+\caption{Cost of the principal kernels, for a representation of length $n$.}
+\label{tab:complexity}
+\end{table}
+
+\subsection{The discrete transform}
+
+Converting between the $n$ samples $v_j = f(x_j)$ and the $n$ discrete
+coefficients $c_k$ is a discrete cosine transform of type I. ChebPy realises it
+with NumPy's complex FFT by even extension. In
+\code{algorithms.vals2coeffs2}, the sample vector is mirrored to length
+$2n - 2$,
+\[
+  \tilde v = \bigl(v_{n-1}, v_{n-2}, \ldots, v_0,\;
+                   v_1, v_2, \ldots, v_{n-2}\bigr),
+\]
+an inverse FFT is applied, the first $n$ entries are retained, and the interior
+entries $c_1, \ldots, c_{n-2}$ are doubled. The inverse map,
+\code{coeffs2vals2}, reverses these steps with a forward FFT. Both routines
+detect purely real or purely imaginary input and take the real part
+accordingly, so a real function never acquires a spurious imaginary component
+through the transform.
+
+\subsection{Deciding where to stop: \texttt{standard\_chop}}
+\label{sec:chop}
+
+Given a coefficient vector believed to have converged, how many entries are
+genuinely significant? Truncating too early loses accuracy; truncating too late
+stores rounding noise and slows every later operation. ChebPy implements the
+algorithm of Aurentz and Trefethen~\cite{aurentz2015} in
+\code{algorithms.standard\_chop}, which proceeds in three steps.
+
+\begin{enumerate}
+  \item \textbf{Envelope.} Form the monotonically non-increasing envelope of
+        $|c_k|$ by taking a running maximum from the tail backwards, normalised
+        so that its first entry is $1$.
+  \item \textbf{Plateau.} Scan for the first index $j$ at which the envelope
+        stops decreasing meaningfully --- the point where genuine decay gives
+        way to the flat noise floor. The test compares the envelope at $j$ with
+        its value at $\lceil 1.25 j + 5 \rceil$ against a tolerance-dependent
+        ratio $r = 3\bigl(1 - \log e_1 / \log \varepsilon\bigr)$.
+  \item \textbf{Refinement.} Within the plateau, minimise
+        $\log_{10}(\text{envelope})$ plus a linear ramp that biases the choice
+        leftwards, and cut there.
+\end{enumerate}
+
+Vectors shorter than $17$ entries are never chopped: there is not enough
+evidence of decay to justify it. The tolerance $\varepsilon^{7/6}$ appears in
+step~3 as a floor, deliberately slightly looser than $\varepsilon$ itself.
+
+\subsection{Adaptive construction}
+\label{sec:adaptive}
+
+\code{algorithms.adaptive} drives the constructor. It samples on grids of
+$n = 2^k + 1$ points for $k = 4, 5, \ldots$ --- that is, $17, 33, 65, \ldots$
+--- and at each stage transforms to coefficients and applies
+\code{standard\_chop}. If the chop length is strictly less than the vector
+length, the coefficients have resolved the function and the loop exits with the
+truncated vector. Doubling is used so that the total cost is dominated by the
+final, successful transform.
+
+Two guards matter. If the largest sampled value falls below the working
+tolerance, the function is declared indistinguishable from zero and represented
+by the single coefficient $0$; this avoids the degenerate case in which a
+vanishing vertical scale makes every relative test meaningless. And if $k$
+reaches \code{prefs.maxpow2} (default $16$, i.e.\ $65\,537$ points) without
+resolution, ChebPy emits a \code{UserWarning} naming the class that failed and
+returns the unresolved coefficients rather than raising --- a non-converged
+answer with a warning being more useful, in interactive work, than no answer.
+
+The working tolerance is $\eps \cdot \max(h, 1)$, where $h$ is a horizontal
+scale passed in by the caller, so that a function on a wide interval is not
+held to an unattainably tight absolute standard.
+
+\subsection{Evaluation}
+
+Two evaluation schemes coexist, and \code{Chebtech.\_\_call\_\_} selects
+between them by keyword (\code{how="clenshaw"} by default).
+
+\paragraph{Clenshaw's algorithm.}
+\code{algorithms.clenshaw} sums the series directly through the backward
+recurrence associated with \eqref{eq:Trec},
+\begin{equation}
+  b_k = a_k + 2x\,b_{k+1} - b_{k+2}, \qquad
+  b_{n} = b_{n+1} = 0, \qquad
+  p(x) = a_0 + x\,b_1 - b_2 .
+  \label{eq:clenshaw}
+\end{equation}
+The implementation unrolls the loop two steps at a time, which halves the
+number of vector temporaries NumPy must allocate. The cost is $O(n)$ per
+evaluation point with no precomputation.
+
+\paragraph{Barycentric interpolation.}
+\code{algorithms.bary} evaluates instead from the samples, using the second
+barycentric formula~\cite{berrut2004}
+\begin{equation}
+  p(x) = \left. \sum_{j=0}^{n-1} \frac{w_j}{x - x_j} f_j \middle/
+                \sum_{j=0}^{n-1} \frac{w_j}{x - x_j} \right. ,
+  \label{eq:bary}
+\end{equation}
+which for the points \eqref{eq:chebpts} has the remarkably simple weights
+$w_j = (-1)^j$, halved at the two endpoints (\code{algorithms.barywts2}).
+Formula \eqref{eq:bary} is numerically stable and $O(n)$ per point. ChebPy
+switches between two loop orderings --- over evaluation points when there are
+few of them, over nodes when there are many --- and repairs the removable
+singularities at $x = x_j$, where \eqref{eq:bary} produces $0/0$, by
+substituting the exact nodal value.
+
+\subsection{Calculus}
+\label{sec:calculus}
+
+Because differentiation and integration act linearly on \eqref{eq:series} and
+$\cheb{k}$ satisfies simple recurrences, all three calculus operations are
+$O(n)$ manipulations of the coefficient vector --- no quadrature nodes, no step
+size.
+
+\paragraph{Definite integral.}
+From $\int_{-1}^{1} \cheb{k}(x)\,dx = 0$ for odd $k$ and $2/(1-k^2)$ for even
+$k$,
+\begin{equation}
+  \int_{-1}^{1} f(x)\,dx
+    \;=\; 2a_0 + \sum_{\substack{k \ge 2 \\ k \text{ even}}}
+          \frac{2\,a_k}{1 - k^2},
+  \label{eq:sum}
+\end{equation}
+implemented in \code{Chebtech.sum} by zeroing the odd coefficients and
+contracting with the weight vector. This is Clenshaw--Curtis quadrature,
+expressed in coefficient space.
+
+\paragraph{Indefinite integral.}
+\code{Chebtech.cumsum} returns $F$ with $F(-1) = 0$ from
+\begin{equation}
+  b_k = \frac{a_{k-1} - a_{k+1}}{2k} \;\; (k \ge 2),
+  \qquad
+  b_1 = a_0 - \tfrac{1}{2} a_2,
+  \qquad
+  b_0 = \sum_{k \ge 1} (-1)^{k+1} b_k ,
+  \label{eq:cumsum}
+\end{equation}
+the last line being exactly the constant that enforces the boundary condition,
+since $\cheb{k}(-1) = (-1)^k$.
+
+\paragraph{Derivative.}
+\code{Chebtech.diff} inverts \eqref{eq:cumsum}. Writing $f' = \sum_k z_k
+\cheb{k}$,
+\begin{equation}
+  z_{k-1} = z_{k+1} + 2k\,a_k, \qquad k = n-1, n-2, \ldots, 1,
+  \label{eq:diff}
+\end{equation}
+with $z_0$ subsequently halved. The implementation evaluates the two parity
+classes as separate reversed cumulative sums, so the whole recurrence is two
+NumPy \code{cumsum} calls rather than a Python loop.
+
+Note that \eqref{eq:diff} multiplies by $k$: differentiation amplifies the
+high-order coefficients, and repeated differentiation loses roughly one digit
+per application to a well-resolved function. This is intrinsic to the operation,
+not to the representation.
+
+\subsection{Multiplication}
+
+The product of two Chebyshev series is a convolution of their coefficients,
+which \code{coeffmult} evaluates in $O(n \log n)$. Each coefficient
+vector is extended to a symmetric sequence of length $2n-2$ with the leading
+entry doubled; the two extensions are multiplied pointwise in Fourier space;
+the result is folded back and scaled by $1/4$. Since the product of two
+degree-$n$ polynomials has degree $2n$, the operands are first prolonged to a
+common length so that the product is represented exactly rather than
+implicitly aliased.
+
+\subsection{Rootfinding}
+\label{sec:roots}
+
+Finding all roots of a polynomial of degree several hundred is the one place
+where a naive approach fails outright, and ChebPy's treatment in
+\code{algorithms.rootsunit} is correspondingly careful.
+
+\paragraph{Colleague matrix.}
+For a series $f = \sum_{k=0}^{N} a_k \cheb{k}$ with $a_N \ne 0$, the roots are
+the eigenvalues of the $N \times N$ \emph{colleague
+matrix}~\cite{good1961,boyd2002}
+\begin{equation}
+  A \;=\;
+  \begin{pmatrix}
+    0 & 1 & & & \\
+    \tfrac{1}{2} & 0 & \tfrac{1}{2} & & \\
+    & \ddots & \ddots & \ddots & \\
+    & & \tfrac{1}{2} & 0 & \tfrac{1}{2} \\
+    & & & \tfrac{1}{2} & 0
+  \end{pmatrix}
+  \;-\;
+  \frac{1}{2 a_N}\,
+  e_N \bigl(a_0,\, a_1,\, \ldots,\, a_{N-1}\bigr),
+  \label{eq:colleague}
+\end{equation}
+the Chebyshev-basis analogue of the companion matrix, formed as a symmetric
+tridiagonal part plus a rank-one correction in the last row. ChebPy passes $A$
+to \code{numpy.linalg.eigvals}.
+
+\paragraph{Subdivision.}
+The eigenvalue solve is $O(N^3)$, so it is used only for $N \le 50$. Above that
+threshold ChebPy bisects the interval, evaluates the series on each half by
+Clenshaw, re-expands each half by \code{vals2coeffs2}, and recurses. The split
+point is not $0$ but
+\[
+  \sigma = -0.004849834917525,
+\]
+a deliberately irrational-looking constant inherited from Chebfun. Splitting at
+the exact midpoint would repeatedly land breakpoints on symmetry axes of even
+or odd functions, where roots cluster and the two halves inherit the worst of
+the conditioning; an off-centre split avoids that resonance. The recursion
+doubles the tolerance at each level, since accumulated map compositions make
+the deep sub-intervals progressively less able to sustain the original
+accuracy.
+
+\paragraph{Filtering and polishing.}
+The eigenvalues of \eqref{eq:colleague} are complex in general. Roots with
+$|\operatorname{Im}| \ge h_{\mathrm{tol}}$ are discarded, the survivors are
+taken as real, those outside $[-1-h_{\mathrm{tol}}, 1+h_{\mathrm{tol}}]$ are
+dropped, and the extreme two are clamped to the interval so that a root at an
+endpoint is reported exactly there. \code{algorithms.newtonroots} then applies
+Newton polishing, at most \code{prefs.maxiter} $= 10$ iterations, to recover the
+digits lost in the eigenvalue solve.
+
+\subsection{Legendre conversion and convolution}
+\label{sec:conv}
+
+Convolution is not natural in the Chebyshev basis, but it is in the Legendre
+basis, where the Hale--Townsend algorithm~\cite{hale2014} computes
+$h = f \star g$ in $O(n^2)$ via a recurrence on the Legendre coefficients.
+ChebPy therefore provides \code{cheb2leg} and \code{leg2cheb}, each an $O(n^2)$
+three-term recurrence derived from \eqref{eq:Trec} and from
+$(k+1)P_{k+1} = (2k+1)xP_k - kP_{k-1}$ respectively, built column by column so
+that the recurrence is applied to whole coefficient vectors at once.
+
+\code{chebpy.\_convolution} then dispatches on the shape of the operands. Two
+single-piece funs of equal width take the fast Legendre path, whose output is a
+piecewise polynomial on $[-2,2]$ split at the origin --- the convolution of two
+functions supported on $[-1,1]$ generically has a derivative discontinuity
+there, and representing it as two pieces keeps both smooth. Anything else falls
+back to building each output sub-interval adaptively by Gauss--Legendre
+quadrature.
+
+%==============================================================================
+\section{Architecture}
+\label{sec:architecture}
+
+\subsection{Two hierarchies meeting at a seam}
+
+The library separates \emph{what the approximation is} from \emph{where it
+lives}. Two runtime type hierarchies express that split and meet at
+\code{Classicfun}:
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.56\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}@{}}
+\toprule
+\textbf{Hierarchy} & \textbf{Meaning} \\
+\midrule
+\code{Onefun $\to$ Smoothfun $\to$\newline
+      \{Chebtech, Trigtech\}}
+  & a function on the reference interval $[-1,1]$ \\[0.5em]
+\code{Fun $\to$ Classicfun $\to$\newline
+      \{Bndfun, CompactFun, Singfun\}}
+  & that function placed on $[a,b]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+A \code{Chebtech} knows about Chebyshev coefficients and nothing about
+intervals. A \code{Bndfun} owns a \code{Chebtech} plus an affine map
+$[-1,1] \to [a,b]$, and translates between them: evaluation composes with the
+forward map, \code{diff} divides by the constant Jacobian, \code{sum}
+multiplies by it. Because the Jacobian of an affine map is a constant, these
+translations are one-line adjustments --- which is exactly why
+Section~\ref{sec:singfun}, where the map is \emph{not} affine, has to override
+them.
+
+Above both sits \code{Chebfun}, which is not a \code{Fun} at all but a
+\emph{container} of \code{Fun} pieces.
+
+\subsection{Import layering}
+
+The package is organised into strict import layers; a lower layer never imports
+an upper one at module scope.
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.34\textwidth}
+                  >{\raggedright\arraybackslash}p{0.58\textwidth}@{}}
+\toprule
+\textbf{Layer} & \textbf{Modules} \\
+\midrule
+high-level API / applications & \code{api}, \code{quasimatrix}, \code{gpr} \\
+piecewise container           & \code{chebfun} (+ \code{\_convolution},
+                                \code{\_pointwise},
+                                \code{\_singular\_construction},
+                                \code{\_ufuncs}) \\
+\code{Classicfun} pieces      & \code{bndfun}, \code{compactfun},
+                                \code{singfun} \\
+interval-mapped base          & \code{classicfun} \\
+reference-interval technology & \code{chebtech}, \code{trigtech} \\
+numerical kernels             & \code{algorithms}, \code{chebyshev} \\
+primitives                    & \code{utilities}, \code{plotting},
+                                \code{smoothfun} \\
+foundations                   & \code{settings}, \code{exceptions},
+                                \code{decorators}, \code{maps},
+                                \code{fun}, \code{onefun} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The foundation layer has no intra-package imports at all. \code{Chebfun}'s
+public methods are thin wrappers that delegate to the private implementation
+modules, which keeps the main class readable at roughly a thousand lines
+despite the breadth of the operator surface.
+
+\subsection{The piecewise container}
+\label{sec:chebfun-container}
+
+A single polynomial cannot represent $|x|$ or a step, but a \emph{piecewise}
+polynomial can. A \code{Chebfun} holds an ordered list of \code{Fun} pieces on
+abutting sub-intervals, together with breakpoint data recording the value at
+each junction. Operations distribute over the pieces: \code{sum} adds the piece
+integrals, \code{roots} concatenates the piece roots and (under
+\code{prefs.mergeroots}) merges duplicates arising at shared breakpoints, and a
+binary operation between two Chebfuns first refines both onto the union of
+their breakpoints so that the operands are piecewise-aligned.
+
+Breakpoints therefore serve two purposes at once: they carry genuine
+discontinuities, and they subdivide regions where a single polynomial would
+need an impractical degree.
+
+\subsection{The public surface}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Entry point} & \textbf{Purpose} \\
+\midrule
+\code{chebfun(f, domain, n=None)} & construct from a callable, adaptively or at
+                                    fixed length \\
+\code{trigfun(f, domain)}         & construct with Fourier technology
+                                    (Section~\ref{sec:trig}) \\
+\code{equifun(values, domain)}    & construct from equispaced samples \\
+\code{pwc(domain, values)}        & piecewise-constant Chebfun \\
+\code{chebpts(n, domain)}         & Chebyshev points and barycentric weights \\
+\code{gpr(x, y, ...)}             & Gaussian process regression
+                                    (Section~\ref{sec:gpr}) \\
+\code{Quasimatrix}, \code{polyfit}& continuous linear algebra
+                                    (Section~\ref{sec:quasi}) \\
+\code{UserPreferences}            & tolerances and algorithmic switches \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Preferences are a context-managed singleton, so a block of code can tighten or
+loosen tolerances locally without disturbing global state:
+
+\begin{lstlisting}
+from chebpy import UserPreferences
+
+with UserPreferences() as prefs:
+    prefs.eps = 1e-10       # looser tolerance, cheaper constructions
+    g = chebfun(f, [0, 1])  # built at 1e-10
+# previous preferences restored here
+\end{lstlisting}
+
+\noindent
+The defaults are $\varepsilon = \eps$, \code{maxpow2} $= 16$,
+\code{maxiter} $= 10$ Newton steps, and $2001$ plotting samples.
+
+\subsection{Interoperability}
+
+\code{Chebfun} registers NumPy ufunc overloads (\code{chebpy.\_ufuncs}), so
+\code{np.sin(f)}, \code{np.exp(f)} and their relatives return Chebfuns
+constructed by composition rather than arrays of samples. The composed function
+is passed back through the adaptive constructor, so $\sin(f)$ carries its own
+resolved degree rather than inheriting $f$'s.
+
+%==============================================================================
+\section{Beyond smooth functions on bounded intervals}
+\label{sec:beyond}
+
+Chebyshev interpolation resolves functions that are analytic on a
+neighbourhood of a bounded real interval. Three extensions widen that domain of
+applicability, each by changing the representation rather than the algorithms
+built on it.
+
+\subsection{Periodic functions: \texttt{Trigtech}}
+\label{sec:trig}
+
+For a smooth \emph{periodic} function, a Fourier series is the natural basis: it
+needs roughly $\pi/2$ times fewer degrees of freedom than a Chebyshev series of
+comparable accuracy, and it enforces periodicity exactly instead of
+approximately. \code{Trigtech} sits beside \code{Chebtech} under
+\code{Smoothfun}, exposing the identical \code{Onefun} interface.
+
+Samples are taken at the $n$ equispaced points $x_j = -1 + 2j/n$, and
+coefficients are stored in NumPy's native FFT ordering,
+\begin{equation}
+  c_k = \frac{1}{n} \sum_{j=0}^{n-1} f(x_j)\, e^{-2\pi i j k / n}
+      = \bigl(\texttt{numpy.fft.fft}(v)/n\bigr)_k ,
+  \label{eq:trigcoeffs}
+\end{equation}
+with the constant term at index $0$, positive frequencies next and negative
+frequencies wrapped to the end. Evaluation at arbitrary $x \in [-1,1]$ uses the
+summation formula
+\begin{equation}
+  f(x) = \sum_k c_k \, e^{i \pi \omega_k (x + 1)},
+  \qquad \omega_k = \texttt{fftfreq}(n) \cdot n .
+  \label{eq:trigeval}
+\end{equation}
+Storing in FFT order rather than the human-readable DC-centred order means the
+transforms are direct NumPy calls with no shifting; a helper converts to
+centred order for display and coefficient plots.
+
+\subsection{Infinite intervals: \texttt{CompactFun}}
+\label{sec:compact}
+
+MATLAB Chebfun handles $[a,\infty)$ and $(-\infty,\infty)$ with
+\code{@unbndfun}, mapping the infinite interval onto $[-1,1]$ by a rational
+change of variables. ChebPy takes a different route, and the departure is
+deliberate.
+
+A \code{CompactFun} distinguishes two intervals. The \emph{logical} interval is
+what the user asked for and may have infinite endpoints. The \emph{numerical
+support} is the finite region outside which the function differs from its
+asymptotic limit by less than a tolerance. The constructor discovers the latter
+by probing outwards from a finite anchor --- the bounded endpoint for a
+semi-infinite interval, or the origin for the doubly-infinite case --- doubling
+the radius up to \code{numsupp\_max\_width} $= 10^6$ over at most
+\code{numsupp\_max\_probes} $= 30$ probes, and detecting where the tail has
+settled. Inside that region an ordinary \code{Chebtech} is stored; outside it
+the function is reported as a scalar constant, \code{tail\_left} or
+\code{tail\_right} (default $0$).
+
+The advantage is that the stored object is an ordinary Chebyshev
+representation, so every kernel of Section~\ref{sec:algorithms} applies
+unchanged and no rational map degrades the conditioning. The limitation is
+equally clear: the approach suits functions that decay to a constant, and
+integrals that diverge are detected and raise
+\code{DivergentIntegralError} rather than returning a meaningless finite
+number. For a finite logical interval, storage and logical intervals coincide
+and a \code{CompactFun} behaves exactly as a \code{Bndfun}.
+
+\subsection{Endpoint singularities: \texttt{Singfun}}
+\label{sec:singfun}
+
+A function such as $\sqrt{x}$ on $[0,1]$ or $\sqrt{x(1-x)}$ is analytic on the
+open interval but has a branch point at an endpoint. Its Chebyshev coefficients
+decay only algebraically (Theorem~\ref{thm:diff}), so the adaptive constructor
+runs to its iteration limit and returns a poor answer.
+
+\code{Singfun} removes the singularity by a change of variable. It is a sibling
+of \code{Bndfun} whose only structural novelty is that the bijection between
+the storage variable $t \in [-1,1]$ and the logical variable $x \in [a,b]$ is
+not affine but a \emph{slit-strip map} of Adcock and
+Richardson~\cite{adcock2013}, whose derivative vanishes super-algebraically at
+the clustered endpoint. For a left-clustered map with parameters $(L, \alpha)$,
+\begin{equation}
+  s(y) = \tfrac{L}{2}(y - 1), \qquad
+  \gamma = \tfrac{\alpha}{\pi}\log\!\bigl(e^{\pi/\alpha} - 1\bigr), \qquad
+  u(s) = \tfrac{\alpha}{\pi}
+         \log\!\bigl(1 + e^{\pi (s + \gamma)/\alpha}\bigr),
+  \label{eq:slit}
+\end{equation}
+with $x = a + (b-a)\,u(s(y))$; the shift $\gamma$ is chosen so that $u(0) = 1$.
+\code{SingleSlitMap} clusters at one endpoint, \code{DoubleSlitMap} at both.
+
+The composition $f \circ m$ is then analytic in a Bernstein ellipse around
+$[-1,1]$ and is resolved by ordinary Chebyshev interpolation to spectral
+accuracy. Everything that depends only on the map being a bijection ---
+evaluation, rootfinding, the binary operators --- is inherited from
+\code{Classicfun} unchanged. Only \code{sum}, \code{cumsum} and \code{diff}
+need bespoke implementations, because the constant-Jacobian shortcuts of
+Section~\ref{sec:architecture} no longer hold.
+
+The map does not quite cover $[a,b]$: the image of $[-1,1]$ omits a small gap
+of relative width \code{gap\_unit} at the clustered end, controlled by $L$.
+This is the price of the construction, and the parameters are exposed through
+\code{MapParams} so a user can trade coverage against conditioning.
+
+%==============================================================================
+\section{Applications}
+\label{sec:apps}
+
+\subsection{Quasimatrices}
+\label{sec:quasi}
+
+A \emph{quasimatrix} is an $\infty \times n$ matrix: $n$ columns, each a
+Chebfun on a common domain, with rows indexed by a continuum. The inner product
+$\int_a^b f(x) g(x)\, dx$ replaces the discrete dot product, and with that
+substitution much of dense linear algebra carries over. ChebPy's
+\code{Quasimatrix} implements QR by the Householder triangularisation of
+Trefethen~\cite{trefethen2010}, and from it the SVD, least-squares solves and
+polynomial fitting via \code{polyfit}.
+
+The continuous QR is the useful primitive: applied to the quasimatrix whose
+columns are $1, x, x^2, \ldots$, Gram--Schmidt would break down numerically at
+modest degree, whereas Householder triangularisation returns a numerically
+orthonormal basis --- the Legendre polynomials, up to scaling --- and does so
+stably.
+
+\subsection{Gaussian process regression}
+\label{sec:gpr}
+
+\code{chebpy.gpr} implements Gaussian process regression following Rasmussen
+and Williams~\cite{rasmussen2006} and the Chebfun \code{gpr} routine. Given
+observations $(x_i, y_i)$, it forms the posterior over functions and returns
+the posterior mean as a Chebfun, the variance as a Chebfun, and any requested
+posterior samples as a Quasimatrix.
+
+Returning Chebfuns rather than sampled arrays is the point. The posterior mean
+can immediately be differentiated, integrated or root-found; the credible band
+is a pair of Chebfuns whose crossings with a threshold are located by
+Section~\ref{sec:roots}'s rootfinder rather than by scanning a grid. A periodic
+kernel is available, in which case the posterior is built on Fourier technology
+(Section~\ref{sec:trig}).
+
+%==============================================================================
+\section{Implementation and validation}
+\label{sec:engineering}
+
+ChebPy targets Python 3.11--3.14 and depends only on NumPy and Matplotlib. Its
+development infrastructure is synchronised from a shared template, keeping the
+repository's own source clearly separated from generated configuration.
+
+The correctness bars are enforced mechanically rather than by convention. The
+test suite spans 23 modules covering every layer from the FFT kernels to the
+public API, and coverage is held at \textbf{100\%}; genuinely unreachable
+defensive branches must carry an explicit \code{pragma} with a stated reason,
+which makes each exemption reviewable rather than invisible. Docstring coverage
+is likewise held at 100\%, and the package type-checks cleanly under
+\code{mypy --strict} with two independent checkers in the continuous
+integration gate. Additional workflows run mutation testing, fuzzing,
+CodeQL analysis and dependency auditing.
+
+For a library whose value proposition is ``accurate to machine precision'', the
+significance of these bars is specific: a silent inaccuracy in a kernel such as
+\code{standard\_chop} or the colleague matrix would not crash anything. It
+would return plausible numbers that are wrong in the last several digits. Full
+branch coverage of the numerical paths is the practical defence.
+
+%==============================================================================
+\section{Conclusion}
+
+ChebPy makes functions into first-class objects by pairing one theorem with a
+handful of carefully chosen algorithms. The theorem is that Chebyshev
+interpolation converges geometrically for analytic functions and is
+near-optimal among polynomial approximations. The algorithms --- the FFT-based
+transform, the \code{standard\_chop} truncation test, the adaptive doubling
+constructor, Clenshaw and barycentric evaluation, the coefficient recurrences
+for calculus, and the colleague-matrix rootfinder with off-centre subdivision
+--- turn it into a system where \code{f.roots()} returns every root and
+\code{f.sum()} returns the integral to fifteen digits, with no grid chosen by
+the user.
+
+The architecture separates the reference-interval representation from its
+placement on a domain, which is what allows Fourier technology, infinite
+intervals and endpoint singularities to be added as new representations rather
+than as special cases threaded through the algorithms. The higher-level
+applications --- quasimatrices and Gaussian process regression --- then follow
+from the same principle applied once more: if functions are objects, then
+matrices of functions and distributions over functions are objects too.
+
+%==============================================================================
+\begin{thebibliography}{99}
+
+\bibitem{adcock2013}
+B.~Adcock and M.~Richardson,
+\emph{New exponential variable transform methods for functions with endpoint
+singularities},
+arXiv:1305.2643, 2013.
+
+\bibitem{aurentz2015}
+J.~L. Aurentz and L.~N. Trefethen,
+\emph{Chopping a Chebyshev series},
+arXiv:1512.01803, 2015.
+
+\bibitem{berrut2004}
+J.-P. Berrut and L.~N. Trefethen,
+\emph{Barycentric Lagrange interpolation},
+SIAM Review, 46(3):501--517, 2004.
+
+\bibitem{boyd2002}
+J.~P. Boyd,
+\emph{Computing zeros on a real interval through Chebyshev expansion and
+polynomial rootfinding},
+SIAM Journal on Numerical Analysis, 40(5):1666--1682, 2002.
+
+\bibitem{clenshaw1955}
+C.~W. Clenshaw,
+\emph{A note on the summation of Chebyshev series},
+Mathematics of Computation, 9(51):118--120, 1955.
+
+\bibitem{driscoll2014}
+T.~A. Driscoll, N.~Hale and L.~N. Trefethen (eds.),
+\emph{Chebfun Guide},
+Pafnuty Publications, Oxford, 2014.
+
+\bibitem{good1961}
+I.~J. Good,
+\emph{The colleague matrix, a Chebyshev analogue of the companion matrix},
+Quarterly Journal of Mathematics, 12(1):61--68, 1961.
+
+\bibitem{hale2014}
+N.~Hale and A.~Townsend,
+\emph{An algorithm for the convolution of Legendre series},
+SIAM Journal on Scientific Computing, 36(3):A1207--A1220, 2014.
+
+\bibitem{rasmussen2006}
+C.~E. Rasmussen and C.~K.~I. Williams,
+\emph{Gaussian Processes for Machine Learning},
+MIT Press, 2006.
+
+\bibitem{trefethen2000}
+L.~N. Trefethen,
+\emph{Spectral Methods in MATLAB},
+SIAM, Philadelphia, 2000.
+
+\bibitem{trefethen2010}
+L.~N. Trefethen,
+\emph{Householder triangularization of a quasimatrix},
+IMA Journal of Numerical Analysis, 30(4):887--897, 2010.
+
+\bibitem{trefethen2013}
+L.~N. Trefethen,
+\emph{Approximation Theory and Approximation Practice},
+SIAM, Philadelphia, 2013.
+
+\bibitem{chebfun}
+The Chebfun Developers,
+\emph{Chebfun --- numerical computing with functions},
+\url{http://www.chebfun.org/}.
+
+\end{thebibliography}
+
+\end{document}

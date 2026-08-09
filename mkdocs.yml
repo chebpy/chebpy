@@ -89,6 +89,7 @@ nav:
       - Quasimatrix Algebra: notebooks/4_quasimatrix.html
       - Gaussian Processes: notebooks/6_gaussian_process.html
       - Variance Swap Replication: notebooks/7_variance_swap.html
+  - Paper: paper/index.md
   - Reports:
       - Overview: reports.md
       - Test Report: reports/html-report/report.html

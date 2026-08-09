@@ -1,0 +1,34 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Paper
+#
+# Purpose: Compile the LaTeX paper (docs/paper/*.tex) to a PDF and publish it
+#          as a downloadable workflow artifact. Pushes the PDF to a paper branch.
+#
+# Trigger: On push/PR to main/master when docs/paper/** changes, or manual dispatch.
+
+name: "(RHIZA) PAPER"
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'docs/paper/**'
+      - '.github/workflows/rhiza_paper.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'docs/paper/**'
+      - '.github/workflows/rhiza_paper.yml'
+  workflow_dispatch:
+
+jobs:
+  paper:
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.3.2
+    secrets: inherit
+    permissions:
+      contents: write
