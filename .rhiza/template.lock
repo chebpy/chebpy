@@ -7,10 +7,9 @@ exclude:
 - book/marimo/notebooks/rhiza.py
 templates:
 - devcontainer
-- github
-- github-marimo
-- github-tests
-- github-book
+- github-paper
+profiles:
+- github-project
 files:
 - .bandit
 - .devcontainer/README.md
@@ -36,6 +35,7 @@ files:
 - .github/workflows/rhiza_fuzzing.yml
 - .github/workflows/rhiza_marimo.yml
 - .github/workflows/rhiza_mutation.yml
+- .github/workflows/rhiza_paper.yml
 - .github/workflows/rhiza_release.yml
 - .github/workflows/rhiza_scorecard.yml
 - .github/workflows/rhiza_weekly.yml
@@ -56,6 +56,7 @@ files:
 - .rhiza/make.d/doctor.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
+- .rhiza/make.d/paper.mk
 - .rhiza/make.d/python.mk
 - .rhiza/make.d/quality.mk
 - .rhiza/make.d/test.mk
@@ -80,5 +81,5 @@ files:
 - pytest.ini
 - ruff.toml
 - tests/test_rhiza_packaging.py
-synced_at: '2026-08-04T18:39:08Z'
+synced_at: '2026-08-09T04:25:35Z'
 strategy: merge
