@@ -9,3 +9,8 @@
 *.pdf
 *.synctex.gz
 *.toc
+
+# ...but chebpy.pdf is committed on purpose: the book (mkdocs/zensical) ships it
+# as a static asset under docs/paper/, and the book job has no LaTeX toolchain.
+# Regenerate with `make paper` and commit the result whenever chebpy.tex changes.
+!chebpy.pdf
