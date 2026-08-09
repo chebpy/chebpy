@@ -6,6 +6,9 @@ profiles:
 
 templates:
   - devcontainer
+  # Ships .github/workflows/rhiza_paper.yml, which compiles docs/paper/*.tex and
+  # publishes the PDF both as a workflow artifact and on the `paper` branch.
+  - github-paper
 
 exclude:
   - book/marimo/notebooks/rhiza.py  
