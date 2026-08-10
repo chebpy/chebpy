@@ -52,9 +52,11 @@ export UV_LINK_MODE=copy
 # Add to current PATH so subsequent commands can find uv
 export PATH="$INSTALL_DIR:$PATH"
 
-# Default to a lightweight dependency set in devcontainers.
+# Default to a lightweight dependency set in devcontainers. Only `test` is named: a
+# `lint` group would make `uv sync` fail outright on the projects that no longer declare
+# one, and it had nothing to install anyway — prek/uvx provision every linter.
 # Override with UV_SYNC_ARGS to install different groups.
-export UV_SYNC_ARGS="${UV_SYNC_ARGS:---group lint --group test}"
+export UV_SYNC_ARGS="${UV_SYNC_ARGS:---group test}"
 
 # Install dependencies with recovery options
 echo "📦 Installing project dependencies..."
@@ -77,11 +79,16 @@ else
 fi
 
 # Initialize pre-commit hooks if configured with fallback
+#
+# prek, and `-c`, to match what `make install` and `make fmt` do. This installed a
+# `pre-commit` shim until now — a leftover from the runner swap (ADR 0009) — so a
+# devcontainer got a commit-time gate driven by a different runner than the one its
+# `make fmt` uses, and pulled the Python pre-commit package to do it.
 if [ -f .pre-commit-config.yaml ]; then
     echo "🔧 Setting up pre-commit hooks..."
-    if ! "$UVX_BIN" pre-commit install 2>/dev/null; then
+    if ! "$UVX_BIN" prek install -c .pre-commit-config.yaml 2>/dev/null; then
         echo "⚠️  WARNING: Pre-commit hook installation failed (non-critical)"
-        echo "   You can manually install later with: uvx pre-commit install"
+        echo "   You can manually install later with: uvx prek install"
         echo "   Continuing with bootstrap..."
     else
         echo "✓ Pre-commit hooks configured successfully"

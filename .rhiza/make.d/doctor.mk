@@ -1,9 +1,18 @@
 ## .rhiza/make.d/doctor.mk - Developer prerequisite diagnostics
+#
+# Core checks only the tools it needs whatever the language: uv, make, git. A language
+# layer appends its own diagnostics with a second `doctor::` rule — double-colon, like
+# `pre-install::` and `test::`, so each rule runs in turn and a layer never has to know
+# what core already checked. rust.mk uses this to catch a cargo that is not
+# rustup-managed, which no version check would notice.
+#
+# Each rule runs in its own shell, so `failed` below is local to this one: a layer's rule
+# reports and exits on its own account, and `make doctor` fails if any rule does.
 
 .PHONY: doctor
 
 ##@ Dev
-doctor: ## verify local prerequisites and print actionable guidance
+doctor:: ## verify local prerequisites and print actionable guidance
 	@failed=0; \
 	version_ge() { \
 		awk -v a="$$1" -v b="$$2" 'BEGIN { \
@@ -21,20 +30,20 @@ doctor: ## verify local prerequisites and print actionable guidance
 	check_tool() { \
 		tool="$$1"; min="$$2"; install_url="$$3"; version_cmd="$$4"; gnu_required="$$5"; \
 		if ! command -v "$$tool" >/dev/null 2>&1; then \
-			printf "${RED}[❌]${RESET} %-9s missing — install: %s\n" "$$tool" "$$install_url"; \
+			printf "${RED}[FAIL]${RESET} %-11s missing - install: %s\n" "$$tool" "$$install_url"; \
 			failed=1; \
 			return; \
 		fi; \
 		version="$$(eval "$$version_cmd" 2>/dev/null)"; \
 		if [ -z "$$version" ]; then \
-			printf "${RED}[❌]${RESET} %-9s unknown version (required ≥ %s)\n" "$$tool" "$$min"; \
+			printf "${RED}[FAIL]${RESET} %-11s unknown version (required >= %s)\n" "$$tool" "$$min"; \
 			failed=1; \
 			return; \
 		fi; \
 		extra=""; \
 		if [ "$$gnu_required" = "gnu" ] && ! make --version 2>/dev/null | grep -q '^GNU Make'; then \
 			extra=" (GNU required)"; \
-			printf "${RED}[❌]${RESET} %-9s %-8s < %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
+			printf "${RED}[FAIL]${RESET} %-11s %-8s < %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
 			failed=1; \
 			return; \
 		fi; \
@@ -42,12 +51,12 @@ doctor: ## verify local prerequisites and print actionable guidance
 			if [ "$$gnu_required" = "gnu" ]; then \
 				extra=" (GNU required)"; \
 			fi; \
-			printf "${GREEN}[✅]${RESET} %-9s %-8s ≥ %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
+			printf "${GREEN}[ OK ]${RESET} %-11s %-8s >= %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
 		else \
 			if [ "$$gnu_required" = "gnu" ]; then \
 				extra=" (GNU required)"; \
 			fi; \
-			printf "${RED}[❌]${RESET} %-9s %-8s < %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
+			printf "${RED}[FAIL]${RESET} %-11s %-8s < %s%s\n" "$$tool" "$$version" "$$min" "$$extra"; \
 			failed=1; \
 		fi; \
 	}; \

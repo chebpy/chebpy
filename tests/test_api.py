@@ -89,6 +89,44 @@ def test_chebfun_raises() -> None:
         chebfun("asdfasdf")
 
 
+def test_chebfun_raises_describes_the_failure() -> None:
+    """Test that the ValueError message explains the failure rather than echoing the input."""
+    with pytest.raises(ValueError) as excinfo:
+        chebfun("asdfasdf")
+
+    message = str(excinfo.value)
+    # the offending input is quoted, so the caller can see what was rejected
+    assert "'asdfasdf'" in message
+    # ...but the message also says what would have been accepted
+    assert "expected None, a callable" in message
+    assert "a number" in message
+    # and the underlying conversion failure is preserved for debugging
+    assert isinstance(excinfo.value.__cause__, ValueError)
+
+
+@pytest.mark.parametrize("bad", [[1, 2], {"a": 1}, (1, 2), {1, 2}])
+def test_chebfun_unconvertible_type_raises_typeerror(bad: object) -> None:
+    """Test that inputs of an unconvertible type raise a described TypeError."""
+    with pytest.raises(TypeError) as excinfo:
+        chebfun(bad)  # ty: ignore[invalid-argument-type]
+
+    message = str(excinfo.value)
+    # the message names chebfun's contract rather than leaking float()'s wording
+    assert "cannot construct a Chebfun from" in message
+    assert "expected None, a callable" in message
+    # the type is preserved, so callers already catching TypeError keep working
+    assert isinstance(excinfo.value.__cause__, TypeError)
+
+
+def test_chebfun_overflowing_int_raises_valueerror() -> None:
+    """Test that an int too large for a float is reported as a ValueError."""
+    with pytest.raises(ValueError) as excinfo:
+        chebfun(10**400)
+
+    assert "cannot construct a Chebfun from" in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, OverflowError)
+
+
 def test_pwc() -> None:
     """Test creating piecewise constant functions."""
     dom = [-1, 0, 1]
@@ -202,6 +240,8 @@ def test_equifun_rejects_invalid_values(values: list[object], match: str) -> Non
         ([-1.0, 0.0, 1.0], "exactly two"),
         ([-np.inf, 1.0], "finite"),
         ([0.0, np.inf], "finite"),
+        ([1.0, -1.0], "strictly increasing"),
+        ([1.0, 1.0], "strictly increasing"),
     ],
 )
 def test_equifun_rejects_invalid_domains(domain: list[float], match: str) -> None:

@@ -1,16 +1,15 @@
-sha: b0748ea2ac6b1b0e3bbf76470b717427cf22a289
+sha: 996d5df684d8967907d883e43e0d28376b0ac140
 repo: jebel-quant/rhiza
 host: github
-ref: v1.1.2
+ref: v1.3.2
 include: []
 exclude:
 - book/marimo/notebooks/rhiza.py
 templates:
 - devcontainer
-- github
-- github-marimo
-- github-tests
-- github-book
+- github-paper
+profiles:
+- github-project
 files:
 - .bandit
 - .devcontainer/README.md
@@ -27,6 +26,7 @@ files:
 - .github/pull_request_template.md
 - .github/release.yml
 - .github/rulesets/main-branch-protection.json
+- .github/rulesets/tag-protection.json
 - .github/secret_scanning.yml
 - .github/workflows/rhiza_benchmark.yml
 - .github/workflows/rhiza_book.yml
@@ -35,30 +35,30 @@ files:
 - .github/workflows/rhiza_fuzzing.yml
 - .github/workflows/rhiza_marimo.yml
 - .github/workflows/rhiza_mutation.yml
+- .github/workflows/rhiza_paper.yml
 - .github/workflows/rhiza_release.yml
 - .github/workflows/rhiza_scorecard.yml
-- .github/workflows/rhiza_sync.yml
 - .github/workflows/rhiza_weekly.yml
 - .gitignore
 - .pre-commit-config.yaml
 - .python-version
-- .rhiza/.cfg.toml
 - .rhiza/.env
 - .rhiza/.gitignore
-- .rhiza/.rhiza-version
 - .rhiza/assets/rhiza-logo.svg
 - .rhiza/completions/README.md
 - .rhiza/completions/rhiza-completion.bash
 - .rhiza/completions/rhiza-completion.zsh
 - .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
+- .rhiza/make.d/completions.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
 - .rhiza/make.d/doctor.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
+- .rhiza/make.d/paper.mk
+- .rhiza/make.d/python.mk
 - .rhiza/make.d/quality.mk
-- .rhiza/make.d/releasing.mk
 - .rhiza/make.d/test.mk
 - .rhiza/rhiza.mk
 - .rhiza/semgrep.yml
@@ -66,7 +66,9 @@ files:
 - .rhiza/tests/conftest.py
 - .rhiza/tests/test_docstrings.py
 - .rhiza/tests/test_pyproject.py
+- .rhiza/tests/test_readme.py
 - .rhiza/tests/test_readme_validation.py
+- .rhiza/tests/test_release_tags.py
 - Makefile
 - cliff.toml
 - docs/assets/rhiza-logo.svg
@@ -78,5 +80,6 @@ files:
 - docs/mkdocs-base.yml
 - pytest.ini
 - ruff.toml
-synced_at: '2026-07-10T10:22:31Z'
+- tests/test_rhiza_packaging.py
+synced_at: '2026-08-09T04:25:35Z'
 strategy: merge

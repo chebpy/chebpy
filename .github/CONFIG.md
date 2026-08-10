@@ -3,18 +3,15 @@
 This document describes the secrets used by the Rhiza-provided GitHub Actions workflows
 (`.github/workflows/rhiza_*.yml`) and how to configure them.
 
-## PAT_TOKEN (template sync)
+## PAT_TOKEN
 
-The sync workflow (`.github/workflows/rhiza_sync.yml`) keeps your repository up to date with the
-upstream Rhiza template. It commits the synced files directly to a branch or opens a pull request.
+Some workflows may need to push changes to files under `.github/workflows/`. The
+automatic `github.token` **cannot** do that — GitHub rejects such pushes unless
+the token carries the `workflow` scope. If you need it, create a Personal Access
+Token (PAT) with the `workflow` scope and store it as a repository secret named
+`PAT_TOKEN`.
 
-By default the workflow authenticates with the automatic `github.token`. That token **cannot push
-changes to files under `.github/workflows/`** — GitHub rejects such pushes unless the token has the
-`workflow` scope. Since template syncs regularly update workflow files, you should configure a
-Personal Access Token (PAT) with that scope and store it as a repository secret named `PAT_TOKEN`.
-
-If `PAT_TOKEN` is not configured, the workflow falls back to `github.token` and prints a warning.
-Syncs that touch only non-workflow files will still succeed.
+If `PAT_TOKEN` is not configured, workflows fall back to `github.token`.
 
 ### Creating the token
 

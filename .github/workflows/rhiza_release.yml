@@ -26,9 +26,10 @@
 #   7. 🐳 Publish Devcontainer - Build and publish devcontainer image (conditional)
 #   8. ✅ Finalize Release - Publish the GitHub release with links
 #
-# 📄 CHANGELOG: not updated here. The rhiza-tools `bump` command folds a freshly
-# generated CHANGELOG.md into the version-bump commit (git-cliff pre-commit hook),
-# so the tagged commit already carries the changelog — no separate post-tag commit.
+# 📄 CHANGELOG: not updated here. The release process (rhiza-claude `/release`)
+# folds a freshly generated CHANGELOG.md into the version-bump commit before the
+# tag is pushed, so the tagged commit already carries the changelog — no separate
+# post-tag commit.
 #
 # 📦 SBOM Generation:
 #   - Generated using CycloneDX format (industry standard for software supply chain security)
@@ -126,7 +127,7 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -154,6 +155,48 @@ jobs:
               echo "::warning::Release '$TAG' exists as a draft. Will proceed to update it."
             fi
           fi
+
+      - name: Ensure the tagged commit is reachable from a branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.set_tag.outputs.tag }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Backstop for issue #1454: a release cut on a branch that is then
+          # squash-merged leaves the tag on the pre-squash commit, and the squash
+          # puts the same content on the default branch under a new SHA. The tag is
+          # then permanently orphaned — no branch contains it, `git describe` skips
+          # the release, and a git-cliff regeneration silently deletes that version's
+          # CHANGELOG section because it cannot place a boundary at an unreachable
+          # tag. Publishing from such a tag is never intended, so refuse it.
+          # The checkout above uses fetch-depth: 0; this fetch only adds the remote
+          # branch refs, which a tag-push checkout does not need otherwise.
+          git fetch --no-tags --quiet origin '+refs/heads/*:refs/remotes/origin/*'
+
+          if [ -z "$DEFAULT_BRANCH" ]; then
+            DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
+          fi
+          if ! git rev-parse --verify --quiet "refs/remotes/origin/$DEFAULT_BRANCH" >/dev/null; then
+            echo "::error::Cannot resolve the default branch 'origin/$DEFAULT_BRANCH' — refusing to release without a reachability check."
+            exit 1
+          fi
+
+          COMMIT=$(git rev-parse "$TAG^{commit}")
+          if git merge-base --is-ancestor "$COMMIT" "refs/remotes/origin/$DEFAULT_BRANCH"; then
+            echo "✅ $TAG ($COMMIT) is an ancestor of $DEFAULT_BRANCH"
+            exit 0
+          fi
+
+          # Reachable from some other branch: a maintenance/hotfix release. Legitimate,
+          # but a changelog regenerated from the default branch still cannot see it.
+          BRANCHES=$(git branch -r --contains "$COMMIT" --format='%(refname:short)')
+          if [ -n "$BRANCHES" ]; then
+            echo "::warning::Tag $TAG is not an ancestor of $DEFAULT_BRANCH; it is contained in: $(echo "$BRANCHES" | tr '\n' ' '). A CHANGELOG regenerated from $DEFAULT_BRANCH will not include this release."
+            exit 0
+          fi
+
+          echo "::error::Tag $TAG points at $COMMIT, which no branch contains. It is most likely a pre-squash commit from a squash-merged release branch: re-tag the merged commit on $DEFAULT_BRANCH and delete this tag (issue #1454)."
+          exit 1
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7.6.0
@@ -211,7 +254,7 @@ jobs:
       attestations: write   # SLSA provenance + SBOM attestations (public repos only)
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -221,7 +264,7 @@ jobs:
           version: "0.11.16"
 
       - name: Configure git auth for private packages
-        uses: jebel-quant/rhiza/.github/actions/configure-git-auth@v1.1.2
+        uses: jebel-quant/actions/configure-git-auth@6d52725ca371d609489c5b50236965ad70bbe528 # v1
         with:
           token: ${{ secrets.GH_PAT }}
 
@@ -260,7 +303,7 @@ jobs:
 
       - name: Install Python for SBOM generation
         if: hashFiles('pyproject.toml') != ''
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
         with:
           python-version-file: .python-version
 
@@ -286,7 +329,7 @@ jobs:
         # The XML format is provided for compatibility but doesn't need separate attestation.
         id: attest-sbom
         if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
-        uses: actions/attest@v4.1.0
+        uses: actions/attest@v4.2.1
         with:
           subject-path: sbom.cdx.json
           sbom-path: sbom.cdx.json
@@ -313,7 +356,7 @@ jobs:
       - name: Generate SLSA provenance attestations
         id: provenance
         if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         with:
           subject-path: dist/*
 
@@ -341,7 +384,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -392,7 +435,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -430,7 +473,7 @@ jobs:
       # repository-url and password only used for custom feeds, not for PyPI with OIDC
       - name: Publish to PyPI
         if: ${{ steps.check_dist.outputs.should_publish == 'true' }}
-        uses: pypa/gh-action-pypi-publish@v1.14.0
+        uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
           packages-dir: dist/
           skip-existing: true
@@ -449,7 +492,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -468,7 +511,7 @@ jobs:
 
       - name: Set up Python
         if: steps.check_conda.outputs.should_generate == 'true'
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
         with:
           python-version-file: .python-version
 
@@ -528,7 +571,7 @@ jobs:
       image_name: ${{ steps.image_name.outputs.image_name }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -557,7 +600,7 @@ jobs:
 
       - name: Login to Container Registry
         if: steps.check_publish.outputs.should_publish == 'true'
-        uses: docker/login-action@v4.2.0
+        uses: docker/login-action@v4.6.0
         with:
           registry: ${{ steps.registry.outputs.registry }}
           username: ${{ github.repository_owner }}
@@ -615,7 +658,7 @@ jobs:
       contents: write   # Needed to undraft/publish the GitHub release
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.1.0
         with:
           fetch-depth: 0
 
@@ -632,7 +675,7 @@ jobs:
           uv sync --all-extras --all-groups --frozen
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
 
       - name: Generate Devcontainer Link
         id: devcontainer_link

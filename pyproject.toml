@@ -5,6 +5,12 @@ description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
 readme = "README.md"
 requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 
@@ -16,7 +22,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.23.14",
+    "marimo==0.23.16",
     "pandas>=2.2",
     "plotly",
 ]
@@ -59,3 +65,29 @@ unsupported-operator = "ignore"
 # is carried by descriptive test names and assertions rather than docstrings.
 # src/ (and the Rhiza-managed .rhiza/tests and .rhiza/utils) stay fully covered.
 exclude = ["tests"]
+
+# Must live here rather than in .rhiza/.cfg.toml: that path is never auto-discovered,
+# so bump-my-version silently fell back to `git describe` and could cut a release at
+# an already-published version. With the table here, [project].version above is read
+# and rewritten natively — so no current_version key and no [[tool.bumpversion.files]]
+# entry for it, either of which would duplicate the version string and then drift.
+[tool.check_test_layout]
+# Tests are flat per-module (tests/test_<name>.py) rather than mirroring the
+# src/chebpy/ package depth, so path-parity reports every module twice — once as a
+# missing tests/chebpy/test_<name>.py, once as an orphan tests/test_<name>.py — while
+# in fact all 25 modules are covered. Per-module coverage is guaranteed instead by
+# COVERAGE_FAIL_UNDER = 100 in the Makefile, which is the condition the checker
+# documents for opting out.
+#
+# Keep the reason free of a literal `%`: radon feeds the whole of this file to
+# configparser, which reads `%` as interpolation syntax and dies before analysing
+# anything. See https://github.com/chebpy/chebpy/issues/457.
+enforce = false
+reason = "Tests are flat per-module rather than mirroring src/chebpy/ package depth; per-module coverage is guaranteed by the full-coverage gate in `make test`."
+
+[tool.bumpversion]
+allow_dirty = false
+# /rhiza:release commits and tags itself, so that the changelog lands in the bump
+# commit; a bare `bump-my-version bump` would add a second commit and a duplicate tag.
+commit = false
+tag = false
