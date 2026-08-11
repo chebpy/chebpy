@@ -1,2 +1,19 @@
+# Bandit configuration. This file — not the pre-commit hook's args — is the
+# single source of truth for bandit's scope, because it is the only part any
+# other runner can see. CodeFactor, IDE plugins and a contributor typing
+# `bandit -r .` all read `.bandit` and none of them read our hook args, so
+# scope kept in the args made every external analyser disagree with CI (#1493).
+#
+# Both spellings of each path are listed deliberately. Bandit matches an
+# exclude entry against the path string it is handed, and that string depends on
+# how it was invoked: a recursive `bandit -r .` discovers `./tests/foo.py`,
+# whereas pre-commit passes `tests/foo.py`. So `./tests` alone silently covers
+# only the recursive case and `tests` alone only the pre-commit case — a
+# one-spelling list looks correct and half-works. Verified in
+# tests/security/test_security_patterns.py, which runs bandit both ways.
+#
+# Note these are *added* to bandit's own defaults (.git, __pycache__, .tox,
+# .eggs, …), so those need no repeating here.
 [bandit]
+exclude = tests,./tests,.rhiza/tests,./.rhiza/tests,.venv,./.venv
 skips = B101
