@@ -202,6 +202,7 @@ Example:
 ```python
 from hypothesis import given, strategies as st, example
 
+
 @given(version=st.from_regex(r"^\d+\.\d+\.\d+$", fullmatch=True))
 @example(version="0.0.0")  # Test specific edge case
 def test_version_parsing(version):
