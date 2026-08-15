@@ -120,7 +120,8 @@ with prefs as local_prefs:
 `eps` is a construction tolerance, not a certified maximum error.  It controls
 the coefficient chopping test used during construction, but the final pointwise
 error also depends on smoothness, conditioning, floating-point roundoff, and
-whether the function is resolved on the chosen interval.  In practice, validate
+whether the function is resolved on the chosen interval.  ChebPy does not
+currently provide a certified maximum-error bound.  In practice, validate
 sensitive approximations against extra sample points:
 
 ```python
@@ -135,11 +136,22 @@ x_test = np.linspace(-1, 1, 1001)
 err_est = np.max(np.abs(g(x_test) - f(x_test)))
 ```
 
+This is an error estimate over the selected test points, not a bound between
+them.  Denser or problem-specific validation points may be needed when the
+function has narrow or rapidly varying features.
+
 The adaptive constructor also uses an absolute zero test.  On each interval it
 sets the approximation to zero when all sampled values have magnitude at most
 `eps * max(hscale, 1)`, where `hscale` is ChebPy's horizontal scale for that
 interval.  Raising `eps` can therefore erase functions whose overall amplitude
 is smaller than this threshold, even when their relative variation matters.
+
+Lowering `eps` below its default, `numpy.finfo(float).eps`, may request a longer
+polynomial and reduce truncation error for a difficult function, but it cannot
+provide floating-point accuracy beyond machine precision.  The requested
+tolerance is then below roundoff and may simply drive construction to
+`maxpow2`.  Use independent validation to decide whether the longer
+approximation is useful.
 
 The example above is deliberately difficult at `x = 0`: `abs(x)**1.8` is not
 twice differentiable there.  A single global polynomial therefore converges only

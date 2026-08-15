@@ -42,7 +42,8 @@ by default). This means:
 
 - Smooth functions are represented compactly (low degree)
 - Functions with localised features may require breakpoint detection
-- The resulting representation is accurate to roughly 15 digits
+- Well-resolved smooth functions are often accurate to nearly machine precision;
+  nonsmooth or under-resolved functions can be much less accurate
 
 See [Accuracy and Preferences](features/approximation.md#accuracy-and-preferences)
 for how `eps`, `maxpow2`, and non-convergence warnings affect adaptive
