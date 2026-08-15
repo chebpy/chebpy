@@ -170,11 +170,12 @@ def branch_switch_roots(diff: Chebfun, roots: np.ndarray) -> np.ndarray:
             interval_signs[idx] = np.sign(value)
 
     def nearest_nonzero(start: int, step: int) -> float:
+        """Return the nearest non-zero interval sign in ``step`` direction."""
         idx = start
         while 0 <= idx < interval_signs.size:
             sign = interval_signs[idx]
             if sign != 0:
-                return sign
+                return float(sign)
             idx += step
         return 0.0
 

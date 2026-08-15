@@ -651,6 +651,9 @@ class TestDomainBreakingOps:
         )
         switch_roots = branch_switch_roots(diff, historical_roots)
         np.testing.assert_allclose(switch_roots, [0.0], atol=1e-12)
+        assert branch_switch_roots(diff, np.array([])).size == 0
+        assert branch_switch_roots(f1 - f1, historical_roots).size == 0
+        assert branch_switch_roots(f1 - f1, np.array([0.0, 0.0])).size == 0
 
         g = f1.maximum(f2)
 
