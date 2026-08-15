@@ -329,7 +329,7 @@ jobs:
         # The XML format is provided for compatibility but doesn't need separate attestation.
         id: attest-sbom
         if: hashFiles('pyproject.toml') != '' && github.event.repository.private == false
-        uses: actions/attest@v4.2.1
+        uses: actions/attest@v4.2.2
         with:
           subject-path: sbom.cdx.json
           sbom-path: sbom.cdx.json
@@ -356,7 +356,7 @@ jobs:
       - name: Generate SLSA provenance attestations
         id: provenance
         if: steps.buildable.outputs.buildable == 'true' && github.event.repository.private == false
-        uses: actions/attest-build-provenance@v4.1.1
+        uses: actions/attest-build-provenance@v4.2.2
         with:
           subject-path: dist/*
 
