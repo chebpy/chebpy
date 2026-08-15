@@ -11,7 +11,9 @@ from collections.abc import Callable
 from typing import Any
 
 from .bndfun import Bndfun
+from .maps import MapParams
 from .settings import _preferences as prefs
+from .singfun import Singfun
 from .utilities import Domain
 
 
@@ -67,11 +69,6 @@ def generate_singular_funs(
     Raises:
         ValueError: If ``sing`` is not one of the recognised values.
     """
-    # Local import: chebfun and singfun are siblings under classicfun and
-    # would otherwise risk a cyclic top-level import.
-    from .maps import MapParams
-    from .singfun import Singfun
-
     if sing not in ("left", "right", "both"):
         msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
         raise ValueError(msg)
