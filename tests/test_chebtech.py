@@ -16,6 +16,7 @@ import pytest
 
 from chebpy.algorithms import standard_chop
 from chebpy.chebtech import Chebtech
+from chebpy.exceptions import BadFunLengthArgument
 from tests.generic.algebra import *  # noqa: F403
 from tests.generic.class_usage import test_constfun_value  # noqa: F401
 from tests.generic.complex import (  # noqa: F401
@@ -83,7 +84,7 @@ class TestConstruction:
 
     def test_initfun_fixedlen_n_none(self):
         """initfun_fixedlen raises ValueError when n is None."""
-        with pytest.raises(ValueError, match="n must be specified"):
+        with pytest.raises(BadFunLengthArgument, match="n must be specified"):
             Chebtech.initfun_fixedlen(np.sin, n=None)
 
     def test_imag_complex_chebtech(self):

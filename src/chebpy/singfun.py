@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from .classicfun import Classicfun, techdict
+from .exceptions import InvalidSingularitySide, NotSubinterval
 from .maps import DoubleSlitMap, MapParams, SingleSlitMap
 from .settings import _preferences as prefs
 from .utilities import Interval, IntervalMap
@@ -49,14 +50,14 @@ def _build_map(a: float, b: float, sing: str, params: MapParams) -> IntervalMap:
             or :class:`DoubleSlitMap` (for ``"both"``).
 
     Raises:
-        ValueError: If ``sing`` is not one of the recognised values.
+        InvalidSingularitySide: If ``sing`` is not one of the recognised values.
     """
     if sing in ("left", "right"):
         return SingleSlitMap(a, b, params, side=sing)
     if sing == "both":
         return DoubleSlitMap(a, b, params)
     msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
-    raise ValueError(msg)
+    raise InvalidSingularitySide(msg)
 
 
 class Singfun(Classicfun):
@@ -336,8 +337,6 @@ class Singfun(Classicfun):
         from .bndfun import Bndfun
 
         if subinterval not in self.interval:
-            from .exceptions import NotSubinterval
-
             raise NotSubinterval(self.interval, subinterval)
         a, b = float(self._interval[0]), float(self._interval[1])
         sa, sb = float(subinterval[0]), float(subinterval[1])

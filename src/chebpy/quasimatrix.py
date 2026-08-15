@@ -19,6 +19,7 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 
 from .chebfun import Chebfun
+from .exceptions import SupportMismatch
 
 
 class Quasimatrix:
@@ -57,7 +58,7 @@ class Quasimatrix:
             for k, col in enumerate(cols[1:], 1):
                 if col.support != ref:
                     msg = f"Column {k} support {col.support} does not match column 0 support {ref}"
-                    raise ValueError(msg)
+                    raise SupportMismatch(msg)
         self.columns: list[Chebfun] = cols
 
     # ------------------------------------------------------------------

@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from .bndfun import Bndfun
+from .exceptions import InvalidSingularitySide
 from .settings import _preferences as prefs
 from .utilities import Domain
 
@@ -65,7 +66,7 @@ def generate_singular_funs(
         list: Per-piece funs ready to feed to :class:`Chebfun`.
 
     Raises:
-        ValueError: If ``sing`` is not one of the recognised values.
+        InvalidSingularitySide: If ``sing`` is not one of the recognised values.
     """
     # Local import: chebfun and singfun are siblings under classicfun and
     # would otherwise risk a cyclic top-level import.
@@ -74,7 +75,7 @@ def generate_singular_funs(
 
     if sing not in ("left", "right", "both"):
         msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
-        raise ValueError(msg)
+        raise InvalidSingularitySide(msg)
     if params is None:
         params = MapParams()
     dom = Domain(domain if domain is not None else prefs.domain)

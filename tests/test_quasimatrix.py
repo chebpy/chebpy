@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from chebpy import Quasimatrix, chebfun, polyfit
+from chebpy.exceptions import SupportMismatch
 
 
 @pytest.fixture
@@ -304,7 +305,7 @@ class TestMisc:
 
     def test_support_mismatch(self, x):
         y = chebfun("x", [0, 2])
-        with pytest.raises(ValueError, match="support"):
+        with pytest.raises(SupportMismatch, match="support"):
             Quasimatrix([x, y])
 
     def test_unsupported_norm(self, A):
