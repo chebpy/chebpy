@@ -12,8 +12,9 @@ upper at module scope):
 
 ```text
 api · quasimatrix · gpr                     high-level API / applications
-chebfun (+ _convolution, _pointwise,        piecewise container + its impl modules
-         _singular_construction, _ufuncs)
+chebfun (+ _construction, _convolution,     piecewise container + its impl modules
+         _pointwise, _singular_construction,
+         _ufuncs)
 bndfun · compactfun · singfun               Classicfun pieces
 classicfun                                  interval-mapped base ([-1,1] ↔ [a,b])
 chebtech · trigtech                         reference-interval representations (Onefun)
@@ -30,9 +31,11 @@ a container of `Fun` pieces, not part of the `Fun` hierarchy. `Chebfun`'s public
 methods are thin wrappers that delegate to the `_convolution` / `_pointwise` /
 `_singular_construction` / `_ufuncs` implementation modules.
 
-Known layering tech debt: `utilities.generate_funs()` reaches up to
-`compactfun.CompactFun` via a function-local import (tracked in
-[#417](https://github.com/chebpy/chebpy/issues/417)).
+`_construction.generate_funs()` and `_singular_construction`'s
+`generate_singular_funs()` are siblings: both build the per-piece `Fun` list a
+`Chebfun` wraps, dispatching between `Bndfun`, `CompactFun` and `Singfun`. They
+sit at this layer — rather than in `utilities` — precisely because that dispatch
+means knowing about the `Classicfun` pieces.
 
 ## Source ownership: this repo vs Rhiza
 
