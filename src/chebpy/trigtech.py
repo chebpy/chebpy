@@ -130,6 +130,25 @@ class Trigtech(Smoothfun, ABC):
     abstract base and the concrete class: it is not further subclassed, but
     the ABC marker prevents accidental bare construction without going through
     a named constructor.
+
+    Examples:
+        A periodic function needs only a handful of Fourier modes, where the
+        Chebyshev constructor would need many more:
+
+        >>> import numpy as np
+        >>> f = Trigtech.initfun_adaptive(lambda x: np.cos(np.pi * x))
+        >>> f.size
+        3
+        >>> bool(abs(f(0.0) - 1.0) < 1e-13)
+        True
+        >>> bool(abs(f(1.0) + 1.0) < 1e-13)
+        True
+
+        Fixed-length construction samples on *n* equispaced points:
+
+        >>> g = Trigtech.initfun_fixedlen(lambda x: np.sin(np.pi * x), 16)
+        >>> g.size
+        16
     """
 
     # ------------------------------------------------------------------

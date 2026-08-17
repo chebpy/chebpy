@@ -261,6 +261,31 @@ class CompactFun(Classicfun):
         numerical_support: The finite storage interval.
         tail_left: Asymptotic value at ``-inf`` (``0.0`` if logical-left is finite).
         tail_right: Asymptotic value at ``+inf`` (``0.0`` if logical-right is finite).
+
+    Examples:
+        A Gaussian on the whole real line. The logical support is infinite,
+        but the discovered numerical support is finite:
+
+        >>> import numpy as np
+        >>> f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        >>> f.support.tolist()
+        [-inf, inf]
+        >>> a, b = f.numerical_support
+        >>> bool(np.isfinite(a) and np.isfinite(b))
+        True
+
+        Integration over the infinite interval recovers ``sqrt(pi)``:
+
+        >>> bool(abs(f.sum() - np.sqrt(np.pi)) < 1e-12)
+        True
+
+        Outside the numerical support the function reports its asymptotic
+        limit rather than extrapolating the polynomial:
+
+        >>> f.tail_left, f.tail_right
+        (0.0, 0.0)
+        >>> float(f(1e6))
+        0.0
     """
 
     def __init__(

@@ -35,6 +35,33 @@ class Classicfun(Fun, ABC):
     The Classicfun class serves as a base class for specific implementations like Bndfun.
     It handles the mapping between the arbitrary interval and the standard domain,
     delegating the actual function representation to the underlying Onefun object.
+
+    Examples:
+        ``Classicfun`` is abstract; construct through a concrete subclass such
+        as :class:`~chebpy.bndfun.Bndfun`. The interval is carried by the
+        object, so evaluation and calculus happen in the user's coordinates
+        rather than on [-1, 1]:
+
+        >>> import numpy as np
+        >>> from chebpy.bndfun import Bndfun
+        >>> from chebpy.utilities import Interval
+        >>> f = Bndfun.initfun_adaptive(np.sin, Interval(0.0, np.pi))
+        >>> f.support.tolist()
+        [0.0, 3.141592653589793]
+        >>> bool(abs(f(np.pi / 2) - 1.0) < 1e-14)
+        True
+
+        The integral of sin over [0, pi] is 2:
+
+        >>> bool(abs(f.sum() - 2.0) < 1e-14)
+        True
+
+        The representation is delegated to a Onefun, which the interval map
+        wraps:
+
+        >>> from chebpy.chebtech import Chebtech
+        >>> isinstance(f.onefun, Chebtech)
+        True
     """
 
     # ``_singularity_priority`` lets mixed-type binary operations dispatch
