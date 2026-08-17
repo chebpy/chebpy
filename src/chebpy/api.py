@@ -12,6 +12,7 @@ import numpy as np
 from .algorithms import barywts2, chebpts2, funqui
 from .bndfun import Bndfun
 from .chebfun import Chebfun
+from .exceptions import InvalidDomain
 from .settings import _preferences as prefs
 from .utilities import Domain, Interval
 
@@ -130,17 +131,17 @@ def _validated_samples(values: np.ndarray | list[float | complex]) -> np.ndarray
 
 
 def _validated_interval(domain: np.ndarray | list[float] | None) -> Domain:
-    """Return *domain* as a Domain of two finite increasing endpoints, or raise ValueError."""
+    """Return *domain* as a Domain of two finite increasing endpoints, or raise InvalidDomain."""
     dom = np.asarray(prefs.domain if domain is None else domain, dtype=float)
     if dom.ndim != 1 or dom.size != 2:
         msg = "domain must contain exactly two endpoints"
-        raise ValueError(msg)
+        raise InvalidDomain(msg)
     if not np.all(np.isfinite(dom)):
         msg = "domain endpoints must be finite"
-        raise ValueError(msg)
+        raise InvalidDomain(msg)
     if dom[0] >= dom[1]:
         msg = "domain endpoints must be strictly increasing"
-        raise ValueError(msg)
+        raise InvalidDomain(msg)
     return Domain(dom)
 
 
@@ -157,8 +158,9 @@ def equifun(values: np.ndarray | list[float | complex], domain: np.ndarray | lis
         rational interpolant through the equispaced samples.
 
     Raises:
-        ValueError: If values are empty, non-numeric, not one-dimensional, or
-            if domain is not exactly two finite endpoints.
+        ValueError: If values are empty, non-numeric, or not one-dimensional.
+        InvalidDomain: If domain is not exactly two finite, strictly
+            increasing endpoints.
 
     Examples:
         >>> import numpy as np

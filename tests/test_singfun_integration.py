@@ -10,6 +10,7 @@ import pytest
 import chebpy
 from chebpy import chebfun
 from chebpy.bndfun import Bndfun
+from chebpy.exceptions import InvalidSingularitySide
 from chebpy.maps import MapParams
 from chebpy.singfun import Singfun
 
@@ -62,8 +63,8 @@ class TestChebfunSingKwarg:
         assert float(f.sum()) == pytest.approx(np.pi / 8.0, abs=1e-13)
 
     def test_invalid_sing_raises(self):
-        """An unrecognised ``sing`` keyword raises :class:`ValueError`."""
-        with pytest.raises(ValueError):
+        """An unrecognised ``sing`` keyword raises :class:`InvalidSingularitySide`."""
+        with pytest.raises(InvalidSingularitySide):
             chebfun(np.sqrt, [0.0, 1.0], sing="middle")
 
     def test_fixedlen_with_sing_raises(self):
