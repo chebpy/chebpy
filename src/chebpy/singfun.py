@@ -77,6 +77,29 @@ class Singfun(Classicfun):
       :meth:`~chebpy.classicfun.Classicfun.__call__` and
       :meth:`~chebpy.classicfun.Classicfun.roots` route through the
       non-affine map without further changes.
+
+    Examples:
+        ``sqrt`` has a branch-point singularity at the left endpoint, which a
+        plain polynomial approximation resolves only slowly. Declaring the
+        side clusters the points there instead:
+
+        >>> import numpy as np
+        >>> f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
+        >>> f.map.side
+        'left'
+
+        The integral of ``sqrt`` over [0, 1] is 2/3:
+
+        >>> bool(abs(f.sum() - 2.0 / 3.0) < 1e-10)
+        True
+
+        The map is non-affine, unlike the plain
+        :class:`~chebpy.utilities.Interval` a :class:`~chebpy.bndfun.Bndfun`
+        would carry:
+
+        >>> from chebpy.maps import SingleSlitMap
+        >>> isinstance(f.map, SingleSlitMap)
+        True
     """
 
     # Mixed-subclass binary ops (Singfun + Bndfun, etc.) reconstruct on the
