@@ -52,6 +52,30 @@ class Chebtech(Smoothfun, ABC):
 
     The user will rarely work with these classes directly so we make
     several assumptions regarding input data types.
+
+    Examples:
+        The adaptive constructor picks however many coefficients the function
+        needs to reach machine precision on [-1, 1]:
+
+        >>> import numpy as np
+        >>> f = Chebtech.initfun_adaptive(np.exp)
+        >>> bool(abs(f(0.0) - 1.0) < 1e-14)
+        True
+        >>> bool(abs(f(0.5) - np.exp(0.5)) < 1e-14)
+        True
+
+        A constant needs exactly one:
+
+        >>> c = Chebtech.initconst(3.0)
+        >>> c.size
+        1
+        >>> c.isconst
+        True
+
+        Coefficients are in the T_k basis, so the identity is ``[0, 1]``:
+
+        >>> Chebtech.initidentity().coeffs.tolist()
+        [0, 1]
     """
 
     @classmethod
