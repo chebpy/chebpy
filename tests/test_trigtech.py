@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from chebpy.exceptions import BadFunLengthArgument
 from chebpy.settings import DefaultPreferences
 from chebpy.settings import _preferences as prefs
 from chebpy.trigtech import Trigtech, _trig_adaptive
@@ -108,7 +109,7 @@ class TestConstruction:
         assert f.size == n
 
     def test_fixedlen_none_raises(self):
-        with pytest.raises(ValueError, match="n parameter"):
+        with pytest.raises(BadFunLengthArgument, match="n parameter"):
             Trigtech.initfun_fixedlen(sin, n=None)
 
     def test_initfun_delegates_adaptive(self):

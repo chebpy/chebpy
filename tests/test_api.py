@@ -14,6 +14,7 @@ import pytest
 
 import chebpy
 from chebpy import chebfun, equifun, pwc
+from chebpy.exceptions import InvalidDomain
 from chebpy.settings import DefaultPreferences
 
 
@@ -246,7 +247,7 @@ def test_equifun_rejects_invalid_values(values: list[object], match: str) -> Non
 )
 def test_equifun_rejects_invalid_domains(domain: list[float], match: str) -> None:
     """Test equifun rejects unsupported domains."""
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(InvalidDomain, match=match):
         equifun([1.0, 2.0], domain)
 
 

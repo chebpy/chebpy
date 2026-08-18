@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from chebpy.bndfun import Bndfun
-from chebpy.exceptions import NotSubinterval
+from chebpy.exceptions import InvalidSingularitySide, NotSubinterval
 from chebpy.maps import DoubleSlitMap, MapParams, SingleSlitMap
 from chebpy.singfun import Singfun
 from chebpy.utilities import Interval
@@ -71,8 +71,8 @@ class TestConstruction:
         assert f.size == n
 
     def test_invalid_sing_raises(self):
-        """An unrecognised ``sing`` keyword raises :class:`ValueError`."""
-        with pytest.raises(ValueError):
+        """An unrecognised ``sing`` keyword raises :class:`InvalidSingularitySide`."""
+        with pytest.raises(InvalidSingularitySide):
             Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="middle")
 
 

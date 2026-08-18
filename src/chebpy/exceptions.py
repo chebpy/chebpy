@@ -201,6 +201,28 @@ BadFunLengthArgument: type[ChebpyBaseError] = type(
 
 
 # ===============================================
+#    chebpy.singfun.Singfun exceptions
+# ===============================================
+
+# Exception raised when a singularity side is not one of the recognised values
+InvalidSingularitySide: type[ChebpyBaseError] = type(
+    "InvalidSingularitySide",
+    (ChebpyBaseError,),
+    {
+        "default_message": "The singularity side must be 'left', 'right', or 'both'",
+        "__doc__": """Exception raised when a singularity side is invalid.
+
+        Raised when the ``sing`` (or ``side``) argument naming which endpoints
+        of an interval carry a singularity is not one of the recognised
+        values. :class:`~chebpy.maps.SingleSlitMap` accepts ``"left"`` or
+        ``"right"``; the Singfun and Chebfun constructors additionally accept
+        ``"both"``.
+        """,
+    },
+)
+
+
+# ===============================================
 #    chebpy.compactfun.CompactFun exceptions
 # ===============================================
 
