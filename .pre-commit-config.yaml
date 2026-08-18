@@ -101,8 +101,8 @@ repos:
       # check-bumpversion-config asserts that bump-my-version can actually discover the
       # project's version config (issue #1453) — for this layer, the [tool.bumpversion]
       # table in pyproject.toml, since python-core deliberately ships no .bumpversion.toml.
-      # It ships as of v1.1.0; it stays off because the .rhiza/tests/test_pyproject.py this
-      # layer also ships enforces the same invariant one gate later.
+      # It ships as of v1.1.0; it stays off because pytest-rhiza's test_pyproject check —
+      # which this layer names in RHIZA_CHECKS — enforces the same invariant one gate later.
       # - id: check-bumpversion-config
       # check-template-bundles validates .rhiza/template.yml against the template repo's
       # remote bundle list, so it fires only when that file is staged — and unlike in the

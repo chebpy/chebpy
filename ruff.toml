@@ -122,9 +122,11 @@ line-ending = "auto"
 
 # File-specific rule exceptions
 [lint.per-file-ignores]
-# All test code, wherever it lives (project suite under tests/, smoke tests under
-# .rhiza/tests/, and their bundle copies under bundles/). This glob subsumes the
-# project suite; tests/**/*.py below adds project-suite-only allowances on top.
+# All test code, wherever it lives (the project suite under tests/, and the bundle
+# copies under bundles/). This glob subsumes the project suite; tests/**/*.py below adds
+# project-suite-only allowances on top. It used to cover a third tree, `.rhiza/tests/`,
+# which the template synced; since #1540 the rhiza checks are an installed dependency and
+# there is no template-owned Python in a consumer's tree to exempt.
 "**/tests/**/*.py" = [
     "ANN",      # tests prioritize readability and fixtures over strict annotation coverage
     "ARG",      # pytest fixtures are requested by name for their side effects, not always read
@@ -139,7 +141,8 @@ line-ending = "auto"
     "S607",     # partial executable paths (git, make) are intentional in test drivers
     "PLW1510",  # Allow subprocess without explicit check parameter
 ]
-# Project test suite only — allowances the synced .rhiza/tests should not inherit
+# Project test suite only — allowances the broader glob above should not hand to the
+# bundle copies under bundles/
 "tests/**/*.py" = [
     "ERA001",   # Allow commented out code in project tests
     "PLR2004",  # Allow magic values in project tests

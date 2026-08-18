@@ -17,6 +17,14 @@
 # `python.mk` / `python-core`. This bundle requires `python-core`, so both are always
 # present alongside it.
 
+# The one rhiza check this bundle owns, appended to core's accumulator (#1540). It was
+# the synced `.rhiza/tests/test_readme_validation.py`, and it lives here rather than in
+# `python-core` for the reason it always did: executing a README's `python` fences and
+# diffing them against the following `result` block only means something on a project that
+# *is* Python and has opted into the testing extras. Core keeps the neutral half — syntax-
+# checking `bash` fences — which every layer gets.
+RHIZA_CHECKS += pytest_rhiza.checks.test_readme_validation
+
 # Declare phony targets (they don't produce files)
 .PHONY: benchmark hypothesis-test stress mutation
 

@@ -11,9 +11,15 @@ Rhiza now includes two additional types of testing:
 
 ## README Code Block Testing
 
-The test file `.rhiza/tests/sync/test_readme_validation.py` automatically executes every `python`
-code block in `README.md` and checks that its output matches the adjacent ` ```result ` block. It
-also syntax-checks every `bash` block using `bash -n`.
+`make rhiza-test` automatically executes every `python` code block in `README.md` and checks
+that its output matches the adjacent ` ```result ` block. It also syntax-checks every `bash`
+block using `bash -n`.
+
+Both halves are checks in [pytest-rhiza](https://github.com/jebel-quant/pytest-rhiza), the
+package that gate installs: `test_readme_validation` (contributed by this bundle, since running
+`python` fences only means something on a Python project) and `test_readme` (contributed by
+`core`, since `bash -n` means the same thing in any language). Neither is a file in your
+repository — earlier template releases synced them into `.rhiza/tests/`.
 
 ### Skipping individual blocks with `+RHIZA_SKIP`
 
@@ -46,24 +52,25 @@ Property-based tests use the [Hypothesis](https://hypothesis.readthedocs.io/) li
 
 In a standard Rhiza project, there are two relevant locations for property-based tests:
 
-- **Project property-based tests** live in `tests/property/`. These are part of your normal test suite and are discovered by `pytest` via `pytest.ini:testpaths = tests`.
-- **Rhiza's own template/internal property-based tests** (if present) live in `.rhiza/tests/property/`. These are not part of your project's main test suite by default.
+Project property-based tests live in `tests/property/`. These are part of your normal test
+suite and are discovered by `pytest` via `pytest.ini:testpaths = tests`.
+
+There is no second location. Rhiza's own checks are an installed dependency of
+`make rhiza-test` rather than files in your tree, and they are conformance assertions about
+the repository — its README, manifest and release config — not property-based tests.
 
 ### Running Property-Based Tests
 
 In a typical setup, the Make targets map to these suites as follows:
 
 - `make test`: runs `pytest` over everything under `tests/` (including `tests/property/`).
-- `make rhiza-test`: runs Rhiza's internal tests under `.rhiza/tests/` (including `.rhiza/tests/property/` if any exist).
+- `make hypothesis-test`: runs `tests/property/` alone, with Hypothesis statistics.
 
 You can also invoke the corresponding `pytest` commands directly:
 
 ```bash
 # Run all project property-based tests (what make test covers)
 uv run pytest tests/property/ -v
-
-# Run Rhiza's internal/template property-based tests (if you have any in .rhiza)
-uv run pytest .rhiza/tests/property/ -v
 
 # Run project property-based tests with more examples (increase coverage)
 uv run pytest tests/property/ -v --hypothesis-max-examples=1000

@@ -17,7 +17,7 @@ And it is the only test a freshly synced project has. ``make test`` searches
 and **exits 0** — so a new repo passed ``make test``, and therefore ``make all``, while
 measuring nothing (#1476). That was the third instance of one pattern: Go had it until
 ``go-core`` shipped ``internal/version/version_test.go`` (#1467), and ``rhiza-test`` had
-it until the ``.rhiza/tests`` suite was actually delivered to every layer (#1469). Rust
+it until the rhiza checks were actually delivered to every layer (#1469). Rust
 never did, because ``cargo init --lib`` leaves an ``it_works`` test behind.
 
 Writing your own tests alongside this is the point. Deleting it and shipping nothing
@@ -28,7 +28,8 @@ output of ``/rhiza:init``, before the author has written a line. The warning bra
 deliberate; what it needed was something to find.
 
 Deliberately self-contained: it uses no fixtures, because this lives in *your* ``tests/``
-directory and must not depend on the ``conftest.py`` that ships with ``.rhiza/tests``.
+directory, and must not depend on the fixtures pytest-rhiza contributes to ``make
+rhiza-test``.
 """
 
 from __future__ import annotations
@@ -46,7 +47,8 @@ import pytest
 # rhiza's own repository this file is a *symlink* into `bundles/python-core/tests/`, and
 # `.resolve()` follows it — making the "project root" come out as `bundles/python-core`,
 # which has no pyproject.toml. The suite then skips for a plausible-looking wrong reason
-# instead of running. `.rhiza/tests/conftest.py` avoids the same trap the same way.
+# instead of running. pytest-rhiza's own ``latest_tag`` fixture avoids the same trap the
+# same way.
 _ROOT = Path(__file__).absolute().parent.parent
 
 
