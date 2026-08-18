@@ -15,5 +15,5 @@
 # Note these are *added* to bandit's own defaults (.git, __pycache__, .tox,
 # .eggs, …), so those need no repeating here.
 [bandit]
-exclude = tests,./tests,.rhiza/tests,./.rhiza/tests,.venv,./.venv
+exclude = tests,./tests,.venv,./.venv
 skips = B101

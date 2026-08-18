@@ -131,16 +131,92 @@ all: fmt deps test docs-coverage security license typecheck rhiza-test ## run al
 # contributes the folders it owns to DEPTRY_FOLDERS (and any per-folder ignores
 # to DEPTRY_IGNORE), so this target never needs to know which bundles are
 # present. The language layer itself contributes SOURCE_FOLDER when it exists; see e.g.
-# marimo.mk for a bundle that appends its own folder. Rhiza's own test folder
-# (.rhiza/tests) is deliberately excluded: its tooling is provisioned on the fly
-# via `uv run --with` in the individual targets, not declared in the project's
-# pyproject, so deptry (which validates against pyproject) would only emit noise
-# for it.
+# marimo.mk for a bundle that appends its own folder. There is no `.rhiza/tests` carve-out
+# any more: the rhiza checks are a pinned dependency of the `rhiza-test` gate rather than
+# files in the tree (#1540), so there is nothing for deptry to resolve against pyproject
+# and nothing to exclude.
 DEPTRY_FOLDERS ?=
 DEPTRY_IGNORE ?=
-ifneq ($(wildcard $(SOURCE_FOLDER)),)
-DEPTRY_FOLDERS += $(SOURCE_FOLDER)
-endif
+DEPTRY_FOLDERS += $(wildcard $(SOURCE_FOLDER))
+
+# The seed is deferred, and that is the whole point of the `$(wildcard ...)` rather than
+# the `ifneq ($(wildcard $(SOURCE_FOLDER)),)` guard that used to wrap this line (#1534).
+#
+# `?=` (and `+=` on a not-yet-defined variable) creates a *recursive* variable, so the
+# text appended here is expanded when a gate uses it — after every makefile has been
+# read. An `ifneq` is not: it is evaluated where it is written, which is while python.mk
+# itself is being parsed.
+#
+# That difference was load-bearing, because the root Makefile reads `local.mk` *after*
+# `include .rhiza/rhiza.mk`. A project whose source root is not `src/` and which set
+# `SOURCE_FOLDER` there — the file CLAUDE.md points developers at — had the conditional
+# already decided against it on the `?= src` default, so `deps`, `typecheck`, `security`,
+# `docs-coverage` and `test` each fell through to their empty-list branch and exited 0
+# having measured nothing. Silently: an empty folder list warns rather than fails, which
+# is the failure mode #1505, #1511 and #1516 each closed one gate at a time.
+#
+# Deferring it makes the accumulators independent of *where* SOURCE_FOLDER is set —
+# `.rhiza/.env`, the environment, the root Makefile above the include, the command line,
+# or `local.mk` below it all now agree. The non-existent case is unchanged: `$(wildcard)`
+# expands to nothing, so a project without the folder still gets an empty seed.
+
+# The same accumulator shape, for the other four path-scoped gates. `deps` has had
+# one since the bundle model began; `typecheck`, `security` and `docs-coverage` each
+# hard-coded SOURCE_FOLDER instead, so any Python a project keeps *outside* its source
+# root was unreachable by three of the four static gates (#1505). The mother repo is
+# the extreme case — it has no `src/` at all, so those three exited 0 having measured
+# nothing — but a downstream project with a `scripts/` or `tools/` directory has the
+# identical hole.
+#
+# COVERAGE_FOLDERS joined them in #1516, and it is the same bug one gate later: `test`
+# still passed `--cov=$(SOURCE_FOLDER)` behind a `[ -d ... ]`, so on a project with no
+# `src/` the suite ran and measured no coverage at all — silently, since a missing
+# source folder is a warning rather than a failure. `utils/` in this very repo was the
+# proof: reachable by four gates, invisible to the fifth.
+#
+# It is a *separate* accumulator from the other four rather than a reuse of one, because
+# the questions differ. A folder can be worth type-checking or scanning without being
+# worth a coverage percentage (generated code, a vendored tree), and DEPTRY_FOLDERS in
+# particular already carries folders — marimo.mk's notebooks — that no test imports.
+#
+# Each seeds itself from SOURCE_FOLDER when that folder exists, so a project that never
+# touches these variables gets precisely the previous behaviour. A bundle or a consuming
+# Makefile contributes a folder by appending, exactly as marimo.mk does for DEPTRY_FOLDERS.
+#
+# The folder list is computed here, at make time, rather than by the `[ -d ... ]` tests
+# that used to live in each recipe. That is a deliberate change in what `make -n` prints:
+# the shell form emitted its assignment whether or not the folder existed, so a dry run
+# reported a scope the real run would not use.
+# One asymmetry here is deliberate rather than an oversight, and is recorded because it
+# reads as one (#1518): `docs-coverage` folds in the test folders on top of this list,
+# while `typecheck` does not. So a repo's tests are held to the docstring bar and not to
+# the typing bar.
+#
+# The reason is that `typecheck` runs mypy in --strict mode, and strict mode's
+# no-untyped-def is a poor fit for a pytest suite: fixtures arrive untyped from pytest,
+# parametrize decorators erase signatures, and monkeypatch stand-ins must match a
+# signature they cannot import. Measured on this repo, extending the scope reports 627
+# errors in 66 files, none of which is a defect. A consumer who does want its tests
+# type-checked appends them: `TYPECHECK_FOLDERS += tests` in the root Makefile or
+# local.mk, which is the accumulator's whole purpose.
+TYPECHECK_FOLDERS ?=
+BANDIT_FOLDERS ?=
+DOCSTRING_FOLDERS ?=
+COVERAGE_FOLDERS ?=
+# Deferred for the reason spelled out at DEPTRY_FOLDERS above (#1534): expanded at use,
+# so it no longer matters whether SOURCE_FOLDER was set above or below the include.
+TYPECHECK_FOLDERS += $(wildcard $(SOURCE_FOLDER))
+BANDIT_FOLDERS += $(wildcard $(SOURCE_FOLDER))
+DOCSTRING_FOLDERS += $(wildcard $(SOURCE_FOLDER))
+COVERAGE_FOLDERS += $(wildcard $(SOURCE_FOLDER))
+
+# The two rhiza checks this layer owns, appended to core's accumulator (#1540). They were
+# two synced files — `.rhiza/tests/test_pyproject.py` and `.rhiza/tests/test_docstrings.py`
+# — and are now two module names in pytest-rhiza, which core's `rhiza-test` names with
+# `--pyargs`. Selection stays with the bundle that owns the assertion, resolved at sync
+# time: a Rust project appends `test_cargo_toml` and never sees these two, exactly as it
+# never received the files.
+RHIZA_CHECKS += pytest_rhiza.checks.test_pyproject pytest_rhiza.checks.test_docstrings
 
 # Named `deps`, matching rust.mk and go.mk. This was the one gate whose *target name*
 # differed by language (#1474): `deptry` names the tool, which nothing else in the
@@ -197,28 +273,29 @@ license: install ## run license compliance scan (fail on GPL, LGPL, AGPL)
 # 0% coverage on the next run.
 test:: install ## run all tests
 	@rm -rf _tests
-	@if [ -z "$$(find ${TESTS_FOLDER} -name 'test_*.py' -o -name '*_test.py' 2>/dev/null)" ]; then \
+	@coverage_paths="$(strip $(COVERAGE_FOLDERS))"; \
+	if [ -z "$$(find ${TESTS_FOLDER} -name 'test_*.py' -o -name '*_test.py' 2>/dev/null)" ]; then \
 	  printf "${YELLOW}[WARN] No test files found in ${TESTS_FOLDER}, skipping tests.${RESET}\n"; \
 	  exit 0; \
 	fi; \
-	if [ -d ${SOURCE_FOLDER} ]; then \
-	  set -- -n auto \
-	    --ignore=${TESTS_FOLDER}/benchmarks \
-	    --ignore=${TESTS_FOLDER}/stress \
-	    --cov=${SOURCE_FOLDER} \
+	set -- -n auto \
+	  --ignore=${TESTS_FOLDER}/benchmarks \
+	  --ignore=${TESTS_FOLDER}/stress; \
+	if [ -n "$${coverage_paths}" ]; then \
+	  printf "${BLUE}[INFO] Measuring coverage in:$${coverage_paths}${RESET}\n"; \
+	  for coverage_path in $${coverage_paths}; do \
+	    set -- "$$@" --cov="$${coverage_path}"; \
+	  done; \
+	  set -- "$$@" \
 	    --cov-report=term \
 	    --cov-report=html:_tests/html-coverage \
 	    --cov-fail-under=$(COVERAGE_FAIL_UNDER) \
 	    --cov-report=json:_tests/coverage.json \
-	    --cov-report=xml:_tests/coverage.xml \
-	    --html=_tests/html-report/report.html; \
+	    --cov-report=xml:_tests/coverage.xml; \
 	else \
-	  printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, running tests without coverage${RESET}\n"; \
-	  set -- -n auto \
-	    --ignore=${TESTS_FOLDER}/benchmarks \
-	    --ignore=${TESTS_FOLDER}/stress \
-	    --html=_tests/html-report/report.html; \
+	  printf "${YELLOW}[WARN] No coverage folders found (COVERAGE_FOLDERS is empty and SOURCE_FOLDER='${SOURCE_FOLDER}' does not exist), running tests without coverage${RESET}\n"; \
 	fi; \
+	set -- "$$@" --html=_tests/html-report/report.html; \
 	attempt=1; max_attempts=2; \
 	while :; do \
 	  rm -f .coverage .coverage.* _tests/coverage.xml _tests/coverage.json 2>/dev/null || true; \
@@ -234,16 +311,13 @@ test:: install ## run all tests
 	done
 
 # The 'typecheck' target runs static type analysis using ty and/or mypy.
-# 1. Builds a list of existing Python source folders to check.
+# 1. Takes the folder list from TYPECHECK_FOLDERS (see the accumulator block above).
 # 2. Depending on TYPECHECKER (ty|mypy|both, default: both), runs ty,
 #    mypy in strict mode, or both in sequence as a cross-check.
 typecheck: install ## run ty and/or mypy type checking (TYPECHECKER=ty|mypy|both, default: both)
-	@typecheck_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  typecheck_paths="${SOURCE_FOLDER}"; \
-	fi; \
+	@typecheck_paths="$(strip $(TYPECHECK_FOLDERS))"; \
 	if [ -z "$${typecheck_paths}" ]; then \
-	  printf "${YELLOW}[WARN] No typecheck folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping typecheck${RESET}\n"; \
+	  printf "${YELLOW}[WARN] No typecheck folders found (TYPECHECK_FOLDERS is empty and SOURCE_FOLDER='${SOURCE_FOLDER}' does not exist), skipping typecheck${RESET}\n"; \
 	  exit 0; \
 	fi; \
 	case "${TYPECHECKER}" in \
@@ -267,43 +341,45 @@ typecheck: install ## run ty and/or mypy type checking (TYPECHECKER=ty|mypy|both
 	    ;; \
 	esac
 
-# The 'security' target runs bandit to find common security issues in the
-# Python source folders that exist.
+# The 'security' target runs bandit over the folders in BANDIT_FOLDERS (see the
+# accumulator block above). Scope *within* those folders is .bandit's job, not this
+# target's — see that file for why it is the single source of truth (#1493).
 security: install ## run security scans (bandit)
-	@bandit_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  bandit_paths="${SOURCE_FOLDER}"; \
-	fi; \
+	@bandit_paths="$(strip $(BANDIT_FOLDERS))"; \
 	if [ -n "$${bandit_paths}" ]; then \
 	  printf "${BLUE}[INFO] Running bandit security scan in:$${bandit_paths}${RESET}\n"; \
 	  ${UVX_BIN} bandit -r $${bandit_paths} -ll -q --ini .bandit; \
 	else \
-	  printf "${YELLOW}[WARN] No bandit scan folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping bandit${RESET}\n"; \
+	  printf "${YELLOW}[WARN] No bandit scan folders found (BANDIT_FOLDERS is empty and SOURCE_FOLDER='${SOURCE_FOLDER}' does not exist), skipping bandit${RESET}\n"; \
 	fi
 
 # The 'docs-coverage' target checks documentation coverage using interrogate.
-# 1. Builds a list of existing Python source folders to check.
-# 2. Runs interrogate with verbose output against those folders.
+# 1. Takes DOCSTRING_FOLDERS (see the accumulator block above) as the base list.
+# 2. Adds the project's test folder, which is checked wherever it exists and is not part
+#    of the accumulator: a consumer contributing a folder means source, not tests.
+# 3. Runs interrogate with verbose output against the result.
+#
+# `.rhiza/tests` used to be folded in as a third path, and that was a cost of delivering
+# the rhiza checks by file-copy: template code nobody downstream may edit was held to the
+# project's own 100% docstring bar. The checks are a dependency now (#1540), so the path
+# is gone rather than merely skipped.
 docs-coverage: install ## check documentation coverage with interrogate
-	@docstring_paths=""; \
-	if [ -d "${SOURCE_FOLDER}" ]; then \
-	  docstring_paths="${SOURCE_FOLDER}"; \
-	fi; \
+	@docstring_paths="$(strip $(DOCSTRING_FOLDERS))"; \
 	if [ -d "tests" ]; then \
 	  docstring_paths="$${docstring_paths} tests"; \
-	fi; \
-	if [ -d ".rhiza/tests" ]; then \
-	  docstring_paths="$${docstring_paths} .rhiza/tests"; \
 	fi; \
 	if [ -n "$${docstring_paths}" ]; then \
 	  printf "${BLUE}[INFO] Checking documentation coverage in:$${docstring_paths}${RESET}\n"; \
 	  ${UV_BIN} run --with interrogate interrogate -vv --fail-under 100 --ignore-init-method --ignore-magic $${docstring_paths}; \
 	else \
-	  printf "${YELLOW}[WARN] No docs-coverage folders found (SOURCE_FOLDER='${SOURCE_FOLDER}'), skipping docs-coverage${RESET}\n"; \
+	  printf "${YELLOW}[WARN] No docs-coverage folders found (DOCSTRING_FOLDERS is empty, SOURCE_FOLDER='${SOURCE_FOLDER}' does not exist, and there are no test folders), skipping docs-coverage${RESET}\n"; \
 	fi
 
+# The single-check shortcut for the gate `rhiza-test` runs in full. It names the module
+# rather than a path for the same reason that gate does: since #1540 the check is installed
+# from pytest-rhiza, not synced into the tree, so there is no file here to point pytest at.
 test-pyproject: install ## run pyproject.toml structure tests
-	@${UV_BIN} run --with pytest pytest .rhiza/tests/test_pyproject.py \
+	@${UV_BIN} run --with 'pytest-rhiza==$(RHIZA_CHECKS_VERSION)' pytest --pyargs pytest_rhiza.checks.test_pyproject \
 		-v \
 		--tb=long \
 		--showlocals \
