@@ -12,6 +12,7 @@ the empty case (via ``@self_empty()``) before delegating.
 from __future__ import annotations
 
 from collections.abc import Callable
+from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -105,7 +106,8 @@ def maximum_minimum(f: Chebfun, other: Chebfun, comparator: Callable[..., bool])
 
     ``comparator`` selects which operand wins on each sub-interval:
     ``operator.ge`` gives the pointwise maximum and ``operator.lt`` the minimum.
-    The switch points are the roots of ``f - other``.
+    Only roots where ``f - other`` changes sign are switch points; tangential
+    contacts are equality points but do not switch branches.
     """
     if f.isempty or other.isempty:
         return f.__class__.initempty()
@@ -131,7 +133,8 @@ def maximum_minimum(f: Chebfun, other: Chebfun, comparator: Callable[..., bool])
         other_restricted = other.restrict([c_min, c_max])
         return maximum_minimum(f_restricted, other_restricted, comparator)
 
-    roots = (f - other).roots()
+    diff = f - other
+    roots = branch_switch_roots(diff, diff.roots())
     newdom = newdom.merge(roots)
     switch = newdom.support.merge(roots)
 
@@ -147,3 +150,39 @@ def maximum_minimum(f: Chebfun, other: Chebfun, comparator: Callable[..., bool])
         subfun = f.restrict(subdom) if use_self else other.restrict(subdom)
         funs = np.append(funs, subfun.funs)
     return f.__class__(funs)
+
+
+def branch_switch_roots(diff: Chebfun, roots: np.ndarray) -> np.ndarray:
+    """Return the subset of ``roots`` where ``diff`` changes sign."""
+    if roots.size == 0:
+        return roots
+
+    support = diff.support
+    breakpoints = np.concatenate(([support[0]], roots, [support[-1]]))
+    value_tol = max(1e2 * diff.vscale * prefs.eps, prefs.eps)
+    interval_signs = np.zeros(breakpoints.size - 1)
+    for idx, (left, right) in enumerate(pairwise(breakpoints)):
+        if right <= left:
+            continue
+        midpoint = left + 0.5 * (right - left)
+        value = float(diff(midpoint))
+        if abs(value) > value_tol:
+            interval_signs[idx] = np.sign(value)
+
+    def nearest_nonzero(start: int, step: int) -> float:
+        """Return the nearest non-zero interval sign in ``step`` direction."""
+        idx = start
+        while 0 <= idx < interval_signs.size:
+            sign = interval_signs[idx]
+            if sign != 0:
+                return float(sign)
+            idx += step
+        return 0.0
+
+    switch_roots = []
+    for idx, root in enumerate(roots):
+        left_sign = nearest_nonzero(idx, -1)
+        right_sign = nearest_nonzero(idx + 1, +1)
+        if left_sign * right_sign < 0:
+            switch_roots.append(root)
+    return np.asarray(switch_roots)
