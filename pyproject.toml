@@ -44,6 +44,56 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/chebpy"]
 
+[tool.rhiza-task]
+# Settings recovered from the make layer that rhiza v1.4.0 stopped shipping. Each entry
+# below differs from `uvx rhiza-task print <key>`; anything the make layer set that already
+# matches the CLI default is deliberately absent, and listed at the end of this table so the
+# next person does not re-add it.
+
+# Was: `COVERAGE_FAIL_UNDER = 100` in the repo-owned Makefile. CLI default: 90.
+# Without it every gate that measures coverage drops 10 points silently, and CLAUDE.md's
+# "tests must stay at 100% coverage" stops being enforced. The `fail-under = 100` under
+# [tool.coverage.report] does not cover for it: the task passes `--cov-fail-under` on the
+# command line, which outranks the config file.
+coverage-fail-under = 100
+
+# Was: `TYPECHECKER ?= both` in .rhiza/make.d/python.mk. CLI default: "ty".
+# Without it `typecheck` runs ty alone and mypy --strict -- which CLAUDE.md requires and
+# which [tool.mypy] here configures -- never runs at all. Note this is also *stricter* than
+# the make layer was: the old shell `case` let mypy's exit status win, so a ty failure
+# could pass.
+typechecker = "both"
+
+# Was: `RHIZA_CHECKS_VERSION ?= 0.2.1` in .rhiza/make.d/quality.mk, i.e. an explicit pin
+# this repo already carried. CLI default: pytest-rhiza @ git+...@v0.2.0, which is older.
+# Without it `rhiza-test` silently rolls back to the v0.2.0 assertions. Named in PyPI form
+# because 0.2.1 is published there (0.2.2 is the current latest -- a bump is a separate
+# decision, not a migration).
+pytest-rhiza = "pytest-rhiza==0.2.1"
+
+# Not set, on purpose -- each already equals `uvx rhiza-task print <key>`, so naming it
+# would only create a second place to keep in sync:
+#   mkdocs-extra-packages  Makefile had exactly `--with 'mkdocstrings[python]'`, which is
+#                          the default. No `--with .` is needed: mkdocs.yml gives the
+#                          mkdocstrings python handler `paths: [src]`, so chebpy imports
+#                          without being installed into the uvx env.
+#   source-folder          .rhiza/.env said `src`; that is the default.
+#   marimo-folder          .rhiza/.env said `docs/notebooks`; that is the default.
+#   ci-os-matrix           .rhiza/.env deliberately left it unset so rhiza_ci.yml can pick
+#                          the matrix per caller by exporting it. Pinning it here would
+#                          defeat that mechanism, which is what rhiza#1545 fixed.
+#   rhiza-checks           the make layer accumulated five modules via `RHIZA_CHECKS +=`
+#                          across python.mk/quality.mk/test.mk; rhiza-task derives the
+#                          identical five from `layers = ["python"]`.
+#   license-ignore-packages  the only `+=` was `docutils` in the template's own marimo.mk,
+#                          and rhiza-task appends docutils itself when marimo is in the
+#                          task registry. chebpy wraps no GPL distribution.
+#   python-version         `.python-version` says 3.12 and rhiza-task reads that file.
+#   license-fail-on, tests-folder, book-output, zensical-version, paper-folder,
+#   uv-sync-args           all matched the make layer's values already.
+# Genuinely lost, and cosmetic: PROJECT_NAME_EXTRA and LOG_LEVEL from the template's
+# example custom-env.mk. They had no equivalent and set nothing this repo relies on.
+
 [tool.deptry.package_module_name_map]
 matplotlib = "matplotlib"
 seaborn = "seaborn"

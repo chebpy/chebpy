@@ -1,5 +1,5 @@
 repository: "jebel-quant/rhiza"
-ref: "v1.3.4"
+ref: "v1.4.2"
 
 profiles:
   - github-project
@@ -10,5 +10,25 @@ templates:
   # publishes the PDF both as a workflow artifact and on the `paper` branch.
   - github-paper
 
+# `exclude:` is matched against DESTINATION paths — where a file lands here, not
+# where it lives in the template clone. An entry spelled clone-relative
+# (`bundles/github/.github/…`) matches nothing, silently.
 exclude:
-  - book/marimo/notebooks/rhiza.py  
+  # Opt-in workflows this repo has never opted into (`gh variable list` is empty, so
+  # neither MUTATION_ENABLED nor FUZZING_ENABLED was ever configured). Mutation's gate
+  # is in the caller so it never starts; fuzzing's is inside the reusable workflow, so
+  # it ran on every PR just to skip. Both files are deleted, not merely unsynced — an
+  # excluded-but-present workflow freezes its `uses: …@vX` pin because the sync stops
+  # touching it.
+  - .github/workflows/rhiza_mutation.yml
+  - .github/workflows/rhiza_fuzzing.yml
+  # Generic community boilerplate. chebpy never customised these (their only commits
+  # are sync commits), and issue/discussion forms are a repo-owned editorial choice
+  # rather than something the template should keep overwriting.
+  - .github/CONFIG.md
+  - .github/DISCUSSION_TEMPLATE
+  - .github/ISSUE_TEMPLATE
+  # Dropped, not converted: `book/marimo/notebooks/rhiza.py` was here since v1.2.5 and
+  # never matched anything — no bundle in v1.3.4 or v1.4.2 ships a notebook to a
+  # consumer (rhiza's own `docs/notebooks/rhiza.py` lives outside `bundles/`), and no
+  # such file exists in this tree. Nothing is un-excluded by removing it.
