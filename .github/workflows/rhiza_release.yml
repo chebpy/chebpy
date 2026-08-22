@@ -653,7 +653,24 @@ jobs:
     name: Finalise Release
     runs-on: ubuntu-latest
     needs: [tag, pypi, conda, devcontainer]
-    if: needs.pypi.result == 'success' || needs.conda.result == 'success' || needs.devcontainer.result == 'success'
+    # `!cancelled() &&` is what makes the rest of this condition mean anything (#1537).
+    # GitHub combines a job's own `if` with an implicit `success()` over every entry in
+    # `needs` *unless* the expression names a status function -- so the OR below was
+    # evaluated only in runs where conda had already succeeded, and a conda failure skipped
+    # this job however true the OR was. That is not theoretical: releasing jointview v0.2.0,
+    # PyPI published successfully, grayskull 404'd on metadata that had not propagated, and
+    # the GitHub release was stranded as the draft `untagged-547fe31ec1ed6de3ef9b` holding
+    # SBOM and provenance assets that never became visible.
+    #
+    # `!cancelled()` rather than `always()`, deliberately: `always()` would finalise a
+    # release during a run somebody had cancelled, which is the one case where publishing is
+    # certainly wrong. A cancelled run still skips this job.
+    #
+    # The OR is unchanged, so the failure modes it encodes are too: if every publishing job
+    # fails or is skipped there is nothing to finalise, and this job skips. Recipe generation
+    # is the only one of the three that is a downstream convenience -- the workflow header
+    # has always called it optional, and now the failure path agrees.
+    if: ${{ !cancelled() && (needs.pypi.result == 'success' || needs.conda.result == 'success' || needs.devcontainer.result == 'success') }}
     permissions:
       contents: write   # Needed to undraft/publish the GitHub release
     steps:

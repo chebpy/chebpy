@@ -18,7 +18,6 @@ _pdoc
 docs/notebooks/*.html
 docs/reports
 docs/reports.md
-_marimushka
 _mkdocs
 _benchmarks
 _jupyter
@@ -31,6 +30,9 @@ docs/paper/*.fls
 docs/paper/*.log
 docs/paper/*.out
 docs/paper/*.toc
+docs/paper/*.pdf
+docs/paper/*.bbl
+docs/paper/*.blg
 
 # temp file used by Junie
 .output.txt
@@ -102,24 +104,15 @@ cover/
 *.mo
 *.pot
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
 # Cython debug symbols
 cython_debug/
 
-# Makefile
-local.mk
+# Makefile -- `local.mk` is deliberately not ignored. The Makefile is template-owned and
+# overwritten by every sync, so `local.mk` is the only place a repo's own make targets can
+# live, and anything CI invokes has to be committed. rhiza's own `make e2e`, which
+# rhiza_e2e.yml runs in all three language jobs, is exactly that case.
 
 .bandit-baseline.json
-
 
 # Rust (rust-core bundle). Kept in core rather than the language layer because
 # .gitignore has one owner and git opens it with O_NOFOLLOW, so it cannot be a

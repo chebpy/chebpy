@@ -66,3 +66,34 @@ paper-folder = "manuscript"
 The `github-paper` bundle adds a workflow that compiles the paper and publishes the
 PDF as a build artifact. It triggers only on changes under `docs/paper/**`, so it
 costs nothing until there is a paper to build.
+
+The **durable** copy comes from the book rather than that artifact, which expires after
+30 days. `paper` is a prerequisite of `book`, and this folder sits inside the docs tree,
+so mkdocs sweeps the compiled PDF up as a site asset at a stable URL. Link it from the
+nav to make it reachable:
+
+```yaml
+nav:
+  - Paper: paper/main.pdf
+```
+
+### If your repository has a `paper` branch
+
+The workflow used to push the PDF to an orphan `paper` branch as well. **It no longer
+does**, and a repository that still has the branch will see a warning naming it.
+
+The push was removed because git refs are paths: `refs/heads/paper` cannot exist while
+`refs/heads/paper/anything` does. So opening a `paper/overview` topic branch — the most
+natural convention for the very feature this bundle serves — broke the push outright, and
+it stayed broken after that topic branch was merged, until somebody also deleted it.
+
+Nothing needs to change on your side unless something *reads* that branch — a badge, a
+Pages source, a direct link. Point those at the PDF in the built site instead, then delete
+the branch, which is now nobody's job to update:
+
+```bash
+git push origin --delete paper
+```
+
+Leaving it in place is harmless except that it holds a PDF frozen at the last run before
+this change, with nothing indicating so.
