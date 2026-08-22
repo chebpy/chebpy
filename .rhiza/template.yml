@@ -26,8 +26,6 @@ exclude:
   # are sync commits), and issue/discussion forms are a repo-owned editorial choice
   # rather than something the template should keep overwriting.
   - .github/CONFIG.md
-  - .github/DISCUSSION_TEMPLATE
-  - .github/ISSUE_TEMPLATE
   # Dropped, not converted: `book/marimo/notebooks/rhiza.py` was here since v1.2.5 and
   # never matched anything — no bundle in v1.3.4 or v1.4.2 ships a notebook to a
   # consumer (rhiza's own `docs/notebooks/rhiza.py` lives outside `bundles/`), and no
