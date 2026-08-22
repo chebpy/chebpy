@@ -14,14 +14,6 @@ templates:
 # where it lives in the template clone. An entry spelled clone-relative
 # (`bundles/github/.github/…`) matches nothing, silently.
 exclude:
-  # Opt-in workflows this repo has never opted into (`gh variable list` is empty, so
-  # neither MUTATION_ENABLED nor FUZZING_ENABLED was ever configured). Mutation's gate
-  # is in the caller so it never starts; fuzzing's is inside the reusable workflow, so
-  # it ran on every PR just to skip. Both files are deleted, not merely unsynced — an
-  # excluded-but-present workflow freezes its `uses: …@vX` pin because the sync stops
-  # touching it.
-  - .github/workflows/rhiza_mutation.yml
-  - .github/workflows/rhiza_fuzzing.yml
   # Generic community boilerplate. chebpy never customised these (their only commits
   # are sync commits), and issue/discussion forms are a repo-owned editorial choice
   # rather than something the template should keep overwriting.
