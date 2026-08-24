@@ -4,15 +4,18 @@
 # Workflow: Paper
 #
 # Purpose: Compile the LaTeX paper (docs/paper/*.tex) to a PDF and publish it
-#          as a downloadable workflow artifact. The durable copy is published by
-#          the book: `paper` is a prerequisite of `book`, and docs/paper/ sits
-#          inside the docs tree, so the PDF ships as a site asset.
+#          three ways: as a downloadable workflow artifact, as a site asset
+#          through the book (the paper folder sits inside the docs tree), and on
+#          the dedicated `paper` branch, which holds the PDF and nothing else.
 #
-#          It no longer pushes to an orphan `paper` branch (rhiza #1494): that
-#          ref cannot coexist with any `paper/<topic>` branch, so the push failed
-#          in exactly the repositories most likely to have one. A repository that
-#          still has the branch gets a warning naming it; delete it when nothing
-#          links to it.
+#          The compile is the `paper` task from the pinned rhiza-task CLI -- the
+#          same one `make paper` runs locally -- so the engine and the choice of
+#          root document are defined once, not restated per platform.
+#
+#          One caveat on the branch: git refs are paths, so `refs/heads/paper`
+#          cannot coexist with a `paper/<topic>` branch. The workflow checks for
+#          one and fails with a message naming it rather than with a bare push
+#          error; rename the topic branch if you hit that.
 #
 # Trigger: On push/PR to main/master when docs/paper/** changes, or manual dispatch.
 
@@ -36,9 +39,9 @@ on:
 
 jobs:
   paper:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.5.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.6.0
     secrets: inherit
-    # `contents: read` only. The `write` scope this stub used to grant existed solely for
-    # the retired branch push; compiling and uploading an artifact need no write access.
+    # `contents: write` is for the `paper` branch publish and nothing else. A pull request
+    # never reaches that step, so the scope is unused on every PR run.
     permissions:
-      contents: read
+      contents: write
