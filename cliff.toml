@@ -64,8 +64,19 @@ sort_commits = "oldest"
 # Group commits into changelog sections. The leading HTML comment controls the
 # section ordering and is stripped from the rendered heading via `striptags`.
 commit_parsers = [
-  # Drop automated noise commits that don't provide user-facing signal.
-  { message = ".*\\[skip ci\\].*", skip = true },
+  # Drop automated noise commits that don't provide user-facing signal -- the machine-written
+  # `Update the compiled paper [skip ci]` kind, which puts the marker in its *subject*.
+  #
+  # Anchored to the subject line, and that is load-bearing rather than tidy. git-cliff matches
+  # this against the whole message, so the unanchored `.*\[skip ci\].*` also dropped any commit
+  # whose *body* merely mentioned the marker -- a commit message quoting the format of another
+  # commit message is enough. That silently ate `feat: give the paper branch a README` (#1626)
+  # out of v1.6.0's notes, for one backticked mention twenty lines down. Same failure as the
+  # `bump` alternative below: a substring search treating a mention as the thing itself.
+  #
+  # `^` with no `(?m)` is start-of-message, and `[^\n]*` cannot cross a newline, so only the
+  # subject can match.
+  { message = "^[^\\n]*\\[skip ci\\]", skip = true },
   # Only the release flow's own commits. A bare `bump` alternative here also ate every
   # `chore(deps): bump <dependency>` — the rhiza-hooks v1.2.0 bump (#1487) vanished from
   # v1.3.2's notes that way, and had been vanishing for a while unnoticed: a Dependabot

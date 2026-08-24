@@ -18,7 +18,7 @@
 # Repo-specific *tasks* go in a `rhiza_task.tasks` entry point, repo-specific *targets* in
 # `local.mk`, which core deliberately does not ignore. Nothing goes below the shim: this
 # file is synced, so the next `/rhiza:update` overwrites whatever was appended to it.
-RHIZA_TASK ?= rhiza-task@1.1.0
+RHIZA_TASK ?= rhiza-task@1.3.1
 
 # uv cannot be delegated, because uv is what runs the CLI. Prepended so a machine carrying
 # an older uv still resolves the pin, exported because task bodies shell out to bare `uv`.
