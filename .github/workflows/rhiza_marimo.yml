@@ -28,5 +28,5 @@ on:
 
 jobs:
   marimo:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_marimo.yml@v1.6.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_marimo.yml@v1.7.1
     secrets: inherit
