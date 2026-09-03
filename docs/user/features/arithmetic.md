@@ -46,6 +46,32 @@ print(np.max(f))         # maximum value
 print(np.min(f))         # minimum value
 ```
 
+## Tangential Contacts in Pointwise Max/Min
+
+Pointwise `maximum` and `minimum` split at roots of the difference between
+the two inputs.  If the curves only touch, the root is numerically
+ill-conditioned and a rootfinder may report a close pair of roots around the
+contact point.  The following example illustrates this case:
+
+```python
+import numpy as np
+from chebpy import chebfun
+
+x = chebfun("x", [-2, 3])
+f = np.sin(3 * x)
+g = -np.sin(x)
+
+(f - g).roots()
+# Some BLAS/FFT/platform combinations report roots close to:
+# [-pi/2, -pi/2, 0, pi/2, pi/2]
+```
+
+The contacts at `+/- pi/2` do not change which branch is active, so
+`f.maximum(g)` filters them as switch points and only splits at the true
+crossing near `0`.  The script
+`docs/examples/tangential_maximum.py` visualises both the historical
+duplicate-root failure mode and the fixed result.
+
 ## References
 
 - Z. Battles and L. N. Trefethen,
