@@ -29,9 +29,16 @@ permissions:
 
 jobs:
   book:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_book.yml@v1.6.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_book.yml@v1.8.0
     secrets: inherit
     permissions:
       contents: read
       pages: write
       id-token: write
+    # Set `deploy-pages: false` for artifact-only mode -- the reusable workflow
+    # still uploads the generic `book` artifact, and a consumer-owned job below
+    # can download it and deploy to Cloudflare Pages, Azure Static Web Apps,
+    # S3/CloudFront, an internal web server, etc. See docs/guides/BOOK.md for a
+    # full Cloudflare Pages example.
+    # with:
+    #   deploy-pages: false

@@ -43,5 +43,6 @@ Or in a Python session:
 
 ```python
 import chebpy
+
 print(chebpy.__version__)
 ```

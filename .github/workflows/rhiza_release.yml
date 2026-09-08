@@ -67,7 +67,10 @@
 #   - SBOM attestations generated for supply chain transparency (public repos only)
 #
 # 📄 Requirements:
-#   - pyproject.toml with top-level version field (for Python packages)
+#   - pyproject.toml declaring a version (for Python packages): either written as
+#     `[project].version`, or listed in `[project].dynamic` for the build backend to
+#     derive from the VCS (hatch-vcs, setuptools-scm). A derived version is checked
+#     against the tag on the built distribution rather than in the file.
 #   - Package registered on PyPI as Trusted Publisher (for PyPI publishing)
 #   - Conda recipe generation is optional and only runs when PyPI publishing is active
 #   - PUBLISH_DEVCONTAINER variable set to "true" (for devcontainer publishing)
@@ -270,16 +273,47 @@ jobs:
 
       - name: Verify version matches tag
         if: hashFiles('pyproject.toml') != ''
+        env:
+          # Read from the environment, not interpolated into the script: that is what
+          # lets tests/api/test_release_version_verification.py run this exact shell
+          # against purpose-built projects instead of asserting on the step's name.
+          TAG: ${{ needs.tag.outputs.tag }}
         run: |
-          TAG_VERSION="${{ needs.tag.outputs.tag }}"
-          TAG_VERSION=${TAG_VERSION#v}
-          PROJECT_VERSION=$(uv version --short)
+          TAG_VERSION="${TAG#v}"
 
           # Normalize tag version to PEP 440 format for comparison.
           # Tags use semver format (e.g., 0.11.1-beta.1) while uv version --short
           # returns PEP 440 normalized format (e.g., 0.11.1b1).
           NORMALIZED_TAG=$(uv run --with packaging --no-project python3 -c "from packaging.version import Version; print(Version('$TAG_VERSION'))")
 
+          # A project may derive its version from the VCS rather than write one: PEP 621's
+          # `dynamic = ["version"]` with a backend plugin such as hatch-vcs. There is then
+          # no number in the file to compare, and `uv version --short` does not return a
+          # differing one -- it exits 2 ("We cannot get or set dynamic project versions"),
+          # which would fail every release of such a project. The tag-versus-version check
+          # moves to "Verify built distribution matches the tag" below, which is where a
+          # derived version can actually be wrong.
+          DYNAMIC=$(uv run --with tomli --no-project python3 -c "
+          import pathlib, tomli
+          project = tomli.loads(pathlib.Path('pyproject.toml').read_text()).get('project') or {}
+          print('dynamic' if 'version' in (project.get('dynamic') or []) else 'written')")
+
+          case "$DYNAMIC" in
+            dynamic)
+              echo "[project].version is dynamic: derived from the VCS, so there is no written number to compare against $NORMALIZED_TAG. The distribution built below is checked against the tag instead."
+              exit 0
+              ;;
+            written)
+              ;;
+            *)
+              # Never assume "written": that would call `uv version --short` on a dynamic
+              # project and fail with an error about the probe, not about the release.
+              echo "::error::Could not tell whether [project].version is written or dynamic (probe returned '$DYNAMIC')"
+              exit 1
+              ;;
+          esac
+
+          PROJECT_VERSION=$(uv version --short)
           if [[ "$PROJECT_VERSION" != "$NORMALIZED_TAG" ]]; then
             echo "::error::Version mismatch: pyproject.toml has '$PROJECT_VERSION' but tag is '$NORMALIZED_TAG' (from tag '$TAG_VERSION')"
             exit 1
@@ -300,6 +334,52 @@ jobs:
         run: |
           printf "[INFO] Building package...\n"
           uv build
+
+      - name: Verify built distribution matches the tag
+        if: steps.buildable.outputs.buildable == 'true'
+        env:
+          TAG: ${{ needs.tag.outputs.tag }}
+        run: |
+          # The only place a version *derived* from the VCS can be caught being wrong.
+          # hatch-vcs and setuptools-scm fall back rather than fail, so a checkout that
+          # cannot see the tag builds `0.1.dev1+g<sha>` and publishes it under a green
+          # tick with no error anywhere -- which is why the checkout above uses
+          # fetch-depth: 0. Runs for a written version too: it costs one filename parse
+          # and closes the gap between what the step above read and what `uv build`
+          # actually produced.
+          TAG_VERSION="${TAG#v}"
+          uv run --with packaging --no-project python3 -c '
+          import pathlib
+          import sys
+
+          from packaging.utils import parse_sdist_filename, parse_wheel_filename
+          from packaging.version import Version
+
+          expected = Version(sys.argv[1])
+          dist = pathlib.Path("dist")
+          built = sorted(dist.glob("*.whl")) + sorted(dist.glob("*.tar.gz"))
+          if not built:
+              print("::error::uv build produced no distribution in dist/ -- there is nothing to publish or verify")
+              sys.exit(1)
+
+          mismatched = []
+          for artifact in built:
+              parse = parse_wheel_filename if artifact.name.endswith(".whl") else parse_sdist_filename
+              found = parse(artifact.name)[1]
+              print(f"{artifact.name}: {found}")
+              if found != expected:
+                  mismatched.append(f"{artifact.name} carries {found}")
+
+          if mismatched:
+              print(
+                  f"::error::Built distribution does not carry the release version {expected}: "
+                  + ", ".join(mismatched)
+                  + ". A version derived from the VCS falls back to a dev version when the tag "
+                  "is not visible to the build -- check the checkout depth and that tags were fetched."
+              )
+              sys.exit(1)
+          print(f"Built distribution verified at {expected}")
+          ' "$TAG_VERSION"
 
       - name: Install Python for SBOM generation
         if: hashFiles('pyproject.toml') != ''

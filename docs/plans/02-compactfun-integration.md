@@ -178,17 +178,17 @@ from numpy import inf
 from chebpy import chebfun
 
 # Light-tailed, integrable, decays to zero on both sides → CompactFun
-f = chebfun(lambda x: np.exp(-x**2) / np.sqrt(np.pi), [-inf, inf])
-f.sum()            # ≈ 1
-f(0.0)             # 1/√π
-f(100.0)           # 0   (outside numerical support)
-f.support          # [-inf, inf]    (logical)
+f = chebfun(lambda x: np.exp(-(x**2)) / np.sqrt(np.pi), [-inf, inf])
+f.sum()  # ≈ 1
+f(0.0)  # 1/√π
+f(100.0)  # 0   (outside numerical support)
+f.support  # [-inf, inf]    (logical)
 f.numerical_support  # [-a, +a]    (discovered)
 
 # Convolution: this is the headline feature
-g = chebfun(lambda x: np.exp(-x**2) / np.sqrt(np.pi), [-inf, inf])
-h = f.conv(g)      # CompactFun, ≈ exp(-x²/2)/√(2π)
-h.sum()            # ≈ 1
+g = chebfun(lambda x: np.exp(-(x**2)) / np.sqrt(np.pi), [-inf, inf])
+h = f.conv(g)  # CompactFun, ≈ exp(-x²/2)/√(2π)
+h.sum()  # ≈ 1
 
 # Heavy tail: explicit refusal in v1
 chebfun(lambda x: 1 / (1 + x**2), [-inf, inf])

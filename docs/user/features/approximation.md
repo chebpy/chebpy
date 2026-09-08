@@ -55,13 +55,14 @@ including Runge-style data:
 
 ```python
 # Identity function
-x = chebfun('x')
+x = chebfun("x")
 
 # Constant function
 c = chebfun(3.14)
 
 # Piecewise-constant function
 from chebpy import pwc
+
 f = pwc(domain=[-2, -1, 0, 1, 2], values=[-1, 0, 1, 2])
 ```
 
@@ -84,8 +85,8 @@ roughly machine epsilon:
 from chebpy import UserPreferences
 
 prefs = UserPreferences()
-prefs.eps       # default: numpy.finfo(float).eps
-prefs.maxpow2   # default: 16, so the largest grid has 65537 points
+prefs.eps  # default: numpy.finfo(float).eps
+prefs.maxpow2  # default: 16, so the largest grid has 65537 points
 ```
 
 Use the preferences object to change these defaults:
@@ -128,8 +129,10 @@ sensitive approximations against extra sample points:
 import numpy as np
 from chebpy import chebfun
 
+
 def g(x):
-    return 0.3 + 0.02*x + abs(x)**1.8
+    return 0.3 + 0.02 * x + abs(x) ** 1.8
+
 
 f = chebfun(g, [-1, 1])
 x_test = np.linspace(-1, 1, 1001)
@@ -190,8 +193,8 @@ Use `chebpts` to get the Chebyshev interpolation points and barycentric weights:
 ```python
 from chebpy import chebpts
 
-pts, wts = chebpts(16)              # 16 points on [-1, 1]
-pts, wts = chebpts(16, [0, 3])      # 16 points on [0, 3]
+pts, wts = chebpts(16)  # 16 points on [-1, 1]
+pts, wts = chebpts(16, [0, 3])  # 16 points on [0, 3]
 ```
 
 ## References

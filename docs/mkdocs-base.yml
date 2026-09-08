@@ -1,14 +1,8 @@
 # docs/mkdocs-base.yml — Base MkDocs configuration for rhiza-based projects.
 #
-# USAGE (standalone)
-#   Build or serve this file directly if you have no root-level mkdocs.yml:
-#     uvx --with mkdocs-material mkdocs serve -f docs/mkdocs-base.yml
-#   The rhiza build system (make book) will pick this file up automatically
-#   as a fallback when no root-level mkdocs.yml is found.
-#
-# USAGE (with INHERIT)
-#   To extend this config from a root-level mkdocs.yml, add the following
-#   at the top of your mkdocs.yml and override only what you need:
+# HOW IT IS READ
+#   Only through `INHERIT:` from a root-level `mkdocs.yml`. Add this at the top of
+#   that file and override only what you need:
 #
 #     INHERIT: docs/mkdocs-base.yml
 #
@@ -17,15 +11,31 @@
 #     repo_url: https://github.com/example/my-project
 #     repo_name: example/my-project
 #
-#     docs_dir: docs   # always set this explicitly — base uses docs_dir: . which
-#                      # resolves relative to docs/mkdocs-base.yml, not mkdocs.yml
-#
-#     nav:             # nav is fully replaced — not merged — by the child config
+#     nav:      # nav is fully replaced -- not merged -- by the child config
 #       - Home: index.md
 #       - Guide: guide.md
 #
-#   Any key you omit in mkdocs.yml is inherited from this file.
-#   The 'nav' key is always fully replaced when defined in the child.
+#   Every other key you omit is inherited, `docs_dir` included: relative paths in
+#   this file resolve against the *primary* config, so `docs_dir: docs` below means
+#   `<repo>/docs` and a child need not restate it.
+#
+# HOW IT IS NOT READ -- three claims this header used to make, all measured false (#1633)
+#   * There is no standalone build. Point mkdocs at this file directly and it aborts:
+#     `Config value 'site_name': Required configuration not provided.` -- this file
+#     declares no site, deliberately, because the site is the consumer's.
+#   * `book` does not fall back to it. rhiza-task's task requires a root `mkdocs.yml`
+#     and prints `skipped  book  no mkdocs.yml` without one. The fallback was real
+#     under `book.mk` and retired with the make layer.
+#   * A child that omits `INHERIT:` gets none of this, and nothing says so. That is
+#     the whole of #1633: 120 synced lines a consumer can silently not read.
+#
+# WHAT IT ACTUALLY BUYS
+#   The book is built by zensical, not mkdocs, and zensical already defaults to the
+#   Material theme and to most of the markdown extensions below. Measured against a
+#   bare config, inheriting this one adds the light/dark palette toggle, the
+#   `theme.features` list, the back-to-top button and `pymdownx.snippets`
+#   resolution -- and `mkdocstrings`, which is why `mkdocs-extra-packages` is
+#   non-empty by default. The rest is there for a consumer who builds with mkdocs.
 
 docs_dir: docs
 site_dir: _book
@@ -62,6 +72,9 @@ theme:
         icon: material/weather-night
         name: Switch to light mode
 
+  logo: https://jebel-quant.github.io/rhiza/assets/rhiza-logo.svg
+  favicon: https://jebel-quant.github.io/rhiza/assets/rhiza-logo.svg
+  
 # ----------------------------------------------------------------------------
 # Markdown extensions
 # ----------------------------------------------------------------------------

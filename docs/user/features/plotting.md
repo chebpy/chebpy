@@ -23,8 +23,8 @@ fig, ax = plt.subplots()
 f = chebfun(lambda x: np.sin(x), [0, 10])
 g = chebfun(lambda x: np.cos(x), [0, 10])
 
-f.plot(ax=ax, label='sin(x)')
-g.plot(ax=ax, label='cos(x)')
+f.plot(ax=ax, label="sin(x)")
+g.plot(ax=ax, label="cos(x)")
 ax.legend()
 plt.show()
 ```
@@ -32,14 +32,14 @@ plt.show()
 ## Marking Roots
 
 ```python
-f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
-g = chebfun(lambda x: np.exp(-(x - 5)**2 / 10), [0, 10])
+f = chebfun(lambda x: np.sin(x**2) + np.sin(x) ** 2, [0, 10])
+g = chebfun(lambda x: np.exp(-((x - 5) ** 2) / 10), [0, 10])
 
-ax = f.plot(label='f')
-g.plot(ax=ax, label='g')
+ax = f.plot(label="f")
+g.plot(ax=ax, label="g")
 
 roots = (f - g).roots()
-ax.plot(roots, f(roots), 'ro', markersize=8, label='Intersections')
+ax.plot(roots, f(roots), "ro", markersize=8, label="Intersections")
 ax.legend()
 ax.grid(True, alpha=0.3)
 plt.show()
