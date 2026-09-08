@@ -29,9 +29,6 @@ dev = [
 test = [
     "pytest>=8.0",
 ]
-lint = [
-    "ruff>=0.14.14",
-]
 
 [project.urls]
 Homepage = "https://chebpy.github.io/chebpy/"
@@ -101,7 +98,6 @@ marimo = "marimo"
 numpy = "numpy"
 pandas = "pandas"
 plotly = "plotly"
-ruff = "ruff"
 
 [tool.ty.rules]
 invalid-method-override = "ignore"
