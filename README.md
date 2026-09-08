@@ -123,16 +123,16 @@ import numpy as np
 from chebpy import chebfun
 
 # Create functions as chebfuns on interval [0, 10]
-f = chebfun(lambda x: np.sin(x**2) + np.sin(x)**2, [0, 10])
-g = chebfun(lambda x: np.exp(-(x-5)**2/10), [0, 10])
+f = chebfun(lambda x: np.sin(x**2) + np.sin(x) ** 2, [0, 10])
+g = chebfun(lambda x: np.exp(-((x - 5) ** 2) / 10), [0, 10])
 
 # Find intersection points
 roots = (f - g).roots()
 
 # Plot both functions and mark intersections
-ax = f.plot(label='f(x) = sin(x²) + sin²(x)')
-g.plot(ax=ax, label='g(x) = exp(-(x-5)²/10)')
-ax.plot(roots, f(roots), 'ro', markersize=8, label='Intersections')
+ax = f.plot(label="f(x) = sin(x²) + sin²(x)")
+g.plot(ax=ax, label="g(x) = exp(-(x-5)²/10)")
+ax.plot(roots, f(roots), "ro", markersize=8, label="Intersections")
 ax.legend()
 ax.grid(True, alpha=0.3)
 ```
@@ -142,12 +142,12 @@ ax.grid(True, alpha=0.3)
 ```python
 # Differentiation and integration
 f = chebfun(lambda x: np.exp(x) * np.sin(x), [-1, 1])
-df_dx = f.diff()          # Derivative
-integral = f.sum()        # Definite integral
+df_dx = f.diff()  # Derivative
+integral = f.sum()  # Definite integral
 
 # Root finding
-g = chebfun(lambda x: x**3 - 2*x - 5, [-3, 3])
-roots = g.roots()         # All roots in the domain
+g = chebfun(lambda x: x**3 - 2 * x - 5, [-3, 3])
+roots = g.roots()  # All roots in the domain
 ```
 
 ### Convolution
@@ -158,10 +158,10 @@ Convolve two functions to produce a new Chebfun on the summed domain:
 from chebpy import chebfun
 import numpy as np
 
-f = chebfun(lambda x: np.exp(-x**2), [-1, 1])
+f = chebfun(lambda x: np.exp(-(x**2)), [-1, 1])
 g = chebfun(lambda x: np.cos(np.pi * x), [-1, 1])
 
-h = f.conv(g)        # h(x) = ∫ f(t) g(x−t) dt, a Chebfun on [−2, 2]
+h = f.conv(g)  # h(x) = ∫ f(t) g(x−t) dt, a Chebfun on [−2, 2]
 h.plot()
 ```
 
@@ -176,12 +176,12 @@ from chebpy import Quasimatrix, chebfun
 x = chebfun("x")
 A = Quasimatrix([1, x, x**2, x**3, x**4, x**5])
 
-Q, R = A.qr()             # QR factorisation → Legendre polynomials
-U, S, V = A.svd()         # Singular value decomposition
+Q, R = A.qr()  # QR factorisation → Legendre polynomials
+U, S, V = A.svd()  # Singular value decomposition
 
 f = chebfun(lambda t: np.exp(t) * np.sin(6 * t), [-1, 1])
-c = A.solve(f)            # Least-squares polynomial fit
-f_approx = A @ c          # Reconstruct as a Chebfun
+c = A.solve(f)  # Least-squares polynomial fit
+f_approx = A @ c  # Reconstruct as a Chebfun
 ```
 
 ### Gaussian Process Regression
@@ -199,9 +199,9 @@ y_obs = np.sin(np.exp(x_obs))
 
 f_mean, f_var = gpr(x_obs, y_obs, domain=[-2, 2])
 
-f_mean.plot()                     # Posterior mean (a Chebfun)
-extrema = f_mean.diff().roots()   # Local extrema via calculus
-integral = f_mean.sum()           # Definite integral
+f_mean.plot()  # Posterior mean (a Chebfun)
+extrema = f_mean.diff().roots()  # Local extrema via calculus
+integral = f_mean.sum()  # Definite integral
 ```
 
 ### Periodic Functions
@@ -215,9 +215,9 @@ from chebpy import trigfun
 import numpy as np
 
 f = trigfun(lambda x: np.exp(np.sin(np.pi * x)), [-1, 1])
-len(f)            # number of Fourier modes
-f.diff()          # spectral differentiation in Fourier space
-f.sum()           # ≈ 2 · I₀(1)
+len(f)  # number of Fourier modes
+f.diff()  # spectral differentiation in Fourier space
+f.sum()  # ≈ 2 · I₀(1)
 ```
 
 The `gpr` interface accepts `trig=True` for a periodic GP posterior,
@@ -237,16 +237,16 @@ from chebpy import chebfun
 import numpy as np
 
 # Doubly-infinite Gaussian — sum is √π
-h = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
-h.sum()                           # ≈ √π
+h = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+h.sum()  # ≈ √π
 
 # Sigmoid-like: tail constants are detected automatically
 t = chebfun(np.tanh, [-np.inf, np.inf])
-t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
-t(1e10)                                       # 1.0
+t.funs[0].tail_left, t.funs[0].tail_right  # (-1.0, 1.0)
+t(1e10)  # 1.0
 
 # Mixed: finite breakpoints with infinite endpoints
-p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
+p = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, -2.0, 0.0, 3.0, np.inf])
 [type(piece).__name__ for piece in p.funs]
 # ['CompactFun', 'Bndfun', 'Bndfun', 'CompactFun']
 ```
@@ -264,10 +264,10 @@ from chebpy import chebfun
 import numpy as np
 
 f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
-f.sum()                       # 2/3, to machine precision
+f.sum()  # 2/3, to machine precision
 
 g = chebfun(lambda x: np.sqrt(x * (1 - x)), [0.0, 1.0], sing="both")
-g.sum()                       # pi/8, to machine precision
+g.sum()  # pi/8, to machine precision
 ```
 
 ---

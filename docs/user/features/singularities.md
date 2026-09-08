@@ -22,8 +22,8 @@ g = chebfun(lambda x: np.sqrt(1.0 - x), [0.0, 1.0], sing="right")
 h = chebfun(lambda x: np.sqrt(x * (1.0 - x)), [0.0, 1.0], sing="both")
 
 # Definite integrals reach machine precision
-float(f.sum())   # -1/4 (up to a tiny endpoint-gap correction; see below)
-float(h.sum())   # pi/8
+float(f.sum())  # -1/4 (up to a tiny endpoint-gap correction; see below)
+float(h.sum())  # pi/8
 ```
 
 The optional `params` keyword bundles the two map parameters as a frozen
@@ -241,7 +241,7 @@ from chebpy.utilities import Interval
 
 s = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
 b = Bndfun.initfun_adaptive(lambda x: x * x, Interval(0.0, 1.0))
-r = s + b   # type(r) is Singfun
+r = s + b  # type(r) is Singfun
 ```
 
 The same logic applies to `Chebfun`-level arithmetic on multi-piece domains.
@@ -256,7 +256,7 @@ variables. The slit-strip clustering map breaks this assumption, so
 ```python
 f = chebfun(np.sqrt, [0.0, 1.0], sing="left")
 g = chebfun(1.0, [0.0, 1.0])
-f.conv(g)   # raises NotImplementedError
+f.conv(g)  # raises NotImplementedError
 ```
 
 A future release may provide an opt-in helper that recasts the singular

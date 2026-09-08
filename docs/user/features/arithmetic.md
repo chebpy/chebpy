@@ -12,20 +12,20 @@ from chebpy import chebfun
 f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
 g = chebfun(lambda x: np.cos(x), [-np.pi, np.pi])
 
-h = f + g       # addition
-h = f - g       # subtraction
-h = f * g       # multiplication
-h = f / g       # division (where g != 0)
-h = f ** 2      # power
-h = -f          # negation
+h = f + g  # addition
+h = f - g  # subtraction
+h = f * g  # multiplication
+h = f / g  # division (where g != 0)
+h = f**2  # power
+h = -f  # negation
 ```
 
 ## Scalar Operations
 
 ```python
-h = f + 1       # add a constant
-h = 2 * f       # scalar multiplication
-h = f / 3       # scalar division
+h = f + 1  # add a constant
+h = 2 * f  # scalar multiplication
+h = f / 3  # scalar division
 ```
 
 ## NumPy Universal Functions
@@ -41,9 +41,9 @@ h = np.abs(f)
 ## Norms and Comparisons
 
 ```python
-print(f.norm())          # L2 norm
-print(np.max(f))         # maximum value
-print(np.min(f))         # minimum value
+print(f.norm())  # L2 norm
+print(np.max(f))  # maximum value
+print(np.min(f))  # minimum value
 ```
 
 ## References

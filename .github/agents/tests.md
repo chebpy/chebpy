@@ -90,6 +90,7 @@ the class method runs in its own scope:
 ```python
 from tests.generic.complex import test_roots  # noqa: F401
 
+
 class TestRoots:
     @pytest.mark.parametrize(("f", "roots"), rootstestfuns)
     def test_roots(self, f, roots):  # noqa: F811
@@ -120,23 +121,25 @@ import pytest
 import numpy as np
 from chebpy import Chebfun
 
+
 # Fixtures (if needed)
 @pytest.fixture
 def example_chebfun():
     return Chebfun.initfun_adaptive(lambda x: np.sin(x), [-1, 1])
 
+
 # Test classes organized by feature/component
 class TestFeatureName:
     """Test FeatureName functionality."""
-    
+
     def test_specific_behavior(self):
         """Test that specific behavior works correctly."""
         # Arrange
         f = Chebfun.initfun_adaptive(lambda x: x**2)
-        
+
         # Act
         result = f(0.5)
-        
+
         # Assert
         assert result == pytest.approx(0.25)
 ```
@@ -240,10 +243,10 @@ Use direct instantiation when:
 def test_evaluation_precision(self):
     """Test evaluation with proper floating point tolerance."""
     f = Chebfun.initfun_adaptive(np.sin, [-np.pi, np.pi])
-    
+
     # Use pytest.approx() for floating point values
     assert f(0.0) == pytest.approx(0.0, abs=1e-14)
-    assert f(np.pi/2) == pytest.approx(1.0, abs=1e-14)
+    assert f(np.pi / 2) == pytest.approx(1.0, abs=1e-14)
 ```
 
 This applies to:
@@ -289,12 +292,15 @@ def test_array_output(self):
 
 ### Parametrized Tests
 ```python
-@pytest.mark.parametrize("input_value,expected", [
-    (0, 0),
-    (1, 2),
-    (2, 4),
-    (-1, -2),
-])
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        (0, 0),
+        (1, 2),
+        (2, 4),
+        (-1, -2),
+    ],
+)
 def test_multiple_cases(input_value, expected):
     """Test function with multiple input/output pairs."""
     assert function(input_value) == expected

@@ -145,17 +145,17 @@ from chebpy import chebfun
 
 # Sigmoid: tail_left = -1, tail_right = +1
 f = chebfun(tanh, [-inf, inf])
-f.tail_left, f.tail_right     # (-1.0, 1.0)
-f(-1e6)                       # -1.0   (returned from tail_left)
-f(0.0)                        # 0.0    (from onefun)
-f(1e6)                        # +1.0   (returned from tail_right)
-f.support                     # [-inf, inf]
+f.tail_left, f.tail_right  # (-1.0, 1.0)
+f(-1e6)  # -1.0   (returned from tail_left)
+f(0.0)  # 0.0    (from onefun)
+f(1e6)  # +1.0   (returned from tail_right)
+f.support  # [-inf, inf]
 
 # Algebraic closure: difference of two sigmoids has zero tails
 g = chebfun(lambda x: tanh(x - 5), [-inf, inf])
 h = f - g
-h.tail_left, h.tail_right     # (0.0, 0.0)
-h.sum()                       # well-defined, finite
+h.tail_left, h.tail_right  # (0.0, 0.0)
+h.sum()  # well-defined, finite
 
 # Sum of a non-decaying function diverges (correctly)
 f.sum()
