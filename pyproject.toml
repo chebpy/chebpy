@@ -1,6 +1,8 @@
 [project]
 name = 'chebfun'
-version = "0.11.0"
+# Derived from the newest git tag by hatch-vcs rather than written here, so the tag is the
+# single source of truth and a bump can never be committed and then left untagged.
+dynamic = ["version"]
 description = "A Python implementation of Chebfun"
 authors = [{name='Mark Richardson', email= 'mrichardson82@gmail.com'}]
 readme = "README.md"
@@ -35,8 +37,16 @@ Homepage = "https://chebpy.github.io/chebpy/"
 Repository = "https://github.com/chebpy/chebpy"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+# `dynamic = ["version"]` above only says the backend supplies the version; this says from
+# where. setuptools-scm's default scheme: exactly the tag on a tagged commit (v0.11.0 ->
+# 0.11.0), and a dev version off the next patch in between (0.11.1.devN+g<sha>). No
+# `fallback-version` on purpose - a build that cannot see the tags should fail loudly
+# rather than publish a number nobody chose.
+[tool.hatch.version]
+source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/chebpy"]
@@ -63,10 +73,16 @@ typechecker = "both"
 
 # Was: `RHIZA_CHECKS_VERSION ?= 0.2.1` in .rhiza/make.d/quality.mk, i.e. an explicit pin
 # this repo already carried. CLI default: pytest-rhiza @ git+...@v0.2.0, which is older.
-# Without it `rhiza-test` silently rolls back to the v0.2.0 assertions. Named in PyPI form
-# because 0.2.1 is published there (0.2.2 is the current latest -- a bump is a separate
-# decision, not a migration).
-pytest-rhiza = "pytest-rhiza==0.2.1"
+# Without it `rhiza-test` silently rolls back to the v0.2.0 assertions.
+#
+# Raised 0.2.1 -> 0.6.0 by the move to a VCS-derived version: 0.2.1 knows about
+# `dynamic = ["version"]` only in the three checks that bump a static location, and still
+# asserts a written `[project].version` in three others, so `rhiza-test` fails on a
+# hatch-vcs project no matter how the manifest is arranged. 0.6.0 routes every assertion
+# about a written version through one fixture that skips when it is derived (six skips
+# here), and adds the "a version is declared, statically or dynamically" check in their
+# place.
+pytest-rhiza = "pytest-rhiza==0.6.0"
 
 # Not set, on purpose -- each already equals `uvx rhiza-task print <key>`, so naming it
 # would only create a second place to keep in sync:
@@ -112,11 +128,6 @@ unsupported-operator = "ignore"
 # src/ (and the Rhiza-managed .rhiza/tests and .rhiza/utils) stay fully covered.
 exclude = ["tests"]
 
-# Must live here rather than in .rhiza/.cfg.toml: that path is never auto-discovered,
-# so bump-my-version silently fell back to `git describe` and could cut a release at
-# an already-published version. With the table here, [project].version above is read
-# and rewritten natively — so no current_version key and no [[tool.bumpversion.files]]
-# entry for it, either of which would duplicate the version string and then drift.
 [tool.check_test_layout]
 # Tests are flat per-module (tests/test_<name>.py) rather than mirroring the
 # src/chebpy/ package depth, so path-parity reports every module twice — once as a
@@ -131,6 +142,15 @@ exclude = ["tests"]
 enforce = false
 reason = "Tests are flat per-module rather than mirroring src/chebpy/ package depth; per-module coverage is guaranteed by the full-coverage gate in `make test`."
 
+# Must live here rather than in .rhiza/.cfg.toml: that path is never auto-discovered, so
+# bump-my-version would find no config at all and /rhiza:release would stop at its
+# precondition check. The table deliberately names no version location: with
+# [project].version dynamic there is no number in any file to rewrite, so bump-my-version
+# derives its current version from the newest tag via `git describe`. That is the
+# tag-derived config /rhiza:release documents for hatch-vcs projects (as for Go and Rust):
+# it reads the pending version from the CHANGELOG heading instead. A current_version key
+# or a [[tool.bumpversion.files]] entry here would reintroduce the second copy of the
+# version string that this table's placement, and the move to hatch-vcs, exist to avoid.
 [tool.bumpversion]
 allow_dirty = false
 # /rhiza:release commits and tags itself, so that the changelog lands in the bump

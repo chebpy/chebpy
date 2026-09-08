@@ -95,7 +95,6 @@ wheels = [
 
 [[package]]
 name = "chebfun"
-version = "0.11.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
