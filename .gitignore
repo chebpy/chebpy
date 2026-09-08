@@ -111,6 +111,11 @@ cython_debug/
 # overwritten by every sync, so `local.mk` is the only place a repo's own make targets can
 # live, and anything CI invokes has to be committed. rhiza's own `make e2e`, which
 # rhiza_e2e.yml runs in all three language jobs, is exactly that case.
+#
+# `local-setup.sh` is not ignored either, and for the same reason one step further out: it
+# is the hook every layer's `install` runs to provision a native binary the project needs
+# (graphviz, libpq, pandoc), so CI invokes it on every job. A gitignored provisioning script
+# is one that works on its author's machine and nowhere else.
 
 .bandit-baseline.json
 
