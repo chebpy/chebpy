@@ -22,15 +22,12 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.23.16",
+    "marimo==0.24.0",
     "pandas>=2.2",
     "plotly",
 ]
 test = [
     "pytest>=8.0",
-]
-lint = [
-    "ruff>=0.14.14",
 ]
 
 [project.urls]
@@ -101,7 +98,6 @@ marimo = "marimo"
 numpy = "numpy"
 pandas = "pandas"
 plotly = "plotly"
-ruff = "ruff"
 
 [tool.ty.rules]
 invalid-method-override = "ignore"

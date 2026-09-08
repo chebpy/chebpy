@@ -4,7 +4,18 @@
 # Workflow: Paper
 #
 # Purpose: Compile the LaTeX paper (docs/paper/*.tex) to a PDF and publish it
-#          as a downloadable workflow artifact. Pushes the PDF to a paper branch.
+#          three ways: as a downloadable workflow artifact, as a site asset
+#          through the book (the paper folder sits inside the docs tree), and on
+#          the dedicated `paper` branch, which holds the PDF and nothing else.
+#
+#          The compile is the `paper` task from the pinned rhiza-task CLI -- the
+#          same one `make paper` runs locally -- so the engine and the choice of
+#          root document are defined once, not restated per platform.
+#
+#          One caveat on the branch: git refs are paths, so `refs/heads/paper`
+#          cannot coexist with a `paper/<topic>` branch. The workflow checks for
+#          one and fails with a message naming it rather than with a bare push
+#          error; rename the topic branch if you hit that.
 #
 # Trigger: On push/PR to main/master when docs/paper/** changes, or manual dispatch.
 
@@ -28,7 +39,9 @@ on:
 
 jobs:
   paper:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.4.2
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.6.0
     secrets: inherit
+    # `contents: write` is for the `paper` branch publish and nothing else. A pull request
+    # never reaches that step, so the scope is unused on every PR run.
     permissions:
       contents: write
