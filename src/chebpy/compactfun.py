@@ -24,8 +24,10 @@ from typing import Any, cast
 
 import numpy as np
 
+from .bndfun import Bndfun
 from .classicfun import Classicfun, techdict
 from .exceptions import CompactFunConstructionError, DivergentIntegralError
+from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
 
@@ -629,8 +631,6 @@ class CompactFun(Classicfun):
     # -----------
     def restrict(self, subinterval: Any) -> Any:
         """Restrict to a finite subinterval, returning a :class:`Bndfun`."""
-        from .bndfun import Bndfun
-
         sub_a, sub_b = _ensure_endpoints(subinterval)
         if not (np.isfinite(sub_a) and np.isfinite(sub_b)):
             raise NotImplementedError(
@@ -756,7 +756,5 @@ class CompactFun(Classicfun):
         defaults to the numerical-support interval padded by 10% on each
         unbounded side. Pass an explicit ``support=(a, b)`` keyword to override.
         """
-        from .plotting import plotfun
-
         support = kwds.pop("support", self.plot_support)
         return plotfun(self, support, ax=ax, **kwds)
