@@ -1,5 +1,5 @@
 repository: "jebel-quant/rhiza"
-ref: "v1.3.2"
+ref: "v1.8.0"
 
 profiles:
   - github-project
@@ -10,5 +10,15 @@ templates:
   # publishes the PDF both as a workflow artifact and on the `paper` branch.
   - github-paper
 
+# `exclude:` is matched against DESTINATION paths — where a file lands here, not
+# where it lives in the template clone. An entry spelled clone-relative
+# (`bundles/github/.github/…`) matches nothing, silently.
 exclude:
-  - book/marimo/notebooks/rhiza.py  
+  # Generic community boilerplate. chebpy never customised these (their only commits
+  # are sync commits), and issue/discussion forms are a repo-owned editorial choice
+  # rather than something the template should keep overwriting.
+  - .github/CONFIG.md
+  # Dropped, not converted: `book/marimo/notebooks/rhiza.py` was here since v1.2.5 and
+  # never matched anything — no bundle in v1.3.4 or v1.4.2 ships a notebook to a
+  # consumer (rhiza's own `docs/notebooks/rhiza.py` lives outside `bundles/`), and no
+  # such file exists in this tree. Nothing is un-excluded by removing it.

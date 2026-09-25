@@ -10,8 +10,8 @@ import numpy as np
 from chebpy import chebfun
 
 f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
-df = f.diff()       # first derivative
-d2f = f.diff(2)     # second derivative
+df = f.diff()  # first derivative
+d2f = f.diff(2)  # second derivative
 ```
 
 Differentiation is performed on the Chebyshev coefficients in $O(n)$ time.
@@ -27,7 +27,7 @@ Integration uses Clenshaw–Curtis quadrature and is accurate to machine precisi
 ## Indefinite Integration (Cumulative Sum)
 
 ```python
-F = f.cumsum()      # F(x) = ∫_{a}^{x} f(t) dt
+F = f.cumsum()  # F(x) = ∫_{a}^{x} f(t) dt
 ```
 
 The result is a new Chebfun whose degree is one higher than the input.

@@ -50,6 +50,31 @@ class MapParams:
             ``gap < 1e-10`` at ``alpha = 1.0``).
         alpha: Positive strip half-width. Controls the clustering
             strength; smaller ``alpha`` clusters more aggressively.
+
+    Examples:
+        >>> p = MapParams()
+        >>> p.L, p.alpha
+        (8.0, 1.0)
+
+        Both parameters must be strictly positive:
+
+        >>> MapParams(L=-1.0)
+        Traceback (most recent call last):
+            ...
+        ValueError: require L > 0
+        >>> MapParams(alpha=0.0)
+        Traceback (most recent call last):
+            ...
+        ValueError: require alpha > 0
+
+        A larger ``L`` shrinks the gap between the map's image and the
+        clustered endpoint:
+
+        >>> from chebpy.maps import SingleSlitMap
+        >>> wide = SingleSlitMap(0.0, 1.0, MapParams(L=4.0), side="left")
+        >>> tight = SingleSlitMap(0.0, 1.0, MapParams(L=8.0), side="left")
+        >>> bool(tight.gap < wide.gap)
+        True
     """
 
     L: float = 8.0

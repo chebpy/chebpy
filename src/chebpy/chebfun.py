@@ -18,13 +18,14 @@ from typing import Any, cast
 import numpy as np
 from matplotlib.axes import Axes
 
+from ._construction import generate_funs
 from ._ufuncs import register_ufuncs
 from .bndfun import Bndfun
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
 from .exceptions import BadFunLengthArgument
 from .plotting import plot_chebfun, plotcoeffs_chebfun
 from .settings import _preferences as prefs
-from .utilities import Domain, check_funs, compute_breakdata, generate_funs
+from .utilities import Domain, check_funs, compute_breakdata
 
 
 class Chebfun:

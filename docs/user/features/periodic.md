@@ -30,9 +30,9 @@ the Python API unambiguous.
 The same shorthand forms as `chebfun` are supported:
 
 ```python
-trigfun()               # empty Chebfun
-trigfun(3.14)            # constant function
-trigfun(lambda x: np.sin(np.pi * x), n=16)   # fixed number of Fourier modes
+trigfun()  # empty Chebfun
+trigfun(3.14)  # constant function
+trigfun(lambda x: np.sin(np.pi * x), n=16)  # fixed number of Fourier modes
 ```
 
 ## Why use `trigfun`?
@@ -51,8 +51,8 @@ f = lambda x: np.cos(8 * np.pi * x) + np.sin(3 * np.pi * x)
 fc = chebfun(f, [-1, 1])
 ft = trigfun(f, [-1, 1])
 
-len(fc)   # Chebyshev degree
-len(ft)   # number of Fourier modes
+len(fc)  # Chebyshev degree
+len(ft)  # number of Fourier modes
 ```
 
 ## Calculus and arithmetic
@@ -62,9 +62,9 @@ All standard Chebfun operations work on periodic Chebfuns:
 ```python
 f = trigfun(lambda x: np.sin(np.pi * x), [-1, 1])
 
-df = f.diff()        # spectral differentiation in Fourier space
-F = f.cumsum()       # antiderivative
-total = f.sum()      # ≈ 0
+df = f.diff()  # spectral differentiation in Fourier space
+F = f.cumsum()  # antiderivative
+total = f.sum()  # ≈ 0
 ```
 
 ## Periodic Gaussian process regression

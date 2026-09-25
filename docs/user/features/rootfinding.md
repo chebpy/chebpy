@@ -11,7 +11,7 @@ from chebpy import chebfun
 
 f = chebfun(lambda x: np.cos(10 * x), [-1, 1])
 roots = f.roots()
-print(roots)   # all zeros of cos(10x) in [-1, 1]
+print(roots)  # all zeros of cos(10x) in [-1, 1]
 ```
 
 ## Finding Extrema

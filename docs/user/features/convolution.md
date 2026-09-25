@@ -8,10 +8,10 @@ Convolve two Chebfun objects to produce a new Chebfun on the summed domain.
 import numpy as np
 from chebpy import chebfun
 
-f = chebfun(lambda x: np.exp(-x**2), [-1, 1])
+f = chebfun(lambda x: np.exp(-(x**2)), [-1, 1])
 g = chebfun(lambda x: np.where(np.abs(x) < 0.5, 1.0, 0.0), [-1, 1])
 
-h = f.conv(g)   # h is a Chebfun on [-2, 2]
+h = f.conv(g)  # h is a Chebfun on [-2, 2]
 h.plot()
 ```
 

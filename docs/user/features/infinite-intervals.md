@@ -13,22 +13,22 @@ import numpy as np
 from chebpy import chebfun
 
 # A doubly-infinite Gaussian
-f = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
+f = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
 
 # Decaying oscillation on [0, ∞)
 g = chebfun(lambda x: np.sin(10 * x) * np.exp(-x), [0, np.inf])
 
 # Standard operations work transparently
-g.sum()       # definite integral over [0, ∞)
-g.diff()      # derivative
-g.roots()     # roots within numerical support
+g.sum()  # definite integral over [0, ∞)
+g.diff()  # derivative
+g.roots()  # roots within numerical support
 ```
 
 Pieces with infinite endpoints are automatically constructed as `CompactFun`
 objects, while interior pieces remain ordinary `Bndfun`s:
 
 ```python
-p = chebfun(lambda x: np.exp(-x**2), [-np.inf, -2.0, 0.0, 3.0, np.inf])
+p = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, -2.0, 0.0, 3.0, np.inf])
 print([type(piece).__name__ for piece in p.funs])
 # ['CompactFun', 'Bndfun', 'Bndfun', 'CompactFun']
 ```
@@ -66,8 +66,8 @@ numerical-support approach has two consequences:
 from chebpy.exceptions import CompactFunConstructionError
 
 for f in [
-    lambda x: 1.0 / (np.pi * (1.0 + x * x)),   # Cauchy density: O(1/x²) decay
-    lambda x: 1.0 / (1.0 + np.abs(x)),          # O(1/x) decay
+    lambda x: 1.0 / (np.pi * (1.0 + x * x)),  # Cauchy density: O(1/x²) decay
+    lambda x: 1.0 / (1.0 + np.abs(x)),  # O(1/x) decay
 ]:
     try:
         chebfun(f, [-np.inf, np.inf])
@@ -80,8 +80,8 @@ constants are recovered automatically:
 
 ```python
 t = chebfun(np.tanh, [-np.inf, np.inf])
-t.funs[0].tail_left, t.funs[0].tail_right    # (-1.0, 1.0)
-t(1e10)                                       # 1.0
+t.funs[0].tail_left, t.funs[0].tail_right  # (-1.0, 1.0)
+t(1e10)  # 1.0
 ```
 
 ## Convolution
@@ -91,11 +91,10 @@ works directly. For example, convolving the standard Gaussian density
 with itself yields $\mathcal{N}(0, 2)$:
 
 ```python
-pdf = chebfun(lambda x: np.exp(-x**2 / 2) / np.sqrt(2 * np.pi),
-              [-np.inf, np.inf])
+pdf = chebfun(lambda x: np.exp(-(x**2) / 2) / np.sqrt(2 * np.pi), [-np.inf, np.inf])
 pdf2 = pdf.conv(pdf)
-pdf2.sum()    # ≈ 1
-pdf2(0.0)     # ≈ 1 / sqrt(4π)
+pdf2.sum()  # ≈ 1
+pdf2(0.0)  # ≈ 1 / sqrt(4π)
 ```
 
 ## See also

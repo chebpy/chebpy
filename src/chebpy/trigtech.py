@@ -43,6 +43,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .decorators import self_empty
+from .exceptions import BadFunLengthArgument
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
 from .smoothfun import Smoothfun
@@ -130,6 +131,25 @@ class Trigtech(Smoothfun, ABC):
     abstract base and the concrete class: it is not further subclassed, but
     the ABC marker prevents accidental bare construction without going through
     a named constructor.
+
+    Examples:
+        A periodic function needs only a handful of Fourier modes, where the
+        Chebyshev constructor would need many more:
+
+        >>> import numpy as np
+        >>> f = Trigtech.initfun_adaptive(lambda x: np.cos(np.pi * x))
+        >>> f.size
+        3
+        >>> bool(abs(f(0.0) - 1.0) < 1e-13)
+        True
+        >>> bool(abs(f(1.0) + 1.0) < 1e-13)
+        True
+
+        Fixed-length construction samples on *n* equispaced points:
+
+        >>> g = Trigtech.initfun_fixedlen(lambda x: np.sin(np.pi * x), 16)
+        >>> g.size
+        16
     """
 
     # ------------------------------------------------------------------
@@ -172,7 +192,7 @@ class Trigtech(Smoothfun, ABC):
     def initfun_fixedlen(cls, fun: Any = None, n: Any = None, *, interval: Any = None) -> "Trigtech":
         """Initialise a Trigtech from callable *fun* using *n* equispaced points."""
         if n is None:
-            raise ValueError("initfun_fixedlen requires the n parameter to be specified")  # noqa: TRY003
+            raise BadFunLengthArgument("initfun_fixedlen requires the n parameter to be specified")  # noqa: TRY003
         points = cls._trigpts(int(n))
         values = fun(points)
         coeffs = cls._vals2coeffs(values)

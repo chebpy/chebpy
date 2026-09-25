@@ -19,6 +19,7 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 
 from .chebfun import Chebfun
+from .exceptions import SupportMismatch
 
 
 class Quasimatrix:
@@ -30,6 +31,39 @@ class Quasimatrix:
 
     Attributes:
         columns: list of Chebfun objects forming the columns.
+
+    Examples:
+        Build a quasimatrix from Chebfun columns. One dimension is
+        continuous, so the shape is ``(inf, n)``:
+
+        >>> import numpy as np
+        >>> from chebpy import chebfun
+        >>> x = chebfun("x")
+        >>> A = Quasimatrix([x, x**2])
+        >>> A.shape
+        (inf, 2)
+        >>> len(A)
+        2
+
+        Calling evaluates every column at once:
+
+        >>> A(0.5).tolist()
+        [0.5, 0.25]
+
+        Matrix-vector products contract the discrete dimension, giving a
+        Chebfun back:
+
+        >>> f = A @ np.array([1.0, 1.0])
+        >>> bool(abs(f(0.5) - 0.75) < 1e-13)
+        True
+
+        The continuous analogue of QR yields orthonormal columns:
+
+        >>> Q, R = A.qr()
+        >>> R.shape
+        (2, 2)
+        >>> bool(np.allclose(Q.inner(), np.eye(2), atol=1e-10))
+        True
     """
 
     # ------------------------------------------------------------------
@@ -57,7 +91,7 @@ class Quasimatrix:
             for k, col in enumerate(cols[1:], 1):
                 if col.support != ref:
                     msg = f"Column {k} support {col.support} does not match column 0 support {ref}"
-                    raise ValueError(msg)
+                    raise SupportMismatch(msg)
         self.columns: list[Chebfun] = cols
 
     # ------------------------------------------------------------------

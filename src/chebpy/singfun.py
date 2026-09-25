@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from .classicfun import Classicfun, techdict
+from .exceptions import InvalidSingularitySide, NotSubinterval
 from .maps import DoubleSlitMap, MapParams, SingleSlitMap
 from .settings import _preferences as prefs
 from .utilities import Interval, IntervalMap
@@ -49,14 +50,14 @@ def _build_map(a: float, b: float, sing: str, params: MapParams) -> IntervalMap:
             or :class:`DoubleSlitMap` (for ``"both"``).
 
     Raises:
-        ValueError: If ``sing`` is not one of the recognised values.
+        InvalidSingularitySide: If ``sing`` is not one of the recognised values.
     """
     if sing in ("left", "right"):
         return SingleSlitMap(a, b, params, side=sing)
     if sing == "both":
         return DoubleSlitMap(a, b, params)
     msg = f"sing must be 'left', 'right', or 'both'; got {sing!r}"
-    raise ValueError(msg)
+    raise InvalidSingularitySide(msg)
 
 
 class Singfun(Classicfun):
@@ -77,6 +78,29 @@ class Singfun(Classicfun):
       :meth:`~chebpy.classicfun.Classicfun.__call__` and
       :meth:`~chebpy.classicfun.Classicfun.roots` route through the
       non-affine map without further changes.
+
+    Examples:
+        ``sqrt`` has a branch-point singularity at the left endpoint, which a
+        plain polynomial approximation resolves only slowly. Declaring the
+        side clusters the points there instead:
+
+        >>> import numpy as np
+        >>> f = Singfun.initfun_adaptive(np.sqrt, [0.0, 1.0], sing="left")
+        >>> f.map.side
+        'left'
+
+        The integral of ``sqrt`` over [0, 1] is 2/3:
+
+        >>> bool(abs(f.sum() - 2.0 / 3.0) < 1e-10)
+        True
+
+        The map is non-affine, unlike the plain
+        :class:`~chebpy.utilities.Interval` a :class:`~chebpy.bndfun.Bndfun`
+        would carry:
+
+        >>> from chebpy.maps import SingleSlitMap
+        >>> isinstance(f.map, SingleSlitMap)
+        True
     """
 
     # Mixed-subclass binary ops (Singfun + Bndfun, etc.) reconstruct on the
@@ -336,8 +360,6 @@ class Singfun(Classicfun):
         from .bndfun import Bndfun
 
         if subinterval not in self.interval:
-            from .exceptions import NotSubinterval
-
             raise NotSubinterval(self.interval, subinterval)
         a, b = float(self._interval[0]), float(self._interval[1])
         sa, sb = float(subinterval[0]), float(subinterval[1])

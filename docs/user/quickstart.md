@@ -31,9 +31,9 @@ f = chebfun(lambda x: np.sin(x), [-np.pi, np.pi])
 You can also create common objects with shorthand:
 
 ```python
-x = chebfun('x')          # identity function on [-1, 1]
-c = chebfun(3.14)          # constant function
-empty = chebfun()           # empty Chebfun
+x = chebfun("x")  # identity function on [-1, 1]
+c = chebfun(3.14)  # constant function
+empty = chebfun()  # empty Chebfun
 ```
 
 ## Evaluating
@@ -51,9 +51,9 @@ f(np.linspace(-1, 1, 100))
 f = chebfun(lambda x: np.exp(x), [-1, 1])
 
 # Calculus
-df = f.diff()              # derivative
-F = f.cumsum()             # indefinite integral
-integral = f.sum()         # definite integral
+df = f.diff()  # derivative
+F = f.cumsum()  # indefinite integral
+integral = f.sum()  # definite integral
 
 # Root-finding
 g = chebfun(lambda x: np.cos(10 * x), [-1, 1])
@@ -62,7 +62,7 @@ roots = g.roots()
 # Arithmetic
 h = f + g
 h = f * g
-h = f ** 2
+h = f**2
 ```
 
 ## Plotting
@@ -86,8 +86,8 @@ from chebpy import chebfun, trigfun
 p = trigfun(lambda x: np.cos(np.pi * x), [-1, 1])
 
 # Functions on (-∞, ∞) via numerical-support truncation
-g = chebfun(lambda x: np.exp(-x**2), [-np.inf, np.inf])
-g.sum()    # ≈ √π
+g = chebfun(lambda x: np.exp(-(x**2)), [-np.inf, np.inf])
+g.sum()  # ≈ √π
 ```
 
 See [Periodic Functions](features/periodic.md) and

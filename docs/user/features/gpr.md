@@ -22,20 +22,21 @@ f_mean, f_var = gpr(x_obs, y_obs, domain=[-2, 2])
 Because the posterior is a Chebfun, all standard operations apply:
 
 ```python
-f_mean.plot()                      # plot the posterior mean
-extrema = f_mean.diff().roots()    # local extrema
-integral = f_mean.sum()            # definite integral
+f_mean.plot()  # plot the posterior mean
+extrema = f_mean.diff().roots()  # local extrema
+integral = f_mean.sum()  # definite integral
 ```
 
 ## Options
 
 ```python
 f_mean, f_var = gpr(
-    x_obs, y_obs,
+    x_obs,
+    y_obs,
     domain=[-2, 2],
-    sigma=1.0,            # signal standard deviation
-    length_scale=0.5,     # kernel length scale
-    noise=0.01,           # observation noise
+    sigma=1.0,  # signal standard deviation
+    length_scale=0.5,  # kernel length scale
+    noise=0.01,  # observation noise
 )
 ```
 
