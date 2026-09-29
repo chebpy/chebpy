@@ -42,6 +42,8 @@ from typing import Any, cast
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .algorithms import newtonroots, rootsunit
+from .chebtech import Chebtech
 from .decorators import self_empty
 from .exceptions import BadFunLengthArgument
 from .plotting import plotfun, plotfuncoeffs
@@ -562,9 +564,6 @@ class Trigtech(Smoothfun, ABC):
             sort: If True, sort the roots in ascending order.  Defaults to
                 ``prefs.sortroots``.
         """
-        from .algorithms import newtonroots, rootsunit
-        from .chebtech import Chebtech
-
         sort = sort if sort is not None else prefs.sortroots
 
         if self.isempty:

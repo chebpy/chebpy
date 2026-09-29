@@ -18,7 +18,10 @@ from typing import Any, cast
 import numpy as np
 from matplotlib.axes import Axes
 
+from . import _pointwise
 from ._construction import generate_funs
+from ._convolution import convolve
+from ._singular_construction import generate_singular_funs
 from ._ufuncs import register_ufuncs
 from .bndfun import Bndfun
 from .decorators import cache, cast_arg_to_chebfun, float_argument, self_empty
@@ -162,7 +165,6 @@ class Chebfun:
         """
         if sing is None:
             return cls(generate_funs(domain, Bndfun.initfun_adaptive, {"f": f}))
-        from ._singular_construction import generate_singular_funs
 
         return cls(generate_singular_funs(f, domain, sing=sing, params=params))
 
@@ -932,8 +934,6 @@ class Chebfun:
             >>> bool(abs(h(1.0) - 1.0) < 1e-10)
             True
         """
-        from ._convolution import convolve
-
         return convolve(self, g)
 
     def sum(self) -> Any:
@@ -1028,9 +1028,7 @@ class Chebfun:
     @self_empty()
     def absolute(self) -> Chebfun:
         """Absolute value of a Chebfun."""
-        from ._pointwise import absolute
-
-        return absolute(self)
+        return _pointwise.absolute(self)
 
     abs = absolute
 
@@ -1045,9 +1043,7 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing sign(f(x)).
         """
-        from ._pointwise import sign
-
-        return sign(self)
+        return _pointwise.sign(self)
 
     @self_empty()
     def ceil(self) -> Chebfun:
@@ -1061,9 +1057,7 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing ceil(f(x)).
         """
-        from ._pointwise import ceil
-
-        return ceil(self)
+        return _pointwise.ceil(self)
 
     @self_empty()
     def floor(self) -> Chebfun:
@@ -1077,25 +1071,19 @@ class Chebfun:
         Returns:
             Chebfun: A new Chebfun representing floor(f(x)).
         """
-        from ._pointwise import floor
-
-        return floor(self)
+        return _pointwise.floor(self)
 
     @self_empty()
     @cast_arg_to_chebfun
     def maximum(self, other: Any) -> Any:
         """Pointwise maximum of self and another chebfun."""
-        from ._pointwise import maximum_minimum
-
-        return maximum_minimum(self, other, operator.ge)
+        return _pointwise.maximum_minimum(self, other, operator.ge)
 
     @self_empty()
     @cast_arg_to_chebfun
     def minimum(self, other: Any) -> Any:
         """Pointwise minimum of self and another chebfun."""
-        from ._pointwise import maximum_minimum
-
-        return maximum_minimum(self, other, operator.lt)
+        return _pointwise.maximum_minimum(self, other, operator.lt)
 
     # ----------
     #  plotting

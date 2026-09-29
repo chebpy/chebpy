@@ -28,7 +28,10 @@ import numpy as np
 from .algorithms import _conv_legendre, cheb2leg, leg2cheb
 from .bndfun import Bndfun
 from .chebtech import Chebtech
+from .compactfun import CompactFun
+from .exceptions import DivergentIntegralError
 from .fun import Fun
+from .singfun import Singfun
 from .trigtech import Trigtech
 from .utilities import Interval
 
@@ -69,8 +72,6 @@ def _reject_unsupported(f: Chebfun, g: Chebfun) -> None:
         NotImplementedError: If either operand contains a Trigtech- or
             Singfun-backed piece.
     """
-    from .singfun import Singfun
-
     pieces = (*f.funs, *g.funs)
     if any(isinstance(piece.onefun, Trigtech) for piece in pieces):
         raise NotImplementedError(
@@ -98,9 +99,6 @@ def _reject_nonzero_tails(f: Chebfun, g: Chebfun) -> None:
         DivergentIntegralError: If any CompactFun piece of either operand has a
             non-zero ``tail_left`` or ``tail_right``.
     """
-    from .compactfun import CompactFun
-    from .exceptions import DivergentIntegralError
-
     for label, h in (("self", f), ("other", g)):
         for piece in h.funs:
             if isinstance(piece, CompactFun) and (piece.tail_left != 0.0 or piece.tail_right != 0.0):
@@ -121,8 +119,6 @@ def _use_equal_width_fast_path(f: Chebfun, g: Chebfun) -> bool:
     logical support) always take the general piecewise path so the output is
     wrapped correctly.
     """
-    from .compactfun import CompactFun
-
     if any(isinstance(piece, CompactFun) for piece in (*f.funs, *g.funs)):
         return False
     if f.funs.size != 1 or g.funs.size != 1:
@@ -199,8 +195,6 @@ def _piecewise(f: Chebfun, g: Chebfun) -> Chebfun:
 
 def _effective_breakpoints(h: Chebfun) -> np.ndarray:
     """Return ``h``'s breakpoints with ±inf replaced by numerical-support bounds."""
-    from .compactfun import CompactFun
-
     bps = np.array(h.breakpoints, dtype=float)
     if not np.isfinite(bps[0]) and isinstance(h.funs[0], CompactFun):
         bps[0] = float(h.funs[0].numerical_support[0])
@@ -280,8 +274,6 @@ def _build_pieces(
     as :class:`CompactFun` when the corresponding logical edge is ``±inf`` so
     the result preserves the unbounded logical support.
     """
-    from .compactfun import CompactFun
-
     n_pieces = len(out_breaks) - 1
     funs_list: list[Fun] = []
     for i in range(n_pieces):

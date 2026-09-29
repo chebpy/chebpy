@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .bndfun import Bndfun
 from .classicfun import Classicfun, techdict
 from .exceptions import InvalidSingularitySide, NotSubinterval
 from .maps import DoubleSlitMap, MapParams, SingleSlitMap
@@ -357,8 +358,6 @@ class Singfun(Classicfun):
         result remains a usable :class:`~chebpy.classicfun.Classicfun` but
         may change subclass.
         """
-        from .bndfun import Bndfun
-
         if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
         a, b = float(self._interval[0]), float(self._interval[1])
@@ -389,8 +388,6 @@ class Singfun(Classicfun):
         touches the clustered endpoint; otherwise the function is analytic on
         the subinterval and drops to a :class:`~chebpy.bndfun.Bndfun`.
         """
-        from .bndfun import Bndfun
-
         if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
             return type(self).initfun_adaptive(self, new_iv, sing=m.side, params=m.params)
         return Bndfun.initfun_adaptive(self, new_iv)
@@ -404,8 +401,6 @@ class Singfun(Classicfun):
         one-sided :class:`Singfun`; a purely interior subinterval drops to a
         :class:`~chebpy.bndfun.Bndfun`.
         """
-        from .bndfun import Bndfun
-
         if touches_left and touches_right:
             # Subinterval == self.interval handled by the caller; this branch is
             # therefore unreachable in normal usage.
