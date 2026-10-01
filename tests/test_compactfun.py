@@ -399,6 +399,10 @@ class TestTailConstants:
         f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
         assert "tails=" in repr(f)
 
+    def test_repr_without_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        assert repr(f) == f"CompactFun([-inf, inf], {f.size})"
+
     def test_endvalues_use_tails(self) -> None:
         f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
         ev = f.endvalues
@@ -466,6 +470,12 @@ class TestTailConstants:
 # -----------------------------
 class TestDiscoveryInternals:
     """Direct tests for the module-level support-discovery helpers."""
+
+    def test_probe_evaluation_error_raises(self) -> None:
+        # An arithmetic error raised by f at a probe is wrapped and chained.
+        with pytest.raises(CompactFunConstructionError) as excinfo:
+            _discover_one_side(lambda x: 1 / 0, 0.0, 1, 1e-10, 1e6, 60)
+        assert isinstance(excinfo.value.__cause__, ZeroDivisionError)
 
     def test_probe_nonfinite_raises(self) -> None:
         # A function returning a non-finite value at a probe is rejected.

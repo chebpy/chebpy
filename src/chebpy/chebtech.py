@@ -191,7 +191,7 @@ class Chebtech(Smoothfun, ABC):
         vk = self._barywts(fk.size)
         return bary(x, fk, xk, vk)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a string representation of the Chebtech.
 
         Returns:

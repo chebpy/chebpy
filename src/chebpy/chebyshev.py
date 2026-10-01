@@ -185,7 +185,8 @@ class ChebyshevPolynomial(cheb.Chebyshev):
         Returns:
             float: The definite integral of the polynomial over its domain.
         """
-        if self.isempty:  # pragma: no cover
+        # Defensive: numpy rejects an empty coefficient array at construction.
+        if self.isempty:  # pragma: no cover - defensive, see above
             return 0.0
 
         a, b = self.domain
