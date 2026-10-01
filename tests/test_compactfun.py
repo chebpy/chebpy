@@ -389,7 +389,9 @@ class TestTailConstants:
 
     def test_logistic_one_sided_tail(self) -> None:
         # Logistic 1/(1+exp(-x)) -> 0 at -inf, 1 at +inf.
-        f = CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + np.exp(-x)), (-np.inf, np.inf))
+        # exp(-x) overflows to inf for very negative x; 1/(1+inf) == 0 is the intended limit.
+        with np.errstate(over="ignore"):
+            f = CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + np.exp(-x)), (-np.inf, np.inf))
         assert f.tail_left == pytest.approx(0.0, abs=1e-12)
         assert f.tail_right == pytest.approx(1.0, abs=1e-12)
 
