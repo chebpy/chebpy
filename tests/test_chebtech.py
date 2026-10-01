@@ -343,3 +343,8 @@ class TestPlotting:
         _fig, ax = plt.subplots()
         self.f0.plotcoeffs(ax=ax)
         self.f1.plotcoeffs(ax=ax, color="r")
+
+
+def test_repr():
+    """The repr reports the class name and number of coefficients."""
+    assert repr(Chebtech.initfun_fixedlen(np.sin, 7)) == "<Chebtech{7}>"

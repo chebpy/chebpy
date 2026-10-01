@@ -43,7 +43,7 @@ def cache(f: Callable[..., Any]) -> Callable[..., Any]:
             # f has not been executed previously and self._cache does not exist
             self._cache = {}
             out = self._cache[f.__name__] = f(self)  # ty: ignore[unresolved-attribute]
-        except KeyError:  # pragma: no cover
+        except KeyError:
             # f has not been executed previously, but self._cache exists
             out = self._cache[f.__name__] = f(self)  # ty: ignore[unresolved-attribute]
         return out

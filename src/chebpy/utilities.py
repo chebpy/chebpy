@@ -152,8 +152,8 @@ class Interval(np.ndarray):
         Returns:
             float or numpy.ndarray: Derivative values at the corresponding points.
         """
-        a, b = self  # pragma: no cover
-        return 0.0 * y + 0.5 * (b - a)  # pragma: no cover
+        a, b = self
+        return 0.0 * y + 0.5 * (b - a)
 
     def __eq__(self, other: object) -> bool:
         """Check if two intervals are equal.
@@ -574,6 +574,6 @@ def coerce_list(x: object) -> list[Any] | Iterable[Any]:
         list or iterable: The input wrapped in a list if it was not an iterable,
             or the original input if it was already an iterable (except strings).
     """
-    if not isinstance(x, Iterable) or isinstance(x, str):  # pragma: no cover
+    if not isinstance(x, Iterable) or isinstance(x, str):
         x = [x]
     return x

@@ -74,6 +74,23 @@ class TestCache:
         assert a.compute() == 1
         assert b.compute() == 2
 
+    def test_cache_second_method_shares_existing_cache(self):
+        """Test that a second cached method adds its entry to an existing _cache."""
+
+        class Obj:
+            @cache
+            def first(self):
+                return 1
+
+            @cache
+            def second(self):
+                return 2
+
+        obj = Obj()
+        assert obj.first() == 1
+        assert obj.second() == 2
+        assert obj._cache == {"first": 1, "second": 2}
+
 
 # ---------------------------------------------------------------------------
 # self_empty decorator

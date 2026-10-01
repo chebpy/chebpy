@@ -21,10 +21,12 @@ from chebpy.algorithms import (
     cheb2leg,
     clenshaw,
     coeffmult,
+    coeffs2vals2,
     fh_barywts,
     funqui,
     leg2cheb,
     standard_chop,
+    vals2coeffs2,
 )
 from chebpy.chebfun import Chebfun
 from chebpy.chebtech import Chebtech
@@ -976,3 +978,16 @@ class TestChebfunConvPiecewise:
         xs = np.array([0.0, 0.5, 1.0, -0.5, -1.0])
         expected = np.maximum(0.0, 2.0 - np.abs(xs))
         assert np.allclose(h(xs), expected, atol=1e-10)
+
+
+def test_standard_chop_tol_at_least_one() -> None:
+    """A tolerance >= 1 chops everything after the first coefficient."""
+    assert standard_chop(np.ones(20), tol=1.0) == 1
+
+
+def test_vals2coeffs2_coeffs2vals2_purely_imaginary() -> None:
+    """Purely imaginary input stays purely imaginary and round-trips."""
+    vals = 1j * np.arange(5.0)
+    coeffs = vals2coeffs2(vals)
+    assert np.all(coeffs.real == 0.0)
+    np.testing.assert_allclose(coeffs2vals2(coeffs), vals, atol=1e-14)

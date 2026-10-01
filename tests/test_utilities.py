@@ -21,7 +21,7 @@ from chebpy.exceptions import (
     SupportMismatch,
 )
 from chebpy.settings import DefaultPreferences
-from chebpy.utilities import Domain, Interval, IntervalMap, check_funs, compute_breakdata, htol
+from chebpy.utilities import Domain, Interval, IntervalMap, check_funs, coerce_list, compute_breakdata, htol
 
 rng = np.random.default_rng(0)  # Use a fixed seed for reproducibility
 eps = DefaultPreferences.eps
@@ -895,3 +895,17 @@ def test_compute_breakdata_2(compute_breakdata_fixtures):
     x, y = list(breaks.keys()), list(breaks.values())
     assert np.max(np.abs(x - np.array([-1, 0, 1]))) <= eps
     assert np.max(np.abs(y - np.array([np.exp(-1), np.exp(0), np.exp(1)]))) <= 2 * eps
+
+
+def test_interval_drvmap():
+    """The derivative of the affine map is the constant half-width."""
+    assert Interval(2, 6).drvmap(0.3) == 2.0
+    np.testing.assert_array_equal(Interval(2, 6).drvmap(np.array([-1.0, 0.0, 1.0])), [2.0, 2.0, 2.0])
+
+
+def test_coerce_list():
+    """Scalars and strings are wrapped in a list; other iterables pass through."""
+    assert coerce_list(3) == [3]
+    assert coerce_list("ab") == ["ab"]
+    x = [1, 2]
+    assert coerce_list(x) is x

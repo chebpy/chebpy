@@ -288,7 +288,7 @@ class SingleSlitMap:
             return float(dxdy)
         return dxdy
 
-    def __repr__(self) -> str:  # pragma: no cover - trivial
+    def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         return f"SingleSlitMap(a={self.a!r}, b={self.b!r}, params={self.params!r}, side={self.side!r})"
 
@@ -449,6 +449,6 @@ class DoubleSlitMap:
             return float(dxdy)
         return dxdy
 
-    def __repr__(self) -> str:  # pragma: no cover - trivial
+    def __repr__(self) -> str:
         """Return a developer-friendly representation."""
         return f"DoubleSlitMap(a={self.a!r}, b={self.b!r}, params={self.params!r})"

@@ -102,7 +102,7 @@ def _trig_adaptive(
         # Convergence: the Nyquist/highest-frequency mode is negligible.
         if abs_sym[-1] <= tol:
             above = np.where(abs_sym > tol)[0]
-            if len(above) == 0:  # pragma: no cover
+            if len(above) == 0:  # pragma: no cover - defensive, see below
                 # Defensive: the normalised peak coefficient is >= 1/n >> tol
                 # whenever vscale > tol, so 'above' is never empty here.
                 return np.array([0.0])
@@ -264,7 +264,7 @@ class Trigtech(Smoothfun, ABC):
             result = result.real
         return float(result[0]) if scalar else result
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a concise string representation."""
         return f"<{self.__class__.__name__}{{{self.size}}}>"
 
@@ -421,7 +421,7 @@ class Trigtech(Smoothfun, ABC):
             abs_sym[ki] = max(abs(p), abs(q)) / abs_max
 
         above = np.where(abs_sym > tol)[0]
-        if len(above) == 0:  # pragma: no cover
+        if len(above) == 0:  # pragma: no cover - defensive, see below
             # Defensive: with abs_max > 0 the normalised peak equals 1 > tol,
             # so 'above' always contains at least the peak index.
             return self.initconst(0.0, interval=self._interval)

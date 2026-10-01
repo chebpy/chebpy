@@ -232,3 +232,12 @@ class TestDoubleSlitMap:
         assert isinstance(m.formap(0.0), float)
         assert isinstance(m.invmap(0.5), float)
         assert isinstance(m.drvmap(0.0), float)
+
+
+def test_repr():
+    """Both maps report their endpoints and parameters."""
+    params = MapParams()
+    assert repr(SingleSlitMap(0.0, 1.0, params, side="left")) == (
+        f"SingleSlitMap(a=0.0, b=1.0, params={params!r}, side='left')"
+    )
+    assert repr(DoubleSlitMap(0.0, 1.0, params)) == f"DoubleSlitMap(a=0.0, b=1.0, params={params!r})"
