@@ -138,7 +138,8 @@ def maximum_minimum(f: Chebfun, other: Chebfun, comparator: Callable[..., bool])
     newdom = newdom.merge(roots)
     switch = newdom.support.merge(roots)
 
-    if switch.size == 0:  # pragma: no cover
+    # Defensive: empty inputs return early above, so support has two endpoints.
+    if switch.size == 0:  # pragma: no cover - defensive, see above
         return f.__class__.initempty()
 
     keys = 0.5 * ((-1) ** np.arange(switch.size - 1) + 1)

@@ -20,6 +20,7 @@ from matplotlib.patches import Rectangle
 
 from .chebfun import Chebfun
 from .exceptions import SupportMismatch
+from .settings import _preferences as prefs
 
 
 class Quasimatrix:
@@ -82,8 +83,6 @@ class Quasimatrix:
                 if cols:
                     cols.append(Chebfun.initconst(float(c), cols[0].domain))
                 else:
-                    from .settings import _preferences as prefs
-
                     cols.append(Chebfun.initconst(float(c), prefs.domain))
         if len(cols) > 1:
             # Verify all columns share the same support

@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .bndfun import Bndfun
 from .classicfun import Classicfun, techdict
 from .exceptions import InvalidSingularitySide, NotSubinterval
 from .maps import DoubleSlitMap, MapParams, SingleSlitMap
@@ -152,8 +153,9 @@ class Singfun(Classicfun):
             return type(self).initfun_adaptive(f, self._interval, sing=m.side, params=m.params)
         if isinstance(m, DoubleSlitMap):
             return type(self).initfun_adaptive(f, self._interval, sing="both", params=m.params)
-        msg = "Singfun._rebuild_from_callable: unknown map type"  # pragma: no cover
-        raise NotImplementedError(msg)  # pragma: no cover
+        # Defensive: a Singfun map is always a SingleSlitMap or DoubleSlitMap.
+        msg = "Singfun._rebuild_from_callable: unknown map type"  # pragma: no cover - defensive
+        raise NotImplementedError(msg)  # pragma: no cover - defensive
 
     @staticmethod
     def _maps_equal(m1: IntervalMap, m2: IntervalMap) -> bool:
@@ -319,7 +321,7 @@ class Singfun(Classicfun):
         integrand = techdict[prefs.tech].initfun(lambda t: onefun(t) * m.drvmap(t), interval=iv)
         return self._rebuild(integrand.cumsum())
 
-    def diff(self) -> Singfun:  # pragma: no cover - not yet implemented
+    def diff(self) -> Singfun:
         r"""Differentiation is not yet implemented for :class:`Singfun` (Phase 3 v1).
 
         ``f'(x) = (f \\circ m)'(t) / m'(t)`` introduces a stronger
@@ -357,8 +359,6 @@ class Singfun(Classicfun):
         result remains a usable :class:`~chebpy.classicfun.Classicfun` but
         may change subclass.
         """
-        from .bndfun import Bndfun
-
         if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
         a, b = float(self._interval[0]), float(self._interval[1])
@@ -378,7 +378,7 @@ class Singfun(Classicfun):
             return self._restrict_double_slit(m, new_iv, touches_left=touches_left, touches_right=touches_right)
 
         # Unknown map type — conservative fallback.
-        return Bndfun.initfun_adaptive(self, new_iv)  # pragma: no cover
+        return Bndfun.initfun_adaptive(self, new_iv)  # pragma: no cover - defensive
 
     def _restrict_single_slit(
         self, m: SingleSlitMap, new_iv: Interval, *, touches_left: bool, touches_right: bool
@@ -389,8 +389,6 @@ class Singfun(Classicfun):
         touches the clustered endpoint; otherwise the function is analytic on
         the subinterval and drops to a :class:`~chebpy.bndfun.Bndfun`.
         """
-        from .bndfun import Bndfun
-
         if (m.side == "left" and touches_left) or (m.side == "right" and touches_right):
             return type(self).initfun_adaptive(self, new_iv, sing=m.side, params=m.params)
         return Bndfun.initfun_adaptive(self, new_iv)
@@ -404,12 +402,10 @@ class Singfun(Classicfun):
         one-sided :class:`Singfun`; a purely interior subinterval drops to a
         :class:`~chebpy.bndfun.Bndfun`.
         """
-        from .bndfun import Bndfun
-
         if touches_left and touches_right:
             # Subinterval == self.interval handled by the caller; this branch is
             # therefore unreachable in normal usage.
-            return self  # pragma: no cover
+            return self  # pragma: no cover - defensive, see above
         if touches_left:
             return type(self).initfun_adaptive(self, new_iv, sing="left", params=m.params)
         if touches_right:
@@ -439,4 +435,4 @@ class Singfun(Classicfun):
             return DoubleSlitMap(a, b, m.params)
         # Unknown map type — fall back to leaving the map unchanged; callers
         # of translate that need a non-trivial rebuild should override.
-        return m  # pragma: no cover
+        return m  # pragma: no cover - defensive

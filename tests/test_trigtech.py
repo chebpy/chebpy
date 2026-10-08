@@ -669,3 +669,8 @@ class TestPropertiesAndAlgebra:
         f = Trigtech.initfun_adaptive(lambda x: exp(1j * pi * x))
         vals = f.values()
         assert np.iscomplexobj(vals)
+
+
+def test_repr():
+    """The repr reports the class name and number of coefficients."""
+    assert repr(Trigtech.initfun_fixedlen(lambda x: np.sin(np.pi * x), 8)) == "<Trigtech{8}>"

@@ -332,7 +332,7 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
     """
     # check magnitude of tol:
     tol = tol if tol is not None else prefs.eps
-    if tol >= 1:  # pragma: no cover
+    if tol >= 1:
         cutoff = 1
         return cutoff
 
@@ -370,7 +370,9 @@ def standard_chop(coeffs: np.ndarray, tol: float | None = None) -> int:
 
     # Step 3: Fix cutoff at a point where envelope, plus a linear function
     # included to bias the result towards the left end, is minimal.
-    if envelope[plateau_point - 1] == 0.0:  # pragma: no cover
+    # Defensive: envelope[0] == 1 and a zero at index j-2 would already have
+    # triggered the plateau at the previous j, so this never holds.
+    if envelope[plateau_point - 1] == 0.0:  # pragma: no cover - defensive, see above
         cutoff = plateau_point
     else:
         j3 = int(np.sum(envelope >= tol ** (7.0 / 6.0)))
@@ -533,7 +535,7 @@ def vals2coeffs2(vals: np.ndarray) -> np.ndarray:
     if np.isreal(vals).all():
         coeffs = ifft(tmp)
         coeffs = np.real(coeffs)
-    elif np.isreal(1j * vals).all():  # pragma: no cover
+    elif np.isreal(1j * vals).all():
         coeffs = ifft(np.imag(tmp))
         coeffs = 1j * np.real(coeffs)
     else:
@@ -570,7 +572,7 @@ def coeffs2vals2(coeffs: np.ndarray) -> np.ndarray:
     if np.isreal(coeffs).all():
         vals = fft(tmp)
         vals = np.real(vals)
-    elif np.isreal(1j * coeffs).all():  # pragma: no cover
+    elif np.isreal(1j * coeffs).all():
         vals = fft(np.imag(tmp))
         vals = 1j * np.real(vals)
     else:

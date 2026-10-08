@@ -24,8 +24,10 @@ from typing import Any, cast
 
 import numpy as np
 
+from .bndfun import Bndfun
 from .classicfun import Classicfun, techdict
 from .exceptions import CompactFunConstructionError, DivergentIntegralError
+from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
 
@@ -89,7 +91,7 @@ def _discover_one_side(
     boundary_r = max(2.0 * active_r, 1.0)
     # Defensive: the last-3 convergence window forces active_r <= r_{N-3}, so
     # boundary_r = 2*active_r stays below the largest probed radius (<= max_width).
-    if boundary_r > max_width:  # pragma: no cover
+    if boundary_r > max_width:  # pragma: no cover - defensive, see above
         raise CompactFunConstructionError(  # noqa: TRY003
             f"Discovered numerical support exceeds max_width = {max_width:g}; "
             f"heavy-tailed inputs are not supported in this release."
@@ -115,7 +117,7 @@ def _probe_side(f: Any, anchor: float, sign: int, max_width: float, max_probes: 
         x = anchor + sign * r
         try:
             v = float(f(x))
-        except (FloatingPointError, OverflowError, ZeroDivisionError) as err:  # pragma: no cover
+        except (FloatingPointError, OverflowError, ZeroDivisionError) as err:
             raise CompactFunConstructionError(  # noqa: TRY003
                 f"Could not evaluate f at probe x = {x:g} during numerical-support discovery"
             ) from err
@@ -218,7 +220,7 @@ def _discover_numsupp(
             f"max_width = {max_width:g}; heavy-tailed inputs are not supported "
             f"in this release."
         )
-    if b_storage <= a_storage:  # pragma: no cover
+    if b_storage <= a_storage:  # pragma: no cover - defensive, see below
         # Defensive: each discovered boundary is >= 1 from the anchor, so
         # b_storage > a_storage always holds; kept as a safety net.
         a_storage, b_storage = anchor - 1.0, anchor + 1.0
@@ -502,7 +504,7 @@ class CompactFun(Classicfun):
         yr = self._tail_right if not np.isfinite(b_log) else self.__call__(b_log)
         return np.array([yl, yr])
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a string representation showing the logical interval, size, and tails."""
         a_log, b_log = self._logical_interval
         if self._tail_left != 0.0 or self._tail_right != 0.0:
@@ -629,8 +631,6 @@ class CompactFun(Classicfun):
     # -----------
     def restrict(self, subinterval: Any) -> Any:
         """Restrict to a finite subinterval, returning a :class:`Bndfun`."""
-        from .bndfun import Bndfun
-
         sub_a, sub_b = _ensure_endpoints(subinterval)
         if not (np.isfinite(sub_a) and np.isfinite(sub_b)):
             raise NotImplementedError(
@@ -756,7 +756,5 @@ class CompactFun(Classicfun):
         defaults to the numerical-support interval padded by 10% on each
         unbounded side. Pass an explicit ``support=(a, b)`` keyword to override.
         """
-        from .plotting import plotfun
-
         support = kwds.pop("support", self.plot_support)
         return plotfun(self, support, ax=ax, **kwds)

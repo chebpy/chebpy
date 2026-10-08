@@ -24,7 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "seaborn==0.13.2",
-    "marimo==0.24.2",
+    "marimo==0.25.1",
     "pandas>=2.2",
     "plotly",
 ]
@@ -121,6 +121,11 @@ invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
 invalid-assignment = "ignore"
 unsupported-operator = "ignore"
+
+[tool.coverage.report]
+# Abstract stubs in fun.py / onefun.py have no body to execute; exclude them
+# here rather than tagging each one with `# pragma: no cover`.
+exclude_also = ["@abstractmethod"]
 
 [tool.interrogate]
 # The project test suite is exempt from the docstring-coverage gate: test intent

@@ -389,13 +389,19 @@ class TestTailConstants:
 
     def test_logistic_one_sided_tail(self) -> None:
         # Logistic 1/(1+exp(-x)) -> 0 at -inf, 1 at +inf.
-        f = CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + np.exp(-x)), (-np.inf, np.inf))
+        # exp(-x) overflows to inf for very negative x; 1/(1+inf) == 0 is the intended limit.
+        with np.errstate(over="ignore"):
+            f = CompactFun.initfun_adaptive(lambda x: 1.0 / (1.0 + np.exp(-x)), (-np.inf, np.inf))
         assert f.tail_left == pytest.approx(0.0, abs=1e-12)
         assert f.tail_right == pytest.approx(1.0, abs=1e-12)
 
     def test_repr_shows_tails(self) -> None:
         f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
         assert "tails=" in repr(f)
+
+    def test_repr_without_tails(self) -> None:
+        f = CompactFun.initfun_adaptive(lambda x: np.exp(-(x**2)), (-np.inf, np.inf))
+        assert repr(f) == f"CompactFun([-inf, inf], {f.size})"
 
     def test_endvalues_use_tails(self) -> None:
         f = CompactFun.initfun_adaptive(np.tanh, (-np.inf, np.inf))
@@ -464,6 +470,12 @@ class TestTailConstants:
 # -----------------------------
 class TestDiscoveryInternals:
     """Direct tests for the module-level support-discovery helpers."""
+
+    def test_probe_evaluation_error_raises(self) -> None:
+        # An arithmetic error raised by f at a probe is wrapped and chained.
+        with pytest.raises(CompactFunConstructionError) as excinfo:
+            _discover_one_side(lambda x: 1 / 0, 0.0, 1, 1e-10, 1e6, 60)
+        assert isinstance(excinfo.value.__cause__, ZeroDivisionError)
 
     def test_probe_nonfinite_raises(self) -> None:
         # A function returning a non-finite value at a probe is rejected.

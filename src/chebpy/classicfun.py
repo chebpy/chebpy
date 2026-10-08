@@ -285,7 +285,7 @@ class Classicfun(Fun, ABC):
         """
         return type(self).initfun_adaptive(f, self._interval)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a string representation of the function.
 
         This method returns a string representation of the function that includes
@@ -478,7 +478,7 @@ class Classicfun(Fun, ABC):
         Raises:
             NotSubinterval: If the subinterval is not contained within the original interval.
         """
-        if subinterval not in self.interval:  # pragma: no cover
+        if subinterval not in self.interval:
             raise NotSubinterval(self.interval, subinterval)
         if self.interval == subinterval:
             return self
@@ -623,7 +623,7 @@ def add_utility(methodname: str) -> None:
 
 
 for methodname in methods_onefun_other:
-    if methodname[:4] == "plot" and plt is None:  # pragma: no cover
+    if methodname[:4] == "plot" and plt is None:  # pragma: no cover - only without matplotlib
         continue
     add_utility(methodname)
 
@@ -776,7 +776,7 @@ def add_binary_op(methodname: str) -> None:
         if isinstance(f, Classicfun):
             if f.isempty:
                 return f.copy()
-            if self.interval != f.interval:  # pragma: no cover
+            if self.interval != f.interval:
                 raise IntervalMismatch(self.interval, f.interval)
             if not self._can_share_onefun_with(f):
                 # Mixed subclasses (or same subclass with disagreeing maps):
