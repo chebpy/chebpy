@@ -35,7 +35,7 @@ repos:
         groups: ["fast"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.16.6'
+    rev: 'v0.17.0'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -53,7 +53,7 @@ repos:
         groups: ["lint", "fast"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.38.0
+    rev: 0.38.2
     hooks:
       - id: check-renovate
         args: [ "--verbose" ]
@@ -84,13 +84,13 @@ repos:
         groups: ["python", "security", "slow"]
 
   - repo: https://github.com/betterleaks/betterleaks
-    rev: v1.8.1
+    rev: v1.9.0
     hooks:
       - id: betterleaks
         groups: ["security", "slow"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.10
+    rev: 0.13.1
     hooks:
       - id: uv-lock
         groups: ["python", "fast"]
@@ -104,7 +104,7 @@ repos:
         groups: ["python", "lint", "slow"]
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v1.3.0  # Use the latest release
+    rev: v1.3.1  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names

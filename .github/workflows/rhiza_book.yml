@@ -29,8 +29,15 @@ permissions:
 
 jobs:
   book:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_book.yml@v1.10.0
-    secrets: inherit
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_book.yml@v1.11.0
+    # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
+    # caller's own organisation or enterprise (#1689). A secret this repository has not
+    # defined arrives empty and the workflow falls back to `github.token`.
+    secrets:
+      BOOK_SETUP_TOKEN: ${{ secrets.BOOK_SETUP_TOKEN }}
+      RHIZA_SETUP_CREDENTIALS: ${{ secrets.RHIZA_SETUP_CREDENTIALS }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+      UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
     permissions:
       contents: read
       pages: write
