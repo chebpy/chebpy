@@ -91,3 +91,29 @@ make test
 
 Please make sure that your change doesn't cause any
 of the unit tests to fail.
+
+## Release packaging and conda-forge
+
+The `Package distribution` workflow builds a source distribution, then rebuilds
+its wheel outside the Git checkout with no version override. It checks that both
+artifacts carry the same version and include `LICENSE.rst`; on release tags it
+also checks that the version matches the tag. Run it locally with:
+
+```bash
+bash .github/scripts/check-sdist.sh
+```
+
+This workflow runs on pull requests, pushes to `master`, and version tags. Check
+it before merging a release PR. The tag run is a separate check, not a dependency
+of the Rhiza-managed publishing workflow.
+
+PyPI publication and conda-forge publication are separate processes. The release
+workflow's `Generate Conda Recipe` job uploads a recipe artifact for reference;
+it does not update or publish the conda-forge feedstock.
+
+The [chebfun feedstock](https://github.com/conda-forge/chebfun-feedstock) owns the
+Conda recipe, dependencies, and bot settings. It should consume the PyPI source
+distribution, which contains version metadata, and use version-only bot
+automerge for passing release updates. Changes to build or runtime requirements
+can still require a feedstock recipe update. Confirm the feedstock build and
+upload succeeded before announcing Conda availability.
