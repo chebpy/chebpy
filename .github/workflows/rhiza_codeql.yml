@@ -26,8 +26,12 @@ on:
 
 jobs:
   codeql:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_codeql.yml@v1.10.0
-    secrets: inherit
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_codeql.yml@v1.11.0
+    # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
+    # caller's own organisation or enterprise (#1689). A secret this repository has not
+    # defined arrives empty and the workflow falls back to `github.token`.
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
     permissions:
       security-events: write   # Upload CodeQL results to code scanning
       packages: read

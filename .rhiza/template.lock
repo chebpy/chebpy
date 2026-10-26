@@ -1,7 +1,7 @@
-sha: 371314b93a460e27d648c87377e8fa252bd92d15
+sha: 6d4bccec4c816bc756284945aebd6f26579a51a7
 repo: jebel-quant/rhiza
 host: github
-ref: v1.8.0
+ref: v1.11.0
 include: []
 exclude:
 - .github/CONFIG.md
@@ -16,6 +16,7 @@ files:
 - .devcontainer/bootstrap.sh
 - .devcontainer/devcontainer.json
 - .editorconfig
+- .github/PULL_REQUEST_TEMPLATE.md
 - .github/dependabot.yml
 - .github/release.yml
 - .github/rulesets/main-branch-protection.json
@@ -33,6 +34,7 @@ files:
 - .gitignore
 - .pre-commit-config.yaml
 - .python-version
+- .rhiza/scripts/release_publish.py
 - .rhiza/semgrep.yml
 - Makefile
 - cliff.toml
@@ -42,5 +44,5 @@ files:
 - pytest.ini
 - ruff.toml
 - tests/test_rhiza_packaging.py
-synced_at: '2026-09-08T06:25:03Z'
+synced_at: '2026-10-24T21:14:38Z'
 strategy: merge

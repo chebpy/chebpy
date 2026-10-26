@@ -39,8 +39,7 @@ on:
 
 jobs:
   paper:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.10.0
-    secrets: inherit
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_paper.yml@v1.11.0
     # `contents: write` is for the `paper` branch publish and nothing else. A pull request
     # never reaches that step, so the scope is unused on every PR run.
     permissions:
