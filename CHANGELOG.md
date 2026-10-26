@@ -5,7 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [0.11.0] - 2026-08-11
+## [0.11.0] - 2026-10-26
+
+### Release Highlights
+
+- Add `equifun(values, domain)` for constructing Chebfuns from equispaced real or
+  complex samples using Floater-Hormann rational interpolation (#399).
+- Correct pointwise maximum/minimum branch selection at tangential intersections
+  by switching only where the difference changes sign (#400).
+- Expand numerical regression tests and enforce 100% test coverage.
+- Add an equispaced-data notebook, accuracy/preferences guidance, doctest examples,
+  architecture documentation, and a mathematical overview paper.
+- Derive package versions from Git tags and update Rhiza tooling to v1.11.0.
+
+### Compatibility Notes
+
+- Invalid singularity sides, missing fixed-length construction parameters, and
+  incompatible quasimatrix supports now raise specific ChebPy exceptions instead
+  of `ValueError`. Callers catching `ValueError` for these cases should update
+  their exception handling (#478).
+- The package remains named `chebfun` on PyPI and imported as `chebpy`.
+- Python 3.11 or newer remains required; CI covers Python 3.11 through 3.14.
+
+### New Features
+- *(build)* Derive the version from git tags via hatch-vcs
 
 ### Bug Fixes
 - Drop License:: classifier test that contradicts PEP 639
@@ -13,11 +36,14 @@ and entries are generated from [Conventional Commits](https://www.conventionalco
 - Describe the failure when chebfun() cannot build a constant
 - Drop the stale self_empty TODO and unblock radon
 - Describe unconvertible chebfun() inputs and simplify equifun (#462)
+- *(ci)* Apply ruff 0.16.6 formatting to Python in Markdown
+- Hoist cycle-free function-local imports to module scope (#504)
 
 ### Documentation
 - Document the test-layout opt-out and correct stale CLAUDE.md claims
 - Add LaTeX paper describing ChebPy, its algorithms and Chebyshev approximation
 - Feature the LaTeX paper in the book
+- Point the ownership sections at template.lock
 
 ### Maintenance
 - Bump rhiza template version to v0.10.9
@@ -65,6 +91,44 @@ and entries are generated from [Conventional Commits](https://www.conventionalco
 - Chore(deps)(deps): bump pymdown-extensions from 10.21.3 to 11.0.1
 - Add github-paper template to rhiza config
 - Apply rhiza sync for github-paper template
+- Chore(deps)(deps): bump the github-actions group with 2 updates
+- Bump rhiza to v1.3.3
+- Apply rhiza sync v1.3.3
+- Chore(deps-dev)(deps-dev): bump ruff in the python-dependencies group
+- Chore(deps-dev)(deps-dev): bump ruff in the python-dependencies group
+- Bump rhiza to v1.3.4
+- Apply rhiza sync v1.3.4
+- Drop files no longer shipped by rhiza v1.3.4
+- Bump rhiza to v1.4.2
+- Apply rhiza sync v1.4.2
+- Drop the retired make layer
+- Delete the newly excluded template files
+- Restore the Makefile as a shim over rhiza-task
+- Move the make layer's settings into [tool.rhiza-task]
+- Bump rhiza to v1.5.0
+- Apply rhiza sync v1.5.0
+- Prune exclude entries the template no longer ships
+- Drop the exclude entries for the retired mutation/fuzzing workflows
+- Bump rhiza to v1.6.0
+- Apply rhiza sync v1.6.0
+- Chore(deps-dev)(deps-dev): bump the python-dependencies group with 2 updates
+- Chore(deps-dev)(deps-dev): bump ruff in the python-dependencies group
+- Chore(deps-dev)(deps-dev): bump ruff in the python-dependencies group
+- Drop the lint dependency group
+- Bump rhiza to v1.8.0
+- Apply rhiza sync v1.8.0
+- Drop docs consolidated into docs/development/rhiza.md
+- Chore(deps)(deps): bump the python-dependencies group with 2 updates
+- Chore(deps)(deps): bump anyio from 4.12.1 to 4.14.2
+- Chore(deps-dev)(deps-dev): bump pandas in the python-dependencies group
+- Chore(deps-dev)(deps-dev): bump marimo in the python-dependencies group
+- Replace unexplained coverage pragmas with tests or reasons (#503)
+- Silence expected exp overflow in logistic tail test (#505)
+- Chore(deps-dev)(deps-dev): bump marimo
+- Chore(deps)(deps): bump the github-actions group with 10 updates
+- Chore(deps)(deps): bump the github-actions group with 8 updates
+- Chore(deps)(deps): bump pillow from 12.3.0 to 13.0.0
+- Update rhiza to v1.11.0 (#516)
 
 ### Other Changes
 - Docs correction (#384)
@@ -127,4 +191,45 @@ and entries are generated from [Conventional Commits](https://www.conventionalco
 - Merge pull request #464 from chebpy/rhiza_github-paper
 - Merge pull request #465 from chebpy/paper/chebpy-overview
 - Merge pull request #466 from chebpy/docs/feature-paper-in-book
+- Merge pull request #470 from chebpy/rhiza_v1.3.3_20260811
+- Merge branch 'master' into dependabot/github_actions/github-actions-a607513d76
+- Merge pull request #469 from chebpy/dependabot/github_actions/github-actions-a607513d76
+- Merge branch 'master' into dependabot/uv/python-dependencies-a656a3a4ac
+- Merge pull request #468 from chebpy/dependabot/uv/python-dependencies-a656a3a4ac
+- Promote two unnecessary function-local imports to module scope (#476)
+- Move generate_funs() out of utilities to resolve the layering inversion (#477)
+- Add doctest examples to the seven core modules that carried none (#479)
+- Document accuracy and related preferences (#471)
+- Raise domain exception types where the condition is chebpy-specific (#478)
+- Merge pull request #480 from chebpy/dependabot/uv/python-dependencies-e904d59df0
+- Merge pull request #481 from chebpy/rhiza_v1.3.4_20260818
+- Merge pull request #484 from chebpy/rhiza_v1.4.2_20260819
+- Merge pull request #485 from chebpy/rhiza_v1.5.0_20260822
+- Delete docs/paper/chebpy.pdf
+- Merge pull request #486 from chebpy/tschm-patch-2
+- Merge pull request #487 from chebpy/chore/prune-dead-template-excludes
+- Merge pull request #488 from chebpy/chore/drop-retired-workflow-excludes
+- Merge pull request #489 from chebpy/rhiza_v1.6.0_20260824
+- Merge pull request #490 from chebpy/dependabot/uv/python-dependencies-6e2a11f412
+- Merge pull request #491 from chebpy/docs/ownership-point-at-lock
+- Merge pull request #493 from chebpy/dependabot/uv/python-dependencies-3c79134f2c
+- Merge pull request #495 from chebpy/dependabot/uv/python-dependencies-30fc5c7019
+- Merge pull request #497 from chebpy/chore/drop-lint-group
+- Merge pull request #498 from chebpy/rhiza_v1.8.0_20260908
+- Merge pull request #499 from chebpy/feat/dynamic-versioning
+- Merge pull request #500 from chebpy/dependabot/uv/python-dependencies-b3a6370bf1
+- Merge pull request #501 from chebpy/dependabot/uv/anyio-4.14.2
+- Merge pull request #502 from chebpy/dependabot/uv/python-dependencies-f5a60c45d2
+- Merge pull request #508 from chebpy/dependabot/uv/python-dependencies-0578291323
+- Merge branch 'master' into rhiza_fix_504_20260923
+- Merge pull request #507 from chebpy/rhiza_fix_504_20260923
+- Merge pull request #509 from chebpy/fix/505-overflow-warning
+- Merge branch 'master' into fix/503-coverage-pragmas
+- Merge pull request #510 from chebpy/fix/503-coverage-pragmas
+- Merge pull request #512 from chebpy/dependabot/uv/python-dependencies-06bc670f4b
+- Fix max/min tangential root switches (#400)
+- Merge pull request #513 from chebpy/dependabot/github_actions/github-actions-1e983556dc
+- Merge pull request #514 from chebpy/dependabot/github_actions/github-actions-2f8814aa64
+- Merge pull request #515 from chebpy/dependabot/uv/pillow-13.0.0
 
+<!-- generated by git-cliff -->
