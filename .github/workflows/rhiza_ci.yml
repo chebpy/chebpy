@@ -12,7 +12,7 @@
 # - Generated from `Programming Language :: Python :: 3.x` classifiers in pyproject.toml
 # - Adding/removing classifiers updates CI Python coverage automatically
 #
-# Trigger: On push and pull_request.
+# Trigger: Default-branch pushes, all PRs, weekly compatibility and manual dispatch.
 
 name: "(RHIZA) CI"
 
@@ -23,10 +23,21 @@ permissions:
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "17 7 * * 1"  # Full compatibility validation, Monday UTC.
+  workflow_dispatch:
+    inputs:
+      full-validation:
+        description: Run the complete compatibility matrix and dependency floors
+        type: boolean
+        default: false
 
 jobs:
   ci:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v1.11.0
+    if: github.event_name != 'push' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v1.12.0
+    with:
+      full-validation: ${{ inputs.full-validation || false }}
     # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
     # caller's own organisation or enterprise (#1689). A secret this repository has not
     # defined arrives empty and the workflow falls back to `github.token`.

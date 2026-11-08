@@ -12,6 +12,12 @@ updates:
   # Python dependencies using uv
   - package-ecosystem: "uv"
     directory: "/"
+    # Bump uv.lock only; leave pyproject.toml ranges alone unless a new version falls
+    # outside them. Without this, Dependabot's default ("auto") treats any project it
+    # cannot find on PyPI -- private, unpublished, or whose name belongs to another
+    # project -- as an application and rewrites every `>=` floor to the latest version,
+    # which then fails the lowest-direct-dependency CI job.
+    versioning-strategy: "increase-if-necessary"
     schedule:
       interval: "weekly"
       day: "tuesday"
