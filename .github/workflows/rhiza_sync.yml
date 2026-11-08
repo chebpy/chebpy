@@ -1,0 +1,36 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Workflow: Sync
+#
+# Purpose: Once a day, checks whether `ref` in `.rhiza/template.yml` is the template's
+#          latest release. If it is behind, opens a pull request that bumps the ref
+#          and carries the synced template files. Major bumps are left to a manual
+#          `/rhiza:update`.
+#
+# IMPORTANT: Set a `GH_PAT` secret (scopes: repo + workflow). `GITHUB_TOKEN` cannot push
+#            workflow-file changes, and a PR it opens triggers no CI. See .github/CONFIG.md.
+#
+# Trigger: Daily schedule (06:00 UTC) and manual dispatch.
+
+name: "(RHIZA) SYNC"
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # Every day at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_sync.yml@v1.12.0
+    permissions:
+      contents: write        # Push the sync branch
+      pull-requests: write   # Open the sync PR
+    # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
+    # caller's own organisation or enterprise (#1689). A secret this repository has not
+    # defined arrives empty and the workflow falls back to `github.token`.
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}

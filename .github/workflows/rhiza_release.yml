@@ -59,7 +59,8 @@
 #
 # 📦 Conda Recipe Generation:
 #   - Runs only when publishing to the default public PyPI endpoint succeeds
-#   - Uses grayskull to generate a conda-forge compatible recipe from PyPI metadata
+#   - Uses grayskull to generate a conda-forge compatible recipe for the tagged version
+#   - Verifies the recipe's version, sdist filename and SHA256 against PyPI's record of that release
 #   - Uploads conda-recipe/meta.yaml as a workflow artifact for downstream feedstock updates
 #
 # 🔐 Security:
@@ -126,6 +127,12 @@ concurrency:
 # scopes it needs (Scorecard Token-Permissions). Top-level stays read-only.
 permissions:
   contents: read
+
+# The CLI the build job validates distributions with (`dist-check`). Pinned like every other
+# workflow's RHIZA_TASK, and moved with them by the same Renovate rule, so the release and CI
+# run one version of the check rather than two.
+env:
+  RHIZA_TASK: rhiza-task@1.10.0
 
 jobs:
   tag:
@@ -380,11 +387,18 @@ jobs:
             echo "buildable=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build
+      - name: Build and validate distributions
         if: steps.buildable.outputs.buildable == 'true'
-        run: |
-          printf "[INFO] Building package...\n"
-          uv build
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL || env.UV_EXTRA_INDEX_URL }}
+        # `dist-check` builds into dist/ and then reads the artifacts back before anything is
+        # uploaded (#1743): every declared licence file must be in each archive and recorded as
+        # a License-File, and a wheel rebuilt from the sdist -- outside the checkout, with
+        # version overrides removed -- must agree with the rest. dist/ is left holding exactly
+        # what passed, and that folder is what the jobs below publish; nothing rebuilds it.
+        # `--strict`, because a skip here would mean nothing was built, and an empty dist/
+        # must not reach the publish job as a pass.
+        run: uvx "$RHIZA_TASK" dist-check --strict
 
       - name: Verify built distribution matches the tag
         if: steps.buildable.outputs.buildable == 'true'
@@ -714,8 +728,14 @@ jobs:
 
       - name: Generate conda recipe with grayskull
         if: steps.check_conda.outputs.should_generate == 'true'
+        env:
+          TAG: ${{ needs.tag.outputs.tag }}
         run: |
           PACKAGE_NAME=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
+          # Ask for the released version, never "whatever PyPI calls latest": while the new
+          # release's metadata propagates, the latest version PyPI reports is the previous
+          # one, and a recipe for it would pass every check below except the version (#1746).
+          VERSION="${TAG#v}"
           mkdir -p /tmp/conda-recipe
           cd /tmp/conda-recipe
 
@@ -737,7 +757,7 @@ jobs:
           MAX_ATTEMPTS=5
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
             status=0
-            grayskull pypi "$PACKAGE_NAME" --strict-conda-forge --no-use-v1-format || status=$?
+            grayskull pypi "$PACKAGE_NAME==$VERSION" --strict-conda-forge --no-use-v1-format || status=$?
             if [[ "$status" -ne 0 ]]; then
               echo "::error::grayskull exited $status on attempt $attempt — a real failure, not a PyPI propagation delay, so not retrying"
               exit 1
@@ -747,7 +767,7 @@ jobs:
               break
             fi
             if [[ "$attempt" -eq "$MAX_ATTEMPTS" ]]; then
-              echo "::error::grayskull produced no meta.yaml after $MAX_ATTEMPTS attempts — PyPI metadata for $PACKAGE_NAME may not be available yet"
+              echo "::error::grayskull produced no meta.yaml after $MAX_ATTEMPTS attempts — PyPI metadata for $PACKAGE_NAME $VERSION may not be available yet"
               exit 1
             fi
             echo "grayskull attempt $attempt/$MAX_ATTEMPTS produced no recipe — waiting 60s for PyPI metadata to propagate"
@@ -756,6 +776,96 @@ jobs:
 
           mkdir -p "$GITHUB_WORKSPACE/conda-recipe"
           cp "$RECIPE_PATH" "$GITHUB_WORKSPACE/conda-recipe/meta.yaml"
+
+      - name: Verify conda recipe against the published sdist
+        if: steps.check_conda.outputs.should_generate == 'true'
+        env:
+          TAG: ${{ needs.tag.outputs.tag }}
+          PYPI_JSON_API: https://pypi.org/pypi
+        run: |
+          # A recipe on disk proves only that grayskull wrote something. It counts as success
+          # when it describes *this* release: the version PyPI published for the tag, and the
+          # exact sdist file and SHA256 PyPI serves for it. An older release's recipe fails
+          # here rather than being uploaded as if it were the new one (#1746).
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          import tomllib
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+
+          def fail(message):
+              print(f"::error::{message}")
+              sys.exit(1)
+
+
+          name = tomllib.loads(Path("pyproject.toml").read_text())["project"]["name"]
+          requested = os.environ["TAG"].removeprefix("v")
+          url = f"{os.environ['PYPI_JSON_API'].rstrip('/')}/{name}/{requested}/json"
+          try:
+              with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310 -- fixed https endpoint
+                  release = json.load(response)
+          except (urllib.error.URLError, OSError) as error:
+              fail(f"could not read PyPI metadata for {name} {requested}: {error}")
+
+          published = release["info"]["version"]
+          sdists = [f for f in release.get("urls", []) if f.get("packagetype") == "sdist"]
+          if len(sdists) != 1:
+              fail(f"PyPI lists {len(sdists)} sdists for {name} {published}; the recipe needs exactly one to verify against")
+          sdist = sdists[0]
+
+          recipe = Path("conda-recipe/meta.yaml").read_text()
+          variables = dict(re.findall(r'{%-?\s*set\s+(\w+)\s*=\s*"([^"]*)"\s*-?%}', recipe))
+
+
+          def render(text):
+              # Just enough Jinja for the expressions grayskull writes into a source URL.
+              def expand(match):
+                  parts = [p.strip() for p in match.group(1).split("|")]
+                  head = re.fullmatch(r"(\w+)(?:\[(\d+)\])?", parts[0])
+                  if not head or head.group(1) not in variables:
+                      fail(f"cannot verify recipe: unsupported expression {{{{ {match.group(1).strip()} }}}}")
+                  value = variables[head.group(1)]
+                  if head.group(2) is not None:
+                      value = value[int(head.group(2))]
+                  for pipe in parts[1:]:
+                      replace = re.fullmatch(r"replace\(\s*[\"']([^\"']*)[\"']\s*,\s*[\"']([^\"']*)[\"']\s*\)", pipe)
+                      if pipe == "lower":
+                          value = value.lower()
+                      elif replace:
+                          value = value.replace(replace.group(1), replace.group(2))
+                      else:
+                          fail(f"cannot verify recipe: unsupported filter {pipe!r}")
+                  return value
+
+              return re.sub(r"{{(.*?)}}", expand, text)
+
+
+          def field(key):
+              found = re.search(rf"^\s+{key}:\s*(.+?)\s*$", recipe, re.MULTILINE)
+              if not found:
+                  fail(f"generated recipe has no {key}: line")
+              return render(found.group(1))
+
+
+          problems = []
+          recipe_version = field("version")
+          if recipe_version != published:
+              problems.append(f"version {recipe_version} != {published} published for {os.environ['TAG']}")
+          recipe_file = field("url").rsplit("/", 1)[-1]
+          if recipe_file != sdist["filename"]:
+              problems.append(f"source {recipe_file} != published sdist {sdist['filename']}")
+          recipe_sha = field("sha256")
+          if recipe_sha != sdist["digests"]["sha256"]:
+              problems.append(f"sha256 {recipe_sha} != {sdist['digests']['sha256']} of {sdist['filename']}")
+          if problems:
+              fail("conda recipe does not match the published release: " + "; ".join(problems))
+          print(f"conda recipe matches {sdist['filename']} ({published}, sha256 {recipe_sha})")
+          PY
 
       - name: Upload conda recipe artifact
         if: steps.check_conda.outputs.should_generate == 'true'
