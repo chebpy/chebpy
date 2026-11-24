@@ -35,7 +35,7 @@ repos:
         groups: ["fast"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.17.0'
+    rev: 'v0.17.5'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
@@ -46,14 +46,14 @@ repos:
         groups: ["python", "format", "fast"]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.49.1
+    rev: v0.50.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013"]
         groups: ["lint", "fast"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.38.2
+    rev: 0.39.0
     hooks:
       - id: check-renovate
         args: [ "--verbose" ]
@@ -70,7 +70,7 @@ repos:
         groups: ["lint", "fast"]
 
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: "0.26"
+    rev: "v0.27"
     hooks:
       - id: validate-pyproject
         groups: ["python", "fast"]
@@ -84,13 +84,13 @@ repos:
         groups: ["python", "security", "slow"]
 
   - repo: https://github.com/betterleaks/betterleaks
-    rev: v1.9.0
+    rev: v1.10.1
     hooks:
       - id: betterleaks
         groups: ["security", "slow"]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.13.1
+    rev: 0.13.8
     hooks:
       - id: uv-lock
         groups: ["python", "fast"]
@@ -104,7 +104,7 @@ repos:
         groups: ["python", "lint", "slow"]
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
-    rev: v1.3.1  # Use the latest release
+    rev: v1.3.2  # Use the latest release
     hooks:
       # Migrated from rhiza
       - id: check-rhiza-workflow-names
