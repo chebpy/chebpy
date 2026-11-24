@@ -25,7 +25,7 @@ on:
 
 jobs:
   sync:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_sync.yml@v1.12.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_sync.yml@v1.13.0
     permissions:
       contents: write        # Push the sync branch
       pull-requests: write   # Open the sync PR

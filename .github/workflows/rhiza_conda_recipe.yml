@@ -1,0 +1,121 @@
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
+#
+# Conda-forge Recipe Generation for an Existing Release
+#
+# Regenerates the conda-forge recipe for a release that is already on PyPI, without
+# rebuilding, re-tagging or republishing anything. Use it when the release workflow's
+# `conda` job failed or was skipped, or when the recipe artifact from that run expired.
+#
+# 📦 Generation, not publication:
+#   - This workflow writes a recipe and uploads it as the `conda-recipe` artifact. It
+#     publishes nothing anywhere: its only permission is `contents: read`.
+#   - A package reaches conda-forge only through a feedstock. The first release is
+#     submitted by hand as a PR to conda-forge/staged-recipes; after that the
+#     feedstock's autotick bot opens an update PR for each new PyPI release, and a
+#     feedstock maintainer reviews and merges it. See
+#     https://jebel-quant.github.io/rhiza/development/CONDA_FORGE/
+#
+# 🔁 Same code as the release:
+#   - Runs .rhiza/scripts/conda_recipe.py, exactly as rhiza_release.yml's `conda` job
+#     does: grayskull is asked for `<name>==<tag version>`, retried while PyPI metadata
+#     propagates, and the recipe's version, sdist filename and SHA256 are verified
+#     against PyPI's record of that release (#1746).
+#   - The script is read from the commit this workflow runs from, not from the tag, so
+#     a release tagged before the script was synced can still be regenerated.
+#
+# ✅ To Trigger:
+#   Actions → "(RHIZA) CONDA RECIPE" → Run workflow, with the release tag (e.g. v1.2.3).
+#   Or: gh workflow run rhiza_conda_recipe.yml -f tag=v1.2.3
+#   The tag must exist and its version must already be published on PyPI.
+
+name: (RHIZA) CONDA RECIPE
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to generate the conda-forge recipe for (e.g. v1.2.3)'
+        required: true
+        type: string
+
+# A second run for the same tag supersedes the first; nothing is published, so
+# cancelling a run mid-way loses nothing but a recipe the next run regenerates.
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag }}
+  cancel-in-progress: true
+
+# Generation only: no write scope, no id-token, no environment, no secrets.
+permissions:
+  contents: read
+
+jobs:
+  recipe:
+    name: Generate Conda Recipe (artifact only, not published)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # Reads the tag and the code; uploads a workflow artifact only
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: Validate tag
+        env:
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The same release-tag pattern rhiza_release.yml's tag job enforces.
+          if [[ ! "$TAG" =~ ^v[0-9]+(\.[0-9]+)*([a-zA-Z0-9.+-]*)$ ]]; then
+            echo "::error::Invalid release tag '$TAG'; expected vX.Y.Z"
+            exit 1
+          fi
+          # Regeneration is for an existing release only: refuse a tag that was never pushed.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --silent; then
+            echo "::error::Tag '$TAG' does not exist in $GITHUB_REPOSITORY; this workflow regenerates the recipe for an existing release only"
+            exit 1
+          fi
+
+      - name: Checkout the release tag
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Checkout conda recipe tooling
+        # The commit this workflow was read from, not the tag: conda_recipe.py is synced by
+        # the `github` bundle together with this file, so this commit always carries the
+        # matching script, while an older release tag may predate it.
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.sha }}
+          path: .rhiza-conda-tools
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version-file: .python-version
+
+      - name: Install grayskull
+        # Pinned, and kept in step with rhiza_release.yml: grayskull 3.2 changed its default
+        # output to a V1 recipe.yaml, which broke the release's conda job once already (#1701).
+        run: python -m pip install "grayskull==3.2.0"
+
+      - name: Generate conda recipe with grayskull
+        env:
+          TAG: ${{ inputs.tag }}
+        run: python .rhiza-conda-tools/.rhiza/scripts/conda_recipe.py generate
+
+      - name: Verify conda recipe against the published sdist
+        env:
+          TAG: ${{ inputs.tag }}
+          PYPI_JSON_API: https://pypi.org/pypi
+        run: python .rhiza-conda-tools/.rhiza/scripts/conda_recipe.py verify
+
+      - name: Upload conda recipe artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: conda-recipe
+          path: conda-recipe/meta.yaml

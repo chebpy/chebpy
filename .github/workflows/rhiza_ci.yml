@@ -35,7 +35,7 @@ on:
 jobs:
   ci:
     if: github.event_name != 'push' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v1.12.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_ci.yml@v1.13.0
     with:
       full-validation: ${{ inputs.full-validation || false }}
     # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
