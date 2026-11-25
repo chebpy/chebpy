@@ -18,11 +18,15 @@
 # Repo-specific *tasks* go in a `rhiza_task.tasks` entry point, repo-specific *targets* in
 # `local.mk`, which core deliberately does not ignore. Nothing goes below the shim: this
 # file is synced, so the next `/rhiza:update` overwrites whatever was appended to it.
-RHIZA_TASK ?= rhiza-task@1.10.0
+RHIZA_TASK ?= rhiza-task@1.11.0
 
 # uv cannot be delegated, because uv is what runs the CLI. Prepended so a machine carrying
 # an older uv still resolves the pin, exported because task bodies shell out to bare `uv`.
 INSTALL_DIR ?= $(abspath ./bin)
+# The uv the bootstrap below installs when none is on PATH. Pinned like `RHIZA_TASK`, so a
+# fresh runner gets the same uv on every run rather than whatever astral released last; the
+# root renovate.json moves it (#1797).
+UV_VERSION ?= 0.13.10
 UVX ?= $(shell command -v uvx 2>/dev/null || echo $(INSTALL_DIR)/uvx)
 export PATH := $(INSTALL_DIR):$(PATH)
 
@@ -58,7 +62,7 @@ RHIZA_TASK_GOAL = $@
 # whose prerequisite is that same file: `make: Circular ... dependency dropped`.
 $(UVX):
 	@echo "[INFO] uv not found; installing into $(@D)"
-	@curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="$(@D)" sh >/dev/null
+	@curl -LsSf https://astral.sh/uv/$(UV_VERSION)/install.sh | UV_INSTALL_DIR="$(@D)" sh >/dev/null
 
 .PHONY: FORCE
 FORCE:
