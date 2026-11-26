@@ -31,7 +31,7 @@ on:
 
 jobs:
   marimo:
-    uses: jebel-quant/rhiza/.github/workflows/rhiza_marimo.yml@v1.13.0
+    uses: jebel-quant/rhiza/.github/workflows/rhiza_marimo.yml@v1.14.0
     # Forwarded explicitly: `secrets: inherit` only reaches a reusable workflow in the
     # caller's own organisation or enterprise (#1689). A secret this repository has not
     # defined arrives empty and the workflow falls back to `github.token`.
